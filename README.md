@@ -1,127 +1,194 @@
-# Laravel Laundry
+﻿# MyZyngga - Sistem Informasi Laundry
 
-The laundry business is increasingly popular as a source of adequate income, exemplified by the initiative led by the village head of Simokerto, Surabaya, which operates five locations. However, the management of transactions remains traditional, and the lack of monitoring has resulted in minimal information about the laundry's progress. To address socio-economic disparities in Simokerto, the village head has involved underprivileged families (Gamis) in a labor-intensive laundry program, where income from laundry services is allocated to the laundry itself, while additional services like ironing and delivery are designated for Gamis.
+Aplikasi web berbasis Laravel untuk manajemen laundry terintegrasi dengan program GAMIS (Gabungan Masyarakat Industri Skala), mencakup multi-cabang, manajemen transaksi, laporan pendapatan, dan monitoring program sosial.
 
-The challenges faced include insufficient monitoring of Gamis, with only one or two successfully employed, as the village head lacks clear information on whether those hired are part of Gamis. Another challenge is the increasing number of transactions, leading to long queues and disrupting service delivery, which may cause customer dissatisfaction.
+---
 
-This research proposes a solution in the form of an application that can monitor the laundry program, facilitating the social program for Gamis, implementing priority services, and generating digital reports. The application is built using the Priority Service method, helping to manage data, transactions, and effectively monitor the Gamis social program in the laundry business.
+## Persyaratan Sistem
 
-This application is the result of my Tugas Akhir (Thesis), which I have been working on over the past few months. The project not only fulfills the requirements for completing my degree but also serves as an opportunity to apply the knowledge and skills I’ve gained throughout my studies. By developing this application, I hope to offer a practical solution that benefits the community while showcasing my abilities in software development. Moreover, this project reflects my dedication and commitment to completing my education and making a positive contribution to my surroundings.
+- PHP >= 8.2
+- Composer
+- MySQL / MariaDB
+- Node.js & NPM
+- Laravel 11
 
-## Tech Stack
+---
 
-- **Laravel 11**
-- **Laravel Breeze**
-- **MySQL Database**
-- **[maatwebsite/excel](https://laravel-excel.com/)**
-- **[spatie/laravel-pdf](https://spatie.be/docs/laravel-pdf/v1/introduction)**
-- **[spatie/laravel-permission](https://spatie.be/docs/laravel-permission/v6/introduction)**
-- **[spatie/laravel-sluggable](https://github.com/spatie/laravel-sluggable)**
-- **[barryvdh/laravel-debugbar](https://github.com/barryvdh/laravel-debugbar)**
+## Cara Menjalankan Project
 
-## Features
+### 1. Clone Repository
 
-- Main features available in this application:
-  - CRUD Data Master
-  - Laundry Transaction Management
-  - Implementation Priority Service method
-  - Monitoring Gamis
-  - Generate Reports
+```bash
+git clone https://github.com/faturh/myzyngga.git
+cd myzyngga
+```
 
-## Installation
+### 2. Install Dependencies
 
-Follow the steps below to clone and run the project in your local environment:
+```bash
+composer install
+npm install
+```
 
-1. Clone repository:
+### 3. Konfigurasi Environment
 
-    ```bash
-    git clone https://github.com/Akbarwp/Laravel-Laundry.git
-    ```
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-2. Install dependencies use Composer and NPM:
+Edit file `.env`, sesuaikan konfigurasi database:
 
-    ```bash
-    composer install
-    npm install
-    ```
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=MyZyngga
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-3. Copy file `.env.example` to `.env`:
+### 4. Buat Database
 
-    ```bash
-    cp .env.example .env
-    ```
+Buat database baru di MySQL/MariaDB dengan nama `MyZyngga` (atau sesuaikan dengan `.env`).
 
-4. Generate application key:
+### 5. Jalankan Migrasi & Seeder
 
-    ```bash
-    php artisan key:generate
-    ```
+```bash
+php artisan migrate:fresh --seed
+```
 
-5. Setup database in the `.env` file:
+### 6. Jalankan Server
 
-    ```plaintext
-    DB_CONNECTION=mysql
-    DB_HOST=127.0.0.1
-    DB_PORT=3306
-    DB_DATABASE=laravel_laundry
-    DB_USERNAME=root
-    DB_PASSWORD=
-    ```
+Buka **dua terminal** secara bersamaan:
 
-6. Run migration database:
+**Terminal 1 - Laravel Server:**
+```bash
+php artisan serve
+```
 
-    ```bash
-    php artisan migrate
-    ```
-    
-7. Run seeder database:
+**Terminal 2 - Vite (Assets):**
+```bash
+npm run dev
+```
 
-    ```bash
-    php artisan db:seed
-    ```
+### 7. Akses Aplikasi
 
-8. Run website:
+Buka browser dan akses: **http://127.0.0.1:8000**
 
-    ```bash
-    npm run dev
-    php artisan serve
-    ```
+---
 
-## Screenshot
+## Akun Default (Setelah Seeder)
 
-- ### **Login page**
+Semua akun menggunakan password: **`password`**
 
-<img src="https://github.com/user-attachments/assets/c1784d4a-a3f3-4202-9cb1-154e6f9d1ea7" alt="Halaman Login" width="" />
-<br><br>
+| Role | Email | Keterangan |
+|------|-------|------------|
+| **Lurah** | lurah@gmail.com | Admin utama, akses penuh |
+| **PIC** | pic@gmail.com | Person in Charge, akses hampir sama dengan Lurah |
+| **RW** | rw@gmail.com | Ketua RW, monitoring program GAMIS |
+| **Manajer Laundry** | manajer@gmail.com | Manajer cabang laundry |
+| **Pegawai Laundry** | pegawai@gmail.com | Pegawai operasional laundry |
+| **GAMIS** | gamis1@gmail.com | Anggota program GAMIS |
 
-- ### **Transaction page**
+---
 
-<img src="https://github.com/user-attachments/assets/b86692ae-91e4-4a30-a227-f712dc9a5893" alt="Halaman Transaksi" width="" />
-&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/fef5b3c1-19cc-481d-9e78-4b128900ab52" alt="Halaman Tambah Transaksi" width="" />
-&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/257b6965-a759-4586-92fb-65225ba8fa49" alt="Halaman Jadwal Transaksi" width="" />
-&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/0c3ac666-b617-4174-8391-e58362421e1b" alt="Cetak Struk" width="" />
-<br><br>
+## Alur / Flow Aplikasi
 
-- ### **Monitoring Gamis page**
+### Halaman Publik (Tanpa Login)
 
-<img src="https://github.com/user-attachments/assets/047449e1-1062-4c3c-9c6f-beddb4f691d1" alt="Halaman Monitoring Gamis" width="" />
-&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/ae402d48-9973-402c-aeaa-d6cbb7b981ab" alt="Halaman Monitoring Detail Gamis" width="" />
-<br><br>
+- **`/`** - Landing page berisi informasi layanan laundry
+- **`/nota`** - Cek status transaksi berdasarkan nomor nota (tanpa login)
 
-- ### **Report page**
+---
 
-<img src="https://github.com/user-attachments/assets/5eb469b1-5452-4f97-aea3-0afe4ad42bdd" alt="Halaman Laporan Pendapatan Laundry" width="" />
-&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/185ee332-d469-424b-9823-5be0c2d35cca" alt="Laporan Pendapatan Laundry" width="" />
-<br><br>
+### Alur per Role
 
-- ### **Landing page**
+#### Lurah & PIC (Admin Utama)
 
-<img src="https://github.com/user-attachments/assets/7240a75a-8e1f-4537-8200-a5ef279c3eef" alt="Landing Page" width="" />
-&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/5afe2ca0-f340-4940-8c20-6f2bef88ddb6" alt="Landing Page - Cek Transaksi" width="" />
-<br><br>
+| Menu | Fungsi |
+|------|--------|
+| Cabang | Kelola data cabang laundry (tambah, ubah, hapus, restore) |
+| UMR | Atur standar UMR untuk perhitungan upah GAMIS |
+| User | Kelola semua akun pengguna sistem |
+| RW | Kelola akun Ketua RW (import/export Excel) |
+| Jenis Layanan | Kelola jenis layanan cuci (reguler, express, dll) |
+| Jenis Pakaian | Kelola kategori pakaian (kaos, gamis, celana, dll) |
+| Harga Jenis Layanan | Atur harga per jenis layanan dan pakaian |
+| Layanan Prioritas | Atur layanan prioritas pelanggan |
+| Layanan Tambahan | Kelola layanan tambahan (setrika, parfum, dll) |
+| Pelanggan | Manajemen data pelanggan (import/export Excel) |
+| GAMIS | Kelola data keluarga GAMIS beserta anggotanya |
+| Transaksi | Lihat & kelola transaksi semua cabang |
+| Monitoring GAMIS | Monitor pendapatan & program GAMIS |
+| Laporan | Cetak laporan pendapatan laundry, GAMIS, pelanggan (PDF) |
+
+#### Manajer Laundry
+
+| Menu | Fungsi |
+|------|--------|
+| User | Kelola pegawai di cabang sendiri |
+| Transaksi | Kelola transaksi cabang sendiri |
+| Pelanggan | Kelola data pelanggan cabang |
+| Monitoring GAMIS | Monitor program GAMIS di cabang |
+| Laporan | Laporan pendapatan cabang |
+
+#### Pegawai Laundry
+
+| Menu | Fungsi |
+|------|--------|
+| Transaksi | Input transaksi baru & update status laundry |
+| Pelanggan | Tambah & lihat data pelanggan |
+
+#### RW (Ketua RW)
+
+| Menu | Fungsi |
+|------|--------|
+| Monitoring GAMIS | Lihat data GAMIS di wilayah RW, cetak laporan PDF |
+
+#### GAMIS (Anggota Program)
+
+| Menu | Fungsi |
+|------|--------|
+| Transaksi Gamis | Lihat transaksi harian & riwayat transaksi yang dikerjakan |
+
+---
+
+### Alur Transaksi Laundry
+
+```
+Pelanggan datang
+    Pegawai/Manajer input Transaksi Baru
+    (pilih pelanggan, jenis pakaian, jenis layanan, layanan tambahan)
+    Sistem hitung total bayar otomatis
+    Status: MENUNGGU
+    Status: DIPROSES (GAMIS mulai mengerjakan)
+    Status: SELESAI
+    Cetak Struk / Nota
+    Pelanggan bisa cek status via /nota (tanpa login)
+```
+
+---
+
+### Alur Program GAMIS
+
+```
+Lurah/PIC input data Keluarga GAMIS
+    Tambah anggota GAMIS (beserta pemasukkan lain)
+    Transaksi laundry dikerjakan oleh GAMIS
+    Lurah/Manajer konfirmasi upah GAMIS per transaksi
+    Monitoring GAMIS: hitung total pendapatan vs UMR
+    RW bisa lihat & cetak laporan monitoring wilayahnya
+    Laporan pendapatan GAMIS dicetak (PDF)
+```
+
+---
+
+## Fitur Tambahan
+
+- **Import/Export Excel** - Data user, RW, jenis layanan, jenis pakaian, harga, pelanggan
+- **Soft Delete** - Data yang dihapus bisa dipulihkan dari trash
+- **Cetak Struk** - Cetak struk transaksi langsung dari sistem
+- **Laporan PDF** - Laporan pendapatan laundry, GAMIS, pelanggan, dan detail GAMIS
+- **Multi Cabang** - Sistem mendukung beberapa cabang laundry sekaligus
+- **Role-based Access** - 6 level akses berbeda (Lurah, PIC, RW, Manajer, Pegawai, GAMIS)
