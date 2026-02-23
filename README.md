@@ -1,6 +1,6 @@
 ﻿# MyZyngga - Sistem Informasi Laundry
 
-Aplikasi web berbasis Laravel untuk manajemen laundry terintegrasi dengan program GAMIS (Gabungan Masyarakat Industri Skala), mencakup multi-cabang, manajemen transaksi, laporan pendapatan, dan monitoring program sosial.
+Aplikasi web berbasis Laravel untuk manajemen laundry 
 
 ---
 
