@@ -1,53 +1,76 @@
-# Zyngga - Maternal Care Platform
+# Zyngga Laundry – Modern Laundry Platform
 
-Homepage built from Figma design using Laravel and Tailwind CSS.
+A premium laundry management platform built with Laravel, Tailwind CSS, and Alpine.js, following a pixel-perfect design system from Figma.
 
-## Design Tokens (from Figma)
+## 🎨 Design System
 
-**Colors:**
-- Primary R500: `#9C3650`
-- Primary R300: `#FF5983`
-- Primary R100: `#FF9FB7`
-- Monochrome Black: `#333333`
-- Monochrome Light: `#F0F0F0`
+### Colors
+- **Primary Blue**: `#1660C1` (Main), `#0E3B77` (Dark), `#E8EFF9` (Light)
+- **Accent Yellow**: `#F7931E` (Main), `#FEF4E9` (Light)
+- **Neutral**: `#0F0F0F` (Dark), `#808080` (Gray), `#F4F4F4` (Light)
 
-**Typography:**
-- Font: Outfit (Google Fonts)
-- XSmall: 14px, Medium (500)
-- Small: 16px, Medium (500)
-- Medium: 20px, Medium (500)
-- Semi-Large: 25px, Medium (500)
+### Typography
+- **Font Family**: `DM Sans` (Google Fonts)
+- **Sizes**:
+  - `XS`: 12px
+  - `SM`: 14px
+  - `Base`: 16px
+  - `LG`: 18px
+  - `XL`: 20px
 
-## Setup
+## 🧩 Reusable Blade Components
 
-1. **Install PHP dependencies:**
+The project uses a custom set of Atomic Design components for consistency:
+
+- **`<x-zyngga-button>`**: Versatile button supporting variants (`primary`, `secondary`, `tertiary`, `neutral`), sizes (`s`, `m`, `l`), and icons.
+- **`<x-zyngga-text>`**: Standardized typography component with pre-defined styles.
+- **`<x-zyngga-status>`**: Dynamic status badges for orders and payments.
+- **`<x-zyngga-service-icon>`**: Standardized iconography for laundry services (Regular, Quick, Express, Kilat, Satuan).
+- **`<x-zyngga-footer>`**: Modern rounded footer with brand information.
+
+## 🚀 Setup Instructions
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/username/Zyngga.git
+   cd myzyngga
+   ```
+
+2. **Install PHP dependencies:**
    ```bash
    composer install
    ```
 
-2. **Install Node dependencies:**
+3. **Install Node dependencies:**
    ```bash
    npm install
    ```
 
-3. **Configure environment:**
+4. **Configure environment:**
    ```bash
    cp .env.example .env
    php artisan key:generate
    ```
 
-4. **Build assets:**
+5. **Run Database Migrations (if applicable):**
    ```bash
-   npm run build
+   php artisan migrate
    ```
-   Or for development with hot reload:
+
+6. **Build assets:**
    ```bash
    npm run dev
    ```
 
-5. **Run the server:**
+7. **Run the server:**
    ```bash
    php artisan serve
    ```
 
-Visit http://localhost:8000 to view the homepage.
+Visit `http://localhost:8000` to view the application.
+
+## 📱 Features
+- Responsive Mobile-First Design
+- Dynamic Order Tracking Progres
+- Premium UI/UX with Glassmorphism and Smooth Animations
+- Localized Pickup & Delivery Scheduling
