@@ -160,6 +160,20 @@ class TransaksiController extends Controller
             (string) $request->validated('status'),
         );
 
+        $cabangSlug = $request->route('cabang');
+
+        if ($cabangSlug) {
+            if ($request->boolean('isJadwal')) {
+                return $updated
+                    ? to_route('transaksi.lurah.cabang.jadwal', ['cabang' => $cabangSlug])->with('success', 'Status Transaksi Berhasil Diperbarui')
+                    : to_route('transaksi.lurah.cabang.jadwal', ['cabang' => $cabangSlug])->with('error', 'Status Transaksi Gagal Diperbarui');
+            }
+
+            return $updated
+                ? to_route('transaksi.lurah.cabang', ['cabang' => $cabangSlug])->with('success', 'Status Transaksi Berhasil Diperbarui')
+                : to_route('transaksi.lurah.cabang', ['cabang' => $cabangSlug])->with('error', 'Status Transaksi Gagal Diperbarui');
+        }
+
         if ($request->boolean('isJadwal')) {
             return $updated
                 ? to_route('transaksi.jadwal')->with('success', 'Status Transaksi Berhasil Diperbarui')
