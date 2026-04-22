@@ -2,6 +2,5 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Spatie\Permission\PermissionServiceProvider::class,
-    Maatwebsite\Excel\ExcelServiceProvider::class,
+    App\Providers\VoltServiceProvider::class,
 ];
