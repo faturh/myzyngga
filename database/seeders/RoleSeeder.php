@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 
 class RoleSeeder extends Seeder
 {
@@ -12,11 +13,20 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create(['name' => 'lurah']);
-        Role::create(['name' => 'pic']);
-        Role::create(['name' => 'rw']);
-        Role::create(['name' => 'manajer_laundry']);
-        Role::create(['name' => 'pegawai_laundry']);
-        Role::create(['name' => 'gamis']);
+        // Create Admin
+        User::create([
+            'name' => 'Admin Zyngga',
+            'email' => 'admin@zyngga.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+        ]);
+
+        // Create Customer
+        User::create([
+            'name' => 'Customer Zyngga',
+            'email' => 'customer@zyngga.com',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
     }
 }

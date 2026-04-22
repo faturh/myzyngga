@@ -4,16 +4,12 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
-use Spatie\Sluggable\HasSlug;
-use Spatie\Sluggable\SlugOptions;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles, SoftDeletes, HasSlug;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,11 +17,10 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'username',
-        'slug',
+        'name',
         'email',
         'password',
-        'cabang_id',
+        'role',
     ];
 
     /**
@@ -51,45 +46,19 @@ class User extends Authenticatable
         ];
     }
 
-    public function getSlugOptions() : SlugOptions
+    /**
+     * Check if the user is an admin.
+     */
+    public function isAdmin(): bool
     {
-        return SlugOptions::create()
-            ->generateSlugsFrom('username')
-            ->saveSlugsTo('slug');
+        return $this->role === 'admin';
     }
 
-    public function getRouteKeyName()
+    /**
+     * Check if the user is a customer.
+     */
+    public function isCustomer(): bool
     {
-        return 'slug';
-    }
-
-    public function cabang()
-    {
-        return $this->belongsTo(Cabang::class);
-    }
-
-    public function lurah()
-    {
-        return $this->hasMany(Lurah::class);
-    }
-
-    public function manajer()
-    {
-        return $this->hasMany(ManajerLaundry::class);
-    }
-
-    public function pegawai()
-    {
-        return $this->hasMany(PegawaiLaundry::class);
-    }
-
-    public function rw()
-    {
-        return $this->hasMany(RW::class);
-    }
-
-    public function gamis()
-    {
-        return $this->hasMany(DetailGamis::class);
+        return $this->role === 'customer';
     }
 }

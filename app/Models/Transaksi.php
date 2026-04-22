@@ -18,11 +18,19 @@ class Transaksi extends Model
         'nota_layanan',
         'nota_pelanggan',
         'waktu',
+        'pickup_address',
+        'pickup_detail_address',
+        'pickup_date',
+        'pickup_time',
+        'parfum',
+        'catatan',
         'total_biaya_layanan',
         'total_biaya_prioritas',
         'total_biaya_layanan_tambahan',
         'total_bayar_akhir',
         'jenis_pembayaran',
+        'payment_status',
+        'paid_at',
         'bayar',
         'kembalian',
         'status',
@@ -32,6 +40,12 @@ class Transaksi extends Model
         'pegawai_id',
         'gamis_id',
         'cabang_id',
+    ];
+
+    protected $casts = [
+        'waktu' => 'datetime',
+        'pickup_date' => 'date',
+        'paid_at' => 'datetime',
     ];
 
     public function detailTransaksi()
@@ -67,5 +81,10 @@ class Transaksi extends Model
     public function cabang()
     {
         return $this->belongsTo(Cabang::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }
