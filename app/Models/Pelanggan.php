@@ -16,6 +16,7 @@ class Pelanggan extends Model
     public $incrementing = "true";
     public $timestamps = "true";
     protected $fillable = [
+        'user_id',
         'nama',
         'jenis_kelamin',
         'telepon',
@@ -32,5 +33,25 @@ class Pelanggan extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    public function preference()
+    {
+        return $this->hasOne(CustomerPreference::class);
+    }
+
+    public function transaksi()
+    {
+        return $this->hasMany(Transaksi::class);
     }
 }
