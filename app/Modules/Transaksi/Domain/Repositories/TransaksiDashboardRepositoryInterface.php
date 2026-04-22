@@ -3,12 +3,15 @@
 namespace App\Modules\Transaksi\Domain\Repositories;
 
 use App\Models\Cabang;
+use App\Models\LayananPrioritas;
 use App\Models\Transaksi;
 use Illuminate\Support\Collection;
 
 interface TransaksiDashboardRepositoryInterface
 {
     public function getCabangByIdWithTrashed(int $id): ?Cabang;
+
+    public function findCabangById(int $id): ?Cabang;
 
     public function getCabangBySlugWithTrashed(string $slug): ?Cabang;
 
@@ -58,6 +61,8 @@ interface TransaksiDashboardRepositoryInterface
 
     public function getLayananTambahanById(int $cabangId, int $layananTambahanId): ?object;
 
+    public function findLayananPrioritasByCabangAndId(int $cabangId, int $layananPrioritasId): ?LayananPrioritas;
+
     public function findTransaksiByCabang(int $cabangId, string $transaksiId): ?Transaksi;
 
     public function findTransaksiStatusByCabang(int $cabangId, string $transaksiId): ?Transaksi;
@@ -71,4 +76,10 @@ interface TransaksiDashboardRepositoryInterface
     public function getMonitoringGamisByUser(int $cabangId, int $userId, ?string $tanggal = null): Collection;
 
     public function findTransaksiDetailForGamis(int $userId, string $transaksiId): ?Transaksi;
+
+    public function storeTransaksiAggregate(array $transaksiPayload, array $detailGroups, array $layananTambahanIds): Transaksi;
+
+    public function updateTransaksiAggregate(int $cabangId, string $transaksiId, array $transaksiPayload, array $detailGroups, array $layananTambahanIds): int;
+
+    public function deleteTransaksiAggregate(int $cabangId, string $transaksiId): int;
 }
