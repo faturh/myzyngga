@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Modules\Admin\Presentation\Http\Controllers;
+
+use App\Modules\Admin\Application\Services\AdminService;
+use App\Modules\Admin\Presentation\Http\Requests\StoreTransaksiManualRequest;
+use App\Shared\Http\ApiResponse;
+
+class StoreTransaksiManualController
+{
+    public function __construct(
+        private readonly AdminService $service,
+    ) {
+    }
+
+    public function __invoke(StoreTransaksiManualRequest $request)
+    {
+        $transaksi = $this->service->createManualTransaksi($request->validated());
+
+        return ApiResponse::success([
+            'transaksi' => [
+                'id' => $transaksi->id,
+                'nota_layanan' => $transaksi->nota_layanan,
+                'status' => $transaksi->status,
+                'payment_status' => $transaksi->payment_status,
+            ],
+        ], 201);
+    }
+}

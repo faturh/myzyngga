@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Modules\Order\Presentation\Web\Controllers\OrderPageController;
+use App\Modules\Admin\Presentation\Web\Controllers\WebDashboardController;
+use App\Modules\Admin\Presentation\Web\Controllers\WebAdminDashboardController;
 
 // Guest Landing Page
 Route::get('/', function () {
@@ -9,42 +12,33 @@ Route::get('/', function () {
 
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    
-    // Default Redirect based on role
-    Route::get('/dashboard', function () {
-        if (auth()->user()->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', WebDashboardController::class)->name('dashboard');
 
     // Profile (Shared)
     Route::view('profile', 'profile')->name('profile');
 
     // Admin Specific Routes
     Route::middleware(['admin'])->group(function () {
-        Route::get('/admin/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('admin.dashboard');
+        Route::get('/admin/dashboard', WebAdminDashboardController::class)->name('admin.dashboard');
     });
 
     // Order Routes
-    Route::get('/order/{service}/pickup', [App\Http\Controllers\OrderController::class, 'pickupLocation'])
+    Route::get('/order/{service}/pickup', [OrderPageController::class, 'pickupLocation'])
         ->name('order.pickup');
 
-    Route::post('/order/pickup', [App\Http\Controllers\OrderController::class, 'storePickupLocation'])
+    Route::post('/order/pickup', [OrderPageController::class, 'storePickupLocation'])
         ->name('order.pickup.store');
 
-    Route::get('/order/booking', [App\Http\Controllers\OrderController::class, 'booking'])
+    Route::get('/order/booking', [OrderPageController::class, 'booking'])
         ->name('order.booking');
 
-    Route::post('/order/confirm', [App\Http\Controllers\OrderController::class, 'confirm'])
+    Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
         ->name('order.confirm');
 
-    Route::get('/order/detail', [App\Http\Controllers\OrderController::class, 'detail'])
+    Route::get('/order/detail', [OrderPageController::class, 'detail'])
         ->name('order.detail');
 
-    Route::get('/order/history', [App\Http\Controllers\OrderController::class, 'history'])
+    Route::get('/order/history', [OrderPageController::class, 'history'])
         ->name('order.history');
 });
 
