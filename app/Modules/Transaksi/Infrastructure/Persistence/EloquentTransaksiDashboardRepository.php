@@ -3,6 +3,7 @@
 namespace App\Modules\Transaksi\Infrastructure\Persistence;
 
 use App\Models\Cabang;
+use App\Models\DetailLayananTransaksi;
 use App\Models\DetailTransaksi;
 use App\Models\HargaJenisLayanan;
 use App\Models\JenisLayanan;
@@ -22,6 +23,11 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
     public function getCabangByIdWithTrashed(int $id): ?Cabang
     {
         return Cabang::withTrashed()->where('id', $id)->first();
+    }
+
+    public function findCabangById(int $id): ?Cabang
+    {
+        return Cabang::query()->where('id', $id)->first();
     }
 
     public function getCabangBySlugWithTrashed(string $slug): ?Cabang
@@ -243,6 +249,14 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->first();
     }
 
+    public function findLayananPrioritasByCabangAndId(int $cabangId, int $layananPrioritasId): ?LayananPrioritas
+    {
+        return LayananPrioritas::query()
+            ->where('cabang_id', $cabangId)
+            ->where('id', $layananPrioritasId)
+            ->first();
+    }
+
     public function findTransaksiByCabang(int $cabangId, string $transaksiId): ?Transaksi
     {
         return Transaksi::where('cabang_id', $cabangId)->where('id', $transaksiId)->first();
@@ -340,5 +354,108 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->where('transaksi.id', $transaksiId)
             ->select('transaksi.*')
             ->first();
+    }
+
+    public function storeTransaksiAggregate(array $transaksiPayload, array $detailGroups, array $layananTambahanIds): Transaksi
+    {
+        return DB::transaction(function () use ($transaksiPayload, $detailGroups, $layananTambahanIds) {
+            $transaksi = Transaksi::query()->create($transaksiPayload);
+
+            foreach ($detailGroups as $detailGroup) {
+                $detailTransaksi = DetailTransaksi::query()->create([
+                    'total_pakaian' => $detailGroup['total_pakaian'],
+                    'harga_layanan_akhir' => $detailGroup['harga_layanan_akhir'],
+                    'total_biaya_layanan' => $detailGroup['total_biaya_layanan'],
+                    'total_biaya_prioritas' => $detailGroup['total_biaya_prioritas'],
+                    'transaksi_id' => $transaksi->id,
+                ]);
+
+                foreach ($detailGroup['harga_jenis_layanan_ids'] as $hargaJenisLayananId) {
+                    DetailLayananTransaksi::query()->create([
+                        'harga_jenis_layanan_id' => $hargaJenisLayananId,
+                        'detail_transaksi_id' => $detailTransaksi->id,
+                    ]);
+                }
+            }
+
+            foreach ($layananTambahanIds as $layananTambahanId) {
+                LayananTambahanTransaksi::query()->create([
+                    'layanan_tambahan_id' => $layananTambahanId,
+                    'transaksi_id' => $transaksi->id,
+                ]);
+            }
+
+            return $transaksi->refresh();
+        });
+    }
+
+    public function updateTransaksiAggregate(int $cabangId, string $transaksiId, array $transaksiPayload, array $detailGroups, array $layananTambahanIds): int
+    {
+        return DB::transaction(function () use ($cabangId, $transaksiId, $transaksiPayload, $detailGroups, $layananTambahanIds) {
+            $updated = Transaksi::query()
+                ->where('cabang_id', $cabangId)
+                ->where('id', $transaksiId)
+                ->update($transaksiPayload);
+
+            $detailIds = DetailTransaksi::query()
+                ->where('transaksi_id', $transaksiId)
+                ->pluck('id')
+                ->all();
+
+            if ($detailIds !== []) {
+                DetailLayananTransaksi::query()->whereIn('detail_transaksi_id', $detailIds)->delete();
+            }
+
+            DetailTransaksi::query()->where('transaksi_id', $transaksiId)->delete();
+            LayananTambahanTransaksi::query()->where('transaksi_id', $transaksiId)->delete();
+
+            foreach ($detailGroups as $detailGroup) {
+                $detailTransaksi = DetailTransaksi::query()->create([
+                    'total_pakaian' => $detailGroup['total_pakaian'],
+                    'harga_layanan_akhir' => $detailGroup['harga_layanan_akhir'],
+                    'total_biaya_layanan' => $detailGroup['total_biaya_layanan'],
+                    'total_biaya_prioritas' => $detailGroup['total_biaya_prioritas'],
+                    'transaksi_id' => $transaksiId,
+                ]);
+
+                foreach ($detailGroup['harga_jenis_layanan_ids'] as $hargaJenisLayananId) {
+                    DetailLayananTransaksi::query()->create([
+                        'harga_jenis_layanan_id' => $hargaJenisLayananId,
+                        'detail_transaksi_id' => $detailTransaksi->id,
+                    ]);
+                }
+            }
+
+            foreach ($layananTambahanIds as $layananTambahanId) {
+                LayananTambahanTransaksi::query()->create([
+                    'layanan_tambahan_id' => $layananTambahanId,
+                    'transaksi_id' => $transaksiId,
+                ]);
+            }
+
+            return $updated;
+        });
+    }
+
+    public function deleteTransaksiAggregate(int $cabangId, string $transaksiId): int
+    {
+        return DB::transaction(function () use ($cabangId, $transaksiId) {
+            $detailIds = DetailTransaksi::query()
+                ->where('transaksi_id', $transaksiId)
+                ->pluck('id')
+                ->all();
+
+            if ($detailIds !== []) {
+                DetailLayananTransaksi::query()->whereIn('detail_transaksi_id', $detailIds)->delete();
+            }
+
+            DetailTransaksi::query()->where('transaksi_id', $transaksiId)->delete();
+            LayananTambahanTransaksi::query()->where('transaksi_id', $transaksiId)->delete();
+
+            return Transaksi::query()
+                ->where('cabang_id', $cabangId)
+                ->where('id', $transaksiId)
+                ->delete();
+        });
     }
 }

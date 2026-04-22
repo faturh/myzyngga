@@ -4,21 +4,13 @@ namespace App\Modules\Transaksi\Application\Services;
 
 use App\Enums\JenisPembayaran;
 use App\Enums\StatusTransaksi;
-use App\Models\DetailLayananTransaksi;
-use App\Models\DetailTransaksi;
-use App\Models\HargaJenisLayanan;
-use App\Models\JenisLayanan;
-use App\Models\JenisPakaian;
-use App\Models\LayananPrioritas;
-use App\Models\LayananTambahanTransaksi;
 use App\Models\Transaksi;
 use App\Models\User;
+use App\Modules\Transaksi\Application\DTO\UpsertTransaksiData;
 use App\Modules\Transaksi\Domain\Repositories\TransaksiDashboardRepositoryInterface;
 use App\Shared\Exceptions\DomainException;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class TransaksiDashboardService
 {
@@ -199,70 +191,23 @@ class TransaksiDashboardService
         ];
     }
 
-    public function storeTransaksiCabang(User $user, Request $request): Transaksi
+    public function storeTransaksiCabang(User $user, UpsertTransaksiData $data): Transaksi
     {
-        $cabang = Cabang::where('id', $user->cabang_id)->first();
+        $cabang = $this->repository->findCabangById((int) $user->cabang_id);
+        if (! $cabang) {
+            throw new DomainException('Cabang user tidak ditemukan.', 404);
+        }
 
-        $validatorTransaksi = Validator::make($request->all(), [
-            'total_biaya_layanan' => 'required|decimal:0,2',
-            'total_biaya_prioritas' => 'required|decimal:0,2',
-            'total_biaya_layanan_tambahan' => 'required|decimal:0,2',
-            'total_bayar_akhir' => 'required|decimal:0,2',
-            'jenis_pembayaran' => 'required|string|max:255',
-            'bayar' => 'required|decimal:0,2',
-            'kembalian' => 'required|decimal:0,2',
-            'layanan_prioritas_id' => 'required|integer',
-            'pelanggan_id' => 'required|integer',
-            'gamis_id' => 'nullable|integer',
-        ]);
+        $layananPrioritas = $this->repository->findLayananPrioritasByCabangAndId((int) $cabang->id, $data->layananPrioritasId);
+        if (! $layananPrioritas) {
+            throw new DomainException('Layanan prioritas tidak ditemukan di cabang ini.', 404);
+        }
 
-        $validatedTransaksi = $validatorTransaksi->validated();
-        $validatedTransaksi['cabang_id'] = $cabang->id;
-        $validatedTransaksi['pegawai_id'] = $user->id;
-        $validatedTransaksi['waktu'] = Carbon::now();
-        $nota = Carbon::now()->format('His').'-'.Carbon::now()->format('dmY').'-'.$cabang->id.$request->pelanggan_id;
-        $validatedTransaksi['nota_layanan'] = 'layanan-'.$nota;
-        $validatedTransaksi['nota_pelanggan'] = 'pelanggan-'.$nota;
-        $validatedTransaksi['status'] = StatusTransaksi::BARU->value;
-
-        return DB::transaction(function () use ($request, $validatedTransaksi, $cabang) {
-            $transaksi = Transaksi::create($validatedTransaksi);
-            $layananPrioritas = LayananPrioritas::where('cabang_id', $cabang->id)->where('id', $request->layanan_prioritas_id)->first();
-
-            foreach ($request->jenis_pakaian_id as $item => $value) {
-                $detailTransaksi = DetailTransaksi::create([
-                    'total_pakaian' => $request->total_pakaian[$item],
-                    'harga_layanan_akhir' => $request->harga_jenis_layanan_id[$item],
-                    'total_biaya_layanan' => $request->total_pakaian[$item] * $request->harga_jenis_layanan_id[$item],
-                    'total_biaya_prioritas' => $request->total_pakaian[$item] * $layananPrioritas->harga,
-                    'transaksi_id' => $transaksi->id,
-                ]);
-
-                foreach ($request->jenis_layanan_id[$item] as $layanan) {
-                    $jenisPakaian = JenisPakaian::where('cabang_id', $cabang->id)->where('id', $value)->first();
-                    $jenisLayanan = JenisLayanan::where('cabang_id', $cabang->id)->where('id', $layanan)->first();
-                    $hargaLayanan = HargaJenisLayanan::where('cabang_id', $cabang->id)
-                        ->where('jenis_pakaian_id', $jenisPakaian->id)
-                        ->where('jenis_layanan_id', $jenisLayanan->id)
-                        ->first();
-                    DetailLayananTransaksi::create([
-                        'harga_jenis_layanan_id' => $hargaLayanan->id,
-                        'detail_transaksi_id' => $detailTransaksi->id,
-                    ]);
-                }
-            }
-
-            if ($request->layanan_tambahan_id) {
-                foreach ($request->layanan_tambahan_id as $item) {
-                    LayananTambahanTransaksi::create([
-                        'layanan_tambahan_id' => $item,
-                        'transaksi_id' => $transaksi->id,
-                    ]);
-                }
-            }
-
-            return $transaksi;
-        });
+        return $this->repository->storeTransaksiAggregate(
+            $data->toStorePayload((int) $cabang->id, (int) $user->id),
+            $this->buildDetailGroups((int) $cabang->id, $data, (float) $layananPrioritas->harga),
+            $data->layananTambahanIds,
+        );
     }
 
     public function editTransaksiCabangData(User $user, Request $request): array
@@ -296,72 +241,30 @@ class TransaksiDashboardService
         ];
     }
 
-    public function updateTransaksiCabang(User $user, Request $request): int
+    public function updateTransaksiCabang(User $user, string $transaksiId, UpsertTransaksiData $data): int
     {
-        $cabang = Cabang::where('id', $user->cabang_id)->first();
-        $getTransaksi = Transaksi::where('cabang_id', $cabang->id)->where('id', $request->transaksi)->first();
+        $cabang = $this->repository->findCabangById((int) $user->cabang_id);
+        if (! $cabang) {
+            throw new DomainException('Cabang user tidak ditemukan.', 404);
+        }
 
-        $validatorTransaksi = Validator::make($request->all(), [
-            'total_biaya_layanan' => 'required|decimal:0,2',
-            'total_biaya_prioritas' => 'required|decimal:0,2',
-            'total_biaya_layanan_tambahan' => 'required|decimal:0,2',
-            'total_bayar_akhir' => 'required|decimal:0,2',
-            'jenis_pembayaran' => 'required|string|max:255',
-            'bayar' => 'required|decimal:0,2',
-            'kembalian' => 'required|decimal:0,2',
-            'status' => 'required|string',
-            'layanan_prioritas_id' => 'required|integer',
-            'pelanggan_id' => 'required|integer',
-            'gamis_id' => 'nullable|integer',
-        ]);
+        $transaksi = $this->repository->findTransaksiByCabang((int) $cabang->id, $transaksiId);
+        if (! $transaksi) {
+            throw new DomainException('Transaksi tidak ditemukan.', 404);
+        }
 
-        $validatedTransaksi = $validatorTransaksi->validated();
+        $layananPrioritas = $this->repository->findLayananPrioritasByCabangAndId((int) $cabang->id, $data->layananPrioritasId);
+        if (! $layananPrioritas) {
+            throw new DomainException('Layanan prioritas tidak ditemukan di cabang ini.', 404);
+        }
 
-        return DB::transaction(function () use ($request, $cabang, $getTransaksi, $validatedTransaksi) {
-            $transaksi = Transaksi::where('cabang_id', $cabang->id)->where('id', $getTransaksi->id)->update($validatedTransaksi);
-            $layananPrioritas = LayananPrioritas::where('cabang_id', $cabang->id)->where('id', $request->layanan_prioritas_id)->first();
-
-            $detailTransaksi = DetailTransaksi::where('transaksi_id', $getTransaksi->id)->get();
-            foreach ($detailTransaksi as $item) {
-                DetailLayananTransaksi::where('detail_transaksi_id', $item->id)->delete();
-            }
-            DetailTransaksi::where('transaksi_id', $getTransaksi->id)->delete();
-
-            foreach ($request->jenis_pakaian_id as $item => $value) {
-                $detail = DetailTransaksi::create([
-                    'total_pakaian' => $request->total_pakaian[$item],
-                    'harga_layanan_akhir' => $request->harga_jenis_layanan_id[$item],
-                    'total_biaya_layanan' => $request->total_pakaian[$item] * $request->harga_jenis_layanan_id[$item],
-                    'total_biaya_prioritas' => $request->total_pakaian[$item] * $layananPrioritas->harga,
-                    'transaksi_id' => $getTransaksi->id,
-                ]);
-
-                foreach ($request->jenis_layanan_id[$item] as $layanan) {
-                    $jenisPakaian = JenisPakaian::where('cabang_id', $cabang->id)->where('id', $value)->first();
-                    $jenisLayanan = JenisLayanan::where('cabang_id', $cabang->id)->where('id', $layanan)->first();
-                    $hargaLayanan = HargaJenisLayanan::where('cabang_id', $cabang->id)
-                        ->where('jenis_pakaian_id', $jenisPakaian->id)
-                        ->where('jenis_layanan_id', $jenisLayanan->id)
-                        ->first();
-                    DetailLayananTransaksi::create([
-                        'harga_jenis_layanan_id' => $hargaLayanan->id,
-                        'detail_transaksi_id' => $detail->id,
-                    ]);
-                }
-            }
-
-            LayananTambahanTransaksi::where('transaksi_id', $getTransaksi->id)->delete();
-            if ($request->layanan_tambahan_id) {
-                foreach ($request->layanan_tambahan_id as $item) {
-                    LayananTambahanTransaksi::create([
-                        'layanan_tambahan_id' => $item,
-                        'transaksi_id' => $getTransaksi->id,
-                    ]);
-                }
-            }
-
-            return $transaksi;
-        });
+        return $this->repository->updateTransaksiAggregate(
+            (int) $cabang->id,
+            $transaksiId,
+            $data->toUpdatePayload(),
+            $this->buildDetailGroups((int) $cabang->id, $data, (float) $layananPrioritas->harga),
+            $data->layananTambahanIds,
+        );
     }
 
     public function editStatusTransaksiCabang(User $user, Request $request): ?Transaksi
@@ -369,32 +272,14 @@ class TransaksiDashboardService
         return $this->repository->findTransaksiStatusByCabang((int) $user->cabang_id, (string) $request->transaksi_id);
     }
 
-    public function updateStatusTransaksiCabang(User $user, Request $request)
+    public function updateStatusTransaksiCabang(User $user, string $transaksiId, string $status): int
     {
-        $perbarui = $this->repository->updateTransaksiStatusByCabang((int) $user->cabang_id, (string) $request->id, (string) $request->status);
-
-        if ($request->isJadwal) {
-            return $perbarui
-                ? to_route('transaksi.jadwal')->with('success', 'Status Transaksi Berhasil Diperbarui')
-                : to_route('transaksi.jadwal')->with('error', 'Status Transaksi Gagal Diperbarui');
-        }
-
-        return $perbarui
-            ? to_route('transaksi')->with('success', 'Status Transaksi Berhasil Diperbarui')
-            : to_route('transaksi')->with('error', 'Status Transaksi Gagal Diperbarui');
+        return $this->repository->updateTransaksiStatusByCabang((int) $user->cabang_id, $transaksiId, $status);
     }
 
-    public function deleteTransaksiCabang(User $user, Request $request): void
+    public function deleteTransaksiCabang(User $user, string $transaksiId): void
     {
-        $cabang = Cabang::where('id', $user->cabang_id)->first();
-        $getTransaksi = Transaksi::where('cabang_id', $cabang->id)->where('id', $request->transaksi_id)->first();
-
-        $detailTransaksi = DetailTransaksi::where('transaksi_id', $getTransaksi->id)->get();
-        foreach ($detailTransaksi as $item) {
-            DetailLayananTransaksi::where('detail_transaksi_id', $item->id)->delete();
-        }
-        DetailTransaksi::where('transaksi_id', $getTransaksi->id)->delete();
-        $hapus = Transaksi::where('id', $request->transaksi_id)->delete();
+        $hapus = $this->repository->deleteTransaksiAggregate((int) $user->cabang_id, $transaksiId);
 
         if (! $hapus) {
             throw new DomainException('Transaksi Gagal Dihapus', 400);
@@ -432,10 +317,12 @@ class TransaksiDashboardService
 
     public function hitungTotalBayar(User $user, Request $request): array
     {
-        $cabang = Cabang::where('id', $user->cabang_id)->first();
         $hargaLayananId = $request->hargaLayanan;
         $totalPakaian = $request->totalPakaian;
-        $layananPrioritas = LayananPrioritas::where('cabang_id', $cabang->id)->where('id', $request->layananPrioritas)->first();
+        $layananPrioritas = $this->repository->findLayananPrioritasByCabangAndId((int) $user->cabang_id, (int) $request->layananPrioritas);
+        if (! $layananPrioritas) {
+            throw new DomainException('Layanan prioritas tidak ditemukan di cabang ini.', 404);
+        }
 
         $biayaLayanan = 0;
         $biayaPrioritas = 0;
@@ -496,5 +383,33 @@ class TransaksiDashboardService
         $layananTambahanTransaksi = $this->repository->getLayananTambahanTransaksiItems((string) $transaksi->id);
 
         return compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'layananTambahanTransaksi', 'isHarian');
+    }
+
+    private function buildDetailGroups(int $cabangId, UpsertTransaksiData $data, float $hargaPrioritas): array
+    {
+        $detailGroups = [];
+
+        foreach ($data->lineItems as $lineItem) {
+            $hargaJenisLayananIds = [];
+
+            foreach ($lineItem->jenisLayananIds as $jenisLayananId) {
+                $hargaLayanan = $this->repository->getHargaLayananByJenis($cabangId, $lineItem->jenisPakaianId, $jenisLayananId);
+                if (! $hargaLayanan) {
+                    throw new DomainException('Harga layanan untuk kombinasi pakaian dan layanan tidak ditemukan.', 404);
+                }
+
+                $hargaJenisLayananIds[] = (int) $hargaLayanan->id;
+            }
+
+            $detailGroups[] = [
+                'total_pakaian' => $lineItem->totalPakaian,
+                'harga_layanan_akhir' => $lineItem->hargaLayananAkhir,
+                'total_biaya_layanan' => $lineItem->totalPakaian * $lineItem->hargaLayananAkhir,
+                'total_biaya_prioritas' => $lineItem->totalPakaian * $hargaPrioritas,
+                'harga_jenis_layanan_ids' => $hargaJenisLayananIds,
+            ];
+        }
+
+        return $detailGroups;
     }
 }
