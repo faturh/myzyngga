@@ -24,7 +24,7 @@ class CabangController extends Controller
         $cabang = Cabang::orderBy('created_at', 'asc')->get();
         $cabangTrash = Cabang::onlyTrashed()->orderBy('created_at', 'asc')->get();
 
-        return view('dashboard.cabang.index', compact('title', 'cabang', 'cabangTrash'));
+        return view('operator.dashboard.cabang.index', compact('title', 'cabang', 'cabangTrash'));
     }
 
     public function store(StoreCabangRequest $request)
@@ -95,3 +95,4 @@ class CabangController extends Controller
         }
     }
 }
+

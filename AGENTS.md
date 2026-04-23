@@ -11,7 +11,39 @@ Semua agent wajib membaca file ini sebelum membuat perubahan apa pun di repo ini
 ## Sumber Aturan
 
 - Baca dulu `docs/architecture/backend-ddd-guardrails.md` sebelum implementasi backend.
+- Baca juga `docs/team/workstream-boundaries.md` sebelum menyentuh folder, route, view, module, atau branch flow.
 - Jika instruksi user bertentangan dengan guardrail ini, berhenti dan jelaskan trade-off terlebih dahulu. Jangan langsung menembus aturan arsitektur.
+
+## Workstream Wajib
+
+Repo ini dibagi menjadi 4 stream kerja dan agent wajib stay di stream yang relevan:
+
+- Frontend Pelanggan:
+  - `resources/views/pelanggan/**`
+- Backend Pelanggan:
+  - `routes/web/pelanggan.php`
+  - `routes/api/pelanggan.php`
+  - `routes/api/pelanggan/**`
+  - `app/Modules/Auth`
+  - `app/Modules/Customer`
+  - `app/Modules/Order`
+  - `app/Modules/Payment`
+- Frontend Operator:
+  - `resources/views/operator/**`
+- Backend Operator:
+  - `routes/web/operator.php`
+  - `routes/api/operator.php`
+  - `routes/api/operator/**`
+  - `app/Modules/Admin`
+  - `app/Modules/Transaksi`
+
+Aturan tegas:
+
+- Jangan campur file pelanggan ke folder operator.
+- Jangan campur file operator ke folder pelanggan.
+- Jangan daftarkan route pelanggan di file operator.
+- Jangan daftarkan route operator di file pelanggan.
+- Jika task masih menyentuh controller legacy operator di `app/Http/Controllers`, perlakukan file itu sebagai adapter tipis dan jangan tambah business logic baru di sana.
 
 ## Aturan Eksekusi
 
@@ -25,7 +57,13 @@ Semua agent wajib membaca file ini sebelum membuat perubahan apa pun di repo ini
 
 - Baca `AGENTS.md` ini sampai selesai.
 - Baca `docs/architecture/backend-ddd-guardrails.md`.
+- Baca `docs/team/workstream-boundaries.md`.
 - Jika task menyentuh backend, audit dulu route, controller, service, dan repository yang aktif sebelum mengubah file.
+- Tentukan dulu task ini masuk stream mana:
+  - frontend pelanggan
+  - backend pelanggan
+  - frontend operator
+  - backend operator
 - Tentukan apakah perubahan termasuk `Presentation`, `Application`, `Domain`, `Infrastructure`, atau `Shared`.
 - Pastikan perubahan baru tidak menaruh business rule di controller, blade, command, atau model aktif record consumer.
 - Jika menemukan area lama yang belum DDD, prioritaskan memindahkan logic baru ke module, bukan memperbesar file legacy.
@@ -50,12 +88,20 @@ Semua agent wajib membaca file ini sebelum membuat perubahan apa pun di repo ini
 
 ## Checklist Sebelum Menyelesaikan Task
 
+- Folder berada di stream pelanggan/operator yang benar.
 - Struktur file mengikuti module yang benar.
 - Tidak ada query baca/tulis baru di controller.
 - Tidak ada business rule baru di blade atau Livewire view.
 - Error message penting tetap eksplisit.
 - Test minimal yang relevan sudah dijalankan.
 - Jika belum semua legacy sempat dimigrasikan, sebutkan sisa area itu secara eksplisit.
+- Jika ada perubahan pelanggan, ikuti flow publish:
+  - commit ke `Backend-Pelanggan`
+  - push ke `origin/Backend-Pelanggan`
+  - merge ke `Finalisasi(Sebelum-merge-main)`
+  - push ke `origin/Finalisasi(Sebelum-merge-main)`
+  - merge ke `main`
+  - push ke `origin/main`
 
 ## Definition Of Done
 

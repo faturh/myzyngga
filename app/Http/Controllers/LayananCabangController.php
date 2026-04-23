@@ -24,7 +24,7 @@ class LayananCabangController extends Controller
     {
         $title = "Daftar Layanan Cabang";
         $cabang = Cabang::withTrashed()->get();
-        return view('dashboard.layanan-cabang.index', compact('title', 'cabang'));
+        return view('operator.dashboard.layanan-cabang.index', compact('title', 'cabang'));
     }
 
     public function indexCabang(Request $request)
@@ -47,7 +47,7 @@ class LayananCabangController extends Controller
         $jenisSatuanLayanan = JenisSatuanLayanan::cases();
         $layananPrioritas = LayananPrioritas::where('cabang_id', $cabang->id)->orderBy('created_at', 'asc')->get();
 
-        return view('dashboard.layanan-cabang.cabang', compact('title', 'cabang', 'jenisLayanan', 'layananTambahan', 'jenisPakaian', 'hargaJenisLayanan', 'layananPrioritas', 'jenisSatuanLayanan'));
+        return view('operator.dashboard.layanan-cabang.cabang', compact('title', 'cabang', 'jenisLayanan', 'layananTambahan', 'jenisPakaian', 'hargaJenisLayanan', 'layananPrioritas', 'jenisSatuanLayanan'));
     }
 
     public function indexCabangTrash(Request $request)
@@ -69,6 +69,7 @@ class LayananCabangController extends Controller
             ->onlyTrashed()->orderBy('jenis_pakaian_id', 'asc')->orderBy('jenis_layanan_id', 'asc')->get();
         $layananPrioritasTrash = LayananPrioritas::where('cabang_id', $cabang->id)->onlyTrashed()->orderBy('created_at', 'asc')->get();
 
-        return view('dashboard.layanan-cabang.trash', compact('title', 'cabang', 'jenisLayananTrash', 'layananTambahanTrash', 'jenisPakaianTrash', 'hargaJenisLayananTrash', 'layananPrioritasTrash'));
+        return view('operator.dashboard.layanan-cabang.trash', compact('title', 'cabang', 'jenisLayananTrash', 'layananTambahanTrash', 'jenisPakaianTrash', 'hargaJenisLayananTrash', 'layananPrioritasTrash'));
     }
 }
+

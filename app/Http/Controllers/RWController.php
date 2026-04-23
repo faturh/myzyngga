@@ -45,7 +45,7 @@ class RWController extends Controller
         $picTrash = User::join('pic as p', 'p.user_id', '=', 'users.id')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
         $rwTrash = User::join('rw as p', 'p.user_id', '=', 'users.id')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
 
-        return view('dashboard.user.pic-rw.index', compact('title', 'pic', 'rw', 'picTrash', 'rwTrash'));
+        return view('operator.dashboard.user.pic-rw.index', compact('title', 'pic', 'rw', 'picTrash', 'rwTrash'));
     }
 
     public function view(Request $request)
@@ -67,7 +67,7 @@ class RWController extends Controller
             $profile = RW::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.user.pic-rw.lihat', compact('title', 'user', 'profile', 'trash'));
+        return view('operator.dashboard.user.pic-rw.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function create()
@@ -75,7 +75,7 @@ class RWController extends Controller
         $title = "Tambah User";
         $userRole = auth()->user()->roles[0]->name;
         $role = Role::where('name', 'pic')->orWhere('name', 'rw')->get();
-        return view('dashboard.user.pic-rw.tambah', compact('title', 'role'));
+        return view('operator.dashboard.user.pic-rw.tambah', compact('title', 'role'));
     }
 
     public function store(Request $request)
@@ -170,7 +170,7 @@ class RWController extends Controller
             $profile = RW::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.user.pic-rw.ubah', compact('title', 'cabang', 'role', 'user', 'profile'));
+        return view('operator.dashboard.user.pic-rw.ubah', compact('title', 'cabang', 'role', 'user', 'profile'));
     }
 
     public function update(Request $request)
@@ -270,7 +270,7 @@ class RWController extends Controller
         } else if ($user->slug == auth()->user()->slug ) {
             return to_route('profile', $user->slug);
         }
-        return view('dashboard.user.pic-rw.ubahPassword', compact('title', 'user'));
+        return view('operator.dashboard.user.pic-rw.ubahPassword', compact('title', 'user'));
     }
 
     public function updatePassword(Request $request)
@@ -326,7 +326,7 @@ class RWController extends Controller
             $profile = RW::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.user.pic-rw.lihat', compact('title', 'user', 'profile', 'trash'));
+        return view('operator.dashboard.user.pic-rw.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function restore(Request $request)
@@ -376,3 +376,4 @@ class RWController extends Controller
         return Excel::download(new User2Export, 'Data PIC-RW '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
+

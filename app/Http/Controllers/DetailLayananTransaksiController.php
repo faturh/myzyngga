@@ -25,14 +25,14 @@ class DetailLayananTransaksiController extends Controller
             $transaksi = Transaksi::where('id', $request->transaksi)->first();
             $detailTransaksi = DetailTransaksi::where('id', $request->detailTransaksi)->orderBy('id', 'asc')->first();
             $detailLayananTransaksi = DetailLayananTransaksi::where('detail_transaksi_id', $request->detailTransaksi)->orderBy('id', 'asc')->get();
-            return view('dashboard.transaksi.lurah.layanan', compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'detailLayananTransaksi'));
+            return view('operator.dashboard.transaksi.lurah.layanan', compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'detailLayananTransaksi'));
 
         } else {
             $cabang = Cabang::withTrashed()->where('id', auth()->user()->cabang_id)->first();
             $transaksi = Transaksi::where('id', $request->transaksi)->first();
             $detailTransaksi = DetailTransaksi::where('id', $request->detailTransaksi)->orderBy('id', 'asc')->first();
             $detailLayananTransaksi = DetailLayananTransaksi::where('detail_transaksi_id', $request->detailTransaksi)->orderBy('id', 'asc')->get();
-            return view('dashboard.transaksi.layanan', compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'detailLayananTransaksi'));
+            return view('operator.dashboard.transaksi.layanan', compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'detailLayananTransaksi'));
         }
     }
 
@@ -44,6 +44,7 @@ class DetailLayananTransaksiController extends Controller
         $transaksi = Transaksi::where('id', $request->transaksi)->first();
         $detailTransaksi = DetailTransaksi::where('id', $request->detailTransaksi)->orderBy('id', 'asc')->first();
         $detailLayananTransaksi = DetailLayananTransaksi::where('detail_transaksi_id', $request->detailTransaksi)->orderBy('id', 'asc')->get();
-        return view('dashboard.transaksi.gamis.layanan', compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'detailLayananTransaksi'));
+        return view('operator.dashboard.transaksi.gamis.layanan', compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'detailLayananTransaksi'));
     }
 }
+

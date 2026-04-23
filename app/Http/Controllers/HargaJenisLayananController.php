@@ -46,7 +46,7 @@ class HargaJenisLayananController extends Controller
             ->select('harga_jenis_layanan.*', 'jl.nama as nama_layanan', 'jp.nama as nama_pakaian')
             ->onlyTrashed()->orderBy('harga_jenis_layanan.jenis_pakaian_id', 'asc')->orderBy('harga_jenis_layanan.jenis_layanan_id', 'asc')->get();
 
-        return view('dashboard.harga-jenis-layanan.index', compact('title', 'hargaJenisLayanan', 'hargaJenisLayananTrash', 'jenisLayanan', 'jenisPakaian', 'cabang', 'jenisSatuanLayanan'));
+        return view('operator.dashboard.harga-jenis-layanan.index', compact('title', 'hargaJenisLayanan', 'hargaJenisLayananTrash', 'jenisLayanan', 'jenisPakaian', 'cabang', 'jenisSatuanLayanan'));
     }
 
     public function store(HargaJenisLayananRequest $request)
@@ -216,3 +216,4 @@ class HargaJenisLayananController extends Controller
         return Excel::download(new HargaJenisLayananExport($request->cabang), 'Data Harga Jenis Layanan '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
+
