@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('customer_preferences')) {
+            return;
+        }
+
         Schema::create('customer_preferences', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pelanggan_id')->unique()->constrained('pelanggan', 'id')->cascadeOnDelete();
@@ -20,6 +24,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasTable('customer_preferences')) {
+            return;
+        }
+
         Schema::dropIfExists('customer_preferences');
     }
 };
