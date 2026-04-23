@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('pelanggan')) {
+            return;
+        }
+
         Schema::table('pelanggan', function (Blueprint $table) {
             if (! Schema::hasColumn('pelanggan', 'user_id')) {
                 $table->foreignId('user_id')->nullable()->after('id')->constrained('users', 'id')->nullOnDelete();
@@ -18,6 +22,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasTable('pelanggan')) {
+            return;
+        }
+
         Schema::table('pelanggan', function (Blueprint $table) {
             if (Schema::hasColumn('pelanggan', 'user_id')) {
                 $table->dropUnique(['user_id']);
