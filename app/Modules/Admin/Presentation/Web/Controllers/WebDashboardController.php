@@ -10,6 +10,6 @@ class WebDashboardController
             return redirect()->route('admin.dashboard');
         }
 
-        return view('dashboard');
+        return view('pelanggan.dashboard.index');
     }
 }

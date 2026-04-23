@@ -29,7 +29,7 @@ class LayananPrioritasController extends Controller
         $layananPrioritas = LayananPrioritas::where('cabang_id', $userCabang)->orderBy('created_at', 'asc')->get();
         $layananPrioritasTrash = LayananPrioritas::where('cabang_id', $userCabang)->onlyTrashed()->orderBy('created_at', 'asc')->get();
 
-        return view('dashboard.layanan-prioritas.index', compact('title', 'layananPrioritas', 'layananPrioritasTrash', 'cabang'));
+        return view('operator.dashboard.layanan-prioritas.index', compact('title', 'layananPrioritas', 'layananPrioritasTrash', 'cabang'));
     }
 
     public function store(LayananPrioritasRequest $request)
@@ -149,3 +149,4 @@ class LayananPrioritasController extends Controller
         return Excel::download(new LayananPrioritasExport($request->cabang), 'Data Layanan Prioritas '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
+

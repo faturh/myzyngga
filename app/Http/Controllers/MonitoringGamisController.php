@@ -275,7 +275,7 @@ class MonitoringGamisController extends Controller
                 }
         }
 
-        return view('dashboard.monitoring.index', compact('title', 'monitoring', 'umr', 'gamis', 'cabang', 'tahun', 'hasilPendapatanGamis', 'hasilJumlahGamis', 'hasilStatusGamis'));
+        return view('operator.dashboard.monitoring.index', compact('title', 'monitoring', 'umr', 'gamis', 'cabang', 'tahun', 'hasilPendapatanGamis', 'hasilJumlahGamis', 'hasilStatusGamis'));
     }
 
     public function perbaruiDataMonitoring()
@@ -722,7 +722,7 @@ class MonitoringGamisController extends Controller
             ->orderBy('monitoring_gamis.detail_gamis_id', 'asc')
             ->get();
 
-        return view('dashboard.monitoring.rw', compact('title', 'monitoring', 'rw'));
+        return view('operator.dashboard.monitoring.rw', compact('title', 'monitoring', 'rw'));
     }
 
     public function pdfMonitoringGamisRw(Request $request)
@@ -765,7 +765,7 @@ class MonitoringGamisController extends Controller
             ->get();
 
         $view = view()->share($title, $monitoring);
-        $pdf = Pdf::loadView('dashboard.laporan.pdf.monitoring-gamis-rw', [
+        $pdf = Pdf::loadView('operator.dashboard.laporan.pdf.monitoring-gamis-rw', [
             'judul' => $title,
             'judulTabel' => $title,
             'monitoring' => $monitoring,
@@ -827,6 +827,7 @@ class MonitoringGamisController extends Controller
             ];
         }
 
-        return view('dashboard.monitoring.riwayat', compact('title', 'umr', 'monitoring', 'riwayatMonitoringGamis', 'gamis'));
+        return view('operator.dashboard.monitoring.riwayat', compact('title', 'umr', 'monitoring', 'riwayatMonitoringGamis', 'gamis'));
     }
 }
+

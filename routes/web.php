@@ -1,97 +1,11 @@
 <?php
 
-use App\Http\Controllers\DetailLayananTransaksiController;
-use App\Http\Controllers\TransaksiController;
-use App\Modules\Admin\Presentation\Web\Controllers\WebAdminDashboardController;
-use App\Modules\Admin\Presentation\Web\Controllers\WebDashboardController;
-use App\Modules\Order\Presentation\Web\Controllers\OrderPageController;
 use Illuminate\Support\Facades\Route;
 
-// Guest Landing Page
 Route::get('/', function () {
     return view('welcome');
 })->name('landing');
 
-// Authenticated Routes
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', WebDashboardController::class)->name('dashboard');
-
-    // Profile (Shared)
-    Route::view('profile', 'profile')->name('profile');
-
-    // Admin Specific Routes
-    Route::middleware(['admin'])->group(function () {
-        Route::get('/admin/dashboard', WebAdminDashboardController::class)->name('admin.dashboard');
-    });
-
-    // Order Routes
-    Route::get('/order/{service}/pickup', [OrderPageController::class, 'pickupLocation'])
-        ->name('order.pickup');
-
-    Route::post('/order/pickup', [OrderPageController::class, 'storePickupLocation'])
-        ->name('order.pickup.store');
-
-    Route::get('/order/booking', [OrderPageController::class, 'booking'])
-        ->name('order.booking');
-
-    Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
-        ->name('order.confirm');
-
-    Route::get('/order/detail', [OrderPageController::class, 'detail'])
-        ->name('order.detail');
-
-    Route::get('/order/history', [OrderPageController::class, 'history'])
-        ->name('order.history');
-
-    // Legacy transaksi pages still used by the dashboard UI
-    Route::prefix('transaksi')->group(function () {
-        Route::get('/', [TransaksiController::class, 'index'])->name('transaksi');
-        Route::get('/jadwal', [TransaksiController::class, 'indexJadwal'])->name('transaksi.jadwal');
-        Route::get('/lihat/{transaksi}', [TransaksiController::class, 'viewDetailTransaksi'])->name('transaksi.view');
-        Route::get('/tambah', [TransaksiController::class, 'createTransaksiCabang'])->name('transaksi.create');
-        Route::post('/simpan', [TransaksiController::class, 'storeTransaksiCabang'])->name('transaksi.store');
-        Route::get('/ubah/{transaksi}', [TransaksiController::class, 'editTransaksiCabang'])->name('transaksi.edit');
-        Route::post('/ubah/{transaksi}', [TransaksiController::class, 'updateTransaksiCabang'])->name('transaksi.update');
-        Route::post('/hapus', [TransaksiController::class, 'deleteTransaksiCabang'])->name('transaksi.delete');
-        Route::get('/status', [TransaksiController::class, 'editStatusTransaksiCabang'])->name('transaksi.edit.status');
-        Route::post('/status', [TransaksiController::class, 'updateStatusTransaksiCabang'])->name('transaksi.update.status');
-        Route::get('/jenis-pakaian', [TransaksiController::class, 'ubahJenisPakaian'])->name('transaksi.create.ubahJenisPakaian');
-        Route::get('/jenis-layanan', [TransaksiController::class, 'ubahJenisLayanan'])->name('transaksi.create.ubahJenisLayanan');
-        Route::get('/layanan-tambahan', [TransaksiController::class, 'ubahLayananTambahan'])->name('transaksi.create.ubahLayananTambahan');
-        Route::get('/hitung-total-bayar', [TransaksiController::class, 'hitungTotalBayar'])->name('transaksi.create.hitungTotalBayar');
-        Route::get('/struk/{transaksi}', [TransaksiController::class, 'cetakStrukTransaksi'])->name('transaksi.cetak-struk');
-        Route::post('/konfirmasi-upah', [TransaksiController::class, 'konfirmasiUpah'])->name('transaksi.konfirmasiUpah');
-
-        Route::get('/lurah', [TransaksiController::class, 'index'])->name('transaksi.lurah');
-        Route::get('/lurah/{cabang}', [TransaksiController::class, 'indexCabang'])->name('transaksi.lurah.cabang');
-        Route::get('/lurah/{cabang}/jadwal', [TransaksiController::class, 'indexCabangJadwal'])->name('transaksi.lurah.cabang.jadwal');
-        Route::get('/lurah/{cabang}/lihat/{transaksi}', [TransaksiController::class, 'viewDetailTransaksi'])->name('transaksi.lurah.view');
-        Route::get('/lurah/{cabang}/tambah', [TransaksiController::class, 'createTransaksiCabang'])->name('transaksi.lurah.cabang.create');
-        Route::post('/lurah/{cabang}/simpan', [TransaksiController::class, 'storeTransaksiCabang'])->name('transaksi.lurah.cabang.store');
-        Route::get('/lurah/{cabang}/ubah/{transaksi}', [TransaksiController::class, 'editTransaksiCabang'])->name('transaksi.lurah.cabang.edit');
-        Route::post('/lurah/{cabang}/ubah/{transaksi}', [TransaksiController::class, 'updateTransaksiCabang'])->name('transaksi.lurah.cabang.update');
-        Route::post('/lurah/{cabang}/hapus', [TransaksiController::class, 'deleteTransaksiCabang'])->name('transaksi.lurah.cabang.delete');
-        Route::get('/lurah/{cabang}/status', [TransaksiController::class, 'editStatusTransaksiCabang'])->name('transaksi.lurah.cabang.edit.status');
-        Route::post('/lurah/{cabang}/status', [TransaksiController::class, 'updateStatusTransaksiCabang'])->name('transaksi.lurah.cabang.update.status');
-        Route::get('/lurah/{cabang}/jenis-pakaian', [TransaksiController::class, 'ubahJenisPakaian'])->name('transaksi.lurah.cabang.create.ubahJenisPakaian');
-        Route::get('/lurah/{cabang}/jenis-layanan', [TransaksiController::class, 'ubahJenisLayanan'])->name('transaksi.lurah.cabang.create.ubahJenisLayanan');
-        Route::get('/lurah/{cabang}/layanan-tambahan', [TransaksiController::class, 'ubahLayananTambahan'])->name('transaksi.lurah.cabang.create.ubahLayananTambahan');
-        Route::get('/lurah/{cabang}/hitung-total-bayar', [TransaksiController::class, 'hitungTotalBayar'])->name('transaksi.lurah.cabang.create.hitungTotalBayar');
-    });
-
-    Route::get('/transaksi/{transaksi}/layanan/{detailTransaksi}', [DetailLayananTransaksiController::class, 'viewDetailLayanan'])
-        ->name('transaksi.view.layanan');
-
-    Route::get('/transaksi/lurah/{cabang}/lihat/{transaksi}/layanan/{detailTransaksi}', [DetailLayananTransaksiController::class, 'viewDetailLayanan'])
-        ->name('transaksi.lurah.view.layanan');
-
-    Route::prefix('transaksi-gamis')->group(function () {
-        Route::get('/', [TransaksiController::class, 'transaksiGamisHarian'])->name('transaksi-gamis');
-        Route::get('/semua', [TransaksiController::class, 'transaksiGamisSemua'])->name('transaksi-gamis.semua');
-        Route::get('/lihat/{transaksi}', [TransaksiController::class, 'viewDetailTransaksiGamis'])->name('transaksi-gamis.view');
-        Route::get('/lihat/{transaksi}/layanan/{detailTransaksi}', [DetailLayananTransaksiController::class, 'viewDetailLayananGamis'])
-            ->name('transaksi-gamis.view.layanan');
-    });
-});
-
+require __DIR__.'/web/pelanggan.php';
+require __DIR__.'/web/operator.php';
 require __DIR__.'/auth.php';

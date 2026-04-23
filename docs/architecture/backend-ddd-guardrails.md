@@ -48,6 +48,27 @@ Setiap perubahan backend baru harus masuk ke struktur ini. Namespace lama di lua
 - Pakai resource/response envelope yang konsisten untuk API.
 - Gunakan nama module berdasarkan capability bisnis, bukan berdasarkan jenis file.
 
+## 3AA. Team Boundary Rules
+
+Sebelum coding, agent wajib petakan task ke salah satu boundary ini:
+
+- Backend Pelanggan:
+  - `routes/web/pelanggan.php`
+  - `routes/api/pelanggan.php`
+  - `routes/api/pelanggan/**`
+  - `app/Modules/Auth`
+  - `app/Modules/Customer`
+  - `app/Modules/Order`
+  - `app/Modules/Payment`
+- Backend Operator:
+  - `routes/web/operator.php`
+  - `routes/api/operator.php`
+  - `routes/api/operator/**`
+  - `app/Modules/Admin`
+  - `app/Modules/Transaksi`
+
+Jika task menyentuh operator legacy yang masih hidup di `app/Http/Controllers`, arahkan output view, request, dan service baru ke boundary operator yang jelas. Jangan menambah hutang teknis baru di area campuran.
+
 ## 3A. Mandatory Execution Flow For Agents
 
 Sebelum agent mengubah backend, urutannya wajib seperti ini:
@@ -134,6 +155,7 @@ Aturan tegas:
 
 ## 6. Checklist Sebelum Commit
 
+- Boundary pelanggan/operator sudah benar.
 - Perubahan sudah ditempatkan di module yang benar.
 - Controller/request tetap tipis.
 - Application service tidak query model langsung.
