@@ -224,7 +224,7 @@ class TransaksiController extends Controller
     {
         $payload = $this->transaksiDashboardService->cetakStrukTransaksiData($request);
 
-        return view('dashboard.transaksi.struk.index', $payload);
+        return view('operator.dashboard.transaksi.struk.index', $payload);
     }
 
     public function konfirmasiUpah(Request $request)
@@ -237,7 +237,7 @@ class TransaksiController extends Controller
         try {
             $payload = $this->transaksiDashboardService->transaksiGamisData(auth()->user(), true);
 
-            return view('dashboard.transaksi.gamis.index', $payload);
+            return view('operator.dashboard.transaksi.gamis.index', $payload);
         } catch (DomainException $exception) {
             abort($exception->status(), $exception->getMessage());
         }
@@ -248,7 +248,7 @@ class TransaksiController extends Controller
         try {
             $payload = $this->transaksiDashboardService->transaksiGamisData(auth()->user(), false);
 
-            return view('dashboard.transaksi.gamis.index', $payload);
+            return view('operator.dashboard.transaksi.gamis.index', $payload);
         } catch (DomainException $exception) {
             abort($exception->status(), $exception->getMessage());
         }
@@ -258,6 +258,7 @@ class TransaksiController extends Controller
     {
         $payload = $this->transaksiDashboardService->viewDetailTransaksiGamisData(auth()->user(), $request);
 
-        return view('dashboard.transaksi.gamis.lihat', $payload);
+        return view('operator.dashboard.transaksi.gamis.lihat', $payload);
     }
 }
+

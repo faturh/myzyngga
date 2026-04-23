@@ -19,7 +19,7 @@ class PelangganController extends Controller
     {
         $title = "Pelanggan";
         $pelanggan = Pelanggan::orderBy('created_at', 'asc')->get();
-        return view('dashboard.pelanggan.index', compact('title', 'pelanggan'));
+        return view('operator.dashboard.pelanggan.index', compact('title', 'pelanggan'));
     }
 
     public function store(PelangganRequest $request)
@@ -82,3 +82,4 @@ class PelangganController extends Controller
         return Excel::download(new PelangganExport, 'Data Pelanggan '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
+

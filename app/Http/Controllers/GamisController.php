@@ -17,7 +17,7 @@ class GamisController extends Controller
     {
         $title = "Gamis";
         $gamis = Gamis::orderBy('created_at', 'asc')->get();
-        return view('dashboard.gamis.index', compact('title', 'gamis'));
+        return view('operator.dashboard.gamis.index', compact('title', 'gamis'));
     }
 
     public function store(GamisRequest $request)
@@ -69,7 +69,7 @@ class GamisController extends Controller
         $title = "Anggota Keluarga";
         $gamis = Gamis::where('kartu_keluarga', $request->detail_gamis)->orderBy('created_at', 'asc')->first();
         $detailGamis = DetailGamis::where('gamis_id', $gamis->id)->orderBy('created_at', 'asc')->get();
-        return view('dashboard.gamis.anggota', compact('title', 'gamis', 'detailGamis'));
+        return view('operator.dashboard.gamis.anggota', compact('title', 'gamis', 'detailGamis'));
     }
 
     public function detailAnggota(Request $request)
@@ -90,3 +90,4 @@ class GamisController extends Controller
         }
     }
 }
+

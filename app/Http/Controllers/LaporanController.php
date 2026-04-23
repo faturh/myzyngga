@@ -73,7 +73,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        return view('dashboard.laporan.pendapatan-laundry', compact('title', 'transaksi', 'cabang', 'nama_cabang', 'transaksiTidakGamis'));
+        return view('operator.dashboard.laporan.pendapatan-laundry', compact('title', 'transaksi', 'cabang', 'nama_cabang', 'transaksiTidakGamis'));
     }
 
     public function pdfLaporanPendapatanLaundry(Request $request)
@@ -137,7 +137,7 @@ class LaporanController extends Controller
         }
 
         $view = view()->share($title, $transaksi);
-        $pdf = Pdf::loadView('dashboard.laporan.pdf.pendapatan-laundry', [
+        $pdf = Pdf::loadView('operator.dashboard.laporan.pdf.pendapatan-laundry', [
             'judul' => $title,
             'judulTabel' => $title,
             'transaksi' => $transaksi,
@@ -202,7 +202,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        return view('dashboard.laporan.pendapatan-gamis', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
+        return view('operator.dashboard.laporan.pendapatan-gamis', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
     }
 
     public function pdfLaporanPendapatanGamis(Request $request)
@@ -255,7 +255,7 @@ class LaporanController extends Controller
         }
 
         $view = view()->share($title, $transaksi);
-        $pdf = Pdf::loadView('dashboard.laporan.pdf.pendapatan-gamis', [
+        $pdf = Pdf::loadView('operator.dashboard.laporan.pdf.pendapatan-gamis', [
             'judul' => $title,
             'judulTabel' => $title,
             'transaksi' => $transaksi,
@@ -320,7 +320,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        return view('dashboard.laporan.pelanggan', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
+        return view('operator.dashboard.laporan.pelanggan', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
     }
 
     public function pdfLaporanPelanggan(Request $request)
@@ -375,7 +375,7 @@ class LaporanController extends Controller
         }
 
         $view = view()->share($title, $transaksi);
-        $pdf = Pdf::loadView('dashboard.laporan.pdf.pelanggan', [
+        $pdf = Pdf::loadView('operator.dashboard.laporan.pdf.pelanggan', [
             'judul' => $title,
             'judulTabel' => $title,
             'transaksi' => $transaksi,
@@ -440,7 +440,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        return view('dashboard.laporan.gamis', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
+        return view('operator.dashboard.laporan.gamis', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
     }
 
     public function pdfLaporanGamis(Request $request)
@@ -495,7 +495,7 @@ class LaporanController extends Controller
         }
 
         $view = view()->share($title, $transaksi);
-        $pdf = Pdf::loadView('dashboard.laporan.pdf.gamis', [
+        $pdf = Pdf::loadView('operator.dashboard.laporan.pdf.gamis', [
             'judul' => $title,
             'judulTabel' => $title,
             'transaksi' => $transaksi,
@@ -509,3 +509,4 @@ class LaporanController extends Controller
         return $pdf->stream();
     }
 }
+
