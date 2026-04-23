@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -26,9 +27,35 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        $username = trim($validated['name']);
+        $baseSlug = Str::slug($username) ?: Str::before($validated['email'], '@');
+        $slug = $baseSlug;
+        $suffix = 1;
 
-        event(new Registered($user = User::create($validated)));
+        while (User::query()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.$suffix;
+            $suffix++;
+        }
+
+        $payload = [
+            'username' => $username,
+            'slug' => $slug,
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ];
+
+        $user = User::create($payload);
+
+        if (class_exists(\Spatie\Permission\Models\Role::class)) {
+            $customerRole = \Spatie\Permission\Models\Role::query()->firstOrCreate([
+                'name' => 'customer',
+                'guard_name' => 'web',
+            ]);
+
+            $user->assignRole($customerRole);
+        }
+
+        event(new Registered($user));
 
         Auth::login($user);
 

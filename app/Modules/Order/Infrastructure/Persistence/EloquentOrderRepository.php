@@ -33,8 +33,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function firstAssignablePegawaiId(): ?int
     {
-        $adminId = User::query()
-            ->where('role', 'admin')
+        $adminId = User::role('admin')
             ->orderBy('id')
             ->value('id');
 
@@ -43,7 +42,9 @@ class EloquentOrderRepository implements OrderRepositoryInterface
         }
 
         $staffId = User::query()
-            ->where('role', '!=', 'customer')
+            ->whereHas('roles', function ($query) {
+                $query->where('name', '!=', 'customer');
+            })
             ->orderBy('id')
             ->value('id');
 
