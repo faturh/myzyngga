@@ -6,6 +6,6 @@ class WebAdminDashboardController
 {
     public function __invoke()
     {
-        return view('admin.dashboard');
+        return view('operator.admin.dashboard');
     }
 }

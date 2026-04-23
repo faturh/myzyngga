@@ -28,7 +28,7 @@ class LayananTambahanController extends Controller
         $layananTambahan = LayananTambahan::where('cabang_id', $userCabang)->orderBy('created_at', 'asc')->get();
         $layananTambahanTrash = LayananTambahan::where('cabang_id', $userCabang)->onlyTrashed()->orderBy('created_at', 'asc')->get();
 
-        return view('dashboard.layanan-tambahan.index', compact('title', 'layananTambahan', 'layananTambahanTrash', 'cabang'));
+        return view('operator.dashboard.layanan-tambahan.index', compact('title', 'layananTambahan', 'layananTambahanTrash', 'cabang'));
     }
 
     public function store(LayananTambahanRequest $request)
@@ -129,3 +129,4 @@ class LayananTambahanController extends Controller
         return Excel::download(new LayananTambahanExport($request->cabang), 'Data Layanan Tambahan '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
+

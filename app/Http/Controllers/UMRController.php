@@ -21,7 +21,7 @@ class UMRController extends Controller
         $title = "UMR";
         $umr = UMR::orderBy('created_at', 'asc')->get();
 
-        return view('dashboard.umr.index', compact('title', 'umr'));
+        return view('operator.dashboard.umr.index', compact('title', 'umr'));
     }
 
     public function store(StoreUMRRequest $request)
@@ -84,3 +84,4 @@ class UMRController extends Controller
         }
     }
 }
+

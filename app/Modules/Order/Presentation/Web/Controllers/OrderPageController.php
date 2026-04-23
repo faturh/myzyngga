@@ -16,7 +16,7 @@ class OrderPageController
 
     public function pickupLocation(Request $request, string $service)
     {
-        return view('order.pickup-location', $this->webService->pickupLocationData($service));
+        return view('pelanggan.order.pickup-location', $this->webService->pickupLocationData($service));
     }
 
     public function storePickupLocation(Request $request)
@@ -31,7 +31,7 @@ class OrderPageController
             return redirect()->route('dashboard');
         }
 
-        return view('order.booking', $payload);
+        return view('pelanggan.order.booking', $payload);
     }
 
     public function confirm(Request $request)
@@ -41,11 +41,12 @@ class OrderPageController
 
     public function detail(Request $request)
     {
-        return view('order.detail');
+        return view('pelanggan.order.detail');
     }
 
     public function history(Request $request)
     {
-        return view('order.history');
+        return view('pelanggan.order.history');
     }
 }
+

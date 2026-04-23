@@ -42,7 +42,7 @@ class ProfileController extends Controller
             $profile = DetailGamis::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.profile.index', compact('title', 'user', 'profile'));
+        return view('operator.dashboard.profile.index', compact('title', 'user', 'profile'));
     }
 
     public function edit(Request $request)
@@ -67,7 +67,7 @@ class ProfileController extends Controller
             $profile = DetailGamis::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.profile.ubah', compact('title', 'user', 'profile'));
+        return view('operator.dashboard.profile.ubah', compact('title', 'user', 'profile'));
     }
 
     public function update(Request $request)
@@ -169,7 +169,7 @@ class ProfileController extends Controller
         if ($user == null || $user->slug != auth()->user()->slug) {
             abort(404, 'USER TIDAK DITEMUKAN.');
         }
-        return view('dashboard.profile.ubahPassword', compact('title', 'user'));
+        return view('operator.dashboard.profile.ubahPassword', compact('title', 'user'));
     }
 
     public function updatePassword(Request $request)
@@ -196,3 +196,4 @@ class ProfileController extends Controller
         }
     }
 }
+

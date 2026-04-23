@@ -77,7 +77,7 @@ class DashboardController extends Controller
                 ];
             }
 
-            return view('dashboard.index', compact('title', 'userRole', 'umr', 'cabang', 'jmlCabang', 'jmlUser', 'jmlGamis', 'transaksiBaru', 'transaksiProses', 'transaksiSiapDiambil', 'transaksiPengantaran', 'transaksiPenjemputan', 'transaksiSelesai', 'transaksiBatal', 'jadwalLayanan', 'pendapatanHari', 'pendapatanBulanan', 'pendapatanTahunan'));
+            return view('operator.dashboard.index', compact('title', 'userRole', 'umr', 'cabang', 'jmlCabang', 'jmlUser', 'jmlGamis', 'transaksiBaru', 'transaksiProses', 'transaksiSiapDiambil', 'transaksiPengantaran', 'transaksiPenjemputan', 'transaksiSelesai', 'transaksiBatal', 'jadwalLayanan', 'pendapatanHari', 'pendapatanBulanan', 'pendapatanTahunan'));
 
         } else if ($userRole == 'manajer_laundry' || $userRole == 'pegawai_laundry') {
             $cabang = Cabang::where('id', auth()->user()->cabang_id)->first();
@@ -142,7 +142,7 @@ class DashboardController extends Controller
                 ];
             }
 
-            return view('dashboard.index', compact('title', 'userRole', 'umr', 'cabang', 'jmlCabang', 'jmlUser', 'jmlGamis', 'transaksiBaru', 'transaksiProses', 'transaksiSiapDiambil', 'transaksiPengantaran', 'transaksiPenjemputan', 'transaksiSelesai', 'transaksiBatal', 'jadwalLayanan', 'pendapatanHari', 'pendapatanBulanan', 'pendapatanTahunan'));
+            return view('operator.dashboard.index', compact('title', 'userRole', 'umr', 'cabang', 'jmlCabang', 'jmlUser', 'jmlGamis', 'transaksiBaru', 'transaksiProses', 'transaksiSiapDiambil', 'transaksiPengantaran', 'transaksiPenjemputan', 'transaksiSelesai', 'transaksiBatal', 'jadwalLayanan', 'pendapatanHari', 'pendapatanBulanan', 'pendapatanTahunan'));
 
         } else if ($userRole == 'gamis') {
             $cabang = Cabang::where('id', auth()->user()->cabang_id)->first();
@@ -207,12 +207,13 @@ class DashboardController extends Controller
                 ];
             }
 
-            return view('dashboard.index', compact('title', 'userRole', 'umr', 'cabang', 'jmlGamis', 'transaksiBaru', 'transaksiProses', 'transaksiSiapDiambil', 'transaksiPengantaran', 'transaksiPenjemputan', 'transaksiSelesai', 'transaksiBatal', 'pendapatanBulanan', 'pendapatanTahunan'));
+            return view('operator.dashboard.index', compact('title', 'userRole', 'umr', 'cabang', 'jmlGamis', 'transaksiBaru', 'transaksiProses', 'transaksiSiapDiambil', 'transaksiPengantaran', 'transaksiPenjemputan', 'transaksiSelesai', 'transaksiBatal', 'pendapatanBulanan', 'pendapatanTahunan'));
 
         } else if ($userRole == 'rw') {
             $rw = User::join('rw', 'rw.user_id', '=', 'users.id')->where('users.id', '=', auth()->user()->id)->first();
             $jmlGamis = DetailGamis::join('gamis as g', 'g.id', '=', 'detail_gamis.gamis_id')->where('g.rw', $rw->nomor_rw)->count();
-            return view('dashboard.index', compact('title', 'userRole', 'umr', 'rw', 'jmlGamis'));
+            return view('operator.dashboard.index', compact('title', 'userRole', 'umr', 'rw', 'jmlGamis'));
         }
     }
 }
+

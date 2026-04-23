@@ -58,7 +58,7 @@ class UserController extends Controller
             $pegawaiTrash = User::join('pegawai_laundry as p', 'p.user_id', '=', 'users.id')->join('cabang as c', 'c.id', '=', 'users.cabang_id')->select('users.*', 'p.*', 'c.nama as nama_cabang')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
             $gamisTrash = User::join('detail_gamis as p', 'p.user_id', '=', 'users.id')->join('cabang as c', 'c.id', '=', 'users.cabang_id')->select('users.*', 'p.*', 'c.nama as nama_cabang')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
 
-            return view('dashboard.user.index', compact('title', 'cabang', 'role', 'manajer', 'pegawai', 'gamis', 'manajerTrash', 'pegawaiTrash', 'gamisTrash'));
+            return view('operator.dashboard.user.index', compact('title', 'cabang', 'role', 'manajer', 'pegawai', 'gamis', 'manajerTrash', 'pegawaiTrash', 'gamisTrash'));
 
         } elseif ($userRole == 'manajer_laundry') {
             $cabangId = auth()->user()->cabang_id;
@@ -81,7 +81,7 @@ class UserController extends Controller
             $pegawaiTrash = User::join('pegawai_laundry as p', 'p.user_id', '=', 'users.id')->join('cabang as c', 'c.id', '=', 'users.cabang_id')->where('users.cabang_id', $cabangId)->select('users.*', 'p.*', 'c.nama as nama_cabang')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
             $gamisTrash = User::join('detail_gamis as p', 'p.user_id', '=', 'users.id')->join('cabang as c', 'c.id', '=', 'users.cabang_id')->where('users.cabang_id', $cabangId)->select('users.*', 'p.*', 'c.nama as nama_cabang')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
 
-            return view('dashboard.user.index', compact('title', 'cabang', 'role', 'pegawai', 'gamis', 'pegawaiTrash', 'gamisTrash'));
+            return view('operator.dashboard.user.index', compact('title', 'cabang', 'role', 'pegawai', 'gamis', 'pegawaiTrash', 'gamisTrash'));
         }
     }
 
@@ -110,7 +110,7 @@ class UserController extends Controller
             $profile = DetailGamis::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
+        return view('operator.dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function create()
@@ -137,7 +137,7 @@ class UserController extends Controller
             $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'manajer_laundry')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
             $cabang = Cabang::where('deleted_at', null)->where('id', auth()->user()->cabang_id)->get();
         }
-        return view('dashboard.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
+        return view('operator.dashboard.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
     }
 
     public function store(Request $request)
@@ -260,7 +260,7 @@ class UserController extends Controller
             $profile = DetailGamis::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.user.ubah', compact('title', 'cabang', 'role', 'kkGamis', 'user', 'profile'));
+        return view('operator.dashboard.user.ubah', compact('title', 'cabang', 'role', 'kkGamis', 'user', 'profile'));
     }
 
     public function update(Request $request)
@@ -392,7 +392,7 @@ class UserController extends Controller
         } else if ($user->slug == auth()->user()->slug ) {
             return to_route('profile', $user->slug);
         }
-        return view('dashboard.user.ubahPassword', compact('title', 'user'));
+        return view('operator.dashboard.user.ubahPassword', compact('title', 'user'));
     }
 
     public function updatePassword(Request $request)
@@ -461,7 +461,7 @@ class UserController extends Controller
             $profile = DetailGamis::where('user_id', $user->id)->first();
         }
 
-        return view('dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
+        return view('operator.dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function restore(Request $request)
@@ -538,7 +538,7 @@ class UserController extends Controller
         $pegawaiTrash = User::join('pegawai_laundry as p', 'p.user_id', '=', 'users.id')->join('cabang as c', 'c.id', '=', 'users.cabang_id')->where('users.cabang_id', $cabang->id)->select('users.*', 'p.*', 'c.nama as nama_cabang')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
         $gamisTrash = User::join('detail_gamis as p', 'p.user_id', '=', 'users.id')->join('cabang as c', 'c.id', '=', 'users.cabang_id')->where('users.cabang_id', $cabang->id)->select('users.*', 'p.*', 'c.nama as nama_cabang')->onlyTrashed()->orderBy('p.created_at', 'asc')->get();
 
-        return view('dashboard.user.cabang.index-cabang', compact('title', 'cabang', 'role', 'manajer', 'pegawai', 'gamis', 'manajerTrash', 'pegawaiTrash', 'gamisTrash'));
+        return view('operator.dashboard.user.cabang.index-cabang', compact('title', 'cabang', 'role', 'manajer', 'pegawai', 'gamis', 'manajerTrash', 'pegawaiTrash', 'gamisTrash'));
     }
 
     public function createUserCabang(Request $request)
@@ -558,7 +558,7 @@ class UserController extends Controller
         $title = "Tambah User";
         $isCabang = [true, $cabang[0]->nama, $cabang[0]->id];
 
-        return view('dashboard.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
+        return view('operator.dashboard.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
     }
 
     public function import(Request $request)
@@ -577,3 +577,4 @@ class UserController extends Controller
         return Excel::download(new UserExport($request->cabang), 'Data Pegawai '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
+

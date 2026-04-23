@@ -10,7 +10,7 @@ class AuthController extends Controller
 {
     public function login()
     {
-        return view('dashboard.auth.login');
+        return view('operator.dashboard.auth.login');
     }
 
     public function loginAttempt(LoginRequest $request)
@@ -28,3 +28,4 @@ class AuthController extends Controller
         return to_route('login');
     }
 }
+

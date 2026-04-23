@@ -30,7 +30,7 @@ class JenisPakaianController extends Controller
         $jenisPakaian = JenisPakaian::where('cabang_id', $userCabang)->orderBy('created_at', 'asc')->get();
         $jenisPakaianTrash = JenisPakaian::where('cabang_id', $userCabang)->onlyTrashed()->orderBy('created_at', 'asc')->get();
 
-        return view('dashboard.jenis-pakaian.index', compact('title', 'jenisPakaian', 'jenisPakaianTrash', 'cabang'));
+        return view('operator.dashboard.jenis-pakaian.index', compact('title', 'jenisPakaian', 'jenisPakaianTrash', 'cabang'));
     }
 
     public function store(JenisPakaianRequest $request)
@@ -164,3 +164,4 @@ class JenisPakaianController extends Controller
         return Excel::download(new JenisPakaianExport($request->cabang), 'Data Jenis Pakaian '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
+
