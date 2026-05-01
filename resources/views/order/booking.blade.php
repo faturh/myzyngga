@@ -19,21 +19,6 @@
             padding-bottom: 100px; /* space for sticky footer */
         }
 
-        /* ── section card ── */
-        .section-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 8px 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0F0F0F;
-            margin: 0 0 20px 0;
-        }
 
         /* ── service option ── */
         .service-option {
@@ -149,7 +134,7 @@
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
-            max-width: 425px;
+            max-width: 768px; /* Tablet width */
             background: white;
             border-top: 1px solid #F4F4F4;
             border-radius: 16px 16px 0 0;
@@ -159,6 +144,15 @@
             justify-content: space-between;
             z-index: 50;
             box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        /* Reset sticky footer position (no sidebar) */
+        @media (min-width: 768px) {
+            #sticky-footer {
+                left: 50%;
+                transform: translateX(-50%);
+            }
         }
 
         /* ── map thumbnail ── */
@@ -171,27 +165,23 @@
         #map-thumb iframe { width:100%; height:100%; border:0; }
     </style>
 </head>
-<body>
-<div class="w-full max-w-[425px] mx-auto min-h-screen flex flex-col">
+<body class="bg-[#e8eff9]">
 
-    {{-- ── HEADER ─────────────────────────────────────────────── --}}
-    <div class="sticky top-0 z-40 bg-white rounded-b-2xl shadow-[0_4px_12px_rgba(0,0,0,0.04)] px-5 py-5 mb-[6px]">
-        <div class="flex items-center gap-3 h-10">
-            <x-zyngga-button 
-                type="a"
-                href="{{ route('order.pickup', ['service' => $service]) }}"
-                variant="neutral"
-                size="l"
-                icon="arrow-left"
-                iconPosition="only"
-                aria-label="Kembali"
-            />
-            <x-zyngga-text variant="lg" weight="semibold" as="h1">Pemesanan Pickup</x-zyngga-text>
-        </div>
-    </div>
+    <div class="min-h-screen flex flex-col">
+        {{-- ── HEADER ─────────────────────────────────────────────── --}}
+        <x-dashboard-header 
+            title="Pemesanan Pickup" 
+            :backUrl="route('order.pickup', ['service' => $service])" 
+            :maxWidth="'max-w-3xl'"
+            :showPoints="false"
+            :showMenu="true"
+        />
 
-    {{-- ── SCROLLABLE CONTENT ──────────────────────────────────── --}}
-    <form method="POST" action="{{ route('order.confirm') }}" id="page-content">
+        {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
+        <main class="flex-1 flex flex-col relative">
+            <div class="w-full max-w-3xl mx-auto px-5">
+                {{-- ── SCROLLABLE CONTENT ──────────────────────────────────── --}}
+                <form method="POST" action="{{ route('order.confirm') }}" id="page-content" class="flex-1 flex flex-col">
         @csrf
         <input type="hidden" name="service"        value="{{ $service }}">
         <input type="hidden" name="address"        value="{{ $address }}">
@@ -204,9 +194,8 @@
         <input type="hidden" name="parfum"        id="parfum"        value="Lavender">
 
         {{-- ── LOKASI PICKUP ─────────────────────────────────── --}}
-        <div class="section-card">
-            <div class="flex items-center justify-between mb-4">
-                <x-zyngga-text variant="base" weight="semibold" as="p">Lokasi Pickup</x-zyngga-text>
+        <x-zyngga-card title="Lokasi Pickup">
+            <x-slot:headerAction>
                 <x-zyngga-button 
                     type="a"
                     href="{{ route('order.pickup', ['service' => $service]) }}"
@@ -214,7 +203,7 @@
                     size="s"
                     label="Ubah"
                 />
-            </div>
+            </x-slot:headerAction>
 
             {{-- Map thumbnail — clickable → edit pickup location --}}
             <div id="map-thumb" class="mb-4 relative">
@@ -236,7 +225,7 @@
 
             {{-- Address --}}
             <div class="mb-3">
-                <x-zyngga-text variant="sm" weight="semibold" class="mb-1">
+                <x-zyngga-text variant="sm" weight="medium" class="mb-1">
                     {{ $address }}
                 </x-zyngga-text>
                 @if($detailAddress)
@@ -257,16 +246,15 @@
                     <i data-feather="edit-2" class="w-4 h-4 text-[#808080]"></i>
                 </x-slot:iconRight>
             </x-zyngga-input>
-        </div>
+        </x-zyngga-card>
 
         {{-- ── JENIS LAYANAN ──────────────────────────────────── --}}
-        <div class="section-card">
-            <div class="flex items-center justify-between mb-4">
-                <x-zyngga-text variant="base" weight="semibold" as="p">Jenis Layanan</x-zyngga-text>
+        <x-zyngga-card title="Jenis Layanan">
+            <x-slot:headerAction>
                 <button type="button" onclick="openServiceModal()">
-                    <x-zyngga-text variant="xs" weight="semibold" color="primary">Lihat semua</x-zyngga-text>
+                    <x-zyngga-text variant="xs" weight="medium" color="primary">Lihat semua</x-zyngga-text>
                 </button>
-            </div>
+            </x-slot:headerAction>
 
             @php
                 $allServices = [
@@ -281,25 +269,25 @@
             {{-- Slot 0: selected service (updated by JS on selection) --}}
             <div class="service-option selected" id="card-slot-0" onclick="cardSlotClick(0)">
                 <div>
-                    <x-zyngga-text id="slot0-name" variant="sm" weight="semibold" class="m-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot0-name" variant="sm" weight="medium" class="m-0"></x-zyngga-text>
                     <x-zyngga-text id="slot0-desc" variant="xs" color="neutral-500" class="m-0 mt-1"></x-zyngga-text>
                 </div>
                 <div class="flex items-center gap-3">
-                    <x-zyngga-text id="slot0-price" variant="sm" weight="semibold" class="shrink-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot0-price" variant="sm" weight="medium" class="shrink-0"></x-zyngga-text>
                 </div>
             </div>
 
             {{-- Slot 1: alternative service (updated by JS on selection) --}}
             <div class="service-option" id="card-slot-1" onclick="cardSlotClick(1)">
                 <div>
-                    <x-zyngga-text id="slot1-name" variant="sm" weight="semibold" class="m-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot1-name" variant="sm" weight="medium" class="m-0"></x-zyngga-text>
                     <x-zyngga-text id="slot1-desc" variant="xs" color="neutral-500" class="m-0 mt-1"></x-zyngga-text>
                 </div>
                 <div class="flex items-center gap-3">
-                    <x-zyngga-text id="slot1-price" variant="sm" weight="semibold" class="shrink-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot1-price" variant="sm" weight="medium" class="shrink-0"></x-zyngga-text>
                 </div>
             </div>
-        </div>
+        </x-zyngga-card>
 
         {{-- ════════════════════════════════════════════════════════
              POPUP — Jenis Layanan (Figma 268:481)
@@ -311,7 +299,7 @@
                 display: none;
                 position: fixed;
                 inset: 0;
-                background: rgba(0,0,0,0.10);
+                background: #F4F4F4;
                 z-index: 100;
                 align-items: center;
                 justify-content: center;
@@ -334,7 +322,7 @@
             >
                 {{-- Modal header --}}
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-                    <x-zyngga-text variant="lg" weight="semibold">Jenis Layanan</x-zyngga-text>
+                    <x-zyngga-text variant="lg" weight="medium">Jenis Layanan</x-zyngga-text>
                     <button
                         type="button"
                         onclick="closeServiceModal()"
@@ -367,74 +355,68 @@
                         onclick="selectServiceFromModal('{{ $svc['id'] }}')"
                     />
                     @if ($i < count($allServices) - 1)
-                        <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-1"></div>
+                        <x-zyngga-divider class="mx-1 my-1" />
                     @endif
                 @endforeach
             </div>
         </div>
 
         {{-- ── JADWAL PICKUP ──────────────────────────────────── --}}
-        <div class="section-card space-y-3">
-            <x-zyngga-text variant="base" weight="semibold" as="p">Jadwal Pickup</x-zyngga-text>
-
-            {{-- Date options --}}
-            <div class="flex gap-2">
-                @php
-                    use Carbon\Carbon;
-                    $today    = Carbon::now('Asia/Jakarta');
-                    $tomorrow = $today->copy()->addDay();
-                @endphp
-                <div class="date-btn selected" onclick="selectDate('today', this)">
-                    <x-zyngga-text variant="sm" weight="semibold" class="m-0">Hari ini</x-zyngga-text>
-                    <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $today->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+        <x-zyngga-card title="Jadwal Pickup">
+            <div class="space-y-3">
+                {{-- Date options --}}
+                <div class="flex gap-2">
+                    @php
+                        $today    = \Carbon\Carbon::now('Asia/Jakarta');
+                        $tomorrow = $today->copy()->addDay();
+                    @endphp
+                    <div class="date-btn selected" onclick="selectDate('today', this)">
+                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Hari ini</x-zyngga-text>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $today->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+                    </div>
+                    <div class="date-btn" onclick="selectDate('tomorrow', this)">
+                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Besok</x-zyngga-text>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrow->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+                    </div>
                 </div>
-                <div class="date-btn" onclick="selectDate('tomorrow', this)">
-                    <x-zyngga-text variant="sm" weight="semibold" class="m-0">Besok</x-zyngga-text>
-                    <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrow->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+
+                {{-- Time chips --}}
+                <div class="flex gap-2">
+                    @foreach(['10:00','12:00','16:00','18:00'] as $time)
+                        <button
+                            type="button"
+                            class="time-chip {{ $time === '10:00' ? 'selected' : '' }}"
+                            onclick="selectTime('{{ $time }}', this)"
+                        >
+                            <x-zyngga-text variant="sm" weight="regular" class="inherit-color">{{ $time }}</x-zyngga-text>
+                        </button>
+                    @endforeach
                 </div>
             </div>
-
-            {{-- Time chips --}}
-            <div class="flex gap-2">
-                @foreach(['10:00','12:00','16:00','18:00'] as $time)
-                    <button
-                        type="button"
-                        class="time-chip {{ $time === '10:00' ? 'selected' : '' }}"
-                        onclick="selectTime('{{ $time }}', this)"
-                    >
-                        <x-zyngga-text variant="sm" weight="medium" class="inherit-color">{{ $time }}</x-zyngga-text>
-                    </button>
-                @endforeach
-            </div>
-        </div>
+        </x-zyngga-card>
 
         {{-- ── TAMBAHAN ───────────────────────────────────────── --}}
-        <div class="section-card">
-            <x-zyngga-text variant="base" weight="semibold" as="p" class="mb-4">Tambahan</x-zyngga-text>
-
+        <x-zyngga-card title="Tambahan">
             <div class="addon-row" onclick="openParfumPicker()">
-                <x-zyngga-text variant="sm" weight="medium" class="m-0">Pilihan parfum</x-zyngga-text>
+                <x-zyngga-text variant="sm" weight="regular" class="m-0">Pilihan parfum</x-zyngga-text>
                 <div class="flex items-center gap-1">
                     <x-zyngga-text id="selected-parfum" variant="sm" color="neutral-500" class="m-0">Lavender</x-zyngga-text>
                     <i data-feather="chevron-right" class="w-4 h-4 text-[#808080]"></i>
                 </div>
             </div>
 
-            <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-2"></div> 
-
+            <x-zyngga-divider class="mx-1 my-2" />
             <div class="addon-row" onclick="openCatatan()">
-                <x-zyngga-text variant="sm" weight="medium" class="m-0">Catatan</x-zyngga-text>
+                <x-zyngga-text variant="sm" weight="regular" class="m-0">Catatan</x-zyngga-text>
                 <div class="flex items-center gap-1">
                     <x-zyngga-text id="catatan-label" variant="sm" color="neutral-500" class="m-0">Buat catatan</x-zyngga-text>
                     <i data-feather="chevron-right" class="w-4 h-4 text-[#808080]"></i>
                 </div>
             </div>
-        </div>
+        </x-zyngga-card>
 
         {{-- ── METODE PEMBAYARAN ──────────────────────────────── --}}
-        <div class="section-card">
-            <x-zyngga-text variant="base" weight="semibold" as="p" class="mb-4">Metode Pembayaran</x-zyngga-text>
-
+        <x-zyngga-card title="Metode Pembayaran">
             @php
                 $payments = [
                     ['id' => 'cash', 'label' => 'Cash',  'desc' => 'Pembayaran dilakukan kepada kurir',
@@ -458,22 +440,22 @@
                     >
                         <x-slot:icon>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zyngga-yellow-50">
-                                <i data-feather="{{ $pay['feather'] }}" class="w-5 h-5 text-zyngga-yellow-300"></i>
+                                <i data-feather="{{ $pay['feather'] }}" class="w-[18px] h-[18px] text-zyngga-yellow-300"></i>
                             </div>
                         </x-slot:icon>
                     </x-zyngga-radio-row>
                     @if ($i < count($payments) - 1)
-                        <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-2"></div>
+                        <x-zyngga-divider class="mx-1 my-2" />
                     @endif
                 @endforeach
             </div>
-        </div>
+        </x-zyngga-card>
     </form>
 
     {{-- ── STICKY FOOTER ──────────────────────────────────────── --}}
     <div id="sticky-footer">
         <div>
-            <x-zyngga-text id="footer-service-label" variant="base" weight="semibold" class="m-0">Memuat...</x-zyngga-text>
+            <x-zyngga-text id="footer-service-label" variant="base" weight="medium" class="m-0">Memuat...</x-zyngga-text>
             <div class="flex items-center gap-1.5 mt-1">
                 <i data-feather="info" class="w-3.5 h-3.5 text-[#1660C1]"></i>
                 <x-zyngga-text id="footer-eta" variant="xs" color="primary" class="m-0">Menghitung estimasi...</x-zyngga-text>
@@ -490,6 +472,8 @@
         />
     </div>
 
+            </div>
+        </main>
 </div>
 
 {{-- ── PARFUM MODAL ───────────────────────────────────── --}}
@@ -499,7 +483,7 @@
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.10);
+        background: #F4F4F4;
         z-index: 100;
         align-items: center;
         justify-content: center;
@@ -555,7 +539,7 @@
                 onclick="chooseParfum('{{ $p }}')"
             />
             @if ($i < count($parfums) - 1)
-                <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-2"></div>
+                <x-zyngga-divider class="mx-1 my-2" />
             @endif
         @endforeach
     </div>

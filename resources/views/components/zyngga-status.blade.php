@@ -12,9 +12,9 @@
     $typeClasses = [
         'primary'   => 'bg-zyngga-blue-300 text-white',
         'secondary' => 'bg-zyngga-blue-50 text-zyngga-blue-300',
-        'success'   => 'bg-[#21B557]/10 text-[#21B557]',
-        'warning'   => 'bg-[#F2AF00]/10 text-[#F2AF00]',
-        'error'     => 'bg-[#EC0F04]/10 text-[#EC0F04]',
+        'success'   => 'bg-[#E9F7EE] text-[#21B557]',
+        'warning'   => 'bg-[#FEF7E6] text-[#F2AF00]',
+        'error'     => 'bg-[#FEE7E6] text-[#EC0F04]',
         'neutral'   => 'bg-[#F4F4F4] text-[#808080]',
     ][$type] ?? 'bg-zyngga-blue-300 text-white';
 
@@ -59,7 +59,7 @@
         <i data-feather="{{ $icon }}" class="{{ $iconSize }} shrink-0"></i>
     @endif
     
-    <span class="leading-none {{ $size === 'S' ? 'font-medium text-[12px]' : ($size === 'L' ? 'font-semibold text-[14px]' : 'font-semibold text-[12px]') }}">
+    <span class="leading-none {{ $size === 'S' ? 'font-normal text-[12px]' : ($size === 'L' ? 'font-medium text-[14px]' : 'font-medium text-[12px]') }}">
         {{ $label ?: $slot }}
     </span>
 </div>

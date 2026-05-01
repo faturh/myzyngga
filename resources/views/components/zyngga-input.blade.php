@@ -38,7 +38,7 @@
 
 <div {{ $attributes->only('class') }}>
     @if($label)
-        <x-zyngga-text as="label" variant="sm" weight="medium" color="neutral-500" class="block mb-2" for="{{ $name }}">
+        <x-zyngga-text as="label" variant="sm" weight="regular" color="neutral-500" class="block mb-2" for="{{ $name }}">
             {{ $label }}
         </x-zyngga-text>
     @endif
@@ -74,7 +74,7 @@
     </div>
     
     @if($error)
-        <x-zyngga-text variant="xs" weight="medium" color="danger" class="mt-1">
+        <x-zyngga-text variant="xs" weight="regular" color="danger" class="mt-1">
             {{ $error }}
         </x-zyngga-text>
     @endif

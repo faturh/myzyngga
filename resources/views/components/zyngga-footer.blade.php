@@ -1,13 +1,13 @@
-{{--
-    Component: zyngga-footer
-    Description: Standard informational footer for Zyngga Laundry pages (Dashboard, History, etc.)
---}}
+@props([
+    'maxWidth' => 'max-w-full',
+])
+
 <div class="mt-auto pt-[6px]">
-    <div class="bg-white rounded-t-2xl border-t border-zyngga-neutral-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] px-5 py-8 space-y-4">
+    <div class="bg-white rounded-t-2xl border-t border-zyngga-neutral-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] px-5 pt-8 pb-8 space-y-4 {{ $maxWidth }} mx-auto">
 
         {{-- Brand info --}}
         <div class="space-y-2">
-            <x-zyngga-text variant="lg" weight="medium">Zyngga Laundry</x-zyngga-text>
+            <x-zyngga-text variant="lg" weight="regular">Zyngga Laundry</x-zyngga-text>
             <x-zyngga-text variant="sm" color="neutral-500" class="leading-relaxed">
                 Solusi laundry modern untuk gaya hidup praktis. Kami memastikan pakaian Anda bersih, rapi, dan harum dengan standar profesional.
             </x-zyngga-text>
@@ -17,7 +17,7 @@
 
         {{-- Operating hours --}}
         <div class="space-y-2">
-            <x-zyngga-text variant="base" weight="medium">Jam Operasional</x-zyngga-text>
+            <x-zyngga-text variant="base" weight="regular">Jam Operasional</x-zyngga-text>
             <x-zyngga-text variant="sm" color="neutral-500">Setiap Hari | 08:00 - 20:00 WIB</x-zyngga-text>
         </div>
 
@@ -26,11 +26,11 @@
         {{-- Location links --}}
         <div class="grid grid-cols-2 gap-4">
             <div class="space-y-1">
-                <x-zyngga-text variant="base" weight="medium">Sukabirus</x-zyngga-text>
+                <x-zyngga-text variant="base" weight="regular">Sukabirus</x-zyngga-text>
                 <x-zyngga-text variant="sm" color="neutral-500" class="underline">Jl. Sukabirus No. 99</x-zyngga-text>
             </div>
             <div class="space-y-1">
-                <x-zyngga-text variant="base" weight="medium">Sukapura</x-zyngga-text>
+                <x-zyngga-text variant="base" weight="regular">Sukapura</x-zyngga-text>
                 <x-zyngga-text variant="sm" color="neutral-500" class="underline">Jl. Sukapura No. 99</x-zyngga-text>
             </div>
         </div>
@@ -40,7 +40,7 @@
         {{-- Links grid --}}
         <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
-                <x-zyngga-text variant="base" weight="medium">Layanan</x-zyngga-text>
+                <x-zyngga-text variant="base" weight="regular">Layanan</x-zyngga-text>
                 <ul class="space-y-0">
                     @foreach (['Regular','Quick','Express','Kilat','Satuan'] as $l)
                         <li class="h-7 flex items-center">
@@ -50,7 +50,7 @@
                 </ul>
             </div>
             <div class="space-y-2">
-                <x-zyngga-text variant="base" weight="medium">Menu</x-zyngga-text>
+                <x-zyngga-text variant="base" weight="regular">Menu</x-zyngga-text>
                 <ul class="space-y-0">
                     <li class="h-7 flex items-center">
                         <a href="{{ route('dashboard') }}" class="underline">

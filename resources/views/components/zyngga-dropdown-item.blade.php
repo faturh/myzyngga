@@ -24,9 +24,9 @@
             ? 'bg-white border-2 border-zyngga-blue-300' 
             : 'bg-white border border-zyngga-neutral-300 hover:bg-zyngga-neutral-200 focus:border-zyngga-blue-300 focus:ring-1 focus:ring-zyngga-blue-300 focus:outline-none');
 
-    $labelClasses = "font-semibold text-zyngga-neutral-500 leading-none " . ($size === 's' ? 'text-[14px]' : 'text-[16px]');
-    $descClasses = "text-[14px] text-zyngga-neutral-400 font-medium leading-none mt-1";
-    $additionalClasses = "text-[16px] text-zyngga-neutral-500 font-medium leading-none";
+    $labelClasses = "font-medium text-zyngga-neutral-500 leading-none " . ($size === 's' ? 'text-[14px]' : 'text-[16px]');
+    $descClasses = "text-[14px] text-zyngga-neutral-400 font-normal leading-none mt-1";
+    $additionalClasses = "text-[16px] text-zyngga-neutral-500 font-normal leading-none";
 @endphp
 
 @if($type === 'a')

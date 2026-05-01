@@ -17,7 +17,7 @@
 
         #app-wrapper {
             width: 100%;
-            max-width: 425px;
+            max-width: 768px; /* Tablet size */
             margin: 0 auto;
             height: 100dvh;
             position: relative;
@@ -115,9 +115,9 @@
         .search-bar input::placeholder { color: #808080; }
     </style>
 </head>
-<body class="bg-white">
-
-<div id="app-wrapper">
+<body class="bg-zyngga-blue-50">
+    <div class="min-h-screen flex flex-col">
+        <div id="app-wrapper">
 
     {{-- ── Map area ───────────────────────────────────────────── --}}
     <div id="map"></div>
@@ -167,7 +167,7 @@
                 aria-label="Kembali"
             />
 
-            <x-zyngga-text variant="lg" weight="semibold" as="h1" class="flex-1">
+            <x-zyngga-text variant="lg" weight="medium" as="h1" class="flex-1">
                 Pilih Lokasi Pickup
             </x-zyngga-text>
         </div>
@@ -234,7 +234,7 @@
                 <i data-feather="map-pin" class="w-5 h-5 text-zyngga-blue-300"></i>
             </div>
             <div style="flex:1; min-width:0;">
-                <x-zyngga-text id="loc-name" variant="sm" weight="semibold">
+                <x-zyngga-text id="loc-name" variant="sm" weight="medium">
                     Menentukan lokasi...
                 </x-zyngga-text>
                 <x-zyngga-text id="loc-address" variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
@@ -250,7 +250,7 @@
         {{-- Error message for distance --}}
         <div id="distance-error" style="display:none; padding:12px 16px; background:#FEF2F2; border-radius:12px; border:1px solid #FEE2E2; align-items:center; gap:10px; margin-top:-4px;">
             <i data-feather="alert-circle" class="w-5 h-5 text-[#EF4444] shrink-0"></i>
-            <x-zyngga-text variant="xs" weight="medium" color="danger">
+            <x-zyngga-text variant="xs" weight="regular" color="danger">
                 Maaf, lokasi Anda berada di luar jangkauan pickup kami.
             </x-zyngga-text>
         </div>
@@ -530,5 +530,9 @@
             feather.replace();
         });
     </script>
+    </div>
+</div>
+</div>
+
 </body>
 </html>

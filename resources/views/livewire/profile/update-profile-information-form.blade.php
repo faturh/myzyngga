@@ -64,13 +64,10 @@ new class extends Component
 
 <section>
     <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile Information') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
+        <x-zyngga-text variant="lg" weight="medium">{{ __('Informasi Profil') }}</x-zyngga-text>
+        <x-zyngga-text variant="sm" color="neutral-500" class="mt-1">
+            {{ __("Perbarui informasi profil akun dan alamat email Anda.") }}
+        </x-zyngga-text>
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
@@ -108,7 +105,7 @@ new class extends Component
                     </p>
 
                     @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
+                        <p class="mt-2 font-normal text-sm text-green-600">
                             {{ __('A new verification link has been sent to your email address.') }}
                         </p>
                     @endif
@@ -117,10 +114,10 @@ new class extends Component
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-zyngga-button type="submit" label="Simpan Perubahan" size="m" />
 
             <x-action-message class="me-3" on="profile-updated">
-                {{ __('Saved.') }}
+                <x-zyngga-text variant="xs" class="text-green-600">Tersimpan.</x-zyngga-text>
             </x-action-message>
         </div>
     </form>

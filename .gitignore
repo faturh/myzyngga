@@ -20,3 +20,6 @@ yarn-error.log
 .vscode/
 .figma_assets/
 .gemini/
+bootstrap/cache/*.php
+bootstrap/cache/*.tmp
+!bootstrap/cache/.gitkeep

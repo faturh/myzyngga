@@ -25,30 +25,31 @@ new class extends Component
 
 <section class="space-y-6">
     <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Delete Account') }}
-        </h2>
+        <x-zyngga-text variant="lg" weight="medium" color="danger">{{ __('Hapus Akun') }}</x-zyngga-text>
 
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
-        </p>
+        <x-zyngga-text variant="sm" color="neutral-500" class="mt-1">
+            {{ __('Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. Sebelum menghapus akun, harap unduh data atau informasi apa pun yang ingin Anda simpan.') }}
+        </x-zyngga-text>
     </header>
 
-    <x-danger-button
+    <x-zyngga-button
+        variant="danger"
+        size="m"
+        label="Hapus Akun Sekarang"
         x-data=""
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    >{{ __('Delete Account') }}</x-danger-button>
+    />
 
     <x-modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable>
         <form wire:submit="deleteUser" class="p-6">
 
-            <h2 class="text-lg font-medium text-gray-900">
-                {{ __('Are you sure you want to delete your account?') }}
-            </h2>
+            <x-zyngga-text variant="lg" weight="medium">
+                {{ __('Apakah Anda yakin ingin menghapus akun?') }}
+            </x-zyngga-text>
 
-            <p class="mt-1 text-sm text-gray-600">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
-            </p>
+            <x-zyngga-text variant="sm" color="neutral-500" class="mt-2">
+                {{ __('Setelah akun Anda dihapus, semua data akan hilang secara permanen. Masukkan kata sandi Anda untuk mengonfirmasi penghapusan.') }}
+            </x-zyngga-text>
 
             <div class="mt-6">
                 <x-zyngga-input 
@@ -63,14 +64,9 @@ new class extends Component
                 />
             </div>
 
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
-                    {{ __('Cancel') }}
-                </x-secondary-button>
-
-                <x-danger-button class="ms-3">
-                    {{ __('Delete Account') }}
-                </x-danger-button>
+            <div class="mt-6 flex justify-end gap-3">
+                <x-zyngga-button variant="neutral" label="Batal" x-on:click="$dispatch('close')" />
+                <x-zyngga-button variant="danger" label="Hapus Akun" type="submit" />
             </div>
         </form>
     </x-modal>

@@ -69,9 +69,9 @@
 
                 {{-- Section heading --}}
                 <div class="flex items-center justify-between">
-                    <x-zyngga-text variant="lg" weight="semibold">Pesan Sekarang</x-zyngga-text>
+                    <x-zyngga-text variant="lg" weight="medium">Pesan Sekarang</x-zyngga-text>
                     <button onclick="window.location.href='#'">
-                        <x-zyngga-text variant="xs" weight="semibold" color="primary">Lihat semua</x-zyngga-text>
+                        <x-zyngga-text variant="xs" weight="medium" color="primary">Lihat semua</x-zyngga-text>
                     </button>
                 </div>
 
@@ -93,7 +93,7 @@
                             <div class="w-9 h-9 bg-zyngga-yellow-50 rounded-full flex items-center justify-center">
                                 <i data-feather="{{ $s['icon'] }}" class="w-[18px] h-[18px] text-zyngga-yellow-300"></i>
                             </div>
-                            <x-zyngga-text variant="sm" weight="medium">{{ $s['label'] }}</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="regular">{{ $s['label'] }}</x-zyngga-text>
                         </a>
                     @endforeach
                 </div>
@@ -105,7 +105,7 @@
             <div class="w-full aspect-[385/168] rounded-lg overflow-hidden relative">
                 <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-br from-[#1660C1]/60 to-transparent flex flex-col justify-between p-5">
-                    <x-zyngga-text variant="base" weight="semibold" color="white" class="max-w-[180px]">Matahari Sembunyi?<br>Tenang, Ada Kami.</x-zyngga-text>
+                    <x-zyngga-text variant="base" weight="medium" color="white" class="max-w-[180px]">Matahari Sembunyi?<br>Tenang, Ada Kami.</x-zyngga-text>
                     <x-zyngga-button 
                         variant="primary"
                         size="s"
@@ -122,7 +122,7 @@
         <div class="px-5 py-[6px]">
             <div class="bg-white rounded-lg p-4 space-y-4">
                 <div class="h-8 flex items-center">
-                    <x-zyngga-text variant="lg" weight="semibold">Alur Pemesanan</x-zyngga-text>
+                    <x-zyngga-text variant="lg" weight="medium">Alur Pemesanan</x-zyngga-text>
                 </div>
 
                 <div class="space-y-6">
@@ -137,10 +137,10 @@
                     @foreach ($steps as $step)
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 rounded-full border border-zyngga-blue-300 flex items-center justify-center shrink-0">
-                                <x-zyngga-text variant="xs" weight="semibold" color="primary">{{ $step['n'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="xs" weight="medium" color="primary">{{ $step['n'] }}</x-zyngga-text>
                             </div>
                             <div class="space-y-1">
-                                <x-zyngga-text variant="sm" weight="medium" class="leading-none">{{ $step['title'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="regular" class="leading-none">{{ $step['title'] }}</x-zyngga-text>
                                 <x-zyngga-text variant="xs" color="neutral-500">{{ $step['desc'] }}</x-zyngga-text>
                             </div>
                         </div>
@@ -153,7 +153,7 @@
         <div class="px-5 py-[6px]">
             <div class="bg-white rounded-lg p-4 space-y-4">
                 <div class="h-8 flex items-center">
-                    <x-zyngga-text variant="lg" weight="semibold">Outlet Kami</x-zyngga-text>
+                    <x-zyngga-text variant="lg" weight="medium">Outlet Kami</x-zyngga-text>
                 </div>
 
                 <div class="space-y-4">
@@ -170,7 +170,7 @@
                             </div>
                             <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
                                 <div class="space-y-1">
-                                    <x-zyngga-text variant="base" weight="medium" class="leading-snug">{{ $outlet['name'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="base" weight="regular" class="leading-snug">{{ $outlet['name'] }}</x-zyngga-text>
                                     <x-zyngga-text variant="xs" color="neutral-500">{{ $outlet['address'] }}</x-zyngga-text>
                                 </div>
                                 <x-zyngga-button 
