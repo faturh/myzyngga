@@ -10,6 +10,8 @@ new class extends Component
 {
     public string $name = '';
     public string $email = '';
+    public string $phone = '';
+    public bool $isEditing = false;
 
     /**
      * Mount the component.
@@ -18,6 +20,18 @@ new class extends Component
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+        $this->phone = Auth::user()->phone ?? '';
+    }
+
+    /**
+     * Toggle edit mode.
+     */
+    public function toggleEdit(): void
+    {
+        $this->isEditing = !$this->isEditing;
+        if (!$this->isEditing) {
+            $this->mount(); // Reset data if canceled
+        }
     }
 
     /**
@@ -29,17 +43,13 @@ new class extends Component
 
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
         $user->fill($validated);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
         $user->save();
 
+        $this->isEditing = false;
         $this->dispatch('profile-updated', name: $user->name);
     }
 
@@ -70,55 +80,94 @@ new class extends Component
         </x-zyngga-text>
     </header>
 
-    <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
-        <x-zyngga-input 
-            label="Name" 
-            wire:model="name" 
-            id="name" 
-            name="name" 
-            type="text" 
-            required 
-            autofocus 
-            autocomplete="name"
-            :error="$errors->first('name')"
-        />
+    @if($isEditing)
+        <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
+            <x-zyngga-input 
+                label="Nama Lengkap" 
+                wire:model="name" 
+                id="name" 
+                name="name" 
+                type="text" 
+                required 
+                autofocus 
+                autocomplete="name"
+                :error="$errors->first('name')"
+            />
 
-        <x-zyngga-input 
-            label="Email" 
-            wire:model="email" 
-            id="email" 
-            name="email" 
-            type="email" 
-            required 
-            autocomplete="username"
-            :error="$errors->first('email')"
-        />
+            <div class="relative">
+                <x-zyngga-input 
+                    label="Email" 
+                    wire:model="email" 
+                    id="email" 
+                    name="email" 
+                    type="email" 
+                    disabled
+                    autocomplete="username"
+                    :error="$errors->first('email')"
+                />
+                <x-zyngga-text variant="2xs" color="neutral-400" class="mt-1.5 ml-1">
+                    <i data-feather="info" class="w-3 h-3 inline mr-1 -mt-0.5"></i>
+                    Email tidak dapat diubah untuk alasan keamanan
+                </x-zyngga-text>
+            </div>
 
-            @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800">
-                        {{ __('Your email address is unverified.') }}
+            <x-zyngga-input 
+                label="Nomor Telepon" 
+                wire:model="phone" 
+                id="phone" 
+                name="phone" 
+                type="tel" 
+                placeholder="0812xxxxxxx"
+                :error="$errors->first('phone')"
+            />
 
-                        <button wire:click.prevent="sendVerification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
+            <div class="flex items-center gap-3 pt-2">
+                <x-zyngga-button type="submit" label="Simpan Perubahan" size="m" class="flex-1" />
+                <x-zyngga-button type="button" wire:click="toggleEdit" label="Batal" variant="secondary" size="m" class="flex-1" />
+            </div>
 
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-normal text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
-            @endif
-        </div>
-
-        <div class="flex items-center gap-4">
-            <x-zyngga-button type="submit" label="Simpan Perubahan" size="m" />
-
-            <x-action-message class="me-3" on="profile-updated">
+            <x-action-message class="mt-2" on="profile-updated">
                 <x-zyngga-text variant="xs" class="text-green-600">Tersimpan.</x-zyngga-text>
             </x-action-message>
+        </form>
+    @else
+        <div class="mt-8 space-y-6">
+            {{-- Name Detail --}}
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
+                    <i data-feather="user" class="w-5 h-5 text-zyngga-blue-300"></i>
+                </div>
+                <div class="flex-1">
+                    <x-zyngga-text variant="xs" color="neutral-400" weight="medium" class="uppercase tracking-widest mb-0.5">Nama Lengkap</x-zyngga-text>
+                    <x-zyngga-text variant="base" weight="bold">{{ $name }}</x-zyngga-text>
+                </div>
+            </div>
+
+            {{-- Email Detail --}}
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
+                    <i data-feather="mail" class="w-5 h-5 text-zyngga-blue-300"></i>
+                </div>
+                <div class="flex-1">
+                    <x-zyngga-text variant="xs" color="neutral-400" weight="medium" class="uppercase tracking-widest mb-0.5">Alamat Email</x-zyngga-text>
+                    <x-zyngga-text variant="base" weight="bold">{{ $email }}</x-zyngga-text>
+                </div>
+            </div>
+
+            {{-- Phone Detail --}}
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
+                    <i data-feather="phone" class="w-5 h-5 text-zyngga-blue-300"></i>
+                </div>
+                <div class="flex-1">
+                    <x-zyngga-text variant="xs" color="neutral-400" weight="medium" class="uppercase tracking-widest mb-0.5">Nomor Telepon</x-zyngga-text>
+                    <x-zyngga-text variant="base" weight="bold">{{ $phone ?: '-' }}</x-zyngga-text>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <x-zyngga-button type="button" wire:click="toggleEdit" label="Ubah Profil" variant="secondary" size="m" class="w-full" />
+            </div>
         </div>
-    </form>
+    @endif
 </section>

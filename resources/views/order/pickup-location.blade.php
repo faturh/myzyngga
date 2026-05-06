@@ -159,7 +159,7 @@
         <div style="display:flex; align-items:center; height:40px; gap:8px;">
             <x-zyngga-button 
                 type="a"
-                href="{{ route('dashboard') }}"
+                href="{{ auth()->check() ? route('dashboard') : route('landing') }}"
                 variant="neutral"
                 size="l"
                 icon="arrow-left"

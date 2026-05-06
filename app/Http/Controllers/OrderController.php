@@ -13,11 +13,30 @@ class OrderController extends Controller
      */
     public function pickupLocation(Request $request, string $service)
     {
+        $user = auth()->user();
+        
+        // If user has a primary address, skip the map selection
+        // BUT if 'force' is present, they want to choose manually
+        if ($user) {
+            $primaryAddress = $user->addresses()->where('is_primary', true)->first();
+            if ($primaryAddress && !$request->has('force')) {
+                session([
+                    'order.service'        => $service,
+                    'order.address'        => $primaryAddress->address_detail,
+                    'order.detail_address' => $primaryAddress->note ?? '',
+                    'order.lat'            => (string) $primaryAddress->latitude ?? '',
+                    'order.lng'            => (string) $primaryAddress->longitude ?? '',
+                ]);
+                return redirect()->route('order.booking');
+            }
+        }
+
         $serviceLabels = [
             'kilat'    => 'Kilat',
             'regular'  => 'Regular',
             'quick'    => 'Quick',
             'express'  => 'Express',
+            'satuan'   => 'Satuan',
         ];
 
         $serviceLabel = $serviceLabels[$service] ?? ucfirst($service);
@@ -57,7 +76,7 @@ class OrderController extends Controller
     {
         // Require pickup location to have been set
         if (! session()->has('order.address')) {
-            return redirect()->route('dashboard');
+            return auth()->check() ? redirect()->route('dashboard') : redirect()->route('landing');
         }
 
         $serviceLabels = [
@@ -65,6 +84,7 @@ class OrderController extends Controller
             'regular'  => 'Regular',
             'quick'    => 'Quick',
             'express'  => 'Express',
+            'satuan'   => 'Satuan',
         ];
 
         $service       = session('order.service', 'regular');
@@ -84,7 +104,9 @@ class OrderController extends Controller
      */
     public function confirm(Request $request): RedirectResponse
     {
-        $data = $request->validate([
+        $isGuest = !auth()->check();
+
+        $rules = [
             'service'          => ['required', 'string'],
             'address'          => ['required', 'string'],
             'detail_address'   => ['nullable', 'string'],
@@ -95,14 +117,23 @@ class OrderController extends Controller
             'pickup_time'      => ['required', 'string'],
             'parfum'           => ['nullable', 'string'],
             'payment'          => ['required', 'string'],
-        ]);
+        ];
+
+        if ($isGuest) {
+            $rules['customer_name']  = ['required', 'string', 'max:255'];
+            $rules['customer_phone'] = ['required', 'string', 'max:20'];
+            $rules['customer_email'] = ['required', 'email', 'max:255'];
+        }
+
+        $data = $request->validate($rules);
 
         // TODO: persist order to DB here
+        // If guest, you might want to create a guest record or just save info in order table
 
         // Clear order session
         session()->forget(['order.service', 'order.address', 'order.detail_address', 'order.lat', 'order.lng']);
 
-        return redirect()->route('dashboard')
+        return ($isGuest ? redirect()->route('landing') : redirect()->route('dashboard'))
             ->with('success', 'Pesanan Anda berhasil dibuat!');
     }
 

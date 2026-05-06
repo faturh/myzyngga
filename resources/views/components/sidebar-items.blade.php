@@ -55,7 +55,7 @@
                 <i data-feather="{{ $item['icon'] }}" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
             </div>
             <span 
-                class="text-[15px] font-medium whitespace-nowrap transition-all duration-300"
+                class="text-base font-medium whitespace-nowrap transition-all duration-300"
                 x-show="!desktopCollapsed"
                 x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0"

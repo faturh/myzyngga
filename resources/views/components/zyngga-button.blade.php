@@ -4,6 +4,7 @@
     'icon'         => null,      // feather icon name
     'iconPosition' => 'none',    // none, left, right, only
     'label'        => '',
+    'label2'       => null,      // sub-label for double text buttons
     'type'         => 'button',  // button, submit, a
     'href'         => '#',
     'disabled'     => false,
@@ -51,7 +52,12 @@
         @endif
         
         @if ($iconPosition !== 'only')
-            <span>{{ $label ?: $slot }}</span>
+            <div class="flex flex-col items-center">
+                <span>{{ $label ?: $slot }}</span>
+                @if($label2)
+                    <span class="text-[10px] opacity-80 font-normal leading-tight">{{ $label2 }}</span>
+                @endif
+            </div>
         @endif
 
         @if ($icon && $iconPosition === 'right')
@@ -65,7 +71,12 @@
         @endif
         
         @if ($iconPosition !== 'only')
-            <span>{{ $label ?: $slot }}</span>
+            <div class="flex flex-col items-center">
+                <span>{{ $label ?: $slot }}</span>
+                @if($label2)
+                    <span class="text-[10px] opacity-80 font-normal leading-tight">{{ $label2 }}</span>
+                @endif
+            </div>
         @endif
 
         @if ($icon && $iconPosition === 'right')

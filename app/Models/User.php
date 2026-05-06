@@ -21,6 +21,7 @@ class User extends Authenticatable
         'username',
         'slug',
         'email',
+        'phone',
         'password',
         'role',
         'cabang_id',
@@ -63,5 +64,21 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->role === 'customer';
+    }
+
+    /**
+     * Get the user's addresses.
+     */
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Get the user's primary address.
+     */
+    public function primaryAddress()
+    {
+        return $this->hasOne(Address::class)->where('is_primary', true);
     }
 }

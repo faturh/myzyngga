@@ -37,7 +37,7 @@
         </div>
 
         {{-- Main Section --}}
-        <main class="w-full max-w-3xl mx-auto flex-1 flex flex-col pb-10">
+        <main class="w-full max-w-3xl mx-auto flex-1 flex flex-col">
             {{-- ─────────────────────────────────────────────────────────
                  PESAN SEKARANG CARD
             ───────────────────────────────────────────────────────── --}}

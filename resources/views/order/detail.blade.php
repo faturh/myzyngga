@@ -103,7 +103,8 @@
             :backUrl="route('dashboard')" 
             :maxWidth="'max-w-3xl'"
             :showPoints="false"
-            :showMenu="true"
+            :back="true"
+            :hamburg="false"
         />
 
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}

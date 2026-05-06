@@ -11,14 +11,26 @@
     'backUrl' => null,
     'maxWidth' => 'max-w-full',
     'showPoints' => true,
-    'showMenu' => true,
+    'menu' => true,
+    'showMenu' => true, // Backward compatibility alias for 'menu'
+    'back' => null,
+    'hamburg' => null,
 ])
+
+@php
+    // Master menu visibility: false if either 'menu' or 'showMenu' is false
+    $masterMenu = $menu && $showMenu;
+    
+    $displayBack = $back ?? ($masterMenu && $backUrl);
+    $displayHamburger = $hamburg ?? $masterMenu;
+@endphp
+
 
 <header class="sticky top-0 z-40 w-full pb-[6px]">
     <div class="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-5 py-5 transition-shadow duration-300 {{ $maxWidth }} mx-auto min-h-[80px] flex flex-col justify-center">
         <div class="flex items-center gap-3">
             {{-- Back Button --}}
-            @if($showMenu && $backUrl)
+            @if($displayBack && $backUrl)
                 <x-zyngga-button 
                     type="a"
                     href="{{ $backUrl }}"
@@ -52,7 +64,7 @@
                 @endif
 
                 {{-- Hamburger for Mobile --}}
-                @if($showMenu)
+                @if($displayHamburger)
                     <div class="md:hidden">
                         <x-zyngga-button 
                             variant="neutral"
