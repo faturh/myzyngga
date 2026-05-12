@@ -49,25 +49,22 @@ new class extends Component
     /**
      * Update the profile information for the currently authenticated user.
      */
-    public function updateProfileInformation(): void
+    public function updateProfileInformation(string $newName, string $newPhone): void
     {
-        if (!$this->hasChanges()) return;
-
-        $user = Auth::user();
-
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $user->fill($validated);
-        $user->save();
+        // Direct update to ensure it bypasses any model accessor issues during save
+        User::where('id', Auth::id())->update([
+            'name' => $newName,
+            'phone' => $newPhone,
+        ]);
 
-        // Update originals after successful save
-        $this->originalName = $this->name;
-        $this->originalPhone = $this->phone;
-
-        $this->dispatch('profile-updated', name: $user->name);
+        $this->dispatch('profile-updated', name: $newName);
+        
+        $this->redirect(route('profile'), navigate: true);
     }
 
     /**
@@ -90,12 +87,16 @@ new class extends Component
 }; ?>
 
 <section x-data="{ 
-    currentName: '{{ addslashes($name) }}',
-    currentPhone: '{{ addslashes($phone) }}',
-    draftName: '{{ addslashes($name) }}', 
-    draftPhone: '{{ addslashes($phone) }}',
+    currentName: {{ json_encode($name) }},
+    currentPhone: {{ json_encode($phone) }},
+    draftName: {{ json_encode($name) }}, 
+    draftPhone: {{ json_encode($phone) }},
     nameError: '',
-    phoneError: ''
+    phoneError: '',
+    get isDirty() {
+        return this.currentName !== {{ json_encode($originalName) }} || 
+               this.currentPhone !== {{ json_encode($originalPhone) }};
+    }
 }">
     {{-- Card 1: Profile Picture --}}
     <x-zyngga-card>
@@ -175,13 +176,13 @@ new class extends Component
         <div class="max-w-5xl mx-auto w-full px-5">
             <x-zyngga-button 
                 type="button" 
-                wire:click="updateProfileInformation"
+                wire:click="updateProfileInformation(currentName, currentPhone)"
                 label="Simpan" 
                 variant="primary"
                 size="l" 
                 class="w-full" 
-                x-bind:disabled="currentName === '{{ addslashes($originalName) }}' && currentPhone === '{{ addslashes($originalPhone) }}'"
-                x-bind:class="(currentName === '{{ addslashes($originalName) }}' && currentPhone === '{{ addslashes($originalPhone) }}') ? 'opacity-40 pointer-events-none' : ''"
+                x-bind:disabled="!isDirty"
+                x-bind:class="!isDirty ? 'opacity-40 pointer-events-none' : ''"
             />
         </div>
     </div>
@@ -214,7 +215,6 @@ new class extends Component
                         } else {
                             nameError = '';
                             currentName = draftName;
-                            $wire.set('name', draftName);
                             isOpen = false;
                         }
                     " 
@@ -251,7 +251,6 @@ new class extends Component
                         } else {
                             phoneError = '';
                             currentPhone = draftPhone;
-                            $wire.set('phone', draftPhone);
                             isOpen = false;
                         }
                     " 

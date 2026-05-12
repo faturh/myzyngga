@@ -1,7 +1,7 @@
 <?php
 
 use App\Modules\Admin\Presentation\Web\Controllers\WebDashboardController;
-use App\Http\Controllers\OrderController;
+use App\Modules\Order\Presentation\Web\Controllers\OrderPageController;
 use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,34 +27,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('addresses/{address}/primary', [AddressController::class, 'setPrimary'])->name('addresses.primary');
 
     // Order Routes
-    Route::get('/order/{service}/pickup', [OrderController::class, 'pickupLocation'])
+    Route::get('/order/{service}/pickup', [OrderPageController::class, 'pickupLocation'])
         ->name('order.pickup');
 
-    Route::get('/order/pickup/{service}/details', [OrderController::class, 'pickupDetails'])
+    Route::get('/order/pickup/{service}/details', [OrderPageController::class, 'pickupDetails'])
         ->name('order.pickup.details');
 
-    Route::post('/order/pickup/details/store', [OrderController::class, 'storePickupDetails'])
+    Route::post('/order/pickup/details/store', [OrderPageController::class, 'storePickupDetails'])
         ->name('order.pickup.details.store');
 
-    Route::post('/order/pickup', [OrderController::class, 'storePickupLocation'])
+    Route::post('/order/pickup', [OrderPageController::class, 'storePickupLocation'])
         ->name('order.pickup.store');
 
-    Route::get('/order/booking', [OrderController::class, 'booking'])
+    Route::get('/order/booking', [OrderPageController::class, 'booking'])
         ->name('order.booking');
 
-    Route::post('/order/confirm', [OrderController::class, 'confirm'])
+    Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
         ->name('order.confirm');
 
-    Route::post('/order/update-session', [OrderController::class, 'updateSession'])
+    Route::post('/order/update-session', [OrderPageController::class, 'updateSession'])
         ->name('order.update-session');
 
-    Route::get('/order/detail', [OrderController::class, 'detail'])
+    Route::get('/order/detail', [OrderPageController::class, 'detail'])
         ->name('order.detail');
 
-    Route::get('/order/history', [OrderController::class, 'history'])
+    Route::get('/order/history', [OrderPageController::class, 'history'])
         ->name('order.history');
 });
 
 // Public Order Check
-Route::match(['get', 'post'], '/order/check', [OrderController::class, 'check'])
+Route::match(['get', 'post'], '/order/check', [OrderPageController::class, 'check'])
     ->name('order.check');

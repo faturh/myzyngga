@@ -15,7 +15,7 @@ class AddressController extends Controller
 
     public function create()
     {
-        return view('profile.addresses.create');
+        return view('pelanggan.profile.addresses.create');
     }
 
     public function createDetails(Request $request)
@@ -31,7 +31,7 @@ class AddressController extends Controller
 
         $addressCount = Auth::user()->addresses()->count();
 
-        return view('profile.addresses.details', compact('lat', 'lng', 'address', 'service', 'addressCount'));
+        return view('pelanggan.profile.addresses.details', compact('lat', 'lng', 'address', 'service', 'addressCount'));
     }
 
     public function store(Request $request)
@@ -107,7 +107,7 @@ class AddressController extends Controller
         // Check if coming from order flow
         $service = request()->query('service');
         
-        return view('profile.addresses.edit', compact('address', 'service', 'addressCount'));
+        return view('pelanggan.profile.addresses.edit', compact('address', 'service', 'addressCount'));
     }
 
     public function update(Request $request, Address $address)
