@@ -10,29 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
     <style>
         * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; overflow: hidden; }
-
-        #app-wrapper {
-            width: 100%;
-            max-width: 768px;
-            margin: 0 auto;
-            height: 100dvh;
-            position: relative;
-            overflow: hidden;
-            background: #FFFFFF;
-        }
-
-        #map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1;
-        }
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #e8eff9; }
+        #app-wrapper { position: relative; height: 100%; display: flex; flex-direction: column; }
+        
+        #map { flex: 1; width: 100%; }
 
         #bottom-sheet {
             position: absolute;
@@ -42,14 +25,19 @@
             background: white;
             border-radius: 24px 24px 0 0;
             box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
-            padding: 24px 20px calc(16px + env(safe-area-inset-bottom, 16px));
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
             z-index: 10;
             max-height: 85vh;
             overflow-y: auto;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #bottom-sheet-content {
+            max-width: 1024px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 24px 20px calc(16px + env(safe-area-inset-bottom, 16px));
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         #bottom-sheet::before {
@@ -66,41 +54,48 @@
 
         #pin-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
             pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             z-index: 5;
         }
 
-        @keyframes pulse {
-            0%   { transform: scale(0.8); opacity:1; }
-            100% { transform: scale(1.8); opacity:0; }
+        @keyframes pin-bounce {
+            0% { transform: translate(-50%, calc(-100% + 4px)); }
+            50% { transform: translate(-50%, calc(-100% - 4px)); }
+            100% { transform: translate(-50%, calc(-100% + 4px)); }
         }
-        
-        #pin-icon.dragging .pulse {
-            display: block;
+        .dragging #pin-icon {
+            animation: pin-bounce 0.4s infinite ease-in-out;
         }
         .pulse {
-            display: none;
-            position:absolute;
-            width:56px; height:56px;
-            border-radius:50%;
-            background:rgba(22,96,193,0.15);
-            animation:pulse 1s infinite;
+            position: absolute;
+            bottom: 4px;
+            width: 12px;
+            height: 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            transform: scale(1);
+            transition: transform 0.2s ease;
         }
+        .dragging .pulse { transform: scale(1.5); opacity: 0.5; }
     </style>
 </head>
-<body class="bg-zyngga-blue-50">
+<body class="bg-[#e8eff9]">
     <div id="app-wrapper">
+        {{-- Hidden fields for internal use --}}
+        <input type="hidden" id="hidden-lat">
+        <input type="hidden" id="hidden-lng">
+        <input type="hidden" id="hidden-address">
 
         {{-- Map area --}}
         <div id="map"></div>
 
         {{-- Centered draggable pin --}}
         <div id="pin-overlay">
-            <div id="pin-icon" style="transform: translateY(-16px); display:flex; flex-direction:column; align-items:center;">
+            <div id="pin-icon" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, calc(-100% + 4px)); display:flex; flex-direction:column; align-items:center;">
                 <div class="pulse"></div>
                 <div style="width:32px; height:32px; background:#EF4444; border-radius:50%; border:3px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; position:relative;">
                     <div style="width:8px;height:8px;background:white;border-radius:50%;"></div>
@@ -110,117 +105,167 @@
             </div>
         </div>
 
-        {{-- Bottom Sheet Form --}}
+        {{-- Bottom Sheet --}}
         <div id="bottom-sheet">
-            {{-- Header --}}
-            <div class="flex items-center gap-3">
-                <x-zyngga-button 
-                    type="a"
-                    href="{{ route('addresses.index') }}"
-                    variant="neutral"
-                    size="l"
-                    icon="arrow-left"
-                    iconPosition="only"
-                />
-                <x-zyngga-text variant="lg" weight="bold" class="flex-1">Tambah Alamat Baru</x-zyngga-text>
-            </div>
-
-            {{-- Search bar --}}
-            <div id="search-box" style="position:relative;">
-                <x-zyngga-input 
-                    name="search_input"
-                    id="search-input"
-                    placeholder="Cari lokasi atau alamat"
-                    autocomplete="off"
-                >
-                    <x-slot:iconLeft>
-                        <i data-feather="search" class="w-5 h-5 text-zyngga-neutral-400"></i>
-                    </x-slot:iconLeft>
-                </x-zyngga-input>
-                <div id="search-results" style="display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 200; background: white; border: 1.5px solid #e8eff9; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto;"></div>
-            </div>
-
-            <form action="{{ route('addresses.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <input type="hidden" id="hidden-lat" name="latitude">
-                <input type="hidden" id="hidden-lng" name="longitude">
-                
-                {{-- Address Preview Card --}}
-                <div class="bg-zyngga-blue-50/50 rounded-2xl p-4 border border-zyngga-blue-50 flex gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 border border-zyngga-blue-50">
-                        <i data-feather="map-pin" class="w-4 h-4 text-zyngga-blue-300"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <x-zyngga-text variant="xs" color="neutral-400" weight="bold" class="uppercase tracking-widest mb-1">Alamat Terpilih</x-zyngga-text>
-                        <textarea 
-                            id="address-preview" 
-                            name="address_detail" 
-                            readonly 
-                            class="w-full bg-transparent border-none p-0 text-sm font-bold text-zyngga-neutral-500 focus:ring-0 resize-none h-12 leading-snug"
-                        >Menentukan lokasi...</textarea>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <x-zyngga-input 
-                        label="Label Alamat" 
-                        name="label" 
-                        placeholder="Contoh: Rumah, Kantor, Kost"
-                        required 
-                        :error="$errors->first('label')"
-                    />
-
-                    <x-zyngga-input 
-                        label="Catatan (Opsional)" 
-                        name="note" 
-                        placeholder="Contoh: Pagar warna biru, lantai 2"
-                        :error="$errors->first('note')"
-                    />
-                </div>
-
-                <div class="pt-2">
+            <div id="bottom-sheet-content">
+                {{-- Header --}}
+                <div style="display:flex; align-items:center; height:40px; gap:8px;">
                     <x-zyngga-button 
-                        type="submit" 
-                        id="btn-submit"
-                        variant="primary" 
-                        size="l" 
-                        label="Simpan Alamat" 
-                        class="w-full"
-                        disabled
+                        type="a"
+                        href="{{ request()->has('address_id') ? route('addresses.edit', request()->query('address_id')) : route('profile') }}"
+                        variant="neutral"
+                        size="l"
+                        icon="arrow-left"
+                        iconPosition="only"
+                        aria-label="Kembali"
                     />
+                    <x-zyngga-text variant="lg" weight="medium" as="h1" class="flex-1">Pilih Alamat Kamu</x-zyngga-text>
                 </div>
-            </form>
+
+                {{-- Search bar --}}
+                <div id="search-box" style="position:relative;">
+                    <x-zyngga-input 
+                        name="search_input"
+                        id="search-input"
+                        placeholder="Cari lokasi atau alamat"
+                        autocomplete="off"
+                    >
+                        <x-slot:iconLeft>
+                            <i data-feather="search" class="w-5 h-5 text-zyngga-neutral-400"></i>
+                        </x-slot:iconLeft>
+                        <x-slot:iconRight>
+                            <button
+                                type="button"
+                                id="btn-clear-search"
+                                onclick="clearSearch()"
+                                style="display:none; background:none; border:none; cursor:pointer; padding:4px; color:#808080; line-height:1;"
+                                aria-label="Hapus pencarian"
+                            >
+                                <i data-feather="x" class="w-4 h-4 text-zyngga-neutral-400"></i>
+                            </button>
+                        </x-slot:iconRight>
+                    </x-zyngga-input>
+                    <div id="search-results" style="display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 200; background: white; border: 1.5px solid #e8eff9; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto;"></div>
+                </div>
+
+                <div style="height:1px; background:#e8eff9; margin:0 4px;"></div>
+
+                {{-- Address Card --}}
+                <div id="address-card" style="border:1.5px solid #e8eff9; border-radius:12px; padding:14px 16px; display:flex; align-items:center; gap:12px;">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zyngga-blue-50">
+                        <i data-feather="map-pin" class="w-5 h-5 text-zyngga-blue-300"></i>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <x-zyngga-text id="loc-name" variant="sm" weight="medium">Menentukan lokasi...</x-zyngga-text>
+                        <x-zyngga-text id="loc-address" variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
+                            Geser pin di peta untuk memilih alamat
+                        </x-zyngga-text>
+                    </div>
+                    <div id="geocode-spinner" style="display:none; flex-shrink:0;">
+                        <i data-feather="refresh-cw" class="w-4 h-4 text-zyngga-blue-300 animate-spin"></i>
+                    </div>
+                </div>
+
+                {{-- Error message for distance --}}
+                <div id="distance-error" style="display:none; padding:12px 16px; background:#FEF2F2; border-radius:12px; border:1px solid #FEE2E2; align-items:center; gap:10px; margin-top:4px;">
+                    <i data-feather="alert-circle" class="w-5 h-5 text-[#EF4444] shrink-0"></i>
+                    <x-zyngga-text variant="xs" weight="regular" color="danger">
+                        Maaf, lokasi ini berada di luar jangkauan layanan kami.
+                    </x-zyngga-text>
+                </div>
+
+                <x-zyngga-button 
+                    onclick="goToDetails()"
+                    type="button" 
+                    id="btn-next"
+                    variant="primary" 
+                    size="l" 
+                    label="Pilih Lokasi ini" 
+                    class="w-full"
+                    disabled
+                />
+            </div>
         </div>
     </div>
 
     <script>
+        function goToDetails() {
+            const lat = document.getElementById('hidden-lat').value;
+            const lng = document.getElementById('hidden-lng').value;
+            const address = document.getElementById('hidden-address').value;
+            const service = "{{ request()->query('service') }}";
+            const addressId = "{{ request()->query('address_id') }}";
+            
+            if (lat && lng && address) {
+                let url;
+                if (addressId) {
+                    url = `{{ url('addresses') }}/${addressId}/edit?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}`;
+                } else {
+                    url = `{{ route('addresses.create.details') }}?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}`;
+                }
+                
+                if (service) url += (url.includes('?') ? '&' : '?') + `service=${service}`;
+                window.location.href = url;
+            }
+        }
+
         let map, geocoder, autocomplete;
-        let currentLat = -6.9809375;
-        let currentLng = 107.6290625;
+        let currentLat = {{ request()->query('lat', -6.9809375) }};
+        let currentLng = {{ request()->query('lng', 107.6290625) }};
+        const LAUNDRY_LAT = -6.9809375;
+        const LAUNDRY_LNG = 107.6290625;
         let geocodeTimer = null;
 
         function syncPinOverlay() {
-            const sheetEl = document.getElementById('bottom-sheet');
-            const overlay = document.getElementById('pin-overlay');
-            const sheetHeight = sheetEl.offsetHeight;
-            const visibleHeight = window.innerHeight - sheetHeight;
-            overlay.style.height = visibleHeight + 'px';
-            if (map) map.setPadding({ bottom: sheetHeight });
+            // We now center the pin to the entire map container instead of the visible area.
+            // No padding or height adjustments are needed.
         }
 
         function reverseGeocode(lat, lng) {
-            document.getElementById('btn-submit').disabled = true;
-            document.getElementById('address-preview').value = 'Menentukan lokasi...';
+            const btnNext = document.getElementById('btn-next');
+            if (!btnNext) return;
+
+            document.getElementById('geocode-spinner').style.display = 'block';
+            btnNext.disabled = true;
+            document.getElementById('loc-name').textContent = 'Menentukan lokasi...';
+            document.getElementById('loc-address').textContent = '';
 
             geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                document.getElementById('geocode-spinner').style.display = 'none';
                 if (status === 'OK' && results[0]) {
-                    const address = results[0].formatted_address;
-                    document.getElementById('address-preview').value = address;
+                    const result = results[0];
+                    let name = '';
+                    const types = ['establishment', 'point_of_interest', 'premise', 'route', 'sublocality_level_1', 'locality'];
+                    for (const type of types) {
+                        const comp = result.address_components.find(c => c.types.includes(type));
+                        if (comp) { name = comp.long_name; break; }
+                    }
+                    if (!name) name = result.formatted_address.split(',')[0];
+
+                    const address = result.formatted_address;
+
+                    // ── Distance Check ─────────────────────────────────────
+                    const laundryLoc = new google.maps.LatLng(LAUNDRY_LAT, LAUNDRY_LNG);
+                    const selectedLoc = new google.maps.LatLng(lat, lng);
+                    const distance = google.maps.geometry.spherical.computeDistanceBetween(laundryLoc, selectedLoc);
+
+                    if (distance > 1400) {
+                        document.getElementById('distance-error').style.display = 'flex';
+                        document.getElementById('loc-name').textContent = name;
+                        document.getElementById('loc-address').textContent = address;
+                        btnNext.disabled = true;
+                        return;
+                    }
+
+                    document.getElementById('distance-error').style.display = 'none';
+                    document.getElementById('loc-name').textContent = name;
+                    document.getElementById('loc-address').textContent = address;
+                    document.getElementById('hidden-address').value = address;
                     document.getElementById('hidden-lat').value = lat;
                     document.getElementById('hidden-lng').value = lng;
-                    document.getElementById('btn-submit').disabled = false;
+                    btnNext.disabled = false;
                 } else {
-                    document.getElementById('address-preview').value = 'Lokasi tidak ditemukan';
+                    document.getElementById('loc-name').textContent = 'Lokasi tidak ditemukan';
                 }
             });
         }
@@ -240,7 +285,9 @@
                 reverseGeocode(currentLat, currentLng);
             });
 
-            map.addListener('dragstart', () => document.getElementById('pin-icon').classList.add('dragging'));
+            map.addListener('dragstart', () => {
+                document.getElementById('pin-icon').classList.add('dragging');
+            });
             map.addListener('dragend', () => {
                 document.getElementById('pin-icon').classList.remove('dragging');
                 const center = map.getCenter();
@@ -250,17 +297,24 @@
 
             setupSearch();
             window.addEventListener('resize', syncPinOverlay);
-            const sheetObserver = new ResizeObserver(() => syncPinOverlay());
-            sheetObserver.observe(document.getElementById('bottom-sheet'));
+            const sheet = document.getElementById('bottom-sheet');
+            if (sheet) {
+                const sheetObserver = new ResizeObserver(() => syncPinOverlay());
+                sheetObserver.observe(sheet);
+            }
         }
 
         function setupSearch() {
             const input = document.getElementById('search-input');
             const resultsBox = document.getElementById('search-results');
+            const clearBtn = document.getElementById('btn-clear-search');
+            if (!input || !resultsBox) return;
+
             autocomplete = new google.maps.places.AutocompleteService();
 
             input.addEventListener('input', () => {
                 const q = input.value.trim();
+                if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
                 if (!q) { resultsBox.style.display = 'none'; return; }
 
                 autocomplete.getPlacePredictions({ input: q, componentRestrictions: { country: 'id' } }, (preds, status) => {
@@ -284,6 +338,7 @@
                                 }
                             });
                             input.value = '';
+                            if (clearBtn) clearBtn.style.display = 'none';
                             resultsBox.style.display = 'none';
                         });
                         resultsBox.appendChild(item);
@@ -291,9 +346,19 @@
                 });
             });
         }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            const resultsBox = document.getElementById('search-results');
+            const clearBtn = document.getElementById('btn-clear-search');
+            if (!input) return;
+            input.value = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (resultsBox) resultsBox.style.display = 'none';
+            input.focus();
+        }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key', '') }}&libraries=places,geometry&callback=initMap" async defer></script>
-    @livewireScripts
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             feather.replace();

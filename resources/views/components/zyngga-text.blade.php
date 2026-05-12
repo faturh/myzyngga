@@ -18,9 +18,9 @@
 
     $weights = [
         'regular'  => 'font-normal',
-        'medium'   => 'font-normal',
-        'semibold' => 'font-medium',
-        'bold'     => 'font-medium',
+        'medium'   => 'font-medium',
+        'semibold' => 'font-semibold',
+        'bold'     => 'font-bold',
     ];
 
     $colors = [

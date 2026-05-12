@@ -25,10 +25,9 @@ new class extends Component
 
 <section class="space-y-6">
     <header>
-        <x-zyngga-text variant="lg" weight="medium" color="danger">{{ __('Hapus Akun') }}</x-zyngga-text>
-
-        <x-zyngga-text variant="sm" color="neutral-500" class="mt-1">
-            {{ __('Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. Sebelum menghapus akun, harap unduh data atau informasi apa pun yang ingin Anda simpan.') }}
+        <x-zyngga-text variant="sm" weight="medium" color="danger">{{ __('Hapus Akun') }}</x-zyngga-text>
+        <x-zyngga-text variant="xs" color="neutral-500" class="mt-1 block leading-relaxed">
+            {{ __('Setelah akun dihapus, semua data Anda akan hilang secara permanen. Harap berhati-hati sebelum melanjutkan.') }}
         </x-zyngga-text>
     </header>
 

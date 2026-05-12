@@ -4,13 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Edit Alamat – Zyngga</title>
+    <title>Detail Penjemputan – Zyngga</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
     <style>
         * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
         html, body { margin: 0; background: #e8eff9; min-height: 100%; }
@@ -22,24 +21,24 @@
     <div class="min-h-screen flex flex-col" x-data>
         {{-- HEADER --}}
         <x-dashboard-header 
-            title="Edit Detail Alamat" 
-            :backUrl="route('profile')" 
+            title="Lengkapi Detail Alamat" 
+            :backUrl="route('order.pickup', $service)" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
             :hamburg="false"
-        />        
-        
+        />
+
         {{-- MAIN CONTENT --}}
         <main class="flex-1 flex flex-col relative mt-2">
             <div class="w-full max-w-5xl mx-auto px-5 space-y-3" id="page-content">
                 
                 {{-- Card 1: Lokasi Terpilih --}}
-                <x-zyngga-card title="Detail Lokasi Alamat" gap="py-0">
+                <x-zyngga-card title="Lokasi Pickup" gap="py-0">
                     <x-slot:headerAction>
                         <x-zyngga-button 
                             type="a"
-                            href="{!! route(isset($service) ? 'order.pickup' : 'addresses.create', ['service' => $service ?? null, 'lat' => $address->latitude, 'lng' => $address->longitude, 'address_id' => $address->id]) !!}"
+                            href="{{ route('order.pickup', ['service' => $service, 'lat' => $lat, 'lng' => $lng]) }}"
                             variant="secondary"
                             size="s"
                             label="Ubah"
@@ -51,10 +50,10 @@
                         <iframe
                             loading="lazy"
                             referrerpolicy="no-referrer-when-downgrade"
-                            src="https://www.google.com/maps/embed/v1/search?key={{ config('services.google.maps_key') }}&q={{ $address->latitude }},{{ $address->longitude }}&zoom=18&maptype=roadmap"
+                            src="https://www.google.com/maps/embed/v1/search?key={{ config('services.google.maps_key') }}&q={{ $lat }},{{ $lng }}&zoom=18&maptype=roadmap"
                             class="w-full h-full border-0 pointer-events-none"
                         ></iframe>
-                        <a href="{!! route(isset($service) ? 'order.pickup' : 'addresses.create', ['service' => $service ?? null, 'lat' => $address->latitude, 'lng' => $address->longitude, 'address_id' => $address->id]) !!}" class="absolute inset-0 z-10 block cursor-pointer" aria-label="Edit lokasi"></a>
+                        <a href="{{ route('order.pickup', ['service' => $service, 'lat' => $lat, 'lng' => $lng]) }}" class="absolute inset-0 z-10 block cursor-pointer" aria-label="Edit lokasi"></a>
                     </div>
                     
                     <div class="flex items-start gap-3">
@@ -63,26 +62,25 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <x-zyngga-text variant="sm" weight="medium">
-                                {{ explode(',', $address->address_detail)[0] }}
+                                {{ explode(',', $address)[0] }}
                             </x-zyngga-text>
                             <x-zyngga-text variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
-                                {{ $address->address_detail }}
+                                {{ $address }}
                             </x-zyngga-text>
                         </div>
                     </div>
                 </x-zyngga-card>
 
-                {{-- Card 2 & 3: Form Details --}}
-                <form action="{{ route('addresses.update', $address) }}" method="POST" class="space-y-3">
+                {{-- Form Details --}}
+                <form action="{{ route('order.pickup.details.store') }}" method="POST" class="space-y-3">
                     @csrf
-                    @method('PUT')
-                    
-                    @if(isset($service))
-                        <input type="hidden" name="service" value="{{ $service }}">
+                    <input type="hidden" name="service" value="{{ $service }}">
+                    <input type="hidden" name="latitude" value="{{ $lat }}">
+                    <input type="hidden" name="longitude" value="{{ $lng }}">
+                    <input type="hidden" name="address_detail" value="{{ $address }}">
+                    @if(isset($existingAddress))
+                        <input type="hidden" name="address_id" value="{{ $existingAddress->id }}">
                     @endif
-                    <input type="hidden" name="latitude" value="{{ $address->latitude }}">
-                    <input type="hidden" name="longitude" value="{{ $address->longitude }}">
-                    <input type="hidden" name="address_detail" value="{{ $address->address_detail }}">
                     
                     <x-zyngga-card gap="py-0">
                         <div class="flex flex-col gap-4">
@@ -90,8 +88,8 @@
                                 label="Label Alamat" 
                                 name="label" 
                                 placeholder="Contoh: Rumah, Kantor, Kost"
-                                :value="old('label', $address->label)"
                                 required 
+                                value="{{ old('label', $existingAddress->label ?? '') }}"
                                 :error="$errors->first('label')"
                                 autofocus
                             >
@@ -101,86 +99,45 @@
                                 label="Catatan (Opsional)" 
                                 name="note" 
                                 placeholder="Contoh: Rumah nomor 123"
-                                :value="old('note', $address->note)"
+                                value="{{ old('note', $existingAddress->note ?? '') }}"
                                 :error="$errors->first('note')"
                             >
                             </x-zyngga-input>
                         </div>
                     </x-zyngga-card>
 
-                    {{-- Card 3: Set Primary --}}
-                    <x-zyngga-card gap="py-0">
-                        <x-zyngga-switch 
-                            label="Jadikan sebagai Alamat Utama"
-                            description="Alamat ini akan otomatis terpilih saat melakukan pemesanan"
-                            name="is_primary"
-                            value="1"
-                            :checked="$address->is_primary"
-                            :disabled="$addressCount === 1"
-                        />
-                    </x-zyngga-card>
+                    {{-- Card 3: Save to Profile (only for new address) --}}
+                    @if(!isset($existingAddress))
+                        <x-zyngga-card gap="py-0">
+                            <x-zyngga-switch 
+                                label="Simpan ke Daftar Alamat"
+                                description="Alamat ini akan tersimpan di profil Anda untuk pemesanan berikutnya"
+                                name="save_address"
+                                value="1"
+                                :checked="true"
+                            />
+                        </x-zyngga-card>
+                    @endif
 
                     {{-- Sticky Footer --}}
                     <div class="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-zyngga-neutral-50 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-50 rounded-t-[16px]">
-                        <div class="max-w-5xl mx-auto flex gap-4">
-                            {{-- Delete button only if not from service flow --}}
-                            @if(!isset($service))
-                                <x-zyngga-button 
-                                    type="button"
-                                    @click="window.dispatchEvent(new CustomEvent('open-delete-modal'))"
-                                    variant="secondary"
-                                    size="l"
-                                    label="Hapus Alamat"
-                                    class="flex-1 !border-red-500 !text-red-500 hover:!bg-red-50 active:!bg-red-100"
-                                />
-                            @endif
-
+                        <div class="max-w-5xl mx-auto">
                             <x-zyngga-button 
                                 type="submit" 
                                 variant="primary" 
                                 size="l" 
-                                label="{{ isset($service) ? 'Atur Lokasi Pickup' : 'Simpan' }}" 
-                                class="flex-1"
+                                label="Atur Lokasi Pickup" 
+                                class="w-full"
                             />
                         </div>
                     </div>
                 </form>
-
-                @if(!isset($service))
-                    <form id="delete-form" action="{{ route('addresses.destroy', $address) }}" method="POST" style="display: none;">
-                        @csrf
-                        @method('DELETE')
-                    </form>
-                @endif
             </div>
         </main>
-
-        {{-- ── MODAL: KONFIRMASI HAPUS ALAMAT ────────────────────────────── --}}
-        <x-zyngga-selection-modal 
-            id="delete-modal-root" 
-            openEvent="open-delete-modal"
-            closeEvent="close-delete-modal"
-        >
-            <x-zyngga-confirm-view 
-                :image="asset('images/illustrations/cancel_order.png')"
-                title="Hapus alamat ini?"
-                description="Alamat yang dihapus tidak dapat dikembalikan lagi."
-                primaryLabel="Ya, Hapus"
-                secondaryLabel="Batal"
-                primaryClass="!bg-red-500 hover:!bg-red-600 !border-red-500"
-                primaryAction="document.getElementById('delete-form').submit()"
-                secondaryAction="@click=$dispatch('close-delete-modal')"
-            />
-        </x-zyngga-selection-modal>
-
     </div>
 
-    @livewireScripts
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            feather.replace();
-        });
-        document.addEventListener('livewire:load', function() {
             feather.replace();
         });
     </script>

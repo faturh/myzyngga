@@ -12,6 +12,9 @@
         $watch('isOpen', value => document.body.style.overflow = value ? 'hidden' : 'auto');
         @if($openEvent) window.addEventListener('{{ $openEvent }}', () => isOpen = true); @endif
         @if($closeEvent) window.addEventListener('{{ $closeEvent }}', () => isOpen = false); @endif
+        window.addEventListener('close-selection-modal', (e) => {
+            if (e.detail.id === '{{ $id }}') isOpen = false;
+        });
     "
     x-show="isOpen"
     x-transition:enter="transition ease-out duration-300"

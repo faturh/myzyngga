@@ -18,56 +18,50 @@
 </head>
 <body class="bg-zyngga-blue-50 min-h-screen">
 
-    <div class="min-h-screen flex flex-col">
+    <div class="min-h-screen flex flex-col" x-data>
+        {{-- HEADER --}}
         <x-dashboard-header 
-            title="Detail Akun" 
+            title="Ubah Profil" 
             :backUrl="route('profile')" 
-            :maxWidth="'max-w-3xl'"
+            :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
             :hamburg="false"
         />
 
-        <main class="w-full max-w-3xl mx-auto py-6 px-5 flex-1 flex flex-col gap-6">
-            
-            {{-- Profile Summary Header --}}
-            <div class="flex flex-col items-center py-2 mb-2">
-                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#1660C1] to-[#0F4387] flex items-center justify-center border-4 border-white shadow-lg mb-3">
-                    <span class="text-2xl font-bold text-white">
-                        {{ collect(explode(' ', Auth::user()->name))->map(fn($n) => str($n)->substr(0, 1))->join('') }}
-                    </span>
-                </div>
-                <x-zyngga-text variant="lg" weight="bold">{{ Auth::user()->name }}</x-zyngga-text>
-                <x-zyngga-text variant="sm" color="neutral-500">ID Pengguna: #{{ str_pad(Auth::id(), 5, '0', STR_PAD_LEFT) }}</x-zyngga-text>
-            </div>
-
-            {{-- Personal Information Section --}}
-            <x-zyngga-card>
+        <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col pb-32">
+            <div class="px-5 space-y-3 pt-2" id="page-content">
+                
+                {{-- Profile Info --}}
                 <livewire:profile.update-profile-information-form />
-            </x-zyngga-card>
 
-            {{-- Danger Zone Section --}}
-            <div>
-                <x-zyngga-text variant="sm" weight="bold" color="danger" class="uppercase tracking-widest mb-3 px-1">Zona Bahaya</x-zyngga-text>
-                <x-zyngga-card class="!border-red-100 !bg-red-50/20">
+                {{-- Hidden Delete Form (for modal access) --}}
+                <div class="hidden">
                     <livewire:profile.delete-user-form />
-                </x-zyngga-card>
+                </div>
             </div>
-
         </main>
     </div>
 
     @livewireScripts
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            feather.replace();
-            setTimeout(() => feather.replace(), 500);
-        });
-        document.addEventListener('livewire:load', function () {
-            feather.replace();
-        });
-        document.addEventListener('livewire:navigated', function () {
-            feather.replace();
+        const replaceFeather = () => {
+            if (typeof feather !== 'undefined') feather.replace();
+        };
+
+        document.addEventListener('DOMContentLoaded', replaceFeather);
+        document.addEventListener('livewire:navigated', replaceFeather);
+        
+        // Listen for any Livewire updates to re-replace icons
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('profile-updated', () => setTimeout(replaceFeather, 50));
+            
+            // Re-replace on every Livewire request finish
+            Livewire.hook('request', ({ fulfill }) => {
+                fulfill(() => {
+                    setTimeout(replaceFeather, 10);
+                });
+            });
         });
     </script>
 </body>

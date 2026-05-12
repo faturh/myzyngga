@@ -8,17 +8,34 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="https://unpkg.com/feather-icons"></script>
+        <style>
+            * { font-family: 'DM Sans', sans-serif; }
+            [x-cloak] { display: none !important; }
+        </style>
     </head>
-    <body class="font-sans antialiased bg-[#F8FAFC] text-gray-900 min-h-screen">
+    <body class="antialiased bg-[#F8FAFC] text-gray-900 min-h-screen">
         {{ $slot }}
         <script>
-            feather.replace();
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof feather !== 'undefined') feather.replace();
+            });
+
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('morph.updated', (el, component) => {
+                    if (typeof feather !== 'undefined') feather.replace();
+                });
+            });
+            
+            document.addEventListener('livewire:navigated', () => {
+                if (typeof feather !== 'undefined') feather.replace();
+            });
         </script>
     </body>
 </html>

@@ -39,7 +39,7 @@
 
     $iconSize = match($size) {
         'L' => 'w-[18px] h-[18px]',
-        'M', 'S' => 'w-[14px] h-[14px]',
+        'M', 'S' => 'w-[12px] h-[12px]',
         default => 'w-[18px] h-[18px]',
     };
 

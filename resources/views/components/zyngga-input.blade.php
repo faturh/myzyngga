@@ -38,7 +38,7 @@
 
 <div {{ $attributes->only('class') }}>
     @if($label)
-        <x-zyngga-text as="label" variant="sm" weight="regular" color="neutral-500" class="block mb-2" for="{{ $name }}">
+        <x-zyngga-text as="label" variant="sm" weight="regular" class="block mb-2" for="{{ $name }}">
             {{ $label }}
         </x-zyngga-text>
     @endif
@@ -52,12 +52,11 @@
         
         <input 
             type="{{ $type }}" 
-            name="{{ $name }}"
-            value="{{ $value }}"
             placeholder="{{ $placeholder }}"
             @disabled($disabled)
             {{ $attributes->except('class')->merge([
-                'id' => $name,
+                'id' => $name ?: ($attributes->get('id') ?: 'input-'.uniqid()),
+                'name' => $name ?: ($attributes->get('name')),
                 'class' => 'flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none p-0 text-zyngga-neutral-500 placeholder-zyngga-neutral-400 ' . ($inputSizeClasses[$size] ?? $inputSizeClasses['M'])
             ]) }}
         >
@@ -74,8 +73,8 @@
     </div>
     
     @if($error)
-        <x-zyngga-text variant="xs" weight="regular" color="danger" class="mt-1">
+        <span class="text-xs text-red-500 mt-1 block">
             {{ $error }}
-        </x-zyngga-text>
+        </span>
     @endif
 </div>

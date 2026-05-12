@@ -79,7 +79,7 @@
             justify-content: center;
             padding: 0;
         }
-        .time-chip:hover {
+        .time-chip:not(:disabled):hover {
             border-color: #1660C1;
             color: #1660C1;
             background: #e8eff9;
@@ -131,10 +131,9 @@
         #sticky-footer {
             position: fixed;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            right: 0;
             width: 100%;
-            max-width: 768px; /* Tablet width */
             background: white;
             border-top: 1px solid #F4F4F4;
             border-radius: 16px 16px 0 0;
@@ -148,10 +147,12 @@
         }
 
         /* Reset sticky footer position (no sidebar) */
+        /* Remove specific centering on desktop */
         @media (min-width: 768px) {
             #sticky-footer {
-                left: 50%;
-                transform: translateX(-50%);
+                left: 0;
+                right: 0;
+                transform: none;
             }
         }
 
@@ -167,12 +168,13 @@
 </head>
 <body class="bg-[#e8eff9]">
 
-    <div class="min-h-screen flex flex-col">
+    <div class="min-h-screen flex flex-col" x-data>
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
             title="Pemesanan Pickup" 
-            :backUrl="route('order.pickup', ['service' => $service])" 
-            :maxWidth="'max-w-3xl'"
+            :backUrl="route('home')" 
+            :backAction="'window.dispatchEvent(new CustomEvent(\'open-back-modal\'))'"
+            :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
             :hamburg="false"
@@ -180,27 +182,31 @@
 
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col relative">
-            <div class="w-full max-w-3xl mx-auto px-5">
+            <div class="w-full max-w-5xl mx-auto px-5">
                 {{-- ── SCROLLABLE CONTENT ──────────────────────────────────── --}}
                 <form method="POST" action="{{ route('order.confirm') }}" id="page-content" class="flex-1 flex flex-col">
         @csrf
         <input type="hidden" name="service"        value="{{ $service }}">
         <input type="hidden" name="address"        value="{{ $address }}">
-        <input type="hidden" name="detail_address" value="{{ $detailAddress }}">
         <input type="hidden" name="lat"            value="{{ $lat }}">
         <input type="hidden" name="lng"            value="{{ $lng }}">
         <input type="hidden" name="selected_service_id" id="selected_service_id" value="{{ strtolower($serviceLabel) }}">
-        <input type="hidden" name="pickup_date"   id="pickup_date"   value="today">
-        <input type="hidden" name="pickup_time"   id="pickup_time"   value="10:00">
+        @php
+            $todayCarbon = \Carbon\Carbon::now('Asia/Jakarta');
+            $currentHour = $todayCarbon->hour;
+            $isTodayDisabled = $currentHour >= 18;
+            $defaultDate = $isTodayDisabled ? 'tomorrow' : 'today';
+        @endphp
+        <input type="hidden" name="pickup_date"   id="pickup_date"   value="{{ $defaultDate }}">
+        <input type="hidden" name="pickup_time"   id="pickup_time"   value="">
         <input type="hidden" name="parfum"        id="parfum"        value="Lavender">
-        <input type="hidden" name="note"          id="note"          value="">
         
         {{-- ── LOKASI PICKUP ─────────────────────────────────── --}}
         <x-zyngga-card title="Lokasi Pickup">
             <x-slot:headerAction>
                 <x-zyngga-button 
                 type="a"
-                href="{{ route('order.pickup', ['service' => $service, 'force' => 1]) }}"
+                href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
                 variant="secondary"
                 size="s"
                 label="Ubah"
@@ -213,41 +219,45 @@
                 loading="lazy"
                 allowfullscreen
                 referrerpolicy="no-referrer-when-downgrade"
-                src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_key') }}&q={{ urlencode($address) }}&zoom=15&maptype=roadmap"
+                src="https://www.google.com/maps/embed/v1/search?key={{ config('services.google.maps_key') }}&q={{ $lat }},{{ $lng }}&zoom=18&maptype=roadmap"
                 style="pointer-events:none;"
                 ></iframe>
                 {{-- Transparent overlay captures click → navigate to edit page --}}
                 <a
-                href="{{ route('order.pickup', ['service' => $service, 'force' => 1]) }}"
+                href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
                 class="absolute inset-0 z-10 block cursor-pointer"
                 aria-label="Edit lokasi pickup"
                 title="Edit lokasi pickup"
                 ></a>
             </div>
             
-            {{-- Address --}}
-            <div class="mb-3">
-                <x-zyngga-text variant="sm" weight="medium" class="mb-1">
-                    {{ $address }}
-                </x-zyngga-text>
-                @if($detailAddress)
-                <x-zyngga-text variant="xs" color="neutral-500">
-                    {{ $detailAddress }}
-                </x-zyngga-text>
-                @endif
+            {{-- Address with Icon --}}
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zyngga-blue-50">
+                    <i data-feather="map-pin" class="w-5 h-5 text-zyngga-blue-300"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <x-zyngga-text variant="sm" weight="medium">
+                        {{ explode(',', $address)[0] }}
+                    </x-zyngga-text>
+                    <x-zyngga-text variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
+                        {{ $address }}
+                    </x-zyngga-text>
+                </div>
             </div>
 
-            {{-- Detail lokasi input --}}
-            <x-zyngga-input 
-            name="detail_address_edit"
-                placeholder="Detail Lokasi"
-                value="{{ $detailAddress }}"
-                onkeydown="if(event.key === 'Enter') event.preventDefault();"
-            >
-                <x-slot:iconRight>
-                    <i data-feather="edit-2" class="w-4 h-4 text-[#808080]"></i>
-                </x-slot:iconRight>
-            </x-zyngga-input>
+            <div class="mt-3">
+                <x-zyngga-input 
+                    name="detail_address" 
+                    id="detail_address" 
+                    value="{{ $detailAddress }}" 
+                    placeholder="Tambah detail lokasi" 
+                >
+                    <x-slot:iconRight>
+                        <i data-feather="edit-2" class="w-4 h-4 text-zyngga-neutral-900 pointer-events-none"></i>
+                    </x-slot:iconRight>
+                </x-zyngga-input>
+            </div>
         </x-zyngga-card>
         
                 @guest
@@ -255,26 +265,35 @@
                 <x-zyngga-card title="Detail Pelanggan">
                     <div class="space-y-4">
                         <div>
-                            <x-zyngga-text variant="sm" weight="medium" class="mb-1.5 block">Nama Lengkap</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Nama Lengkap</x-zyngga-text>
                             <x-zyngga-input 
                                 name="customer_name"
+                                id="customer_name"
                                 placeholder="Masukkan nama pelanggan"
+                                required
                             />
+                            <span id="error-customer_name" class="text-xs text-red-500 mt-1 hidden"></span>
                         </div>
                         <div>
-                            <x-zyngga-text variant="sm" weight="medium" class="mb-1.5 block">Nomor WhatsApp</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Nomor WhatsApp</x-zyngga-text>
                             <x-zyngga-input 
                                 name="customer_phone"
-                                placeholder="Masukkan No. WhatsApp"
+                                id="customer_phone"
+                                placeholder="Masukkan nomor WhatsApp"
+                                required
                             />
+                            <span id="error-customer_phone" class="text-xs text-red-500 mt-1 hidden"></span>
                         </div>
                         <div>
-                            <x-zyngga-text variant="sm" weight="medium" class="mb-1.5 block">Email</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Email</x-zyngga-text>
                             <x-zyngga-input 
                                 name="customer_email"
+                                id="customer_email"
                                 placeholder="Masukkan Email"
                                 type="email"
+                                required
                             />
+                            <span id="error-customer_email" class="text-xs text-red-500 mt-1 hidden"></span>
                             <div class="flex items-center gap-2 mt-2">
                                 <i data-feather="info" class="w-4 h-4 text-[#1660C1]"></i>
                                 <x-zyngga-text variant="xs" color="primary">Email digunakan untuk mengirim notifikasi pesanan</x-zyngga-text>
@@ -359,25 +378,29 @@
                 {{-- Date options --}}
                 <div class="flex gap-2">
                     @php
-                        $today    = \Carbon\Carbon::now('Asia/Jakarta');
-                        $tomorrow = $today->copy()->addDay();
+                        $tomorrowCarbon = $todayCarbon->copy()->addDay();
                     @endphp
-                    <div class="date-btn selected" onclick="selectDate('today', this)">
+                    <button type="button" class="date-btn {{ !$isTodayDisabled ? 'selected' : 'opacity-40 bg-gray-50 pointer-events-none' }}" 
+                            onclick="selectDate('today', this)" {{ $isTodayDisabled ? 'disabled' : '' }}>
                         <x-zyngga-text variant="sm" weight="medium" class="m-0">Hari ini</x-zyngga-text>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $today->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                    </div>
-                    <div class="date-btn" onclick="selectDate('tomorrow', this)">
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $todayCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+                    </button>
+                    <button type="button" class="date-btn {{ $isTodayDisabled ? 'selected' : '' }}" 
+                            onclick="selectDate('tomorrow', this)">
                         <x-zyngga-text variant="sm" weight="medium" class="m-0">Besok</x-zyngga-text>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrow->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                    </div>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrowCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+                    </button>
                 </div>
 
                 {{-- Time chips --}}
                 <div class="flex gap-2">
                     @foreach(['10:00','12:00','16:00','18:00'] as $time)
+                        @php $timeHour = (int) explode(':', $time)[0]; @endphp
                         <button
                             type="button"
-                            class="time-chip {{ $time === '10:00' ? 'selected' : '' }}"
+                            class="time-chip"
+                            data-time="{{ $time }}"
+                            data-hour="{{ $timeHour }}"
                             onclick="selectTime('{{ $time }}', this)"
                         >
                             <x-zyngga-text variant="sm" weight="regular" class="inherit-color">{{ $time }}</x-zyngga-text>
@@ -446,22 +469,24 @@
 
     {{-- ── STICKY FOOTER ──────────────────────────────────────── --}}
     <div id="sticky-footer">
-        <div>
-            <x-zyngga-text id="footer-service-label" variant="base" weight="medium" class="m-0">Memuat...</x-zyngga-text>
-            <div class="flex items-center gap-1.5 mt-1">
-                <i data-feather="info" class="w-3.5 h-3.5 text-[#1660C1]"></i>
-                <x-zyngga-text id="footer-eta" variant="xs" color="primary" class="m-0">Menghitung estimasi...</x-zyngga-text>
+        <div class="max-w-5xl mx-auto w-full px-5 flex items-center justify-between">
+            <div>
+                <x-zyngga-text id="footer-service-label" variant="base" weight="medium" class="m-0">Memuat...</x-zyngga-text>
+                <div class="flex items-center gap-1.5 mt-1">
+                    <i data-feather="info" class="w-3.5 h-3.5 text-[#1660C1]"></i>
+                    <x-zyngga-text id="footer-eta" variant="xs" color="primary" class="m-0">Menghitung estimasi...</x-zyngga-text>
+                </div>
             </div>
-        </div>
 
-        <x-zyngga-button 
-            type="button"
-            variant="primary"
-            size="l"
-            label="Buat Pesanan"
-            class="ml-4"
-            onclick="window.dispatchEvent(new CustomEvent('open-confirm-modal'))"
-        />
+            <x-zyngga-button 
+                type="button"
+                variant="primary"
+                size="l"
+                label="Buat Pesanan"
+                class="ml-4"
+                onclick="validateAndConfirm()"
+            />
+        </div>
     </div>
 
             </div>
@@ -482,6 +507,23 @@
         secondaryLabel="Batalkan"
         primaryAction="@click=submitOrder()"
         secondaryAction="@click=$dispatch('close-confirm-modal')"
+    />
+</x-zyngga-selection-modal>
+
+{{-- ── MODAL: KONFIRMASI KEMBALI ────────────────────────────── --}}
+<x-zyngga-selection-modal 
+    id="back-modal-root" 
+    openEvent="open-back-modal"
+    closeEvent="close-back-modal"
+>
+    <x-zyngga-confirm-view 
+        :image="asset('images/illustrations/cancel_order.png')"
+        title="Batal buat pesanan?"
+        description="Data yang sudah Anda masukkan akan hilang jika Anda kembali ke halaman sebelumnya."
+        primaryLabel="Ya, Batalkan"
+        secondaryLabel="Tetap di Sini"
+        primaryAction="onclick=window.location.href='{{ route('home') }}'"
+        secondaryAction="@click=$dispatch('close-back-modal')"
     />
 </x-zyngga-selection-modal>
 
@@ -639,10 +681,7 @@
         closeServiceModal();
     }
 
-    // ── Init on page load ──────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-        applySelection(selectedId);
-    });
+    const CURRENT_HOUR = {{ \Carbon\Carbon::now('Asia/Jakarta')->hour }};
 
     // ── Date selection ─────────────────────────────────────────
     function selectDate(val, el) {
@@ -650,16 +689,55 @@
         el.classList.add('selected');
         document.getElementById('pickup_date').value = val;
         
+        refreshTimeChips(val);
         // Refresh ETA based on new date
         applySelection(selectedId);
     }
 
     // ── Time selection ─────────────────────────────────────────
     function selectTime(val, el) {
+        if (el.disabled) return;
         document.querySelectorAll('.time-chip').forEach(e => e.classList.remove('selected'));
         el.classList.add('selected');
         document.getElementById('pickup_time').value = val;
     }
+
+    function refreshTimeChips(selectedDate) {
+        const chips = document.querySelectorAll('.time-chip');
+        let firstAvailable = null;
+        let anySelected = false;
+
+        chips.forEach(chip => {
+            const timeHour = parseInt(chip.dataset.hour);
+            let isDisabled = false;
+
+            if (selectedDate === 'today' && CURRENT_HOUR >= timeHour) {
+                isDisabled = true;
+            }
+
+            if (isDisabled) {
+                chip.disabled = true;
+                chip.classList.add('opacity-30', 'bg-gray-50', 'cursor-not-allowed');
+                chip.classList.remove('selected');
+            } else {
+                chip.disabled = false;
+                chip.classList.remove('opacity-30', 'bg-gray-50', 'cursor-not-allowed');
+                if (!firstAvailable) firstAvailable = chip;
+                if (chip.classList.contains('selected')) anySelected = true;
+            }
+        });
+
+        // Auto-select the first available time if nothing is validly selected
+        if (!anySelected && firstAvailable) {
+            selectTime(firstAvailable.dataset.time, firstAvailable);
+        }
+    }
+
+    // ── Init on page load ──────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        applySelection(selectedId);
+        refreshTimeChips(document.getElementById('pickup_date').value);
+    });
 
 
 
@@ -703,9 +781,114 @@
         closeCatatan();
     }
 
+    // ── Validation Helpers ─────────────────────────────────────
+    function showError(fieldId, message) {
+        const errorEl = document.getElementById(`error-${fieldId}`);
+        const inputEl = document.getElementById(fieldId);
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+        // Assuming your x-zyngga-input has an internal input we can style, 
+        // but for now we focus on the text message.
+    }
+
+    function clearErrors() {
+        document.querySelectorAll('[id^="error-"]').forEach(el => {
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+    }
+
+    function validateGuestDetails() {
+        clearErrors();
+        let isValid = true;
+
+        const nameEl  = document.getElementById('customer_name');
+        const phoneEl = document.getElementById('customer_phone');
+        const emailEl = document.getElementById('customer_email');
+
+        // If these elements don't exist (user is logged in), skip validation
+        if (!nameEl) return true;
+
+        const name  = nameEl.value.trim();
+        const phone = phoneEl.value.trim();
+        const email = emailEl.value.trim();
+
+        // Validate Name
+        if (!name) {
+            showError('customer_name', 'Nama lengkap tidak boleh kosong');
+            isValid = false;
+        } else if (/\d/.test(name)) {
+            showError('customer_name', 'Nama tidak boleh mengandung angka');
+            isValid = false;
+        }
+
+        // Validate Phone
+        if (!phone) {
+            showError('customer_phone', 'Nomor WhatsApp tidak boleh kosong');
+            isValid = false;
+        }
+
+        // Validate Email
+        if (!email) {
+            showError('customer_email', 'Alamat email tidak boleh kosong');
+            isValid = false;
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('customer_email', 'Format email tidak valid');
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+
+    function validateAndConfirm() {
+        if (validateGuestDetails()) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal'));
+        } else {
+            // Scroll to top of the card if needed, or just focus first error
+            const firstError = document.querySelector('[id^="error-"]:not(.hidden)');
+            if (firstError) {
+                firstError.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }
+
+    // ── Prevent Refresh/Leave Warning ──────────────────────────
+    let isDirty = false;
+
+    // Monitor guest inputs for changes
+    ['customer_name', 'customer_phone', 'customer_email'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                isDirty = true;
+            });
+        }
+    });
+
+    // Also track other interactions like notes or parfum changes
+    document.getElementById('modal-catatan-input')?.addEventListener('input', () => isDirty = true);
+
+    window.addEventListener('beforeunload', (e) => {
+        if (isDirty) {
+            e.preventDefault();
+            e.returnValue = ''; // Required for Chrome/Standard
+        }
+    });
+
     // ── Confirm Modal Submit ─────────────────────────────────────
     function submitOrder() {
-        document.getElementById('page-content').submit();
+        // Final check before submission
+        if (validateGuestDetails()) {
+            isDirty = false; // Disable warning on legitimate submit
+            document.getElementById('page-content').submit();
+        } else {
+            window.dispatchEvent(new CustomEvent('close-confirm-modal'));
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -720,5 +903,6 @@
     });
 </script>
 
+@livewireScripts
 </body>
 </html>

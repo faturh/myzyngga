@@ -67,10 +67,9 @@
         footer {
             position: fixed;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            right: 0;
             width: 100%;
-            max-width: 768px; /* Tablet width */
             background: white;
             padding: 20px;
             display: flex;
@@ -82,10 +81,12 @@
         }
 
         /* Adjust footer position when sidebar is present on desktop */
+        /* Remove centering on desktop */
         @media (min-width: 768px) {
             footer {
-                left: 50%;
-                transform: translateX(-50%);
+                left: 0;
+                right: 0;
+                transform: none;
             }
         }
     </style>
@@ -100,8 +101,7 @@
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
             title="Detail Pesanan" 
-            :backUrl="route('dashboard')" 
-            :maxWidth="'max-w-3xl'"
+            :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
             :hamburg="false"
@@ -109,30 +109,28 @@
 
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col relative">
-            <div class="w-full max-w-3xl mx-auto px-5 pb-[100px]">
+            <div class="w-full max-w-5xl mx-auto px-5 pb-[100px]">
 
         {{-- ── CARD 1: ORDER INFO ──────────────────────────────────── --}}
         <x-zyngga-card>
             {{-- Top Row: Service & Status --}}
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                        <x-zyngga-service-icon service="Express" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+            <div class="flex items-start justify-between">
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
+                            <x-zyngga-service-icon service="Express" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                        </div>
+                        <x-zyngga-text variant="xl" weight="medium">Express</x-zyngga-text>
                     </div>
-                    <x-zyngga-text variant="xl" weight="medium">Express</x-zyngga-text>
+                    {{-- Order ID --}}
+                    <div class="flex items-center gap-1.5 px-1">
+                        <x-zyngga-text variant="sm" color="neutral-500" weight="regular">IJK902H8MAHD</x-zyngga-text>
+                        <button class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors">
+                            <i data-feather="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
                 <x-zyngga-status type="secondary" size="L" icon="truck" label="Delivery" />
-            </div>
-
-            {{-- Order ID --}}
-            <div class="flex items-center gap-1.5 mb-4 px-1">
-                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">IJK902H8MAHD</x-zyngga-text>
-                <button class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                </button>
             </div>
 
             <x-zyngga-divider class="my-4" />
@@ -151,6 +149,20 @@
                 <x-zyngga-text variant="sm" color="neutral-500" weight="regular" class="leading-relaxed">
                     Jl. Telekomunikasi No.1, Sukapura, Kec. Dayeuhkolot, Kabupaten Bandung
                 </x-zyngga-text>
+            </div>
+
+            <x-zyngga-divider class="my-4" />
+
+            {{-- Dates Section --}}
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Tanggal Pemesanan</x-zyngga-text>
+                    <x-zyngga-text variant="sm" weight="regular" color="neutral-500">Minggu, 12 Mei | 12.00</x-zyngga-text>
+                </div>
+                <div class="flex justify-between items-center">
+                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Estimasi Selesai</x-zyngga-text>
+                    <x-zyngga-text variant="sm" weight="regular" color="neutral-500">Senin, 13 Mei | 12.00</x-zyngga-text>
+                </div>
             </div>
         </x-zyngga-card>
 
@@ -204,7 +216,7 @@
                 icon="chevron-down"
                 iconPosition="right"
                 @click="showStatusDetail = !showStatusDetail"
-                class="w-full mt-4"
+                class="w-full mt-4 hover:bg-transparent"
                 ::class="showStatusDetail ? '[&_svg]:rotate-180' : ''"
             >
                 <span x-text="showStatusDetail ? 'Sembunyikan' : 'Lihat Detail'">Lihat Detail</span>
@@ -273,7 +285,7 @@
                 icon="chevron-down"
                 iconPosition="right"
                 @click="showPaymentDetail = !showPaymentDetail"
-                class="w-full mt-4"
+                class="w-full mt-4 hover:bg-transparent"
                 ::class="showPaymentDetail ? '[&_svg]:rotate-180' : ''"
             >
                 <span x-text="showPaymentDetail ? 'Sembunyikan' : 'Lihat Detail'">Lihat Detail</span>
@@ -323,22 +335,27 @@
 
         {{-- ── FOOTER ─────────────────────────────────────────────── --}}
         <footer>
-            <x-zyngga-button 
-                variant="secondary"
-                size="l"
-                icon="message-square"
-                iconPosition="left"
-                label="Chat"
-                class="flex-1"
-            />
-            <x-zyngga-button 
-                variant="primary"
-                size="l"
-                class="flex-[2]"
-                ::disabled="isPaid"
-            >
-                <x-zyngga-text variant="base" weight="medium" color="white" x-text="isPaid ? 'Sudah Dibayar' : 'Bayar Sekarang'">Bayar Sekarang</x-zyngga-text>
-            </x-zyngga-button>
+            <div class="max-w-5xl mx-auto w-full px-5 flex items-center gap-4">
+                <x-zyngga-button 
+                    type="a"
+                    href="https://wa.me/+6281297673318"
+                    target="_blank"
+                    variant="secondary"
+                    size="l"
+                    icon="message-square"
+                    iconPosition="left"
+                    label="Chat"
+                    class="flex-1"
+                />
+                <x-zyngga-button 
+                    variant="primary"
+                    size="l"
+                    class="flex-[2]"
+                    ::disabled="isPaid"
+                >
+                    <x-zyngga-text variant="base" weight="medium" color="white" x-text="isPaid ? 'Sudah Dibayar' : 'Bayar Sekarang'">Bayar Sekarang</x-zyngga-text>
+                </x-zyngga-button>
+            </div>
         </footer>
 
             </div>

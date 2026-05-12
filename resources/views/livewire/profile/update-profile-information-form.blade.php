@@ -11,27 +11,39 @@ new class extends Component
     public string $name = '';
     public string $email = '';
     public string $phone = '';
-    public bool $isEditing = false;
+    public string $originalName = '';
+    public string $originalPhone = '';
 
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
-        $this->phone = Auth::user()->phone ?? '';
+        $user = Auth::user();
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->phone = $user->phone ?? '';
+        
+        $this->originalName = $this->name;
+        $this->originalPhone = $this->phone;
     }
 
     /**
-     * Toggle edit mode.
+     * Revert changes if user cancels.
      */
-    public function toggleEdit(): void
+    public function cancelChanges(): void
     {
-        $this->isEditing = !$this->isEditing;
-        if (!$this->isEditing) {
-            $this->mount(); // Reset data if canceled
-        }
+        $this->name = $this->originalName;
+        $this->phone = $this->originalPhone;
+        $this->resetErrorBag();
+    }
+
+    /**
+     * Check if there are any changes to the profile information.
+     */
+    public function hasChanges(): bool
+    {
+        return $this->name !== $this->originalName || $this->phone !== $this->originalPhone;
     }
 
     /**
@@ -39,6 +51,8 @@ new class extends Component
      */
     public function updateProfileInformation(): void
     {
+        if (!$this->hasChanges()) return;
+
         $user = Auth::user();
 
         $validated = $this->validate([
@@ -49,7 +63,10 @@ new class extends Component
         $user->fill($validated);
         $user->save();
 
-        $this->isEditing = false;
+        // Update originals after successful save
+        $this->originalName = $this->name;
+        $this->originalPhone = $this->phone;
+
         $this->dispatch('profile-updated', name: $user->name);
     }
 
@@ -72,102 +89,124 @@ new class extends Component
     }
 }; ?>
 
-<section>
-    <header>
-        <x-zyngga-text variant="lg" weight="medium">{{ __('Informasi Profil') }}</x-zyngga-text>
-        <x-zyngga-text variant="sm" color="neutral-500" class="mt-1">
-            {{ __("Perbarui informasi profil akun dan alamat email Anda.") }}
-        </x-zyngga-text>
-    </header>
+<section x-data="{}">
+    {{-- Card 1: Profile Picture --}}
+    <x-zyngga-card class="mb-3">
+        <div class="flex flex-col items-center justify-center py-4">
+            <div class="w-24 h-24 rounded-full bg-zyngga-blue-300 flex items-center justify-center text-white text-4xl font-medium mb-4">
+                {{ substr($name, 0, 1) }}
+            </div>
+            <x-zyngga-button 
+                type="button" 
+                variant="secondary" 
+                size="s" 
+                class="rounded-full px-6"
+            >
+                <div class="flex items-center gap-2">
+                    <i data-feather="edit-3" class="w-3.5 h-3.5"></i>
+                    <span>Ubah Foto</span>
+                </div>
+            </x-zyngga-button>
+        </div>
+    </x-zyngga-card>
 
-    @if($isEditing)
-        <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
+    {{-- Card 2: Informasi Akun --}}
+    <x-zyngga-card title="Informasi Akun" wire:key="info-card-{{ $name }}-{{ $phone }}">
+        <div class="flex flex-col">
+            {{-- Name Item --}}
+            <button @click="window.dispatchEvent(new CustomEvent('open-name-modal'))" class="flex items-center justify-between py-4 border-b border-zyngga-neutral-50 text-left group">
+                <x-zyngga-text variant="sm" color="neutral-900">Nama Lengkap</x-zyngga-text>
+                <div class="flex items-center gap-2">
+                    <x-zyngga-text wire:key="name-display" variant="sm" weight="medium" class="text-zyngga-neutral-900">{{ $name }}</x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-zyngga-blue-300"></i>
+                </div>
+            </button>
+
+            {{-- Phone Item --}}
+            <button @click="window.dispatchEvent(new CustomEvent('open-phone-modal'))" class="flex items-center justify-between py-4 border-b border-zyngga-neutral-50 text-left group">
+                <x-zyngga-text variant="sm" color="neutral-900">Nomor WhatsApp</x-zyngga-text>
+                <div class="flex items-center gap-2">
+                    <x-zyngga-text wire:key="phone-display" variant="sm" weight="medium" class="text-zyngga-neutral-900">{{ $phone ?: '-' }}</x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-zyngga-blue-300"></i>
+                </div>
+            </button>
+
+            {{-- Email Item (Non-editable) --}}
+            <div class="flex items-center justify-between py-4 text-left">
+                <x-zyngga-text variant="sm" color="neutral-900">Email</x-zyngga-text>
+                <div class="flex items-center gap-2">
+                    @php
+                        $emailParts = explode('@', $email);
+                        $namePart = $emailParts[0];
+                        $domainPart = $emailParts[1];
+                        $maskedName = strlen($namePart) > 2 
+                            ? substr($namePart, 0, 1) . str_repeat('*', 3) . substr($namePart, -1) 
+                            : $namePart;
+                        $maskedEmail = $maskedName . '@' . $domainPart;
+                    @endphp
+                    <x-zyngga-text variant="sm" weight="medium" class="text-zyngga-neutral-900">{{ $maskedEmail }}</x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-zyngga-blue-300"></i>
+                </div>
+            </div>
+        </div>
+    </x-zyngga-card>
+
+    {{-- Sticky Footer --}}
+    <div class="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-zyngga-neutral-50 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-50 rounded-t-[16px]">
+        <div class="max-w-5xl mx-auto flex gap-4">
+            <x-zyngga-button 
+                type="button" 
+                @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-user-deletion' }))"
+                label="Hapus Akun" 
+                variant="secondary" 
+                size="l" 
+                class="flex-1 !text-red-500 !border-red-500 hover:!bg-red-50" 
+            />
+            <x-zyngga-button 
+                type="button" 
+                wire:click="updateProfileInformation"
+                label="Simpan" 
+                variant="primary"
+                size="l" 
+                class="flex-1 {{ !$this->hasChanges() ? 'opacity-40 pointer-events-none' : '' }}" 
+                :disabled="!$this->hasChanges()"
+            />
+        </div>
+    </div>
+
+    {{-- Modals --}}
+    <x-zyngga-selection-modal id="modal-name" title="Ubah Nama Lengkap" openEvent="open-name-modal">
+        <div class="flex flex-col gap-4">
             <x-zyngga-input 
                 label="Nama Lengkap" 
-                wire:model="name" 
-                id="name" 
-                name="name" 
-                type="text" 
-                required 
-                autofocus 
-                autocomplete="name"
+                wire:model.live="name" 
+                name="name"
+                id="name-input" 
+                placeholder="Masukkan nama lengkap"
                 :error="$errors->first('name')"
             />
-
-            <div class="relative">
-                <x-zyngga-input 
-                    label="Email" 
-                    wire:model="email" 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    disabled
-                    autocomplete="username"
-                    :error="$errors->first('email')"
-                />
-                <x-zyngga-text variant="2xs" color="neutral-400" class="mt-1.5 ml-1">
-                    <i data-feather="info" class="w-3 h-3 inline mr-1 -mt-0.5"></i>
-                    Email tidak dapat diubah untuk alasan keamanan
-                </x-zyngga-text>
+            <div class="mt-2 flex justify-end gap-3">
+                <x-zyngga-button type="button" @click="isOpen = false" wire:click="cancelChanges" variant="secondary" label="Batal" />
+                <x-zyngga-button type="button" @click="isOpen = false" variant="primary" label="Terapkan" />
             </div>
+        </div>
+    </x-zyngga-selection-modal>
 
+    <x-zyngga-selection-modal id="modal-phone" title="Ubah Nomor WhatsApp" openEvent="open-phone-modal">
+        <div class="flex flex-col gap-4">
             <x-zyngga-input 
-                label="Nomor Telepon" 
-                wire:model="phone" 
-                id="phone" 
-                name="phone" 
-                type="tel" 
+                label="Nomor WhatsApp" 
+                wire:model.live="phone" 
+                name="phone"
+                id="phone-input" 
+                type="tel"
                 placeholder="0812xxxxxxx"
                 :error="$errors->first('phone')"
             />
-
-            <div class="flex items-center gap-3 pt-2">
-                <x-zyngga-button type="submit" label="Simpan Perubahan" size="m" class="flex-1" />
-                <x-zyngga-button type="button" wire:click="toggleEdit" label="Batal" variant="secondary" size="m" class="flex-1" />
-            </div>
-
-            <x-action-message class="mt-2" on="profile-updated">
-                <x-zyngga-text variant="xs" class="text-green-600">Tersimpan.</x-zyngga-text>
-            </x-action-message>
-        </form>
-    @else
-        <div class="mt-8 space-y-6">
-            {{-- Name Detail --}}
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
-                    <i data-feather="user" class="w-5 h-5 text-zyngga-blue-300"></i>
-                </div>
-                <div class="flex-1">
-                    <x-zyngga-text variant="xs" color="neutral-400" weight="medium" class="uppercase tracking-widest mb-0.5">Nama Lengkap</x-zyngga-text>
-                    <x-zyngga-text variant="base" weight="bold">{{ $name }}</x-zyngga-text>
-                </div>
-            </div>
-
-            {{-- Email Detail --}}
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
-                    <i data-feather="mail" class="w-5 h-5 text-zyngga-blue-300"></i>
-                </div>
-                <div class="flex-1">
-                    <x-zyngga-text variant="xs" color="neutral-400" weight="medium" class="uppercase tracking-widest mb-0.5">Alamat Email</x-zyngga-text>
-                    <x-zyngga-text variant="base" weight="bold">{{ $email }}</x-zyngga-text>
-                </div>
-            </div>
-
-            {{-- Phone Detail --}}
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
-                    <i data-feather="phone" class="w-5 h-5 text-zyngga-blue-300"></i>
-                </div>
-                <div class="flex-1">
-                    <x-zyngga-text variant="xs" color="neutral-400" weight="medium" class="uppercase tracking-widest mb-0.5">Nomor Telepon</x-zyngga-text>
-                    <x-zyngga-text variant="base" weight="bold">{{ $phone ?: '-' }}</x-zyngga-text>
-                </div>
-            </div>
-
-            <div class="pt-4">
-                <x-zyngga-button type="button" wire:click="toggleEdit" label="Ubah Profil" variant="secondary" size="m" class="w-full" />
+            <div class="mt-2 flex justify-end gap-3">
+                <x-zyngga-button type="button" @click="isOpen = false" wire:click="cancelChanges" variant="secondary" label="Batal" />
+                <x-zyngga-button type="button" @click="isOpen = false" variant="primary" label="Terapkan" />
             </div>
         </div>
-    @endif
+    </x-zyngga-selection-modal>
 </section>

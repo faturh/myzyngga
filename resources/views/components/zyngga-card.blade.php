@@ -5,7 +5,7 @@
 ])
 
 <div {{ $attributes->merge(['class' => $gap]) }}>
-    <div class="bg-white rounded-2xl {{ $padding }} shadow-sm border border-gray-50 overflow-hidden relative">
+    <div class="bg-white rounded-lg {{ $padding }} shadow-sm border border-gray-50 overflow-hidden relative">
         @if($title || isset($headerAction))
             <div class="flex items-center justify-between mb-4">
                 @if($title)

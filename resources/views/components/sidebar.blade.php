@@ -93,7 +93,7 @@
                 x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100"
-                class="text-xl font-medium text-gray-800 whitespace-nowrap"
+                class="text-lg font-medium text-gray-800 whitespace-nowrap"
             >
                 Menu
             </span>

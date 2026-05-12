@@ -32,8 +32,8 @@
         
         {{-- ── GUEST HEADER ────────────────────────────────────────── --}}
         <header class="sticky top-0 z-40 w-full pb-[6px]">
-            <div class="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-5 py-5 transition-shadow duration-300 max-w-3xl mx-auto min-h-[80px] flex flex-col justify-center">
-                <div class="flex items-center justify-end gap-4">
+            <div class="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300 w-full min-h-[80px]">
+                <div class="max-w-5xl mx-auto w-full px-5 py-5 flex items-center justify-end min-h-[80px]">
                     {{-- Guest Auth Buttons --}}
                     <div class="flex items-center gap-2">
                         <x-zyngga-button 
@@ -68,30 +68,38 @@
         </header>
 
         {{-- Main Section --}}
-        <main class="w-full max-w-3xl mx-auto flex-1 flex flex-col">
+        <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col">
             {{-- ─────────────────────────────────────────────────────────
-                 HERO & PESAN SEKARANG CARD
+                 HERO BANNER
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5 py-[6px]">
+                <div class="w-full aspect-[353/120] rounded-lg overflow-hidden relative">
+                    <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
+                    
+                </div>
+            </div>
+
+            {{-- ─────────────────────────────────────────────────────────
+                 PESAN SEKARANG CARD
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
                 <div class="bg-white rounded-lg p-4 space-y-4">
-                    {{-- Hero banner image --}}
-                    <div class="w-full aspect-[353/120] rounded-lg overflow-hidden relative">
-                        <img src="/figma/figma_banner_hero.png" alt="Banner" class="w-full h-full object-cover">
-                    </div>
-
                     {{-- Section heading --}}
                     <div class="flex items-center justify-between">
-                        <x-zyngga-text variant="base" weight="medium">Layanan Kami</x-zyngga-text>
+                        <x-zyngga-text variant="base" weight="medium">Pesan Sekarang</x-zyngga-text>
+                        <a href="{{ route('order.pickup', ['service' => 'regular']) }}">
+                            <x-zyngga-text variant="sm" weight="medium" color="primary">Detail Layanan</x-zyngga-text>
+                        </a>
                     </div>
 
-                    {{-- Service icons --}}
+                    {{-- Service icons: Kilat | Regular | Quick | Express | Satuan --}}
                     <div class="grid grid-cols-5">
                         @php
                             $services = [
-                                ['label' => 'Regular', 'icon' => 'refresh-cw'],
+                                ['label' => 'Kilat',   'icon' => 'zap'],
+                                ['label' => 'Reguler', 'icon' => 'star'],
                                 ['label' => 'Quick',   'icon' => 'clock'],
                                 ['label' => 'Express', 'icon' => 'fast-forward'],
-                                ['label' => 'Kilat',   'icon' => 'zap'],
                                 ['label' => 'Satuan',  'icon' => 'package'],
                             ];
                         @endphp
@@ -106,30 +114,6 @@
                                 <x-zyngga-text variant="sm" weight="regular">{{ $s['label'] }}</x-zyngga-text>
                             </a>
                         @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- ─────────────────────────────────────────────────────────
-                 PROMO BANNER
-            ───────────────────────────────────────────────────────── --}}
-            <div class="px-5 py-[6px]">
-                <div class="w-full aspect-[385/168] rounded-lg overflow-hidden relative">
-                    <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-br from-[#1660C1]/60 to-transparent flex flex-col justify-between p-5">
-                        <x-zyngga-text variant="base" weight="medium" color="white" class="max-w-[180px]">
-                            Matahari Sembunyi?<br>Tenang, Ada Kami.
-                        </x-zyngga-text>
-                        <x-zyngga-button 
-                            type="a"
-                            href="{{ route('order.pickup', ['service' => 'regular']) }}"
-                            variant="primary"
-                            size="s"
-                            icon="chevron-right"
-                            iconPosition="right"
-                            label="Pesan Sekarang"
-                            class="bg-white !text-zyngga-blue-300 hover:bg-gray-100"
-                        />
                     </div>
                 </div>
             </div>
@@ -179,8 +163,8 @@
                     <div class="space-y-4">
                         @php
                             $outlets = [
-                                ['name' => 'Zyngga Laundry Sukabirus', 'address' => 'Jl. Sukabirus No. 99'],
-                                ['name' => 'Zyngga Laundry Sukapura', 'address' => 'Jl. Sukapura No. 97'],
+                                ['name' => 'Zyngga Laundry Sukabirus', 'address' => 'Jl. Sukabirus No. 99', 'map' => 'https://maps.app.goo.gl/uMGkcaDueS74pU3T7'],
+                                ['name' => 'Zyngga Laundry Sukapura', 'address' => 'Jl. Sukapura No. 97', 'map' => 'https://maps.app.goo.gl/1DKMzTAJ7FbG9YDa7'],
                             ];
                         @endphp
                         @foreach ($outlets as $outlet)
@@ -194,10 +178,13 @@
                                         <x-zyngga-text variant="xs" color="neutral-500">{{ $outlet['address'] }}</x-zyngga-text>
                                     </div>
                                     <x-zyngga-button 
+                                        type="a"
+                                        target="_blank"
                                         variant="secondary"
                                         size="s"
                                         label="Cek Lokasi"
-                                        class="w-full"
+                                        href="{{ $outlet['map'] }}"
+                                        class="w-fit !px-4"
                                     />
                                 </div>
                             </div>
@@ -206,10 +193,10 @@
                 </div>
             </div>
 
-            {{-- FOOTER --}}
-            <x-zyngga-footer />
-
         </main>
+
+        {{-- FOOTER --}}
+        <x-zyngga-footer />
     </div>
 
     @livewireScripts

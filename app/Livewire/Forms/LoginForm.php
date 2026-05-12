@@ -12,10 +12,15 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
-    #[Validate('required|string|email')]
+    #[Validate('required|string|email:rfc,dns', message: [
+        'required' => 'Email wajib diisi.',
+        'email' => 'Format email tidak valid (pastikan format benar, contoh: nama@email.com).'
+    ])]
     public string $email = '';
 
-    #[Validate('required|string')]
+    #[Validate('required|string', message: [
+        'required' => 'Password wajib diisi.'
+    ])]
     public string $password = '';
 
     #[Validate('boolean')]
@@ -34,7 +39,7 @@ class LoginForm extends Form
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'form.email' => trans('auth.failed'),
+                'form.email' => 'Email atau password kamu salah.',
             ]);
         }
 

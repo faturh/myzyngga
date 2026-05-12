@@ -41,7 +41,84 @@ class OrderController extends Controller
 
         $serviceLabel = $serviceLabels[$service] ?? ucfirst($service);
 
-        return view('order.pickup-location', compact('service', 'serviceLabel'));
+        $savedAddresses = $user ? $user->addresses()->get() : collect();
+
+        return view('order.pickup-location', compact('service', 'serviceLabel', 'savedAddresses'));
+    }
+
+    public function pickupDetails(Request $request, string $service)
+    {
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+        $address = $request->query('address');
+        $addressId = $request->query('address_id');
+
+        if (!$lat || !$lng || !$address) {
+            return redirect()->route('order.pickup', $service)->with('error', 'Silakan pilih lokasi terlebih dahulu.');
+        }
+
+        // If it's an existing address, we might want to show its current labels
+        $existingAddress = null;
+        if ($addressId) {
+            $existingAddress = auth()->user()->addresses()->find($addressId);
+        }
+
+        return view('order.pickup-details', compact('service', 'lat', 'lng', 'address', 'existingAddress'));
+    }
+
+    public function storePickupDetails(Request $request)
+    {
+        $request->validate([
+            'service'        => 'required|string',
+            'label'          => 'required|string|max:255',
+            'address_detail' => 'required|string',
+            'latitude'       => 'required|numeric',
+            'longitude'      => 'required|numeric',
+            'note'           => 'nullable|string|max:255',
+            'address_id'     => 'nullable|exists:addresses,id',
+            'save_address'   => 'nullable|boolean',
+        ]);
+
+        $user = auth()->user();
+
+        // If the user checked "Simpan Alamat" or if it was an existing address
+        if ($user && ($request->boolean('save_address') || $request->filled('address_id'))) {
+            if ($request->filled('address_id')) {
+                $address = $user->addresses()->find($request->address_id);
+                if ($address) {
+                    $address->update([
+                        'label' => $request->label,
+                        'address_detail' => $request->address_detail,
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                        'note' => $request->note,
+                    ]);
+                }
+            } else {
+                // Check limit before saving new
+                if ($user->addresses()->count() < 3) {
+                    $user->addresses()->create([
+                        'label' => $request->label,
+                        'address_detail' => $request->address_detail,
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                        'note' => $request->note,
+                        'is_primary' => $user->addresses()->count() === 0,
+                    ]);
+                }
+            }
+        }
+
+        // Store in session for booking
+        session([
+            'order.service'        => $request->service,
+            'order.address'        => $request->address_detail,
+            'order.detail_address' => $request->note ?? '',
+            'order.lat'            => (string) $request->latitude,
+            'order.lng'            => (string) $request->longitude,
+        ]);
+
+        return redirect()->route('order.booking');
     }
 
     /**
@@ -76,7 +153,7 @@ class OrderController extends Controller
     {
         // Require pickup location to have been set
         if (! session()->has('order.address')) {
-            return auth()->check() ? redirect()->route('dashboard') : redirect()->route('landing');
+            return auth()->check() ? redirect()->route('home') : redirect()->route('landing');
         }
 
         $serviceLabels = [
@@ -133,7 +210,7 @@ class OrderController extends Controller
         // Clear order session
         session()->forget(['order.service', 'order.address', 'order.detail_address', 'order.lat', 'order.lng']);
 
-        return ($isGuest ? redirect()->route('landing') : redirect()->route('dashboard'))
+        return redirect()->route('order.detail')
             ->with('success', 'Pesanan Anda berhasil dibuat!');
     }
 
@@ -151,5 +228,61 @@ class OrderController extends Controller
     public function history(Request $request)
     {
         return view('order.history');
+    }
+
+    /**
+     * Show order check page.
+     */
+    public function check(Request $request)
+    {
+        if ($request->isMethod('post')) {
+            $request->validate([
+                'query' => 'required|string',
+                'phone_last_4' => 'required|digits:4',
+            ], [
+                'query.required' => 'Nama atau ID Delivery tidak boleh kosong.',
+                'phone_last_4.required' => '4 digit terakhir nomor WhatsApp tidak boleh kosong.',
+                'phone_last_4.digits' => 'Masukkan tepat 4 digit terakhir nomor WhatsApp.',
+            ]);
+
+            // Logic for searching and verifying order
+            $orders = [];
+            if (str_contains(strtolower($request->input('query')), 'rafi') || str_contains(strtoupper($request->input('query')), 'ZYG-12345')) {
+                $orders = [
+                    [
+                        'id' => 'IJK902H8MAHD',
+                        'customer_name' => 'Rafi Syihan',
+                        'phone_last_4' => '7890',
+                        'service' => 'Express',
+                        'date' => 'Minggu, 24 Feb | 12.09',
+                        'status' => 'Diproses',
+                        'progress' => 56,
+                        'total' => 33000
+                    ],
+                    [
+                        'id' => 'ZYG-67890ABC',
+                        'customer_name' => 'Rafi Syihan',
+                        'phone_last_4' => '7890',
+                        'service' => 'Satuan',
+                        'date' => 'Minggu, 24 Feb | 12.09',
+                        'status' => 'Diproses',
+                        'progress' => 56,
+                        'total' => 25000
+                    ]
+                ];
+                
+                // Redirect back with results in session flash
+                return back()->with('orders', $orders)->withInput();
+            }
+
+            return back()->withErrors([
+                'query' => 'Pesanan tidak ditemukan. Cek kembali Nama/ID atau 4 digit nomor WhatsApp kamu.'
+            ])->withInput();
+        }
+
+        // Get orders from session (if any)
+        $orders = session('orders', []);
+
+        return view('order.check', compact('orders'));
     }
 }
