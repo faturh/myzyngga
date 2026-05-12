@@ -7,8 +7,10 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/*.key
 /database/database.sqlite
+.env
 .env.backup
 .env.production
+storage/logs/*.log
 .phpunit.result.cache
 docker-compose.override.yml
 homestead.json
