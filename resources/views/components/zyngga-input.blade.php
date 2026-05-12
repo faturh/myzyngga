@@ -3,7 +3,7 @@
     'name' => null,
     'type' => 'text',
     'placeholder' => '',
-    'value' => '',
+    'value' => null,
     'size' => 'M', // M or S
     'error' => null,
     'disabled' => false,
@@ -54,11 +54,12 @@
             type="{{ $type }}" 
             placeholder="{{ $placeholder }}"
             @disabled($disabled)
-            {{ $attributes->except('class')->merge([
-                'id' => $name ?: ($attributes->get('id') ?: 'input-'.uniqid()),
+            {{ $attributes->except('class')->merge(array_filter([
+                'id' => $attributes->get('id') ?: ($name ?: 'input-'.uniqid()),
                 'name' => $name ?: ($attributes->get('name')),
+                'value' => $value,
                 'class' => 'flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none p-0 text-zyngga-neutral-500 placeholder-zyngga-neutral-400 ' . ($inputSizeClasses[$size] ?? $inputSizeClasses['M'])
-            ]) }}
+            ], fn($v) => $v !== null)) }}
         >
         
         @if($error && !$iconRight)

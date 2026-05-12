@@ -24,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile (Shared)
     Route::view('profile', 'profile')->name('profile');
     Route::view('profile/account', 'profile.account')->name('profile.account');
+    Route::view('notifications', 'notifications')->name('notifications');
 
     // Address Management
     Route::get('addresses/create/details', [App\Http\Controllers\AddressController::class, 'createDetails'])->name('addresses.create.details');
@@ -63,5 +64,8 @@ Route::get('/order/booking', [App\Http\Controllers\OrderController::class, 'book
 
 Route::post('/order/confirm', [App\Http\Controllers\OrderController::class, 'confirm'])
     ->name('order.confirm');
+
+Route::post('/order/update-session', [App\Http\Controllers\OrderController::class, 'updateSession'])
+    ->name('order.update-session');
 
 require __DIR__.'/auth.php';

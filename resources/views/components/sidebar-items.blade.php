@@ -37,14 +37,7 @@
                 'active' => false,
                 'show'   => true,
             ],
-            [
-                'id'     => 'langganan',
-                'label'  => 'Langganan',
-                'icon'   => 'tag',
-                'href'   => '#',
-                'active' => false,
-                'show'   => $isCustomer,
-            ],
+
             [
                 'id'     => 'profile',
                 'label'  => 'Profil',

@@ -43,6 +43,7 @@
         <x-dashboard-header
             :name="Auth::user()->name"
             :points="4"
+            :showBell="true"
         />
 
         {{-- Main Section --}}

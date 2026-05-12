@@ -98,7 +98,7 @@
                             </x-zyngga-input>
 
                             <x-zyngga-input 
-                                label="Catatan (Opsional)" 
+                                label="Detail Alamat (Opsional)" 
                                 name="note" 
                                 placeholder="Contoh: Rumah nomor 123"
                                 :value="old('note', $address->note)"
@@ -161,16 +161,32 @@
             openEvent="open-delete-modal"
             closeEvent="close-delete-modal"
         >
-            <x-zyngga-confirm-view 
-                :image="asset('images/illustrations/cancel_order.png')"
-                title="Hapus alamat ini?"
-                description="Alamat yang dihapus tidak dapat dikembalikan lagi."
-                primaryLabel="Ya, Hapus"
-                secondaryLabel="Batal"
-                primaryClass="!bg-red-500 hover:!bg-red-600 !border-red-500"
-                primaryAction="document.getElementById('delete-form').submit()"
-                secondaryAction="@click=$dispatch('close-delete-modal')"
-            />
+            <div class="flex flex-col items-center text-center">
+                <div class="mb-6">
+                    <img src="{{ asset('images/illustrations/cancel_order.png') }}" alt="Hapus Alamat" class="w-40 h-40 object-contain mx-auto">
+                </div>
+
+                <div class="space-y-2 mb-8 px-2">
+                    <x-zyngga-text variant="lg" weight="medium" color="neutral-900" class="leading-snug !text-[#0F0F0F]">
+                        Hapus Alamat Ini?
+                    </x-zyngga-text>
+                    <x-zyngga-text variant="sm" weight="regular" color="neutral-500" class="leading-normal !text-[#717171]">
+                        Alamat ini akan dihapus dari daftar simpananmu. Tindakan ini tidak dapat dikembalikan.
+                    </x-zyngga-text>
+                </div>
+
+                <div class="flex gap-3 w-full">
+                    <x-zyngga-button type="button" @click="isOpen = false" size="m" variant="secondary" label="Batalkan" class="flex-1" />
+                    <x-zyngga-button 
+                        type="button" 
+                        onclick="document.getElementById('delete-form').submit()" 
+                        variant="secondary-danger" 
+                        size="m"
+                        label="Hapus" 
+                        class="flex-1" 
+                    />
+                </div>
+            </div>
         </x-zyngga-selection-modal>
 
     </div>

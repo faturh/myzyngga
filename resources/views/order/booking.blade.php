@@ -197,19 +197,21 @@
             $isTodayDisabled = $currentHour >= 18;
             $defaultDate = $isTodayDisabled ? 'tomorrow' : 'today';
         @endphp
-        <input type="hidden" name="pickup_date"   id="pickup_date"   value="{{ $defaultDate }}">
-        <input type="hidden" name="pickup_time"   id="pickup_time"   value="">
-        <input type="hidden" name="parfum"        id="parfum"        value="Lavender">
+        <input type="hidden" name="pickup_date"   id="pickup_date"   value="{{ $pickupDate ?: $defaultDate }}">
+        <input type="hidden" name="pickup_time"   id="pickup_time"   value="{{ $pickupTime }}">
+        <input type="hidden" name="parfum"        id="parfum"        value="{{ $parfum ?: 'Lavender' }}">
+        <input type="hidden" name="note"          id="note"          value="{{ $note }}">
         
         {{-- ── LOKASI PICKUP ─────────────────────────────────── --}}
         <x-zyngga-card title="Lokasi Pickup">
             <x-slot:headerAction>
                 <x-zyngga-button 
-                type="a"
-                href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
-                variant="secondary"
-                size="s"
-                label="Ubah"
+                    type="a"
+                    href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
+                    variant="secondary"
+                    size="s"
+                    label="Ubah"
+                    onclick="isDirty = false"
                 />
             </x-slot:headerAction>
             
@@ -412,20 +414,20 @@
 
         {{-- ── TAMBAHAN ───────────────────────────────────────── --}}
         <x-zyngga-card title="Tambahan">
-            <div class="addon-row" onclick="window.dispatchEvent(new CustomEvent('open-parfum-modal'))">
-                <x-zyngga-text variant="sm" weight="regular" class="m-0">Pilihan parfum</x-zyngga-text>
-                <div class="flex items-center gap-1">
-                    <x-zyngga-text id="selected-parfum" variant="sm" class="m-0">Lavender</x-zyngga-text>
-                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080]"></i>
+            <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="window.dispatchEvent(new CustomEvent('open-parfum-modal'))">
+                <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Pilihan parfum</x-zyngga-text>
+                <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
+                    <x-zyngga-text id="selected-parfum" variant="sm" class="m-0 truncate text-right">Lavender</x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080] shrink-0"></i>
                 </div>
             </div>
 
             <x-zyngga-divider class="mx-1 my-2" />
-            <div class="addon-row" onclick="openCatatan()">
-                <x-zyngga-text variant="sm" weight="regular" class="m-0">Catatan</x-zyngga-text>
-                <div class="flex items-center gap-1">
-                    <x-zyngga-text id="catatan-label" variant="sm" color="neutral-500" class="m-0">Buat catatan</x-zyngga-text>
-                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080]"></i>
+            <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="openCatatan()">
+                <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Catatan</x-zyngga-text>
+                <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
+                    <x-zyngga-text id="catatan-label" variant="sm" color="neutral-500" class="m-0 truncate text-right">Buat catatan</x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080] shrink-0"></i>
                 </div>
             </div>
         </x-zyngga-card>
@@ -505,8 +507,8 @@
         description="Apakah Anda yakin ingin melanjutkan? Periksa detailnya sebelum melanjutkan."
         primaryLabel="Buat Pesanan"
         secondaryLabel="Batalkan"
-        primaryAction="@click=submitOrder()"
-        secondaryAction="@click=$dispatch('close-confirm-modal')"
+        primaryAction="submitOrder()"
+        secondaryAction="isOpen=false"
     />
 </x-zyngga-selection-modal>
 
@@ -522,8 +524,8 @@
         description="Data yang sudah Anda masukkan akan hilang jika Anda kembali ke halaman sebelumnya."
         primaryLabel="Ya, Batalkan"
         secondaryLabel="Tetap di Sini"
-        primaryAction="onclick=window.location.href='{{ route('home') }}'"
-        secondaryAction="@click=$dispatch('close-back-modal')"
+        primaryAction="window.location.href='{{ route('home') }}'"
+        secondaryAction="isOpen=false"
     />
 </x-zyngga-selection-modal>
 
@@ -558,12 +560,19 @@
     openEvent="open-catatan-modal"
     closeEvent="close-catatan-modal"
 >
-    <div class="p-1 space-y-4">
-        <textarea 
-            id="modal-catatan-input"
-            class="w-full h-32 p-4 border-[1.5px] border-zyngga-blue-50 rounded-xl focus:border-zyngga-blue-300 focus:ring-0 outline-none transition-all duration-200 text-sm placeholder-zyngga-neutral-400"
-            placeholder="Tambahkan catatan untuk pesananmu. (Contoh: jangan gunakan pemutih)"
-        ></textarea>
+    <div class="space-y-4">
+        <div class="relative">
+            <textarea 
+                id="modal-catatan-input"
+                maxlength="60"
+                class="w-full h-32 p-4 border-[1.5px] border-zyngga-blue-50 rounded-xl focus:border-zyngga-blue-300 focus:ring-0 outline-none transition-all duration-200 text-sm placeholder-zyngga-neutral-400"
+                placeholder="Tambahkan catatan untuk pesananmu"
+                oninput="document.getElementById('catatan-char-count').textContent = this.value.length"
+            ></textarea>
+            <div class="absolute bottom-3 right-4 text-xs text-zyngga-neutral-400">
+                <span id="catatan-char-count">0</span>/60
+            </div>
+        </div>
         
         <x-zyngga-button 
             type="button"
@@ -637,6 +646,13 @@
         document.getElementById('selected_service_id').value = id;
 
         // 2. Footer label & ETA
+        updateFooterServiceLabel(id);
+
+        // 3. Update Session
+        updateOrderSession({ service: id });
+    }
+
+    function updateFooterServiceLabel(id) {
         const svc = ALL_SERVICES.find(s => s.id === id) || ALL_SERVICES[0];
         
         // Label: Name (X hari) or Name (Hari yang sama)
@@ -692,6 +708,7 @@
         refreshTimeChips(val);
         // Refresh ETA based on new date
         applySelection(selectedId);
+        updateOrderSession({ pickup_date: val });
     }
 
     // ── Time selection ─────────────────────────────────────────
@@ -700,6 +717,7 @@
         document.querySelectorAll('.time-chip').forEach(e => e.classList.remove('selected'));
         el.classList.add('selected');
         document.getElementById('pickup_time').value = val;
+        updateOrderSession({ pickup_time: val });
     }
 
     function refreshTimeChips(selectedDate) {
@@ -752,6 +770,7 @@
         // Update hidden input and label
         document.getElementById('selected-parfum').textContent = val;
         document.getElementById('parfum').value = val;
+        updateOrderSession({ parfum: val });
 
         // Sync radios
         document.querySelectorAll('input[name="modal_parfum"]').forEach(r => {
@@ -771,14 +790,35 @@
     function saveCatatan() {
         const val = document.getElementById('modal-catatan-input').value.trim();
         const label = document.getElementById('catatan-label');
+        const noteInput = document.getElementById('note');
+
         if (val) {
             label.textContent = val;
-            // Change from gray (neutral-500) to black-ish (neutral-900)
             label.classList.remove('text-zyngga-neutral-400');
-            label.classList.add('text-zyngga-neutral-500');
-            document.getElementById('note').value = val;
+            label.classList.add('text-zyngga-neutral-900'); // Use dark color for filled note
+        } else {
+            label.textContent = 'Buat catatan';
+            label.classList.add('text-zyngga-neutral-400');
+            label.classList.remove('text-zyngga-neutral-900');
         }
+
+        if (noteInput) {
+            noteInput.value = val;
+            updateOrderSession({ note: val });
+        }
+
         closeCatatan();
+    }
+
+    function updateOrderSession(data) {
+        fetch('{{ route('order.update-session') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(data)
+        });
     }
 
     // ── Validation Helpers ─────────────────────────────────────
@@ -894,6 +934,45 @@
     document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
         setTimeout(() => feather.replace(), 500);
+
+        // ── Restore State from Session ──
+        const initialNote = "{{ $note }}";
+        if (initialNote) {
+            const label = document.getElementById('catatan-label');
+            if (label) {
+                label.textContent = initialNote;
+                label.classList.remove('text-zyngga-neutral-400');
+                label.classList.add('text-zyngga-neutral-900');
+            }
+            const input = document.getElementById('modal-catatan-input');
+            if (input) {
+                input.value = initialNote;
+                const count = document.getElementById('catatan-char-count');
+                if (count) count.textContent = initialNote.length;
+            }
+        }
+
+        const initialParfum = "{{ $parfum }}";
+        if (initialParfum) {
+            const pLabel = document.getElementById('selected-parfum');
+            if (pLabel) pLabel.textContent = initialParfum;
+            const radio = document.querySelector(`input[name="modal_parfum"][value="${initialParfum}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        const pDate = "{{ $pickupDate }}";
+        if (pDate) {
+            const dateBtn = document.querySelector(`button[onclick*="selectDate('${pDate}'"]`);
+            if (dateBtn) selectDate(pDate, dateBtn);
+        }
+
+        const pTime = "{{ $pickupTime }}";
+        if (pTime) {
+            setTimeout(() => {
+                const timeChip = document.querySelector(`.time-chip[data-time="${pTime}"]`);
+                if (timeChip) selectTime(pTime, timeChip);
+            }, 100);
+        }
     });
     document.addEventListener('livewire:load', function () {
         feather.replace();

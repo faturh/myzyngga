@@ -93,6 +93,7 @@
 </head>
 <body x-data="{ 
     isPaid: {{ request('status') === 'paid' ? 'true' : 'false' }},
+    isOutlet: true,
     showStatusDetail: false,
     showPaymentDetail: false 
 }" class="bg-zyngga-blue-50 min-h-screen">
@@ -120,36 +121,45 @@
                         <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
                             <x-zyngga-service-icon service="Express" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
                         </div>
-                        <x-zyngga-text variant="xl" weight="medium">Express</x-zyngga-text>
+                        <x-zyngga-text variant="xl" weight="semibold">Express</x-zyngga-text>
                     </div>
                     {{-- Order ID --}}
-                    <div class="flex items-center gap-1.5 px-1">
+                    <div class="flex items-center gap-1.5">
                         <x-zyngga-text variant="sm" color="neutral-500" weight="regular">IJK902H8MAHD</x-zyngga-text>
                         <button class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors">
                             <i data-feather="copy" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </div>
-                <x-zyngga-status type="secondary" size="L" icon="truck" label="Delivery" />
+                
+                <template x-if="isOutlet">
+                    <x-zyngga-status type="secondary" size="M" icon="shopping-bag" label="Ambil di Outlet" class="!bg-[#E8EFF9] !text-zyngga-blue-300 !border-none px-3" />
+                </template>
+                <template x-if="!isOutlet">
+                    <x-zyngga-status type="secondary" size="L" icon="truck" label="Delivery" />
+                </template>
             </div>
 
             <x-zyngga-divider class="my-4" />
             
             {{-- Name & Phone --}}
             <div class="space-y-1">
-                <x-zyngga-text variant="base" weight="medium">Rafi Syihan</x-zyngga-text>
+                <x-zyngga-text variant="base" weight="semibold">Rafi Syihan</x-zyngga-text>
                 <x-zyngga-text variant="sm" color="neutral-500" weight="regular">0812 3456 7890</x-zyngga-text>
             </div>
 
-            <x-zyngga-divider class="my-4" />
-
-            {{-- Location & Address --}}
-            <div class="space-y-1">
-                <x-zyngga-text variant="base" weight="medium">Telkom University</x-zyngga-text>
-                <x-zyngga-text variant="sm" color="neutral-500" weight="regular" class="leading-relaxed">
-                    Jl. Telekomunikasi No.1, Sukapura, Kec. Dayeuhkolot, Kabupaten Bandung
-                </x-zyngga-text>
-            </div>
+            <template x-if="!isOutlet">
+                <div>
+                    <x-zyngga-divider class="my-4" />
+                    {{-- Location & Address --}}
+                    <div class="space-y-1">
+                        <x-zyngga-text variant="base" weight="semibold">Telkom University</x-zyngga-text>
+                        <x-zyngga-text variant="sm" color="neutral-500" weight="regular" class="leading-relaxed">
+                            Jl. Telekomunikasi No.1, Sukapura, Kec. Dayeuhkolot, Kabupaten Bandung
+                        </x-zyngga-text>
+                    </div>
+                </div>
+            </template>
 
             <x-zyngga-divider class="my-4" />
 
@@ -169,19 +179,19 @@
         {{-- ── CARD 2: STATUS PENGERJAAN ───────────────────────────── --}}
         <x-zyngga-card title="Status Pengerjaan">
             <x-slot:headerAction>
-                <x-zyngga-status type="primary" size="M" class="!px-3">
-                    <span x-text="isPaid ? '100%' : '56%'">56%</span>
+                <x-zyngga-status type="primary" size="L" class="!px-3 !bg-zyngga-blue-300 !text-white !border-none">
+                    <span x-text="isPaid ? '100%' : '56%'">100%</span>
                 </x-zyngga-status>
             </x-slot:headerAction>
 
             <div class="flex flex-col gap-4 mt-4">
                 {{-- Date Group: Current --}}
                 <div class="flex flex-col gap-2">
-                    <x-zyngga-text variant="sm" weight="medium">Senin, 18 Feb</x-zyngga-text>
+                    <x-zyngga-text variant="sm" weight="semibold">Senin, 18 Feb</x-zyngga-text>
                     <div class="flex gap-2 items-center">
                         <x-zyngga-text variant="sm" weight="regular" color="neutral-500" class="w-[60px] shrink-0">08:30</x-zyngga-text>
                         <div class="bg-zyngga-neutral-200 flex-1 px-4 py-3 rounded-lg">
-                            <x-zyngga-text variant="sm" weight="regular">Mengerjakan Tahap Pengeringan</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="medium">Mengerjakan Tahap Pengeringan</x-zyngga-text>
                         </div>
                     </div>
                 </div>
@@ -191,18 +201,18 @@
                     <x-zyngga-divider />
                     
                     <div class="flex flex-col gap-2">
-                        <x-zyngga-text variant="sm" weight="medium">Minggu, 19 Feb</x-zyngga-text>
+                        <x-zyngga-text variant="sm" weight="semibold">Minggu, 19 Feb</x-zyngga-text>
                         <div class="flex flex-col gap-2">
                             <div class="flex gap-2 items-center">
                                 <x-zyngga-text variant="sm" weight="regular" color="neutral-500" class="w-[60px] shrink-0">12:30</x-zyngga-text>
                                 <div class="bg-zyngga-neutral-200 flex-1 px-4 py-3 rounded-lg">
-                                    <x-zyngga-text variant="sm" weight="regular">Mengerjakan Tahap Pencucian</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium">Mengerjakan Tahap Pencucian</x-zyngga-text>
                                 </div>
                             </div>
                             <div class="flex gap-2 items-center">
                                 <x-zyngga-text variant="sm" weight="regular" color="neutral-500" class="w-[60px] shrink-0">08:30</x-zyngga-text>
                                 <div class="bg-zyngga-neutral-200 flex-1 px-4 py-3 rounded-lg">
-                                    <x-zyngga-text variant="sm" weight="regular">Menerima Pesanan</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium">Menerima Pesanan</x-zyngga-text>
                                 </div>
                             </div>
                         </div>
@@ -216,7 +226,7 @@
                 icon="chevron-down"
                 iconPosition="right"
                 @click="showStatusDetail = !showStatusDetail"
-                class="w-full mt-4 hover:bg-transparent"
+                class="w-full mt-4 hover:bg-transparent !text-zyngga-blue-300 !text-[14px]"
                 ::class="showStatusDetail ? '[&_svg]:rotate-180' : ''"
             >
                 <span x-text="showStatusDetail ? 'Sembunyikan' : 'Lihat Detail'">Lihat Detail</span>
@@ -226,17 +236,17 @@
         {{-- ── CARD 3: RINCIAN PEMBAYARAN ───────────────────────────── --}}
         <x-zyngga-card title="Rincian Pembayaran">
             <x-slot:headerAction>
-                <x-zyngga-status x-show="isPaid" type="success" size="M" label="Lunas" />
-                <x-zyngga-status x-show="!isPaid" type="error" size="M" label="Belum Bayar" />
+                <x-zyngga-status x-show="isPaid" type="success" size="L" label="Lunas" class="!bg-[#E9F7EE] !text-zyngga-status-success !border-none !px-4" />
+                <x-zyngga-status x-show="!isPaid" type="error" size="L" label="Belum Bayar" class="!bg-[#FEE7E6] !text-zyngga-status-error !border-none !px-4" />
             </x-slot:headerAction>
 
             <div class="flex flex-col gap-4">
                 <div class="flex justify-between items-center">
                     <div class="flex flex-col gap-1">
-                        <x-zyngga-text variant="sm" weight="medium">Express</x-zyngga-text>
+                        <x-zyngga-text variant="sm" weight="semibold">Express</x-zyngga-text>
                         <x-zyngga-text variant="sm" weight="regular" color="neutral-500">3.3 x Rp10.000</x-zyngga-text>
                     </div>
-                    <x-zyngga-text variant="sm" weight="medium">Rp33.000</x-zyngga-text>
+                    <x-zyngga-text variant="sm" weight="semibold">Rp33.000</x-zyngga-text>
                 </div>
 
                 <div x-show="showPaymentDetail" x-transition x-cloak class="flex flex-col gap-2">
@@ -263,19 +273,6 @@
                         <x-zyngga-text variant="sm" weight="regular" color="neutral-500">Total</x-zyngga-text>
                         <x-zyngga-text variant="sm" weight="medium">Rp33.000</x-zyngga-text>
                     </div>
-                    
-                    <template x-if="isPaid">
-                        <div class="flex flex-col gap-2">
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" weight="regular" color="neutral-500">Tunai</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">Rp33.000</x-zyngga-text>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" weight="regular" color="neutral-500">Kembalian</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">Rp0</x-zyngga-text>
-                            </div>
-                        </div>
-                    </template>
                 </div>
             </div>
 
@@ -285,7 +282,7 @@
                 icon="chevron-down"
                 iconPosition="right"
                 @click="showPaymentDetail = !showPaymentDetail"
-                class="w-full mt-4 hover:bg-transparent"
+                class="w-full mt-4 hover:bg-transparent !text-zyngga-blue-300 !text-[14px]"
                 ::class="showPaymentDetail ? '[&_svg]:rotate-180' : ''"
             >
                 <span x-text="showPaymentDetail ? 'Sembunyikan' : 'Lihat Detail'">Lihat Detail</span>
@@ -295,26 +292,18 @@
         {{-- ── CARD 4: BANTUAN/LAYANAN ───────────────────────────── --}}
         <x-zyngga-card title="Bantuan/Layanan">
             <div class="space-y-3">
-                <div class="action-item">
+                <a href="https://wa.me/+6281297673318" target="_blank" class="action-item !border-[#CCCCCC] !rounded-xl !py-4 px-5">
                     <div class="flex items-center gap-3">
-                        <i data-feather="trending-up" class="w-5 h-5 text-zyngga-neutral-500"></i>
-                        <x-zyngga-text variant="sm" weight="regular">Upgrade Layanan</x-zyngga-text>
+                        <i data-feather="message-circle" class="w-5 h-5 text-zyngga-neutral-500"></i>
+                        <x-zyngga-text variant="sm" weight="medium">Hubungi Kami</x-zyngga-text>
                     </div>
                     <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
-                </div>
+                </a>
 
-                <div class="action-item">
-                    <div class="flex items-center gap-3">
-                        <i data-feather="credit-card" class="w-5 h-5 text-zyngga-neutral-500"></i>
-                        <x-zyngga-text variant="sm" weight="regular">Ubah Metode Pembayaran</x-zyngga-text>
-                    </div>
-                    <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
-                </div>
-
-                <div class="action-item">
+                <div class="action-item !border-[#CCCCCC] !rounded-xl !py-4 px-5">
                     <div class="flex items-center gap-3">
                         <i data-feather="alert-circle" class="w-5 h-5 text-zyngga-neutral-500"></i>
-                        <x-zyngga-text variant="sm" weight="regular">Ajukan Komplain</x-zyngga-text>
+                        <x-zyngga-text variant="sm" weight="medium">Ajukan Komplain</x-zyngga-text>
                     </div>
                     <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
                 </div>
@@ -323,40 +312,58 @@
 
         {{-- ── CARD 5: SYARAT DAN KETENTUAN ───────────────────────────── --}}
         <x-zyngga-card title="Syarat dan Ketentuan">
-            <ol class="list-decimal list-inside space-y-3">
-                <li class="ms-1"><x-zyngga-text variant="sm" color="neutral-500" weight="regular" as="span" class="ms-2">Pengambilan barang harap disertai nota</x-zyngga-text></li>
-                <li class="ms-1"><x-zyngga-text variant="sm" color="neutral-500" weight="regular" as="span" class="ms-2">Barang yang tidak diambil selama 1 bulan, hilang/rusak tidak diganti</x-zyngga-text></li>
-                <li class="ms-1"><x-zyngga-text variant="sm" color="neutral-500" weight="regular" as="span" class="ms-2">Barang hilang/rusak karena proses pengerjaan diganti maksimal 5x biaya</x-zyngga-text></li>
-                <li class="ms-1"><x-zyngga-text variant="sm" color="neutral-500" weight="regular" as="span" class="ms-2">Klaim luntur tidak dipisah di luar tanggungan</x-zyngga-text></li>
-                <li class="ms-1"><x-zyngga-text variant="sm" color="neutral-500" weight="regular" as="span" class="ms-2">Hak klaim berlaku 1x24 jam setelah barang diambil</x-zyngga-text></li>
-                <li class="ms-1"><x-zyngga-text variant="sm" color="neutral-500" weight="regular" as="span" class="ms-2">Setiap konsumen dianggap setuju dengan poin tersebut di atas</x-zyngga-text></li>
-            </ol>
+            <div class="space-y-3">
+                @foreach([
+                    'Pengambilan barang harap disertai nota',
+                    'Barang yang tidak diambil selama 1 bulan, hilang/rusak tidak diganti',
+                    'Barang hilang/rusak karena proses pengerjaan diganti maksimal 5x biaya',
+                    'Klaim luntur tidak dipisah di luar tanggungan',
+                    'Hak klaim berlaku 1x24 jam setelah barang diambil',
+                    'Setiap konsumen dianggap setuju dengan poin tersebut di atas'
+                ] as $index => $item)
+                    <div class="flex gap-3">
+                        <x-zyngga-text variant="sm" color="neutral-500" weight="regular">{{ $index + 1 }}.</x-zyngga-text>
+                        <x-zyngga-text variant="sm" color="neutral-500" weight="regular" class="leading-relaxed">{{ $item }}</x-zyngga-text>
+                    </div>
+                @endforeach
+            </div>
         </x-zyngga-card>
 
         {{-- ── FOOTER ─────────────────────────────────────────────── --}}
         <footer>
             <div class="max-w-5xl mx-auto w-full px-5 flex items-center gap-4">
                 <x-zyngga-button 
-                    type="a"
-                    href="https://wa.me/+6281297673318"
-                    target="_blank"
                     variant="secondary"
                     size="l"
-                    icon="message-square"
+                    icon="download"
                     iconPosition="left"
-                    label="Chat"
+                    label="Unduh Nota"
                     class="flex-1"
+                    onclick="window.dispatchEvent(new CustomEvent('open-download-modal'))"
                 />
                 <x-zyngga-button 
                     variant="primary"
                     size="l"
-                    class="flex-[2]"
-                    ::disabled="isPaid"
-                >
-                    <x-zyngga-text variant="base" weight="medium" color="white" x-text="isPaid ? 'Sudah Dibayar' : 'Bayar Sekarang'">Bayar Sekarang</x-zyngga-text>
-                </x-zyngga-button>
+                    label="Ulangi Pesanan"
+                    class="flex-1 !bg-zyngga-blue-300"
+                />
             </div>
         </footer>
+
+        {{-- ── MODAL: DOWNLOAD NOTA ────────────────────────────── --}}
+        <x-zyngga-selection-modal id="download-modal" openEvent="open-download-modal">
+            <div class="flex flex-col items-center text-center">
+                <x-zyngga-text variant="lg" weight="medium" color="neutral-900" class="mb-2 !text-[#0F0F0F]">Simpan Nota Transaksi</x-zyngga-text>
+                <x-zyngga-text variant="sm" weight="regular" color="neutral-500" class="mb-8 px-4 !text-[#717171]">
+                    Kamu bisa mengunduh atau membagikan nota ini sebagai bukti transaksi.
+                </x-zyngga-text>
+                
+                <div class="flex flex-col gap-3 w-full">
+                    <x-zyngga-button variant="secondary" size="m" icon="send" iconPosition="left" label="Bagikan Nota" class="w-full" />
+                    <x-zyngga-button variant="primary" size="m" icon="download" iconPosition="left" label="Unduh Nota" class="w-full !bg-zyngga-blue-300" />
+                </div>
+            </div>
+        </x-zyngga-selection-modal>
 
             </div>
         </main>

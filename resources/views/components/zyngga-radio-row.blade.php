@@ -16,7 +16,7 @@
     $id = $id ?? $name . '-' . $value;
     // Base container classes
     $containerClasses = [
-        'flex items-center justify-between px-1 cursor-pointer group select-none transition-all duration-200',
+        'flex items-center justify-between cursor-pointer group select-none transition-all duration-200',
         $size === 'M' ? 'h-[32px]' : 'h-[56px]',
         $disabled ? 'opacity-50 cursor-not-allowed' : '',
     ];

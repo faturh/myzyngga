@@ -92,7 +92,7 @@
                             </x-zyngga-input>
  
                             <x-zyngga-input 
-                                label="Catatan (Opsional)" 
+                                label="Detail Alamat (Opsional)" 
                                 name="note" 
                                 placeholder="Contoh: Rumah nomor 123"
                                 :error="$errors->first('note')"

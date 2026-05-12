@@ -16,6 +16,7 @@
     'back' => null,
     'hamburg' => null,
     'backAction' => null,
+    'showBell' => false,
 ])
 
 @php
@@ -58,12 +59,17 @@
                 </div>
 
                 {{-- Points badge & Mobile Menu --}}
-                <div class="flex items-center gap-2 shrink-0">
-                    @if($showPoints)
-                        <div class="bg-zyngga-yellow-50 rounded-full px-3 py-2 flex items-center gap-1">
-                            <x-zyngga-text variant="lg" weight="medium" class="leading-none">{{ $points }}</x-zyngga-text>
-                            <i data-feather="sun" class="w-5 h-5 text-zyngga-yellow-300 fill-zyngga-yellow-300"></i>
-                        </div>
+                <div class="flex items-center shrink-0 gap-1">
+                    @if($showBell)
+                        <x-zyngga-button 
+                            type="a"
+                            href="{{ route('notifications') }}"
+                            variant="neutral"
+                            size="l"
+                            icon="bell"
+                            iconPosition="only"
+                            aria-label="Notifikasi"
+                        />
                     @endif
 
                     {{-- Hamburger for Mobile --}}

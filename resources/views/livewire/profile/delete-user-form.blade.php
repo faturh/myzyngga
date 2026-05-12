@@ -6,6 +6,7 @@ use Livewire\Volt\Component;
 
 new class extends Component
 {
+    public bool $hideTrigger = false;
     public string $password = '';
 
     /**
@@ -24,20 +25,22 @@ new class extends Component
 }; ?>
 
 <section class="space-y-6">
-    <header>
-        <x-zyngga-text variant="sm" weight="medium" color="danger">{{ __('Hapus Akun') }}</x-zyngga-text>
-        <x-zyngga-text variant="xs" color="neutral-500" class="mt-1 block leading-relaxed">
-            {{ __('Setelah akun dihapus, semua data Anda akan hilang secara permanen. Harap berhati-hati sebelum melanjutkan.') }}
-        </x-zyngga-text>
-    </header>
+    @if(!$hideTrigger)
+        <header>
+            <x-zyngga-text variant="sm" weight="medium" color="danger">{{ __('Hapus Akun') }}</x-zyngga-text>
+            <x-zyngga-text variant="xs" color="neutral-500" class="mt-1 block leading-relaxed">
+                {{ __('Setelah akun dihapus, semua data Anda akan hilang secara permanen. Harap berhati-hati sebelum melanjutkan.') }}
+            </x-zyngga-text>
+        </header>
 
-    <x-zyngga-button
-        variant="danger"
-        size="m"
-        label="Hapus Akun Sekarang"
-        x-data=""
-        x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    />
+        <x-zyngga-button
+            variant="danger"
+            size="m"
+            label="Hapus Akun Sekarang"
+            x-data=""
+            x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
+        />
+    @endif
 
     <x-modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable>
         <form wire:submit="deleteUser" class="p-6">

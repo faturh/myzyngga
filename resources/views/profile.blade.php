@@ -78,8 +78,8 @@
                     <div class="space-y-4">
                         @forelse(Auth::user()->addresses()->orderBy('is_primary', 'desc')->take(3)->get() as $address)
                             <a href="{{ route('addresses.edit', $address) }}" class="flex items-center gap-4 group">
-                                <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
-                                    <i data-feather="map-pin" class="w-[18px] h-[18px] text-zyngga-blue-300"></i>
+                                <div class="w-10 h-10 rounded-xl bg-zyngga-yellow-50 flex items-center justify-center shrink-0">
+                                    <i data-feather="map-pin" class="w-[18px] h-[18px] text-zyngga-yellow-300"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-0.5">
@@ -141,6 +141,18 @@
 
                         <x-zyngga-divider class="my-2" />
 
+                        {{-- Hapus Akun --}}
+                        <button @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-user-deletion' }))" class="w-full flex items-center gap-4 h-14 group">
+                            <i data-feather="trash-2" class="w-6 h-6 text-zyngga-neutral-800"></i>
+                            <div class="flex-1 text-left">
+                                <x-zyngga-text variant="sm" weight="medium">Hapus Akun</x-zyngga-text>
+                                <x-zyngga-text variant="xs" color="neutral-500">Data akan dihapus permanen</x-zyngga-text>
+                            </div>
+                            <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
+                        </button>
+
+                        <x-zyngga-divider class="my-2" />
+
                         <button @click="window.dispatchEvent(new CustomEvent('open-logout-modal'))" class="w-full flex items-center gap-4 h-14 group">
                             <i data-feather="log-out" class="w-6 h-6 text-red-500"></i>
                             <x-zyngga-text variant="sm" weight="medium" color="danger">Log Out</x-zyngga-text>    
@@ -162,8 +174,8 @@
                         <livewire:profile.update-password-form />
                     </div>
                 </x-zyngga-card>
-            </div>
-            
+            {{-- Deletion Modal Component --}}
+            <livewire:profile.delete-user-form :hide-trigger="true" />
         </main>
 
         {{-- ── MODAL: KONFIRMASI LOGOUT ────────────────────────────── --}}
@@ -172,15 +184,34 @@
             openEvent="open-logout-modal"
             closeEvent="close-logout-modal"
         >
-            <x-zyngga-confirm-view 
-                :image="asset('images/illustrations/cancel_order.png')"
-                title="Yakin ingin keluar?"
-                description="Anda harus masuk kembali untuk dapat melakukan pemesanan laundry."
-                primaryLabel="Ya, Keluar"
-                secondaryLabel="Batal"
-                primaryAction="document.getElementById('logout-form').submit()"
-                secondaryAction="@click=$dispatch('close-logout-modal')"
-            />
+            <div class="flex flex-col items-center text-center">
+                <div class="mb-6">
+                    <img src="{{ asset('images/illustrations/log_out.png') }}" alt="Logout" class="w-40 h-40 object-contain mx-auto">
+                </div>
+
+                <div class="space-y-2 mb-8 px-2">
+                    <x-zyngga-text variant="lg" weight="medium" color="neutral-900" class="leading-snug !text-[#0F0F0F]">
+                        Yakin Keluar dari Akun?
+                    </x-zyngga-text>
+                    <x-zyngga-text variant="sm" weight="regular" color="neutral-500" class="leading-normal !text-[#717171]">
+                        Kamu akan keluar dari sesi saat ini dan perlu masuk kembali untuk melanjutkan.
+                    </x-zyngga-text>
+                </div>
+
+                <div class="flex gap-3 w-full">
+                    <x-zyngga-button type="button" @click="isOpen = false" size="m" variant="secondary" label="Kembali" class="flex-1" />
+                    <x-zyngga-button 
+                        type="button"
+                        size="m"
+                        onclick="document.getElementById('logout-form').submit()" 
+                        variant="secondary-danger" 
+                        label="Log Out" 
+                        icon="log-out" 
+                        iconPosition="left" 
+                        class="flex-1" 
+                    />
+                </div>
+            </div>
         </x-zyngga-selection-modal>
 
         <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">

@@ -170,10 +170,29 @@ class OrderController extends Controller
         $detailAddress = session('order.detail_address', '');
         $lat           = session('order.lat', '');
         $lng           = session('order.lng', '');
+        
+        // Additional state from session
+        $parfum      = session('order.parfum', 'Lavender');
+        $note        = session('order.note', '');
+        $pickupDate  = session('order.pickup_date', '');
+        $pickupTime  = session('order.pickup_time', '');
 
         return view('order.booking', compact(
-            'service', 'serviceLabel', 'address', 'detailAddress', 'lat', 'lng'
+            'service', 'serviceLabel', 'address', 'detailAddress', 'lat', 'lng',
+            'parfum', 'note', 'pickupDate', 'pickupTime'
         ));
+    }
+
+    /**
+     * Update order session via AJAX.
+     */
+    public function updateSession(Request $request)
+    {
+        $data = $request->all();
+        foreach ($data as $key => $value) {
+            session(["order.$key" => $value]);
+        }
+        return response()->json(['status' => 'success']);
     }
 
     /**
@@ -193,6 +212,7 @@ class OrderController extends Controller
             'pickup_date'      => ['required', 'string'],
             'pickup_time'      => ['required', 'string'],
             'parfum'           => ['nullable', 'string'],
+            'note'             => ['nullable', 'string'],
             'payment'          => ['required', 'string'],
         ];
 

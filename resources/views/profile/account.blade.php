@@ -29,15 +29,13 @@
             :hamburg="false"
         />
 
-        <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col pb-32">
-            <div class="px-5 space-y-3 pt-2" id="page-content">
-                
-                {{-- Profile Info --}}
-                <livewire:profile.update-profile-information-form />
+        <main class="flex-1 flex flex-col relative">
+            <div class="w-full max-w-5xl mx-auto px-5">
+                <div class="space-y-3" id="page-content">
+                    {{-- Profile Info --}}
+                    <livewire:profile.update-profile-information-form />
 
-                {{-- Hidden Delete Form (for modal access) --}}
-                <div class="hidden">
-                    <livewire:profile.delete-user-form />
+
                 </div>
             </div>
         </main>

@@ -59,9 +59,7 @@
                 <x-sidebar-items :active="$active" :collapsed="false" />
             </div>
 
-            <div class="p-4 border-t border-gray-100">
-                <x-sidebar-auth-button :collapsed="false" />
-            </div>
+
         </aside>
     </div>
 
@@ -104,12 +102,7 @@
             <x-sidebar-items :active="$active" ::collapsed="desktopCollapsed" />
         </div>
 
-        {{-- Footer / Logout --}}
-        <div 
-            class="border-t border-gray-100 px-3 py-4"
-        >
-            <x-sidebar-auth-button ::collapsed="desktopCollapsed" />
-        </div>
+
     </aside>
 </div>
 

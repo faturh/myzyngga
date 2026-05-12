@@ -85,7 +85,7 @@
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col">
             <div class="w-full max-w-5xl mx-auto px-5">
-                <div class="flex flex-col py-[6px]">
+                <div class="flex flex-col">
                     
                     {{-- Order 1: Diproses --}}
                     <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Diproses'" 

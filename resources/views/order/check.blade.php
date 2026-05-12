@@ -159,7 +159,7 @@
                             href="https://wa.me/+6281297673318"
                             target="_blank"
                             variant="secondary"
-                            size="s"
+                            size="m"
                             icon="message-circle"
                             label="Chat"
                             iconPosition="left"

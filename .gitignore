@@ -7,7 +7,6 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/*.key
 /database/database.sqlite
-.env
 .env.backup
 .env.production
 .phpunit.result.cache
