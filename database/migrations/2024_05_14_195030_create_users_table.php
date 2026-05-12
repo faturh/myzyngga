@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->nullable();
+            $table->string('username')->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('username')->unique();
-            $table->string('slug');
+            $table->string('slug')->unique();
             $table->string('password');
+            $table->string('role')->default('customer');
             $table->foreignId('cabang_id')->nullable()->constrained('cabang', 'id');
             $table->softDeletes();
             $table->rememberToken();

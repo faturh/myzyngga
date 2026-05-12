@@ -39,8 +39,30 @@ export default {
                         300: '#CCCCCC',
                         400: '#808080',
                         500: '#0F0F0F',
+                    },
+                    status: {
+                        success: '#21b557',
+                        warning: '#f2af00',
+                        error: '#ec0f04',
+                        info: '#2563eb',
+                        danger: '#ec0f04',
                     }
                 }
+            },
+            animation: {
+                'gradient-x': 'gradient-x 5s ease infinite',
+            },
+            keyframes: {
+                'gradient-x': {
+                    '0%, 100%': {
+                        'background-size': '200% 200%',
+                        'background-position': 'left center'
+                    },
+                    '50%': {
+                        'background-size': '200% 200%',
+                        'background-position': 'right center'
+                    },
+                },
             }
         },
     },

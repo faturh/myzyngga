@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.auth')] class extends Component
 {
     public LoginForm $form;
 
@@ -20,77 +20,123 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $this->redirectIntended(default: route('home', absolute: false), navigate: true);
     }
 }; ?>
 
-<div>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+<div class="min-h-screen relative flex flex-col md:flex-row bg-gradient-to-r from-[#A5C0EE] to-[#E8F0FE] animate-gradient-x overflow-hidden">
+    
+    <!-- Spacer for mobile gradient area -->
+    <div class="relative flex-1 min-h-[120px] md:hidden w-full"></div>
 
-    <form wire:submit="login">
-        <!-- Email Address -->
-        <x-zyngga-input 
-            label="Email" 
-            wire:model="form.email" 
-            id="email" 
-            type="email" 
-            name="email" 
-            required 
-            autofocus 
-            autocomplete="username"
-            :error="$errors->first('form.email')"
-        >
-            <x-slot:iconLeft>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-            </x-slot:iconLeft>
-        </x-zyngga-input>
+    <!-- Right Side (White Container) - Desktop: Right Half, Mobile: Bottom Sheet -->
+    <div class="bg-white rounded-t-[2rem] md:rounded-none md:w-[50%] md:flex-none w-full flex flex-col z-10 px-8 pt-8 pb-12 md:p-12 relative md:ml-auto md:min-h-screen">
+        
+        <!-- Back Button -->
+        <x-zyngga-button 
+            type="a"
+            href="{{ route('landing') }}"
+            wire:navigate
+            variant="tertiary"
+            size="m"
+            icon="arrow-left"
+            iconPosition="left"
+            label="Kembali"
+            class="!text-zyngga-neutral-500 hover:!bg-zyngga-neutral-200 mb-5 md:mb-12 self-start -ml-4"
+        />
 
-        <!-- Password -->
-        <x-zyngga-input 
-            label="Password" 
-            wire:model="form.password" 
-            id="password" 
-            class="mt-4"
-            type="password" 
-            name="password" 
-            required 
-            autocomplete="current-password"
-            :error="$errors->first('form.password')"
-        >
-            <x-slot:iconLeft>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-            </x-slot:iconLeft>
-        </x-zyngga-input>
+        <!-- Form Container -->
+        <div class="w-full max-w-[420px] mx-auto flex flex-col justify-center flex-1">
+            
+            <!-- Header -->
+            <div class="mb-6">
+                <x-zyngga-text as="h1" variant="2xl" weight="medium" color="neutral-900" class="mb-2">Selamat Datang Kembali!</x-zyngga-text>
+                <x-zyngga-text variant="sm" weight="regular" color="neutral-500">Silakan masuk untuk melanjutkan pesanan dan melihat riwayat transaksimu.</x-zyngga-text>
+            </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember" class="inline-flex items-center">
-                <input wire:model="form.remember" id="remember" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-            </label>
+            <form wire:submit="login" class="space-y-4">
+                <!-- Email -->
+                <x-zyngga-input 
+                    label="Email" 
+                    wire:model="form.email" 
+                    id="email" 
+                    type="email" 
+                    name="email" 
+                    required 
+                    autofocus 
+                    autocomplete="email"
+                    placeholder="Masukkan email kamu"
+                    :error="$errors->first('form.email')"
+                />
+
+                <!-- Password -->
+                <div x-data="{ showPassword: false }">
+                    <x-zyngga-input 
+                        label="Password" 
+                        wire:model="form.password" 
+                        id="password" 
+                        type="password"
+                        name="password" 
+                        required 
+                        autocomplete="current-password"
+                        placeholder="Masukkan kata sandi"
+                        :error="$errors->first('form.password')"
+                    >
+                        <x-slot:iconRight>
+                            <button type="button" @click="let el = document.getElementById('password'); el.type = el.type === 'password' ? 'text' : 'password'; showPassword = !showPassword" class="focus:outline-none flex items-center justify-center p-1 hover:text-zyngga-neutral-500 transition-colors">
+                                <div x-show="!showPassword">
+                                    <i data-feather="eye-off" class="w-4 h-4 text-zyngga-neutral-500"></i>
+                                </div>
+                                <div x-show="showPassword" x-cloak>
+                                    <i data-feather="eye" class="w-4 h-4 text-zyngga-neutral-500"></i>
+                                </div>
+                            </button>
+                        </x-slot:iconRight>
+                    </x-zyngga-input>
+                </div>
+
+                <!-- Options -->
+                <div class="flex items-center justify-between mt-4 pb-2">
+                    <label for="remember" class="inline-flex items-center cursor-pointer">
+                        <input wire:model="form.remember" id="remember" type="checkbox" class="rounded-[4px] border-zyngga-blue-300 text-zyngga-blue-300 shadow-sm focus:ring-zyngga-blue-300 w-4 h-4 cursor-pointer mt-0.5">
+                        <x-zyngga-text variant="sm" weight="regular" color="neutral-900" class="ms-2">Ingat saya</x-zyngga-text>
+                    </label>
+
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" wire:navigate>
+                            <x-zyngga-text variant="sm" weight="medium" color="primary" class="hover:text-zyngga-blue-400">Lupa kata sandi?</x-zyngga-text>
+                        </a>
+                    @endif
+                </div>
+
+                <!-- Submit Button -->
+                <x-zyngga-button 
+                    type="submit"
+                    variant="primary"
+                    size="l"
+                    class="w-full"
+                    wire:loading.attr="disabled"
+                >
+                    <span wire:loading.remove wire:target="login">Masuk</span>
+                    <span wire:loading wire:target="login" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Memproses...
+                    </span>
+                </x-zyngga-button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <x-zyngga-text variant="sm" weight="regular" color="neutral-500">
+                    Belum punya akun? 
+                    <a href="{{ route('register') }}" wire:navigate>
+                        <x-zyngga-text variant="sm" weight="medium" color="primary" as="span" class="hover:text-zyngga-blue-400">Daftar di sini</x-zyngga-text>
+                    </a>
+                </x-zyngga-text>
+            </div>
         </div>
-
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}" wire:navigate>
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
-
-            <x-zyngga-button 
-                type="submit"
-                variant="primary"
-                size="m"
-                label="Log in"
-                class="ms-3"
-            />
-        </div>
-    </form>
+    </div>
 </div>
+

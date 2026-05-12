@@ -3,7 +3,7 @@
     'name' => null,
     'type' => 'text',
     'placeholder' => '',
-    'value' => '',
+    'value' => null,
     'size' => 'M', // M or S
     'error' => null,
     'disabled' => false,
@@ -38,7 +38,7 @@
 
 <div {{ $attributes->only('class') }}>
     @if($label)
-        <x-zyngga-text as="label" variant="sm" weight="medium" color="neutral-500" class="block mb-2" for="{{ $name }}">
+        <x-zyngga-text as="label" variant="sm" weight="regular" class="block mb-2" for="{{ $name }}">
             {{ $label }}
         </x-zyngga-text>
     @endif
@@ -52,14 +52,14 @@
         
         <input 
             type="{{ $type }}" 
-            name="{{ $name }}"
-            value="{{ $value }}"
             placeholder="{{ $placeholder }}"
             @disabled($disabled)
-            {{ $attributes->except('class')->merge([
-                'id' => $name,
+            {{ $attributes->except('class')->merge(array_filter([
+                'id' => $attributes->get('id') ?: ($name ?: 'input-'.uniqid()),
+                'name' => $name ?: ($attributes->get('name')),
+                'value' => $value,
                 'class' => 'flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none p-0 text-zyngga-neutral-500 placeholder-zyngga-neutral-400 ' . ($inputSizeClasses[$size] ?? $inputSizeClasses['M'])
-            ]) }}
+            ], fn($v) => $v !== null)) }}
         >
         
         @if($error && !$iconRight)
@@ -74,8 +74,8 @@
     </div>
     
     @if($error)
-        <x-zyngga-text variant="xs" weight="medium" color="danger" class="mt-1">
+        <span class="text-xs text-red-500 mt-1 block">
             {{ $error }}
-        </x-zyngga-text>
+        </span>
     @endif
 </div>

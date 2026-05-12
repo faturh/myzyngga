@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
     {
         Pelanggan::factory(10)->create();
         $this->call([
+            PermissionSeeder::class,
             //? Data Master
             CabangSeeder::class,
             UMRSeeder::class,

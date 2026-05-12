@@ -19,21 +19,6 @@
             padding-bottom: 100px; /* space for sticky footer */
         }
 
-        /* ── section card ── */
-        .section-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 8px 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0F0F0F;
-            margin: 0 0 20px 0;
-        }
 
         /* ── service option ── */
         .service-option {
@@ -94,7 +79,7 @@
             justify-content: center;
             padding: 0;
         }
-        .time-chip:hover {
+        .time-chip:not(:disabled):hover {
             border-color: #1660C1;
             color: #1660C1;
             background: #e8eff9;
@@ -146,10 +131,9 @@
         #sticky-footer {
             position: fixed;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            right: 0;
             width: 100%;
-            max-width: 425px;
             background: white;
             border-top: 1px solid #F4F4F4;
             border-radius: 16px 16px 0 0;
@@ -159,6 +143,17 @@
             justify-content: space-between;
             z-index: 50;
             box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        /* Reset sticky footer position (no sidebar) */
+        /* Remove specific centering on desktop */
+        @media (min-width: 768px) {
+            #sticky-footer {
+                left: 0;
+                right: 0;
+                transform: none;
+            }
         }
 
         /* ── map thumbnail ── */
@@ -171,102 +166,152 @@
         #map-thumb iframe { width:100%; height:100%; border:0; }
     </style>
 </head>
-<body>
-<div class="w-full max-w-[425px] mx-auto min-h-screen flex flex-col">
+<body class="bg-[#e8eff9]">
 
-    {{-- ── HEADER ─────────────────────────────────────────────── --}}
-    <div class="sticky top-0 z-40 bg-white rounded-b-2xl shadow-[0_4px_12px_rgba(0,0,0,0.04)] px-5 py-5 mb-[6px]">
-        <div class="flex items-center gap-3 h-10">
-            <x-zyngga-button 
-                type="a"
-                href="{{ route('order.pickup', ['service' => $service]) }}"
-                variant="neutral"
-                size="l"
-                icon="arrow-left"
-                iconPosition="only"
-                aria-label="Kembali"
-            />
-            <x-zyngga-text variant="lg" weight="semibold" as="h1">Pemesanan Pickup</x-zyngga-text>
-        </div>
-    </div>
+    <div class="min-h-screen flex flex-col" x-data>
+        {{-- ── HEADER ─────────────────────────────────────────────── --}}
+        <x-dashboard-header 
+            title="Pemesanan Pickup" 
+            :backUrl="route('home')" 
+            :backAction="'window.dispatchEvent(new CustomEvent(\'open-back-modal\'))'"
+            :maxWidth="'max-w-full'"
+            :showPoints="false"
+            :back="true"
+            :hamburg="false"
+        />
 
-    {{-- ── SCROLLABLE CONTENT ──────────────────────────────────── --}}
-    <form method="POST" action="{{ route('order.confirm') }}" id="page-content">
+        {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
+        <main class="flex-1 flex flex-col relative">
+            <div class="w-full max-w-5xl mx-auto px-5">
+                {{-- ── SCROLLABLE CONTENT ──────────────────────────────────── --}}
+                <form method="POST" action="{{ route('order.confirm') }}" id="page-content" class="flex-1 flex flex-col">
         @csrf
         <input type="hidden" name="service"        value="{{ $service }}">
         <input type="hidden" name="address"        value="{{ $address }}">
-        <input type="hidden" name="detail_address" value="{{ $detailAddress }}">
         <input type="hidden" name="lat"            value="{{ $lat }}">
         <input type="hidden" name="lng"            value="{{ $lng }}">
         <input type="hidden" name="selected_service_id" id="selected_service_id" value="{{ strtolower($serviceLabel) }}">
-        <input type="hidden" name="pickup_date"   id="pickup_date"   value="today">
-        <input type="hidden" name="pickup_time"   id="pickup_time"   value="10:00">
-        <input type="hidden" name="parfum"        id="parfum"        value="Lavender">
-
+        @php
+            $todayCarbon = \Carbon\Carbon::now('Asia/Jakarta');
+            $currentHour = $todayCarbon->hour;
+            $isTodayDisabled = $currentHour >= 18;
+            $defaultDate = $isTodayDisabled ? 'tomorrow' : 'today';
+        @endphp
+        <input type="hidden" name="pickup_date"   id="pickup_date"   value="{{ $pickupDate ?: $defaultDate }}">
+        <input type="hidden" name="pickup_time"   id="pickup_time"   value="{{ $pickupTime }}">
+        <input type="hidden" name="parfum"        id="parfum"        value="{{ $parfum ?: 'Lavender' }}">
+        <input type="hidden" name="note"          id="note"          value="{{ $note }}">
+        
         {{-- ── LOKASI PICKUP ─────────────────────────────────── --}}
-        <div class="section-card">
-            <div class="flex items-center justify-between mb-4">
-                <x-zyngga-text variant="base" weight="semibold" as="p">Lokasi Pickup</x-zyngga-text>
+        <x-zyngga-card title="Lokasi Pickup">
+            <x-slot:headerAction>
                 <x-zyngga-button 
                     type="a"
-                    href="{{ route('order.pickup', ['service' => $service]) }}"
+                    href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
                     variant="secondary"
                     size="s"
                     label="Ubah"
+                    onclick="isDirty = false"
                 />
-            </div>
-
+            </x-slot:headerAction>
+            
             {{-- Map thumbnail — clickable → edit pickup location --}}
             <div id="map-thumb" class="mb-4 relative">
                 <iframe
-                    loading="lazy"
-                    allowfullscreen
-                    referrerpolicy="no-referrer-when-downgrade"
-                    src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_key') }}&q={{ urlencode($address) }}&zoom=15&maptype=roadmap"
-                    style="pointer-events:none;"
+                loading="lazy"
+                allowfullscreen
+                referrerpolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps/embed/v1/search?key={{ config('services.google.maps_key') }}&q={{ $lat }},{{ $lng }}&zoom=18&maptype=roadmap"
+                style="pointer-events:none;"
                 ></iframe>
                 {{-- Transparent overlay captures click → navigate to edit page --}}
                 <a
-                    href="{{ route('order.pickup', ['service' => $service]) }}"
-                    class="absolute inset-0 z-10 block cursor-pointer"
-                    aria-label="Edit lokasi pickup"
-                    title="Edit lokasi pickup"
+                href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
+                class="absolute inset-0 z-10 block cursor-pointer"
+                aria-label="Edit lokasi pickup"
+                title="Edit lokasi pickup"
                 ></a>
             </div>
-
-            {{-- Address --}}
-            <div class="mb-3">
-                <x-zyngga-text variant="sm" weight="semibold" class="mb-1">
-                    {{ $address }}
-                </x-zyngga-text>
-                @if($detailAddress)
-                    <x-zyngga-text variant="xs" color="neutral-500">
-                        {{ $detailAddress }}
+            
+            {{-- Address with Icon --}}
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zyngga-blue-50">
+                    <i data-feather="map-pin" class="w-5 h-5 text-zyngga-blue-300"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <x-zyngga-text variant="sm" weight="medium">
+                        {{ explode(',', $address)[0] }}
                     </x-zyngga-text>
-                @endif
+                    <x-zyngga-text variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
+                        {{ $address }}
+                    </x-zyngga-text>
+                </div>
             </div>
 
-            {{-- Detail lokasi input --}}
-            <x-zyngga-input 
-                name="detail_address_edit"
-                placeholder="Detail Lokasi"
-                value="{{ $detailAddress }}"
-                onkeydown="if(event.key === 'Enter') event.preventDefault();"
-            >
-                <x-slot:iconRight>
-                    <i data-feather="edit-2" class="w-4 h-4 text-[#808080]"></i>
-                </x-slot:iconRight>
-            </x-zyngga-input>
-        </div>
-
+            <div class="mt-3">
+                <x-zyngga-input 
+                    name="detail_address" 
+                    id="detail_address" 
+                    value="{{ $detailAddress }}" 
+                    placeholder="Tambah detail lokasi" 
+                >
+                    <x-slot:iconRight>
+                        <i data-feather="edit-2" class="w-4 h-4 text-zyngga-neutral-900 pointer-events-none"></i>
+                    </x-slot:iconRight>
+                </x-zyngga-input>
+            </div>
+        </x-zyngga-card>
+        
+                @guest
+                {{-- ── DETAIL PELANGGAN ───────────────────────────────── --}}
+                <x-zyngga-card title="Detail Pelanggan">
+                    <div class="space-y-4">
+                        <div>
+                            <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Nama Lengkap</x-zyngga-text>
+                            <x-zyngga-input 
+                                name="customer_name"
+                                id="customer_name"
+                                placeholder="Masukkan nama pelanggan"
+                                required
+                            />
+                            <span id="error-customer_name" class="text-xs text-red-500 mt-1 hidden"></span>
+                        </div>
+                        <div>
+                            <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Nomor WhatsApp</x-zyngga-text>
+                            <x-zyngga-input 
+                                name="customer_phone"
+                                id="customer_phone"
+                                placeholder="Masukkan nomor WhatsApp"
+                                required
+                            />
+                            <span id="error-customer_phone" class="text-xs text-red-500 mt-1 hidden"></span>
+                        </div>
+                        <div>
+                            <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Email</x-zyngga-text>
+                            <x-zyngga-input 
+                                name="customer_email"
+                                id="customer_email"
+                                placeholder="Masukkan Email"
+                                type="email"
+                                required
+                            />
+                            <span id="error-customer_email" class="text-xs text-red-500 mt-1 hidden"></span>
+                            <div class="flex items-center gap-2 mt-2">
+                                <i data-feather="info" class="w-4 h-4 text-[#1660C1]"></i>
+                                <x-zyngga-text variant="xs" color="primary">Email digunakan untuk mengirim notifikasi pesanan</x-zyngga-text>
+                            </div>
+                        </div>
+                    </div>
+                </x-zyngga-card>
+                @endguest
+        
         {{-- ── JENIS LAYANAN ──────────────────────────────────── --}}
-        <div class="section-card">
-            <div class="flex items-center justify-between mb-4">
-                <x-zyngga-text variant="base" weight="semibold" as="p">Jenis Layanan</x-zyngga-text>
-                <button type="button" onclick="openServiceModal()">
-                    <x-zyngga-text variant="xs" weight="semibold" color="primary">Lihat semua</x-zyngga-text>
+        <x-zyngga-card title="Jenis Layanan">
+            <x-slot:headerAction>
+                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-service-modal'))">
+                    <x-zyngga-text variant="xs" weight="medium" color="primary">Lihat semua</x-zyngga-text>
                 </button>
-            </div>
+            </x-slot:headerAction>
 
             @php
                 $allServices = [
@@ -281,160 +326,114 @@
             {{-- Slot 0: selected service (updated by JS on selection) --}}
             <div class="service-option selected" id="card-slot-0" onclick="cardSlotClick(0)">
                 <div>
-                    <x-zyngga-text id="slot0-name" variant="sm" weight="semibold" class="m-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot0-name" variant="sm" weight="medium" class="m-0"></x-zyngga-text>
                     <x-zyngga-text id="slot0-desc" variant="xs" color="neutral-500" class="m-0 mt-1"></x-zyngga-text>
                 </div>
                 <div class="flex items-center gap-3">
-                    <x-zyngga-text id="slot0-price" variant="sm" weight="semibold" class="shrink-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot0-price" variant="sm" weight="medium" class="shrink-0"></x-zyngga-text>
                 </div>
             </div>
 
             {{-- Slot 1: alternative service (updated by JS on selection) --}}
             <div class="service-option" id="card-slot-1" onclick="cardSlotClick(1)">
                 <div>
-                    <x-zyngga-text id="slot1-name" variant="sm" weight="semibold" class="m-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot1-name" variant="sm" weight="medium" class="m-0"></x-zyngga-text>
                     <x-zyngga-text id="slot1-desc" variant="xs" color="neutral-500" class="m-0 mt-1"></x-zyngga-text>
                 </div>
                 <div class="flex items-center gap-3">
-                    <x-zyngga-text id="slot1-price" variant="sm" weight="semibold" class="shrink-0"></x-zyngga-text>
+                    <x-zyngga-text id="slot1-price" variant="sm" weight="medium" class="shrink-0"></x-zyngga-text>
                 </div>
             </div>
-        </div>
+        </x-zyngga-card>
 
         {{-- ════════════════════════════════════════════════════════
              POPUP — Jenis Layanan (Figma 268:481)
              Centered in page, backdrop rgba(0,0,0,0.10)
         ════════════════════════════════════════════════════════ --}}
-        <div
-            id="service-modal"
-            style="
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.10);
-                z-index: 100;
-                align-items: center;
-                justify-content: center;
-            "
-            onclick="closeServiceModal(event)"
+        {{-- ── MODAL: JENIS LAYANAN ──────────────────────────────── --}}
+        <x-zyngga-selection-modal 
+            id="service-modal-root" 
+            title="Jenis Layanan"
+            openEvent="open-service-modal"
+            closeEvent="close-service-modal"
         >
-            <div
-                id="service-modal-box"
-                style="
-                    width: 385px;
-                    max-width: calc(100vw - 40px);
-                    background: white;
-                    border-radius: 16px;
-                    padding: 20px;
-                    box-shadow: 0 8px 40px rgba(0,0,0,0.16);
-                    max-height: 90vh;
-                    overflow-y: auto;
-                "
-                onclick="event.stopPropagation()"
-            >
-                {{-- Modal header --}}
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-                    <x-zyngga-text variant="lg" weight="semibold">Jenis Layanan</x-zyngga-text>
-                    <button
-                        type="button"
-                        onclick="closeServiceModal()"
-                        style="
-                            width:32px; height:32px;
-                            border:none; background:none;
-                            cursor:pointer;
-                            display:flex; align-items:center; justify-content:center;
-                            border-radius:50%;
-                            transition:background 0.15s;
-                        "
-                        onmouseover="this.style.background='#F4F4F4'"
-                        onmouseout="this.style.background='none'"
-                        aria-label="Tutup"
-                    >
-                        <i data-feather="x" class="w-5 h-5 text-[#0F0F0F]"></i>
-                    </button>
-                </div>
-
-                {{-- Service list --}}
-                @foreach ($allServices as $i => $svc)
-                    <x-zyngga-radio-row 
-                        name="modal_service"
-                        id="modal-radio-{{ $svc['id'] }}"
-                        value="{{ $svc['id'] }}"
-                        :label="$svc['name']"
-                        :description="$svc['desc']"
-                        :additional="$svc['price']"
-                        :checked="strtolower($serviceLabel) === $svc['id']"
-                        onclick="selectServiceFromModal('{{ $svc['id'] }}')"
-                    />
-                    @if ($i < count($allServices) - 1)
-                        <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-1"></div>
-                    @endif
-                @endforeach
-            </div>
-        </div>
+            @foreach ($allServices as $i => $svc)
+                <x-zyngga-radio-row 
+                    name="modal_service"
+                    id="modal-radio-{{ $svc['id'] }}"
+                    value="{{ $svc['id'] }}"
+                    :label="$svc['name']"
+                    :description="$svc['desc']"
+                    :additional="$svc['price']"
+                    :checked="strtolower($serviceLabel) === $svc['id']"
+                    onclick="selectServiceFromModal('{{ $svc['id'] }}')"
+                />
+                @if ($i < count($allServices) - 1)
+                    <x-zyngga-divider class="mx-1 my-1" />
+                @endif
+            @endforeach
+        </x-zyngga-selection-modal>
 
         {{-- ── JADWAL PICKUP ──────────────────────────────────── --}}
-        <div class="section-card space-y-3">
-            <x-zyngga-text variant="base" weight="semibold" as="p">Jadwal Pickup</x-zyngga-text>
-
-            {{-- Date options --}}
-            <div class="flex gap-2">
-                @php
-                    use Carbon\Carbon;
-                    $today    = Carbon::now('Asia/Jakarta');
-                    $tomorrow = $today->copy()->addDay();
-                @endphp
-                <div class="date-btn selected" onclick="selectDate('today', this)">
-                    <x-zyngga-text variant="sm" weight="semibold" class="m-0">Hari ini</x-zyngga-text>
-                    <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $today->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                </div>
-                <div class="date-btn" onclick="selectDate('tomorrow', this)">
-                    <x-zyngga-text variant="sm" weight="semibold" class="m-0">Besok</x-zyngga-text>
-                    <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrow->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                </div>
-            </div>
-
-            {{-- Time chips --}}
-            <div class="flex gap-2">
-                @foreach(['10:00','12:00','16:00','18:00'] as $time)
-                    <button
-                        type="button"
-                        class="time-chip {{ $time === '10:00' ? 'selected' : '' }}"
-                        onclick="selectTime('{{ $time }}', this)"
-                    >
-                        <x-zyngga-text variant="sm" weight="medium" class="inherit-color">{{ $time }}</x-zyngga-text>
+        <x-zyngga-card title="Jadwal Pickup">
+            <div class="space-y-3">
+                {{-- Date options --}}
+                <div class="flex gap-2">
+                    @php
+                        $tomorrowCarbon = $todayCarbon->copy()->addDay();
+                    @endphp
+                    <button type="button" class="date-btn {{ !$isTodayDisabled ? 'selected' : 'opacity-40 bg-gray-50 pointer-events-none' }}" 
+                            onclick="selectDate('today', this)" {{ $isTodayDisabled ? 'disabled' : '' }}>
+                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Hari ini</x-zyngga-text>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $todayCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
                     </button>
-                @endforeach
+                    <button type="button" class="date-btn {{ $isTodayDisabled ? 'selected' : '' }}" 
+                            onclick="selectDate('tomorrow', this)">
+                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Besok</x-zyngga-text>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrowCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+                    </button>
+                </div>
+
+                {{-- Time chips --}}
+                <div class="flex gap-2">
+                    @foreach(['10:00','12:00','16:00','18:00'] as $time)
+                        @php $timeHour = (int) explode(':', $time)[0]; @endphp
+                        <button
+                            type="button"
+                            class="time-chip"
+                            data-time="{{ $time }}"
+                            data-hour="{{ $timeHour }}"
+                            onclick="selectTime('{{ $time }}', this)"
+                        >
+                            <x-zyngga-text variant="sm" weight="regular" class="inherit-color">{{ $time }}</x-zyngga-text>
+                        </button>
+                    @endforeach
+                </div>
             </div>
-        </div>
+        </x-zyngga-card>
 
         {{-- ── TAMBAHAN ───────────────────────────────────────── --}}
-        <div class="section-card">
-            <x-zyngga-text variant="base" weight="semibold" as="p" class="mb-4">Tambahan</x-zyngga-text>
-
-            <div class="addon-row" onclick="openParfumPicker()">
-                <x-zyngga-text variant="sm" weight="medium" class="m-0">Pilihan parfum</x-zyngga-text>
-                <div class="flex items-center gap-1">
-                    <x-zyngga-text id="selected-parfum" variant="sm" color="neutral-500" class="m-0">Lavender</x-zyngga-text>
-                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080]"></i>
+        <x-zyngga-card title="Tambahan">
+            <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="window.dispatchEvent(new CustomEvent('open-parfum-modal'))">
+                <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Pilihan parfum</x-zyngga-text>
+                <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
+                    <x-zyngga-text id="selected-parfum" variant="sm" class="m-0 truncate text-right">Lavender</x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080] shrink-0"></i>
                 </div>
             </div>
 
-            <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-2"></div> 
-
-            <div class="addon-row" onclick="openCatatan()">
-                <x-zyngga-text variant="sm" weight="medium" class="m-0">Catatan</x-zyngga-text>
-                <div class="flex items-center gap-1">
-                    <x-zyngga-text id="catatan-label" variant="sm" color="neutral-500" class="m-0">Buat catatan</x-zyngga-text>
-                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080]"></i>
+            <x-zyngga-divider class="mx-1 my-2" />
+            <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="openCatatan()">
+                <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Catatan</x-zyngga-text>
+                <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
+                    <x-zyngga-text id="catatan-label" variant="sm" color="neutral-500" class="m-0 truncate text-right">Buat catatan</x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-[#808080] shrink-0"></i>
                 </div>
             </div>
-        </div>
+        </x-zyngga-card>
 
         {{-- ── METODE PEMBAYARAN ──────────────────────────────── --}}
-        <div class="section-card">
-            <x-zyngga-text variant="base" weight="semibold" as="p" class="mb-4">Metode Pembayaran</x-zyngga-text>
-
+        <x-zyngga-card title="Metode Pembayaran">
             @php
                 $payments = [
                     ['id' => 'cash', 'label' => 'Cash',  'desc' => 'Pembayaran dilakukan kepada kurir',
@@ -458,108 +457,133 @@
                     >
                         <x-slot:icon>
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zyngga-yellow-50">
-                                <i data-feather="{{ $pay['feather'] }}" class="w-5 h-5 text-zyngga-yellow-300"></i>
+                                <i data-feather="{{ $pay['feather'] }}" class="w-[18px] h-[18px] text-zyngga-yellow-300"></i>
                             </div>
                         </x-slot:icon>
                     </x-zyngga-radio-row>
                     @if ($i < count($payments) - 1)
-                        <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-2"></div>
+                        <x-zyngga-divider class="mx-1 my-2" />
                     @endif
                 @endforeach
             </div>
-        </div>
+        </x-zyngga-card>
     </form>
 
     {{-- ── STICKY FOOTER ──────────────────────────────────────── --}}
     <div id="sticky-footer">
-        <div>
-            <x-zyngga-text id="footer-service-label" variant="base" weight="semibold" class="m-0">Memuat...</x-zyngga-text>
-            <div class="flex items-center gap-1.5 mt-1">
-                <i data-feather="info" class="w-3.5 h-3.5 text-[#1660C1]"></i>
-                <x-zyngga-text id="footer-eta" variant="xs" color="primary" class="m-0">Menghitung estimasi...</x-zyngga-text>
+        <div class="max-w-5xl mx-auto w-full px-5 flex items-center justify-between">
+            <div>
+                <x-zyngga-text id="footer-service-label" variant="base" weight="medium" class="m-0">Memuat...</x-zyngga-text>
+                <div class="flex items-center gap-1.5 mt-1">
+                    <i data-feather="info" class="w-3.5 h-3.5 text-[#1660C1]"></i>
+                    <x-zyngga-text id="footer-eta" variant="xs" color="primary" class="m-0">Menghitung estimasi...</x-zyngga-text>
+                </div>
+            </div>
+
+            <x-zyngga-button 
+                type="button"
+                variant="primary"
+                size="l"
+                label="Buat Pesanan"
+                class="ml-4"
+                onclick="validateAndConfirm()"
+            />
+        </div>
+    </div>
+
+            </div>
+        </main>
+</div>
+
+{{-- ── MODAL: KONFIRMASI PESANAN ───────────────────────────── --}}
+<x-zyngga-selection-modal 
+    id="confirm-modal-root" 
+    openEvent="open-confirm-modal"
+    closeEvent="close-confirm-modal"
+>
+    <x-zyngga-confirm-view 
+        :image="asset('images/illustrations/confirm_order.png')"
+        title="Yakin ingin membuat pesanan ini?"
+        description="Apakah Anda yakin ingin melanjutkan? Periksa detailnya sebelum melanjutkan."
+        primaryLabel="Buat Pesanan"
+        secondaryLabel="Batalkan"
+        primaryAction="submitOrder()"
+        secondaryAction="isOpen=false"
+    />
+</x-zyngga-selection-modal>
+
+{{-- ── MODAL: KONFIRMASI KEMBALI ────────────────────────────── --}}
+<x-zyngga-selection-modal 
+    id="back-modal-root" 
+    openEvent="open-back-modal"
+    closeEvent="close-back-modal"
+>
+    <x-zyngga-confirm-view 
+        :image="asset('images/illustrations/cancel_order.png')"
+        title="Batal buat pesanan?"
+        description="Data yang sudah Anda masukkan akan hilang jika Anda kembali ke halaman sebelumnya."
+        primaryLabel="Ya, Batalkan"
+        secondaryLabel="Tetap di Sini"
+        primaryAction="window.location.href='{{ route('home') }}'"
+        secondaryAction="isOpen=false"
+    />
+</x-zyngga-selection-modal>
+
+{{-- ── MODAL: PILIH PARFUM ────────────────────────────────── --}}
+<x-zyngga-selection-modal 
+    id="parfum-modal-root" 
+    title="Pilih Parfum"
+    openEvent="open-parfum-modal"
+    closeEvent="close-parfum-modal"
+>
+    @php $parfums = ['Lavender','Rose','Jasmine','Fresh','Unscented']; @endphp
+    @foreach ($parfums as $i => $p)
+        <x-zyngga-radio-row 
+            name="modal_parfum"
+            id="parfum-radio-row-{{ $p }}"
+            value="{{ $p }}"
+            :label="$p"
+            size="M"
+            :checked="$p === 'Lavender'"
+            onclick="chooseParfum('{{ $p }}')"
+        />
+        @if ($i < count($parfums) - 1)
+            <x-zyngga-divider class="mx-1 my-2" />
+        @endif
+    @endforeach
+</x-zyngga-selection-modal>
+
+{{-- ── MODAL: CATATAN ──────────────────────────────────────── --}}
+<x-zyngga-selection-modal 
+    id="catatan-modal-root" 
+    title="Tambah Catatan"
+    openEvent="open-catatan-modal"
+    closeEvent="close-catatan-modal"
+>
+    <div class="space-y-4">
+        <div class="relative">
+            <textarea 
+                id="modal-catatan-input"
+                maxlength="60"
+                class="w-full h-32 p-4 border-[1.5px] border-zyngga-blue-50 rounded-xl focus:border-zyngga-blue-300 focus:ring-0 outline-none transition-all duration-200 text-sm placeholder-zyngga-neutral-400"
+                placeholder="Tambahkan catatan untuk pesananmu"
+                oninput="document.getElementById('catatan-char-count').textContent = this.value.length"
+            ></textarea>
+            <div class="absolute bottom-3 right-4 text-xs text-zyngga-neutral-400">
+                <span id="catatan-char-count">0</span>/60
             </div>
         </div>
-
+        
         <x-zyngga-button 
-            type="submit"
-            form="page-content"
+            type="button"
             variant="primary"
             size="l"
-            label="Buat Pesanan"
-            class="ml-4"
+            label="Simpan"
+            class="w-full"
+            onclick="saveCatatan()"
         />
     </div>
-
-</div>
-
-{{-- ── PARFUM MODAL ───────────────────────────────────── --}}
-<div
-    id="parfum-modal"
-    style="
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.10);
-        z-index: 100;
-        align-items: center;
-        justify-content: center;
-    "
-    onclick="closeParfumPicker(event)"
->
-    <div
-        id="parfum-modal-box"
-        style="
-            width: 385px;
-            max-width: calc(100vw - 40px);
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.16);
-            max-height: 90vh;
-            overflow-y: auto;
-        "
-        onclick="event.stopPropagation()"
-    >
-        {{-- Modal header --}}
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-            <p style="font-size:18px; font-weight:700; color:theme('colors.zyngga.neutral.500'); margin:0;">Pilih Parfum</p>
-            <button
-                type="button"
-                onclick="closeParfumPicker()"
-                style="
-                    width:32px; height:32px;
-                    border:none; background:none;
-                    cursor:pointer;
-                    display:flex; align-items:center; justify-content:center;
-                    border-radius:50%;
-                    transition:background 0.15s;
-                "
-                onmouseover="this.style.background='#F4F4F4'"
-                onmouseout="this.style.background='none'"
-                aria-label="Tutup"
-            >
-                <i data-feather="x" class="w-5 h-5 text-[#0F0F0F]"></i>
-            </button>
-        </div>
-
-        {{-- Parfum list --}}
-        @php $parfums = ['Lavender','Rose','Jasmine','Fresh','Unscented']; @endphp
-        @foreach ($parfums as $i => $p)
-            <x-zyngga-radio-row 
-                name="modal_parfum"
-                id="parfum-radio-row-{{ $p }}"
-                value="{{ $p }}"
-                :label="$p"
-                size="M"
-                :checked="$p === 'Lavender'"
-                onclick="chooseParfum('{{ $p }}')"
-            />
-            @if ($i < count($parfums) - 1)
-                <div class="h-[1px] bg-zyngga-neutral-200 mx-1 my-2"></div>
-            @endif
-        @endforeach
-    </div>
-</div>
+</x-zyngga-selection-modal>
 
 <script>
     // ── Service catalogue (mirrors PHP $allServices) ───────────
@@ -622,6 +646,13 @@
         document.getElementById('selected_service_id').value = id;
 
         // 2. Footer label & ETA
+        updateFooterServiceLabel(id);
+
+        // 3. Update Session
+        updateOrderSession({ service: id });
+    }
+
+    function updateFooterServiceLabel(id) {
         const svc = ALL_SERVICES.find(s => s.id === id) || ALL_SERVICES[0];
         
         // Label: Name (X hari) or Name (Hari yang sama)
@@ -654,12 +685,10 @@
 
     // ── Modal open / close ─────────────────────────────────────
     function openServiceModal() {
-        document.getElementById('service-modal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        window.dispatchEvent(new CustomEvent('open-service-modal'));
     }
     function closeServiceModal() {
-        document.getElementById('service-modal').style.display = 'none';
-        document.body.style.overflow = '';
+        window.dispatchEvent(new CustomEvent('close-service-modal'));
     }
 
     // ── Called from modal row click ────────────────────────────
@@ -668,10 +697,7 @@
         closeServiceModal();
     }
 
-    // ── Init on page load ──────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-        applySelection(selectedId);
-    });
+    const CURRENT_HOUR = {{ \Carbon\Carbon::now('Asia/Jakarta')->hour }};
 
     // ── Date selection ─────────────────────────────────────────
     function selectDate(val, el) {
@@ -679,32 +705,72 @@
         el.classList.add('selected');
         document.getElementById('pickup_date').value = val;
         
+        refreshTimeChips(val);
         // Refresh ETA based on new date
         applySelection(selectedId);
+        updateOrderSession({ pickup_date: val });
     }
 
     // ── Time selection ─────────────────────────────────────────
     function selectTime(val, el) {
+        if (el.disabled) return;
         document.querySelectorAll('.time-chip').forEach(e => e.classList.remove('selected'));
         el.classList.add('selected');
         document.getElementById('pickup_time').value = val;
+        updateOrderSession({ pickup_time: val });
     }
+
+    function refreshTimeChips(selectedDate) {
+        const chips = document.querySelectorAll('.time-chip');
+        let firstAvailable = null;
+        let anySelected = false;
+
+        chips.forEach(chip => {
+            const timeHour = parseInt(chip.dataset.hour);
+            let isDisabled = false;
+
+            if (selectedDate === 'today' && CURRENT_HOUR >= timeHour) {
+                isDisabled = true;
+            }
+
+            if (isDisabled) {
+                chip.disabled = true;
+                chip.classList.add('opacity-30', 'bg-gray-50', 'cursor-not-allowed');
+                chip.classList.remove('selected');
+            } else {
+                chip.disabled = false;
+                chip.classList.remove('opacity-30', 'bg-gray-50', 'cursor-not-allowed');
+                if (!firstAvailable) firstAvailable = chip;
+                if (chip.classList.contains('selected')) anySelected = true;
+            }
+        });
+
+        // Auto-select the first available time if nothing is validly selected
+        if (!anySelected && firstAvailable) {
+            selectTime(firstAvailable.dataset.time, firstAvailable);
+        }
+    }
+
+    // ── Init on page load ──────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        applySelection(selectedId);
+        refreshTimeChips(document.getElementById('pickup_date').value);
+    });
 
 
 
     // ── Parfum picker ──────────────────────────────────────────
     function openParfumPicker() {
-        document.getElementById('parfum-modal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        window.dispatchEvent(new CustomEvent('open-parfum-modal'));
     }
     function closeParfumPicker() {
-        document.getElementById('parfum-modal').style.display = 'none';
-        document.body.style.overflow = '';
+        window.dispatchEvent(new CustomEvent('close-parfum-modal'));
     }
     function chooseParfum(val) {
         // Update hidden input and label
         document.getElementById('selected-parfum').textContent = val;
         document.getElementById('parfum').value = val;
+        updateOrderSession({ parfum: val });
 
         // Sync radios
         document.querySelectorAll('input[name="modal_parfum"]').forEach(r => {
@@ -716,13 +782,197 @@
 
     // ── Catatan ────────────────────────────────────────────────
     function openCatatan() {
-        const note = prompt('Tulis catatan untuk kurir:');
-        if (note) document.getElementById('catatan-label').textContent = note;
+        window.dispatchEvent(new CustomEvent('open-catatan-modal'));
+    }
+    function closeCatatan() {
+        window.dispatchEvent(new CustomEvent('close-catatan-modal'));
+    }
+    function saveCatatan() {
+        const val = document.getElementById('modal-catatan-input').value.trim();
+        const label = document.getElementById('catatan-label');
+        const noteInput = document.getElementById('note');
+
+        if (val) {
+            label.textContent = val;
+            label.classList.remove('text-zyngga-neutral-400');
+            label.classList.add('text-zyngga-neutral-900'); // Use dark color for filled note
+        } else {
+            label.textContent = 'Buat catatan';
+            label.classList.add('text-zyngga-neutral-400');
+            label.classList.remove('text-zyngga-neutral-900');
+        }
+
+        if (noteInput) {
+            noteInput.value = val;
+            updateOrderSession({ note: val });
+        }
+
+        closeCatatan();
+    }
+
+    function updateOrderSession(data) {
+        fetch('{{ route('order.update-session') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(data)
+        });
+    }
+
+    // ── Validation Helpers ─────────────────────────────────────
+    function showError(fieldId, message) {
+        const errorEl = document.getElementById(`error-${fieldId}`);
+        const inputEl = document.getElementById(fieldId);
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+        // Assuming your x-zyngga-input has an internal input we can style, 
+        // but for now we focus on the text message.
+    }
+
+    function clearErrors() {
+        document.querySelectorAll('[id^="error-"]').forEach(el => {
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+    }
+
+    function validateGuestDetails() {
+        clearErrors();
+        let isValid = true;
+
+        const nameEl  = document.getElementById('customer_name');
+        const phoneEl = document.getElementById('customer_phone');
+        const emailEl = document.getElementById('customer_email');
+
+        // If these elements don't exist (user is logged in), skip validation
+        if (!nameEl) return true;
+
+        const name  = nameEl.value.trim();
+        const phone = phoneEl.value.trim();
+        const email = emailEl.value.trim();
+
+        // Validate Name
+        if (!name) {
+            showError('customer_name', 'Nama lengkap tidak boleh kosong');
+            isValid = false;
+        } else if (/\d/.test(name)) {
+            showError('customer_name', 'Nama tidak boleh mengandung angka');
+            isValid = false;
+        }
+
+        // Validate Phone
+        if (!phone) {
+            showError('customer_phone', 'Nomor WhatsApp tidak boleh kosong');
+            isValid = false;
+        }
+
+        // Validate Email
+        if (!email) {
+            showError('customer_email', 'Alamat email tidak boleh kosong');
+            isValid = false;
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('customer_email', 'Format email tidak valid');
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+
+    function validateAndConfirm() {
+        if (validateGuestDetails()) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal'));
+        } else {
+            // Scroll to top of the card if needed, or just focus first error
+            const firstError = document.querySelector('[id^="error-"]:not(.hidden)');
+            if (firstError) {
+                firstError.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }
+
+    // ── Prevent Refresh/Leave Warning ──────────────────────────
+    let isDirty = false;
+
+    // Monitor guest inputs for changes
+    ['customer_name', 'customer_phone', 'customer_email'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                isDirty = true;
+            });
+        }
+    });
+
+    // Also track other interactions like notes or parfum changes
+    document.getElementById('modal-catatan-input')?.addEventListener('input', () => isDirty = true);
+
+    window.addEventListener('beforeunload', (e) => {
+        if (isDirty) {
+            e.preventDefault();
+            e.returnValue = ''; // Required for Chrome/Standard
+        }
+    });
+
+    // ── Confirm Modal Submit ─────────────────────────────────────
+    function submitOrder() {
+        // Final check before submission
+        if (validateGuestDetails()) {
+            isDirty = false; // Disable warning on legitimate submit
+            document.getElementById('page-content').submit();
+        } else {
+            window.dispatchEvent(new CustomEvent('close-confirm-modal'));
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
         setTimeout(() => feather.replace(), 500);
+
+        // ── Restore State from Session ──
+        const initialNote = "{{ $note }}";
+        if (initialNote) {
+            const label = document.getElementById('catatan-label');
+            if (label) {
+                label.textContent = initialNote;
+                label.classList.remove('text-zyngga-neutral-400');
+                label.classList.add('text-zyngga-neutral-900');
+            }
+            const input = document.getElementById('modal-catatan-input');
+            if (input) {
+                input.value = initialNote;
+                const count = document.getElementById('catatan-char-count');
+                if (count) count.textContent = initialNote.length;
+            }
+        }
+
+        const initialParfum = "{{ $parfum }}";
+        if (initialParfum) {
+            const pLabel = document.getElementById('selected-parfum');
+            if (pLabel) pLabel.textContent = initialParfum;
+            const radio = document.querySelector(`input[name="modal_parfum"][value="${initialParfum}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        const pDate = "{{ $pickupDate }}";
+        if (pDate) {
+            const dateBtn = document.querySelector(`button[onclick*="selectDate('${pDate}'"]`);
+            if (dateBtn) selectDate(pDate, dateBtn);
+        }
+
+        const pTime = "{{ $pickupTime }}";
+        if (pTime) {
+            setTimeout(() => {
+                const timeChip = document.querySelector(`.time-chip[data-time="${pTime}"]`);
+                if (timeChip) selectTime(pTime, timeChip);
+            }, 100);
+        }
     });
     document.addEventListener('livewire:load', function () {
         feather.replace();
@@ -732,5 +982,6 @@
     });
 </script>
 
+@livewireScripts
 </body>
 </html>

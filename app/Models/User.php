@@ -19,10 +19,13 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'name',
         'username',
         'slug',
         'email',
+        'phone',
         'password',
+        'role',
         'cabang_id',
     ];
 
@@ -108,5 +111,21 @@ class User extends Authenticatable
     public function gamis()
     {
         return $this->hasMany(DetailGamis::class);
+    }
+
+    /**
+     * Get the user's addresses.
+     */
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Get the user's primary address.
+     */
+    public function primaryAddress()
+    {
+        return $this->hasOne(Address::class)->where('is_primary', true);
     }
 }

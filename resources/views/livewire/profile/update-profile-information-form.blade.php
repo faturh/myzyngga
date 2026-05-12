@@ -10,14 +10,40 @@ new class extends Component
 {
     public string $name = '';
     public string $email = '';
+    public string $phone = '';
+    public string $originalName = '';
+    public string $originalPhone = '';
 
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        $user = Auth::user();
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->phone = $user->phone ?? '';
+        
+        $this->originalName = $this->name;
+        $this->originalPhone = $this->phone;
+    }
+
+    /**
+     * Revert changes if user cancels.
+     */
+    public function cancelChanges(): void
+    {
+        $this->name = $this->originalName;
+        $this->phone = $this->originalPhone;
+        $this->resetErrorBag();
+    }
+
+    /**
+     * Check if there are any changes to the profile information.
+     */
+    public function hasChanges(): bool
+    {
+        return $this->name !== $this->originalName || $this->phone !== $this->originalPhone;
     }
 
     /**
@@ -25,20 +51,21 @@ new class extends Component
      */
     public function updateProfileInformation(): void
     {
+        if (!$this->hasChanges()) return;
+
         $user = Auth::user();
 
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
         $user->fill($validated);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
         $user->save();
+
+        // Update originals after successful save
+        $this->originalName = $this->name;
+        $this->originalPhone = $this->phone;
 
         $this->dispatch('profile-updated', name: $user->name);
     }
@@ -62,66 +89,174 @@ new class extends Component
     }
 }; ?>
 
-<section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile Information') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
-    </header>
-
-    <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
-        <x-zyngga-input 
-            label="Name" 
-            wire:model="name" 
-            id="name" 
-            name="name" 
-            type="text" 
-            required 
-            autofocus 
-            autocomplete="name"
-            :error="$errors->first('name')"
-        />
-
-        <x-zyngga-input 
-            label="Email" 
-            wire:model="email" 
-            id="email" 
-            name="email" 
-            type="email" 
-            required 
-            autocomplete="username"
-            :error="$errors->first('email')"
-        />
-
-            @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800">
-                        {{ __('Your email address is unverified.') }}
-
-                        <button wire:click.prevent="sendVerification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
+<section x-data="{ 
+    currentName: '{{ addslashes($name) }}',
+    currentPhone: '{{ addslashes($phone) }}',
+    draftName: '{{ addslashes($name) }}', 
+    draftPhone: '{{ addslashes($phone) }}',
+    nameError: '',
+    phoneError: ''
+}">
+    {{-- Card 1: Profile Picture --}}
+    <x-zyngga-card>
+        <div class="flex flex-col items-center justify-center">
+            <div class="w-24 h-24 rounded-full bg-zyngga-blue-300 flex items-center justify-center text-white text-4xl font-medium mb-4">
+                <span x-text="currentName ? currentName.charAt(0).toUpperCase() : '?'"></span>
+            </div>
+            <x-zyngga-button 
+                type="button" 
+                variant="secondary" 
+                size="s" 
+                class="rounded-full px-6"
+            >
+                <div class="flex items-center gap-2">
+                    <i data-feather="edit-3" class="w-3.5 h-3.5"></i>
+                    <span>Ubah Foto</span>
                 </div>
+            </x-zyngga-button>
+        </div>
+    </x-zyngga-card>
+
+    {{-- Card 2: Informasi Akun --}}
+    <x-zyngga-card title="Informasi Akun" wire:key="profile-info-card">
+        <div class="flex flex-col">
+            {{-- Name Item --}}
+            <button @click="window.dispatchEvent(new CustomEvent('open-name-modal'))" class="flex items-center justify-between h-[48px] text-left group">
+                <div class="flex items-center gap-3">
+                    <i data-feather="user" class="w-[18px] h-[18px] text-zyngga-neutral-500"></i>
+                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Nama Lengkap</x-zyngga-text>
+                </div>
+                <div class="flex items-center gap-2">
+                    <x-zyngga-text variant="sm" weight="medium" class="text-zyngga-neutral-900" x-text="currentName"></x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-zyngga-blue-300"></i>
+                </div>
+            </button>
+
+            <x-zyngga-divider class="my-2" />
+
+            {{-- Phone Item --}}
+            <button @click="window.dispatchEvent(new CustomEvent('open-phone-modal'))" class="flex items-center justify-between h-[48px] text-left group">
+                <div class="flex items-center gap-3">
+                    <i data-feather="phone" class="w-[18px] h-[18px] text-zyngga-neutral-500"></i>
+                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Nomor WhatsApp</x-zyngga-text>
+                </div>
+                <div class="flex items-center gap-2">
+                    <x-zyngga-text variant="sm" weight="medium" class="text-zyngga-neutral-900" x-text="currentPhone || '-'"></x-zyngga-text>
+                    <i data-feather="chevron-right" class="w-4 h-4 text-zyngga-blue-300"></i>
+                </div>
+            </button>
+
+            <x-zyngga-divider class="my-2" />
+
+            {{-- Email Item (Non-editable) --}}
+            <div class="flex items-center justify-between h-[48px] text-left">
+                <div class="flex items-center gap-3">
+                    <i data-feather="mail" class="w-[18px] h-[18px] text-zyngga-neutral-500"></i>
+                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Email</x-zyngga-text>
+                </div>
+                <div class="flex items-center gap-2">
+                    @php
+                        $emailParts = explode('@', $email);
+                        $namePart = $emailParts[0];
+                        $domainPart = $emailParts[1];
+                        $maskedName = strlen($namePart) > 2 
+                            ? substr($namePart, 0, 1) . str_repeat('*', 3) . substr($namePart, -1) 
+                            : $namePart;
+                        $maskedEmail = $maskedName . '@' . $domainPart;
+                    @endphp
+                    <x-zyngga-text variant="sm" weight="medium" class="text-zyngga-neutral-900">{{ $maskedEmail }}</x-zyngga-text>
+                </div>
+            </div>
+        </div>
+    </x-zyngga-card>
+
+    {{-- Sticky Footer --}}
+    <div class="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-zyngga-neutral-50 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-50 rounded-t-[16px]">
+        <div class="max-w-5xl mx-auto w-full px-5">
+            <x-zyngga-button 
+                type="button" 
+                wire:click="updateProfileInformation"
+                label="Simpan" 
+                variant="primary"
+                size="l" 
+                class="w-full" 
+                x-bind:disabled="currentName === '{{ addslashes($originalName) }}' && currentPhone === '{{ addslashes($originalPhone) }}'"
+                x-bind:class="(currentName === '{{ addslashes($originalName) }}' && currentPhone === '{{ addslashes($originalPhone) }}') ? 'opacity-40 pointer-events-none' : ''"
+            />
+        </div>
+    </div>
+
+    {{-- Modals --}}
+    <x-zyngga-selection-modal id="modal-name" title="Ubah Nama Lengkap" openEvent="open-name-modal">
+        <div class="flex flex-col">
+            <div>
+                <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Nama Lengkap</x-zyngga-text>
+                <x-zyngga-input 
+                    x-model="draftName" 
+                    name="name"
+                    id="name-input" 
+                    placeholder="Masukkan nama lengkap"
+                    class="!rounded-full"
+                />
+                <span class="text-xs text-red-500 mt-1 block" x-show="nameError" x-text="nameError"></span>
+            </div>
+            @if($errors->has('name'))
+                <span class="text-xs text-red-500 mt-1 block">{{ $errors->first('name') }}</span>
             @endif
+            <div class="mt-6 flex gap-3">
+                <x-zyngga-button type="button" @click="draftName = currentName; nameError = ''; isOpen = false" variant="secondary" label="Batal" class="flex-1" />
+                <x-zyngga-button type="button" 
+                    @click="
+                        if (!draftName.trim()) {
+                            nameError = 'Nama lengkap tidak boleh kosong';
+                        } else if (/\d/.test(draftName)) {
+                            nameError = 'Nama tidak boleh mengandung angka';
+                        } else {
+                            nameError = '';
+                            currentName = draftName;
+                            $wire.set('name', draftName);
+                            isOpen = false;
+                        }
+                    " 
+                    variant="primary" label="Simpan" class="flex-1" />
+            </div>
         </div>
+    </x-zyngga-selection-modal>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            <x-action-message class="me-3" on="profile-updated">
-                {{ __('Saved.') }}
-            </x-action-message>
+    <x-zyngga-selection-modal id="modal-phone" title="Ubah Nomor WhatsApp" openEvent="open-phone-modal">
+        <div class="flex flex-col">
+            <div>
+                <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Nomor WhatsApp</x-zyngga-text>
+                <x-zyngga-input 
+                    x-model="draftPhone" 
+                    name="phone"
+                    id="phone-input" 
+                    type="tel"
+                    placeholder="0812xxxxxxx"
+                    class="!rounded-full"
+                />
+                <span class="text-xs text-red-500 mt-1 block" x-show="phoneError" x-text="phoneError"></span>
+            </div>
+            @if($errors->has('phone'))
+                <span class="text-xs text-red-500 mt-1 block">{{ $errors->first('phone') }}</span>
+            @endif
+            <div class="mt-6 flex gap-3">
+                <x-zyngga-button type="button" @click="draftPhone = currentPhone; phoneError = ''; isOpen = false" variant="secondary" label="Batal" class="flex-1" />
+                <x-zyngga-button type="button" 
+                    @click="
+                        if (!draftPhone.trim()) {
+                            phoneError = 'Nomor WhatsApp tidak boleh kosong';
+                        } else if (!/^\d+$/.test(draftPhone)) {
+                            phoneError = 'Nomor WhatsApp hanya boleh berisi angka';
+                        } else {
+                            phoneError = '';
+                            currentPhone = draftPhone;
+                            $wire.set('phone', draftPhone);
+                            isOpen = false;
+                        }
+                    " 
+                    variant="primary" label="Simpan" class="flex-1" />
+            </div>
         </div>
-    </form>
+    </x-zyngga-selection-modal>
 </section>

@@ -40,13 +40,10 @@ new class extends Component
 
 <section>
     <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Update Password') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
-        </p>
+        <x-zyngga-text variant="lg" weight="medium">{{ __('Update Password') }}</x-zyngga-text>
+        <x-zyngga-text variant="sm" color="neutral-500" class="mt-1">
+            {{ __('Pastikan akun Anda menggunakan kata sandi yang panjang dan acak agar tetap aman.') }}
+        </x-zyngga-text>
     </header>
 
     <form wire:submit="updatePassword" class="mt-6 space-y-6">
@@ -81,10 +78,10 @@ new class extends Component
         />
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-zyngga-button type="submit" label="Perbarui Password" size="m" />
 
             <x-action-message class="me-3" on="password-updated">
-                {{ __('Saved.') }}
+                <x-zyngga-text variant="xs" class="text-green-600">Berhasil diperbarui.</x-zyngga-text>
             </x-action-message>
         </div>
     </form>

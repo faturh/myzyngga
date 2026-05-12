@@ -20,7 +20,7 @@
         'regular'  => 'font-normal',
         'medium'   => 'font-medium',
         'semibold' => 'font-semibold',
-        'bold'     => 'font-semibold', // Fallback to semibold
+        'bold'     => 'font-bold',
     ];
 
     $colors = [
