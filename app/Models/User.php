@@ -4,12 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -50,12 +52,22 @@ class User extends Authenticatable
         ];
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function getNameAttribute(): string
+    {
+        return (string) ($this->attributes['username'] ?? '');
+    }
+
     /**
      * Check if the user is an admin.
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('admin') || ($this->attributes['role'] ?? null) === 'admin';
     }
 
     /**
@@ -63,7 +75,42 @@ class User extends Authenticatable
      */
     public function isCustomer(): bool
     {
-        return $this->role === 'customer';
+        return $this->hasRole('customer') || ($this->attributes['role'] ?? null) === 'customer';
+    }
+
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class);
+    }
+
+    public function lurah()
+    {
+        return $this->hasMany(Lurah::class);
+    }
+
+    public function pic()
+    {
+        return $this->hasMany(PIC::class);
+    }
+
+    public function manajer()
+    {
+        return $this->hasMany(ManajerLaundry::class);
+    }
+
+    public function pegawai()
+    {
+        return $this->hasMany(PegawaiLaundry::class);
+    }
+
+    public function rw()
+    {
+        return $this->hasMany(RW::class);
+    }
+
+    public function gamis()
+    {
+        return $this->hasMany(DetailGamis::class);
     }
 
     /**

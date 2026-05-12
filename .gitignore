@@ -24,3 +24,4 @@ yarn-error.log
 bootstrap/cache/*.php
 bootstrap/cache/*.tmp
 !bootstrap/cache/.gitkeep
+config.bat

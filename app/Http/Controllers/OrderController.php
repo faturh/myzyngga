@@ -2,12 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Modules\Order\Presentation\Web\Controllers\OrderPageController;
 
 class OrderController extends Controller
 {
+    /**
+     * @deprecated gunakan App\Modules\Order\Presentation\Web\Controllers\OrderPageController
+     */
+    public function __construct(
+        private readonly OrderPageController $controller,
+    ) {
+    }
+
     /**
      * Show the pickup location selection page.
      */
@@ -31,21 +38,20 @@ class OrderController extends Controller
             }
         }
 
-        $serviceLabels = [
-            'kilat'    => 'Kilat',
-            'regular'  => 'Regular',
-            'quick'    => 'Quick',
-            'express'  => 'Express',
-            'satuan'   => 'Satuan',
-        ];
-
-        $serviceLabel = $serviceLabels[$service] ?? ucfirst($service);
-
-        $savedAddresses = $user ? $user->addresses()->get() : collect();
-
-        return view('order.pickup-location', compact('service', 'serviceLabel', 'savedAddresses'));
+        return $this->controller->pickupLocation($request, $service);
     }
 
+    /**
+     * Store pickup location and redirect to booking page.
+     */
+    public function storePickupLocation(Request $request)
+    {
+        return $this->controller->storePickupLocation($request);
+    }
+
+    /**
+     * Show pickup details page.
+     */
     public function pickupDetails(Request $request, string $service)
     {
         $lat = $request->query('lat');
@@ -59,13 +65,16 @@ class OrderController extends Controller
 
         // If it's an existing address, we might want to show its current labels
         $existingAddress = null;
-        if ($addressId) {
+        if ($addressId && auth()->check()) {
             $existingAddress = auth()->user()->addresses()->find($addressId);
         }
 
         return view('order.pickup-details', compact('service', 'lat', 'lng', 'address', 'existingAddress'));
     }
 
+    /**
+     * Store pickup details.
+     */
     public function storePickupDetails(Request $request)
     {
         $request->validate([
@@ -96,7 +105,7 @@ class OrderController extends Controller
                 }
             } else {
                 // Check limit before saving new
-                if ($user->addresses()->count() < 3) {
+                if ($user->addresses()->count() < 5) { // Increased to 5 as per recent updates
                     $user->addresses()->create([
                         'label' => $request->label,
                         'address_detail' => $request->address_detail,
@@ -122,65 +131,11 @@ class OrderController extends Controller
     }
 
     /**
-     * Store pickup location and redirect to booking page.
-     */
-    public function storePickupLocation(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'service'        => ['required', 'string'],
-            'address'        => ['required', 'string', 'max:500'],
-            'detail_address' => ['nullable', 'string', 'max:255'],
-            'lat'            => ['nullable', 'numeric'],
-            'lng'            => ['nullable', 'numeric'],
-        ]);
-
-        // Store in session to pass to booking page
-        session([
-            'order.service'        => $data['service'],
-            'order.address'        => $data['address'],
-            'order.detail_address' => $data['detail_address'] ?? '',
-            'order.lat'            => $data['lat'] ?? '',
-            'order.lng'            => $data['lng'] ?? '',
-        ]);
-
-        return redirect()->route('order.booking');
-    }
-
-    /**
-     * Show the full booking form (Figma 77:301).
+     * Show the full booking form.
      */
     public function booking(Request $request)
     {
-        // Require pickup location to have been set
-        if (! session()->has('order.address')) {
-            return auth()->check() ? redirect()->route('home') : redirect()->route('landing');
-        }
-
-        $serviceLabels = [
-            'kilat'    => 'Kilat',
-            'regular'  => 'Regular',
-            'quick'    => 'Quick',
-            'express'  => 'Express',
-            'satuan'   => 'Satuan',
-        ];
-
-        $service       = session('order.service', 'regular');
-        $serviceLabel  = $serviceLabels[$service] ?? ucfirst($service);
-        $address       = session('order.address', '');
-        $detailAddress = session('order.detail_address', '');
-        $lat           = session('order.lat', '');
-        $lng           = session('order.lng', '');
-        
-        // Additional state from session
-        $parfum      = session('order.parfum', 'Lavender');
-        $note        = session('order.note', '');
-        $pickupDate  = session('order.pickup_date', '');
-        $pickupTime  = session('order.pickup_time', '');
-
-        return view('order.booking', compact(
-            'service', 'serviceLabel', 'address', 'detailAddress', 'lat', 'lng',
-            'parfum', 'note', 'pickupDate', 'pickupTime'
-        ));
+        return $this->controller->booking($request);
     }
 
     /**
@@ -198,56 +153,25 @@ class OrderController extends Controller
     /**
      * Confirm and place the order.
      */
-    public function confirm(Request $request): RedirectResponse
+    public function confirm(Request $request)
     {
-        $isGuest = !auth()->check();
-
-        $rules = [
-            'service'          => ['required', 'string'],
-            'address'          => ['required', 'string'],
-            'detail_address'   => ['nullable', 'string'],
-            'lat'              => ['nullable', 'numeric'],
-            'lng'              => ['nullable', 'numeric'],
-            'selected_service_id' => ['required', 'string'],
-            'pickup_date'      => ['required', 'string'],
-            'pickup_time'      => ['required', 'string'],
-            'parfum'           => ['nullable', 'string'],
-            'note'             => ['nullable', 'string'],
-            'payment'          => ['required', 'string'],
-        ];
-
-        if ($isGuest) {
-            $rules['customer_name']  = ['required', 'string', 'max:255'];
-            $rules['customer_phone'] = ['required', 'string', 'max:20'];
-            $rules['customer_email'] = ['required', 'email', 'max:255'];
-        }
-
-        $data = $request->validate($rules);
-
-        // TODO: persist order to DB here
-        // If guest, you might want to create a guest record or just save info in order table
-
-        // Clear order session
-        session()->forget(['order.service', 'order.address', 'order.detail_address', 'order.lat', 'order.lng']);
-
-        return redirect()->route('order.detail')
-            ->with('success', 'Pesanan Anda berhasil dibuat!');
+        return $this->controller->confirm($request);
     }
 
     /**
-     * Show order detail page (Figma 95:10 & 221:719).
+     * Show order detail page.
      */
     public function detail(Request $request)
     {
-        return view('order.detail');
+        return $this->controller->detail($request);
     }
 
     /**
-     * Show order history page (Figma 110:15).
+     * Show order history page.
      */
     public function history(Request $request)
     {
-        return view('order.history');
+        return $this->controller->history($request);
     }
 
     /**
@@ -265,7 +189,7 @@ class OrderController extends Controller
                 'phone_last_4.digits' => 'Masukkan tepat 4 digit terakhir nomor WhatsApp.',
             ]);
 
-            // Logic for searching and verifying order
+            // Simple logic for searching and verifying order (placeholder)
             $orders = [];
             if (str_contains(strtolower($request->input('query')), 'rafi') || str_contains(strtoupper($request->input('query')), 'ZYG-12345')) {
                 $orders = [
@@ -278,31 +202,17 @@ class OrderController extends Controller
                         'status' => 'Diproses',
                         'progress' => 56,
                         'total' => 33000
-                    ],
-                    [
-                        'id' => 'ZYG-67890ABC',
-                        'customer_name' => 'Rafi Syihan',
-                        'phone_last_4' => '7890',
-                        'service' => 'Satuan',
-                        'date' => 'Minggu, 24 Feb | 12.09',
-                        'status' => 'Diproses',
-                        'progress' => 56,
-                        'total' => 25000
                     ]
                 ];
-                
-                // Redirect back with results in session flash
                 return back()->with('orders', $orders)->withInput();
             }
 
             return back()->withErrors([
-                'query' => 'Pesanan tidak ditemukan. Cek kembali Nama/ID atau 4 digit nomor WhatsApp kamu.'
+                'query' => 'Pesanan tidak ditemukan.'
             ])->withInput();
         }
 
-        // Get orders from session (if any)
         $orders = session('orders', []);
-
         return view('order.check', compact('orders'));
     }
 }
