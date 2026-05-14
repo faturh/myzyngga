@@ -32,7 +32,7 @@
         
         {{-- ── GUEST HEADER ────────────────────────────────────────── --}}
         <header class="sticky top-0 z-40 w-full pb-[6px]">
-            <div class="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300 w-full min-h-[80px]">
+            <div class="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-shadow duration-300 w-full min-h-[80px]">
                 <div class="max-w-5xl mx-auto w-full px-5 py-5 flex items-center justify-end min-h-[80px]">
                     {{-- Guest Auth Buttons --}}
                     <div class="flex items-center gap-2">
@@ -87,25 +87,22 @@
                     {{-- Section heading --}}
                     <div class="flex items-center justify-between">
                         <x-zyngga-text variant="base" weight="medium">Pesan Sekarang</x-zyngga-text>
-                        <a href="{{ route('order.pickup', ['service' => 'regular']) }}">
-                            <x-zyngga-text variant="sm" weight="medium" color="primary">Detail Layanan</x-zyngga-text>
-                        </a>
                     </div>
 
                     {{-- Service icons: Kilat | Regular | Quick | Express | Satuan --}}
                     <div class="grid grid-cols-5">
                         @php
                             $services = [
-                                ['label' => 'Kilat',   'icon' => 'zap'],
-                                ['label' => 'Reguler', 'icon' => 'star'],
-                                ['label' => 'Quick',   'icon' => 'clock'],
-                                ['label' => 'Express', 'icon' => 'fast-forward'],
-                                ['label' => 'Satuan',  'icon' => 'package'],
+                                ['label' => 'Kilat',   'icon' => 'zap',     'key' => 'kilat'],
+                                ['label' => 'Regular', 'icon' => 'star',    'key' => 'regular'],
+                                ['label' => 'Quick',   'icon' => 'clock',   'key' => 'quick'],
+                                ['label' => 'Express', 'icon' => 'fast-forward', 'key' => 'express'],
+                                ['label' => 'Satuan',  'icon' => 'package', 'key' => 'satuan'],
                             ];
                         @endphp
                         @foreach ($services as $s)
                             <a
-                                href="{{ route('order.pickup', ['service' => strtolower($s['label'])]) }}"
+                                href="{{ route('order.pickup', ['service' => $s['key']]) }}"
                                 class="flex flex-col items-center gap-2 h-16 justify-center hover:opacity-80 transition-opacity"
                             >
                                 <div class="w-9 h-9 bg-zyngga-yellow-50 rounded-full flex items-center justify-center">

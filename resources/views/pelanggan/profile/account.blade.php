@@ -55,8 +55,8 @@
             Livewire.on('profile-updated', () => setTimeout(replaceFeather, 50));
             
             // Re-replace on every Livewire request finish
-            Livewire.hook('request', ({ fulfill }) => {
-                fulfill(() => {
+            Livewire.hook('request', ({ respond }) => {
+                respond(() => {
                     setTimeout(replaceFeather, 10);
                 });
             });

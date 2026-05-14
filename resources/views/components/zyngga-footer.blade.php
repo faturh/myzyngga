@@ -3,7 +3,7 @@
 ])
 
 <div class="mt-auto pt-[6px]">
-    <div class="bg-white rounded-t-2xl border-t border-zyngga-neutral-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] {{ $maxWidth }} mx-auto">
+    <div class="bg-white rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.06)] {{ $maxWidth }} mx-auto">
         <div class="max-w-5xl mx-auto px-5 pt-8 pb-8 space-y-4">
             {{-- Brand info --}}
             <div class="space-y-2">

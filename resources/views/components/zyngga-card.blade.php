@@ -5,9 +5,9 @@
 ])
 
 <div {{ $attributes->merge(['class' => $gap]) }}>
-    <div class="bg-white rounded-lg {{ $padding }} shadow-sm border border-gray-50 overflow-hidden relative">
+    <div class="bg-white rounded-lg {{ $padding }} overflow-hidden relative">
         @if($title || isset($headerAction))
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-4 h-8">
                 @if($title)
                     <x-zyngga-text variant="base" weight="medium">{{ $title }}</x-zyngga-text>
                 @endif

@@ -10,7 +10,7 @@
                 'label'  => 'Home',
                 'icon'   => 'home',
                 'href'   => $isCustomer ? route('home') : route('landing'),
-                'active' => request()->routeIs('home') || request()->routeIs('landing'),
+                'active' => request()->routeIs('home') || request()->routeIs('landing') || request()->routeIs('dashboard'),
                 'show'   => true,
             ],
             [

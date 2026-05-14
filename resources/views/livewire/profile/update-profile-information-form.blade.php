@@ -51,23 +51,21 @@ new class extends Component
      */
     public function updateProfileInformation(): void
     {
-        if (!$this->hasChanges()) return;
-
-        $user = Auth::user();
-
+        // dd($this->name, $this->phone);
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $user->fill($validated);
-        $user->save();
+        // Direct update to ensure it bypasses any model accessor issues during save
+        User::where('id', Auth::id())->update([
+            'name' => $this->name,
+            'phone' => $this->phone,
+        ]);
 
-        // Update originals after successful save
-        $this->originalName = $this->name;
-        $this->originalPhone = $this->phone;
-
-        $this->dispatch('profile-updated', name: $user->name);
+        $this->dispatch('profile-updated', name: $this->name);
+        
+        $this->redirect(route('profile'), navigate: true);
     }
 
     /**
@@ -89,14 +87,28 @@ new class extends Component
     }
 }; ?>
 
-<section x-data="{ 
-    currentName: '{{ addslashes($name) }}',
-    currentPhone: '{{ addslashes($phone) }}',
-    draftName: '{{ addslashes($name) }}', 
-    draftPhone: '{{ addslashes($phone) }}',
+<div x-data="{ 
+    currentName: @entangle('name'),
+    currentPhone: @entangle('phone'),
+    draftName: '', 
+    draftPhone: '',
     nameError: '',
-    phoneError: ''
+    phoneError: '',
+    init() {
+        this.draftName = this.currentName;
+        this.draftPhone = this.currentPhone;
+        this.$watch('currentName', value => this.draftName = value);
+        this.$watch('currentPhone', value => this.draftPhone = value);
+    },
+    get isDirty() {
+        let origName = ({{ json_encode($originalName) }} || '').toString().trim();
+        let origPhone = ({{ json_encode($originalPhone) }} || '').toString().trim();
+        let currName = (this.currentName || '').toString().trim();
+        let currPhone = (this.currentPhone || '').toString().trim();
+        return currName !== origName || currPhone !== origPhone;
+    }
 }">
+    <form wire:submit="updateProfileInformation">
     {{-- Card 1: Profile Picture --}}
     <x-zyngga-card>
         <div class="flex flex-col items-center justify-center">
@@ -107,13 +119,9 @@ new class extends Component
                 type="button" 
                 variant="secondary" 
                 size="s" 
-                class="rounded-full px-6"
-            >
-                <div class="flex items-center gap-2">
-                    <i data-feather="edit-3" class="w-3.5 h-3.5"></i>
-                    <span>Ubah Foto</span>
-                </div>
-            </x-zyngga-button>
+                icon="edit-3"
+                icon-position="left"
+                label="Ubah Foto"/>                       
         </div>
     </x-zyngga-card>
 
@@ -121,7 +129,7 @@ new class extends Component
     <x-zyngga-card title="Informasi Akun" wire:key="profile-info-card">
         <div class="flex flex-col">
             {{-- Name Item --}}
-            <button @click="window.dispatchEvent(new CustomEvent('open-name-modal'))" class="flex items-center justify-between h-[48px] text-left group">
+            <button type="button" @click="window.dispatchEvent(new CustomEvent('open-name-modal'))" class="flex items-center justify-between h-[48px] text-left group">
                 <div class="flex items-center gap-3">
                     <i data-feather="user" class="w-[18px] h-[18px] text-zyngga-neutral-500"></i>
                     <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Nama Lengkap</x-zyngga-text>
@@ -135,7 +143,7 @@ new class extends Component
             <x-zyngga-divider class="my-2" />
 
             {{-- Phone Item --}}
-            <button @click="window.dispatchEvent(new CustomEvent('open-phone-modal'))" class="flex items-center justify-between h-[48px] text-left group">
+            <button type="button" @click="window.dispatchEvent(new CustomEvent('open-phone-modal'))" class="flex items-center justify-between h-[48px] text-left group">
                 <div class="flex items-center gap-3">
                     <i data-feather="phone" class="w-[18px] h-[18px] text-zyngga-neutral-500"></i>
                     <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Nomor WhatsApp</x-zyngga-text>
@@ -174,17 +182,19 @@ new class extends Component
     <div class="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-zyngga-neutral-50 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-50 rounded-t-[16px]">
         <div class="max-w-5xl mx-auto w-full px-5">
             <x-zyngga-button 
-                type="button" 
-                wire:click="updateProfileInformation"
+                type="submit" 
                 label="Simpan" 
                 variant="primary"
                 size="l" 
                 class="w-full" 
-                x-bind:disabled="currentName === '{{ addslashes($originalName) }}' && currentPhone === '{{ addslashes($originalPhone) }}'"
-                x-bind:class="(currentName === '{{ addslashes($originalName) }}' && currentPhone === '{{ addslashes($originalPhone) }}') ? 'opacity-40 pointer-events-none' : ''"
+                :disabled="!$this->hasChanges()"
+                x-bind:disabled="!isDirty"
+                wire:loading.attr="disabled"
+                wire:target="updateProfileInformation"
             />
         </div>
     </div>
+</form>
 
     {{-- Modals --}}
     <x-zyngga-selection-modal id="modal-name" title="Ubah Nama Lengkap" openEvent="open-name-modal">
@@ -214,7 +224,6 @@ new class extends Component
                         } else {
                             nameError = '';
                             currentName = draftName;
-                            $wire.set('name', draftName);
                             isOpen = false;
                         }
                     " 
@@ -251,7 +260,6 @@ new class extends Component
                         } else {
                             phoneError = '';
                             currentPhone = draftPhone;
-                            $wire.set('phone', draftPhone);
                             isOpen = false;
                         }
                     " 
@@ -259,4 +267,4 @@ new class extends Component
             </div>
         </div>
     </x-zyngga-selection-modal>
-</section>
+</div>

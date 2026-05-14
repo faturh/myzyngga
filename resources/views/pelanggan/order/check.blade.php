@@ -103,7 +103,7 @@
                 @if(isset($orders) && count($orders) > 0)
                     @foreach($orders as $order)
                         <x-zyngga-card 
-                            onclick="window.location.href='{{ route('order.detail') }}'"
+                            onclick="window.location.href='{{ route('order.detail', ['id' => $order['id']]) }}'"
                             class="cursor-pointer"
                         >
                             {{-- Top Part: User & Order Info (Extra Elements) --}}
@@ -112,7 +112,15 @@
                                     <x-zyngga-text variant="base" weight="medium" class="text-zyngga-neutral-900">{{ $order['customer_name'] }}</x-zyngga-text>
                                     <x-zyngga-text variant="sm" color="neutral-500">*** {{ $order['phone_last_4'] }}</x-zyngga-text>
                                 </div>
-                                <x-zyngga-text variant="base" weight="medium" class="text-zyngga-neutral-900">{{ $order['id'] }}</x-zyngga-text>
+                                <div class="flex items-center gap-1.5">
+                                    <x-zyngga-text variant="base" weight="medium" class="text-zyngga-neutral-900">{{ $order['id'] }}</x-zyngga-text>
+                                    <button 
+                                        @click.stop="navigator.clipboard.writeText('{{ $order['id'] }}'); $dispatch('toast', { message: 'ID Pesanan berhasil disalin', type: 'success' })"
+                                        class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors"
+                                    >
+                                        <i data-feather="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <x-zyngga-divider class="mb-5" />
@@ -172,6 +180,7 @@
 
         {{-- FOOTER NAVIGATION (Mobile) --}}
         <x-zyngga-footer active="order" />
+        <x-zyngga-toast />
     </div>
 
     <script>

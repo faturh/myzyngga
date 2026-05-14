@@ -89,7 +89,7 @@
                     
                     {{-- Order 1: Diproses --}}
                     <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Diproses'" 
-                        onclick="window.location.href='{{ route('order.detail') }}'"
+                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'ongoing']) }}'"
                         class="cursor-pointer"
                     >
                         <div class="flex items-start justify-between mb-5">
@@ -133,7 +133,7 @@
 
                     {{-- Order 2: Selesai --}}
                     <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Selesai'"
-                        onclick="window.location.href='{{ route('order.detail') }}'"
+                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'finished']) }}'"
                         class="cursor-pointer"
                     >
                         <div class="flex items-start justify-between mb-5">
@@ -176,7 +176,7 @@
 
                     {{-- Order 3: Selesai (Duplicate for UI demo) --}}
                     <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Selesai'"
-                        onclick="window.location.href='{{ route('order.detail') }}'"
+                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'finished']) }}'"
                         class="cursor-pointer"
                     >
                         <div class="flex items-start justify-between mb-5">

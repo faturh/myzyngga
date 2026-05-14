@@ -57,9 +57,9 @@ class User extends Authenticatable
         return 'slug';
     }
 
-    public function getNameAttribute(): string
+    public function getNameAttribute(): ?string
     {
-        return (string) ($this->attributes['username'] ?? '');
+        return $this->attributes['name'] ?? $this->attributes['username'] ?? null;
     }
 
     /**
