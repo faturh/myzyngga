@@ -104,10 +104,10 @@ class OrderWebService
         ]);
 
         $user = $request->user();
-        $pelanggan = $this->customerRepository->upsertProfileForUser($user, [
-            'nama' => $user->name,
+        $pelanggan = $this->customerRepository->upsertProfile($user, [
+            'nama' => $user ? $user->name : $request->input('customer_name'),
             'jenis_kelamin' => 'L',
-            'telepon' => '-',
+            'telepon' => $user ? ($user->phone ?? '-') : $request->input('customer_phone'),
             'alamat' => $data['address'],
         ]);
 
@@ -121,7 +121,7 @@ class OrderWebService
             return redirect()->back()->withErrors(['cabang' => 'Cabang belum tersedia.']);
         }
 
-        $orderService->createOrder(new CreateOrderData(
+        $order = $orderService->createOrder(new CreateOrderData(
             pelangganId: (int) $pelanggan->id,
             cabangId: (int) $cabangId,
             layananPrioritasId: (int) $layananPrioritasId,
@@ -135,9 +135,9 @@ class OrderWebService
             estimatedTotal: $this->resolveEstimatedTotal($data['selected_service_id']),
         ));
 
-        session()->forget(['order.service', 'order.address', 'order.detail_address', 'order.lat', 'order.lng']);
+        session()->forget('order');
 
-        return redirect()->route('dashboard')->with('success', 'Pesanan Anda berhasil dibuat!');
+        return redirect()->route('order.detail', ['id' => $order->id])->with('success', 'Pesanan Anda berhasil dibuat!');
     }
 
     public function pickupDetailsData(Request $request, string $service): array

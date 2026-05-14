@@ -26,34 +26,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('addresses', AddressController::class)->except(['show']);
     Route::post('addresses/{address}/primary', [AddressController::class, 'setPrimary'])->name('addresses.primary');
 
-    // Order Routes
-    Route::get('/order/{service}/pickup', [OrderPageController::class, 'pickupLocation'])
-        ->name('order.pickup');
-
-    Route::get('/order/pickup/{service}/details', [OrderPageController::class, 'pickupDetails'])
-        ->name('order.pickup.details');
-
-    Route::post('/order/pickup/details/store', [OrderPageController::class, 'storePickupDetails'])
-        ->name('order.pickup.details.store');
-
-    Route::post('/order/pickup', [OrderPageController::class, 'storePickupLocation'])
-        ->name('order.pickup.store');
-
-    Route::get('/order/booking', [OrderPageController::class, 'booking'])
-        ->name('order.booking');
-
-    Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
-        ->name('order.confirm');
-
     Route::post('/order/update-session', [OrderPageController::class, 'updateSession'])
         ->name('order.update-session');
-
-    Route::get('/order/detail', [OrderPageController::class, 'detail'])
-        ->name('order.detail');
-
-    Route::get('/order/history', [OrderPageController::class, 'history'])
+    
+    Route::get('/order/cancel', [OrderPageController::class, 'cancel'])
+        ->name('order.cancel');
+ 
+ 
+     Route::get('/order/history', [OrderPageController::class, 'history'])
         ->name('order.history');
 });
+
+// Public Order Routes (Enabled for Guests)
+Route::get('/order/{service}/pickup', [OrderPageController::class, 'pickupLocation'])
+    ->name('order.pickup');
+
+Route::get('/order/pickup/{service}/details', [OrderPageController::class, 'pickupDetails'])
+    ->name('order.pickup.details');
+
+Route::post('/order/pickup/details/store', [OrderPageController::class, 'storePickupDetails'])
+    ->name('order.pickup.details.store');
+
+Route::post('/order/pickup', [OrderPageController::class, 'storePickupLocation'])
+    ->name('order.pickup.store');
+
+Route::get('/order/booking', [OrderPageController::class, 'booking'])
+    ->name('order.booking');
+
+Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
+    ->name('order.confirm');
+ 
+ Route::get('/order/detail/{id?}', [OrderPageController::class, 'detail'])
+    ->name('order.detail');
+
 
 // Public Order Check
 Route::match(['get', 'post'], '/order/check', [OrderPageController::class, 'check'])

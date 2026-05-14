@@ -43,7 +43,7 @@
             width: 100%;
             background: white;
             border-radius: 24px 24px 0 0;
-            box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.08);
             z-index: 10;
             max-height: 85vh;
             overflow-y: auto;
@@ -159,7 +159,7 @@
             <div style="display:flex; align-items:center; height:40px; gap:8px;">
                 <x-zyngga-button 
                     type="a"
-                    href="{{ route('order.booking') }}"
+                    href="{{ $from === 'booking' ? route('order.booking') : route('home') }}"
                     variant="neutral"
                     size="l"
                     icon="arrow-left"
@@ -208,7 +208,7 @@
                     background: white;
                     border: 1.5px solid #e8eff9;
                     border-radius: 12px;
-                    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
                     max-height: 220px;
                     overflow-y: auto;
                 "></div>

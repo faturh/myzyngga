@@ -22,6 +22,7 @@
     showLogoutModal: false 
 }" class="bg-zyngga-blue-50 min-h-screen">
     <x-sidebar active="profile" />
+    <x-zyngga-toast />
 
     {{-- Main Content Wrapper --}}
     <div 
@@ -52,9 +53,17 @@
                     {{-- User Info --}}
                     <div class="flex-1 space-y-0.5">
                         <x-zyngga-text variant="lg" weight="medium" class="leading-tight">{{ Auth::user()->name }}</x-zyngga-text>
-                        <x-zyngga-text variant="sm" color="neutral-500" class="block">{{ Auth::user()->email }}</x-zyngga-text>
                         <x-zyngga-text variant="sm" color="neutral-500" class="block">{{ Auth::user()->phone ?? '0812 3456 7890' }}</x-zyngga-text>
                     </div>
+
+                    <x-zyngga-button 
+                        type="a" 
+                        href="{{ route('profile.account') }}" 
+                        variant="secondary" 
+                        size="s" 
+                        label="Ubah" 
+                        class="!px-4 !border-zyngga-blue-300 !text-zyngga-blue-300 shrink-0"
+                    />
                 </div>
             </x-zyngga-card>
 
@@ -63,16 +72,30 @@
                 <x-zyngga-card>
                     <div class="flex items-center justify-between mb-5">
                         <x-zyngga-text variant="base" weight="medium">Alamat Penjemputan</x-zyngga-text>
-                        <x-zyngga-button 
-                            type="a" 
-                            href="{{ route('addresses.create') }}" 
-                            variant="secondary" 
-                            icon="plus"
-                            iconPosition="left"
-                            size="s" 
-                            label="Tambah Alamat" 
-                            class="!px-4 !border-zyngga-blue-300 !text-zyngga-blue-300"
-                        />
+                        @php $addressCount = Auth::user()->addresses()->count(); @endphp
+                        @if($addressCount >= 3)
+                            <x-zyngga-button 
+                                type="button" 
+                                @click="window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Maaf, kamu sudah melebihi batas pembuatan alamat (maksimal 3).', type: 'warning' } }))"
+                                variant="secondary" 
+                                icon="plus"
+                                iconPosition="left"
+                                size="s" 
+                                label="Tambah Alamat" 
+                                class="!px-4 !opacity-50 !cursor-not-allowed !border-zyngga-blue-300 !text-zyngga-blue-300"
+                            />
+                        @else
+                            <x-zyngga-button 
+                                type="a" 
+                                href="{{ route('addresses.create') }}" 
+                                variant="secondary" 
+                                icon="plus"
+                                iconPosition="left"
+                                size="s" 
+                                label="Tambah Alamat" 
+                                class="!px-4 !border-zyngga-blue-300 !text-zyngga-blue-300"
+                            />
+                        @endif
                     </div>
                     
                     <div class="space-y-4">

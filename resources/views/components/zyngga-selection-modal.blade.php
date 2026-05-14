@@ -25,7 +25,7 @@
     x-transition:leave-end="opacity-0"
     x-cloak
     class="fixed inset-0 z-[100] flex items-center justify-center p-5"
-    style="background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(12px);"
+    style="background: rgba(0, 0, 0, 0.08); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(12px);"
     x-on:click="isOpen = false"
 >
     <div

@@ -16,7 +16,7 @@
 
         /* ── scrollable main content ── */
         #page-content {
-            padding-bottom: 100px; /* space for sticky footer */
+            /* padding-bottom removed to allow cleaner structure */
         }
 
 
@@ -173,7 +173,7 @@
         <x-dashboard-header 
             title="Pemesanan Pickup" 
             :backUrl="route('home')" 
-            :backAction="'window.dispatchEvent(new CustomEvent(\'open-back-modal\'))'"
+            :backAction="'if(isDirty) { window.dispatchEvent(new CustomEvent(\'open-back-modal\')); return false; }'"
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -182,7 +182,7 @@
 
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col relative">
-            <div class="w-full max-w-5xl mx-auto px-5">
+            <div class="w-full max-w-5xl mx-auto px-5 pb-[88px]">
                 {{-- ── SCROLLABLE CONTENT ──────────────────────────────────── --}}
                 <form method="POST" action="{{ route('order.confirm') }}" id="page-content" class="flex-1 flex flex-col">
         @csrf
@@ -207,7 +207,7 @@
             <x-slot:headerAction>
                 <x-zyngga-button 
                     type="a"
-                    href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
+                    href="{!! route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) !!}"
                     variant="secondary"
                     size="s"
                     label="Ubah"
@@ -226,7 +226,7 @@
                 ></iframe>
                 {{-- Transparent overlay captures click → navigate to edit page --}}
                 <a
-                href="{{ route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) }}"
+                href="{!! route('order.pickup', ['service' => $service, 'force' => 1, 'from' => 'booking']) !!}"
                 class="absolute inset-0 z-10 block cursor-pointer"
                 aria-label="Edit lokasi pickup"
                 title="Edit lokasi pickup"
@@ -308,9 +308,13 @@
         {{-- ── JENIS LAYANAN ──────────────────────────────────── --}}
         <x-zyngga-card title="Jenis Layanan">
             <x-slot:headerAction>
-                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-service-modal'))">
-                    <x-zyngga-text variant="xs" weight="medium" color="primary">Lihat semua</x-zyngga-text>
-                </button>
+                <x-zyngga-button 
+                    type="button" 
+                    onclick="window.dispatchEvent(new CustomEvent('open-service-modal'))"
+                    variant="tertiary"
+                    size="s"
+                    label="Lihat semua"
+                />
             </x-slot:headerAction>
 
             @php
@@ -369,7 +373,7 @@
                     onclick="selectServiceFromModal('{{ $svc['id'] }}')"
                 />
                 @if ($i < count($allServices) - 1)
-                    <x-zyngga-divider class="mx-1 my-1" />
+                    <x-zyngga-divider class=" my-1" />
                 @endif
             @endforeach
         </x-zyngga-selection-modal>
@@ -422,7 +426,7 @@
                 </div>
             </div>
 
-            <x-zyngga-divider class="mx-1 my-2" />
+            <x-zyngga-divider class=" my-2" />
             <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="openCatatan()">
                 <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Catatan</x-zyngga-text>
                 <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
@@ -462,7 +466,7 @@
                         </x-slot:icon>
                     </x-zyngga-radio-row>
                     @if ($i < count($payments) - 1)
-                        <x-zyngga-divider class="mx-1 my-2" />
+                        <x-zyngga-divider class=" my-2" />
                     @endif
                 @endforeach
             </div>
@@ -524,7 +528,7 @@
         description="Data yang sudah Anda masukkan akan hilang jika Anda kembali ke halaman sebelumnya."
         primaryLabel="Ya, Batalkan"
         secondaryLabel="Tetap di Sini"
-        primaryAction="window.location.href='{{ route('home') }}'"
+        primaryAction="window.location.href='{{ route('order.cancel') }}'"
         secondaryAction="isOpen=false"
     />
 </x-zyngga-selection-modal>
@@ -548,7 +552,7 @@
             onclick="chooseParfum('{{ $p }}')"
         />
         @if ($i < count($parfums) - 1)
-            <x-zyngga-divider class="mx-1 my-2" />
+            <x-zyngga-divider class=" my-2" />
         @endif
     @endforeach
 </x-zyngga-selection-modal>
@@ -649,6 +653,7 @@
         updateFooterServiceLabel(id);
 
         // 3. Update Session
+        isDirty = true;
         updateOrderSession({ service: id });
     }
 
@@ -708,6 +713,7 @@
         refreshTimeChips(val);
         // Refresh ETA based on new date
         applySelection(selectedId);
+        isDirty = true;
         updateOrderSession({ pickup_date: val });
     }
 
@@ -717,6 +723,7 @@
         document.querySelectorAll('.time-chip').forEach(e => e.classList.remove('selected'));
         el.classList.add('selected');
         document.getElementById('pickup_time').value = val;
+        isDirty = true;
         updateOrderSession({ pickup_time: val });
     }
 
@@ -770,6 +777,7 @@
         // Update hidden input and label
         document.getElementById('selected-parfum').textContent = val;
         document.getElementById('parfum').value = val;
+        isDirty = true;
         updateOrderSession({ parfum: val });
 
         // Sync radios
@@ -804,6 +812,7 @@
 
         if (noteInput) {
             noteInput.value = val;
+            isDirty = true;
             updateOrderSession({ note: val });
         }
 
@@ -913,12 +922,18 @@
     // Also track other interactions like notes or parfum changes
     document.getElementById('modal-catatan-input')?.addEventListener('input', () => isDirty = true);
 
-    window.addEventListener('beforeunload', (e) => {
+    // Trap the browser back button to show the beautiful modal
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
         if (isDirty) {
-            e.preventDefault();
-            e.returnValue = ''; // Required for Chrome/Standard
+            window.dispatchEvent(new CustomEvent('open-back-modal'));
+            // Re-push to keep trapping
+            history.pushState(null, null, location.href);
+        } else {
+            // If not dirty, actually go back
+            window.location.href = "{{ route('home') }}";
         }
-    });
+    };
 
     // ── Confirm Modal Submit ─────────────────────────────────────
     function submitOrder() {

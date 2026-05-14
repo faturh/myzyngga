@@ -92,7 +92,7 @@
                     <div class="flex-1 space-y-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <x-zyngga-text variant="sm" weight="semibold" class="truncate">Pesanan Selesai!</x-zyngga-text>
-                            <x-zyngga-text variant="2xs" color="neutral-500" class="shrink-0">Baru saja</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">Baru saja</x-zyngga-text>
                         </div>
                         <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
                             Pesanan Quick Anda (IJK902H8MAHD) telah selesai dicuci dan siap diambil.
@@ -108,7 +108,7 @@
                     <div class="flex-1 space-y-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <x-zyngga-text variant="sm" weight="semibold" class="truncate">Pembayaran Berhasil</x-zyngga-text>
-                            <x-zyngga-text variant="2xs" color="neutral-500" class="shrink-0">15 menit lalu</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">15 menit lalu</x-zyngga-text>
                         </div>
                         <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
                             Pembayaran untuk pesanan #IJK902H8MAHD sebesar Rp33.000 telah kami terima.
@@ -124,7 +124,7 @@
                     <div class="flex-1 space-y-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <x-zyngga-text variant="sm" weight="semibold" class="truncate">Kurir Menuju Lokasi</x-zyngga-text>
-                            <x-zyngga-text variant="2xs" color="neutral-500" class="shrink-0">2 jam yang lalu</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">2 jam yang lalu</x-zyngga-text>
                         </div>
                         <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
                             Kurir sedang menuju lokasi Anda untuk menjemput pakaian. Mohon tunggu ya!
@@ -140,7 +140,7 @@
                     <div class="flex-1 space-y-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <x-zyngga-text variant="sm" weight="semibold" class="truncate">Promo Khusus Member</x-zyngga-text>
-                            <x-zyngga-text variant="2xs" color="neutral-500" class="shrink-0">1 hari yang lalu</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">1 hari yang lalu</x-zyngga-text>
                         </div>
                         <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
                             Dapatkan diskon 20% untuk semua layanan Express hari ini. Gunakan kode: ZYNGGA20
@@ -156,7 +156,7 @@
                     <div class="flex-1 space-y-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <x-zyngga-text variant="sm" weight="semibold" class="truncate">Tagihan Baru Tersedia</x-zyngga-text>
-                            <x-zyngga-text variant="2xs" color="neutral-500" class="shrink-0">2 hari yang lalu</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">2 hari yang lalu</x-zyngga-text>
                         </div>
                         <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
                             Pesanan Anda telah selesai ditimbang. Segera lakukan pembayaran untuk proses selanjutnya.

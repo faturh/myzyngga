@@ -16,7 +16,26 @@ class OrderPageController
 
     public function pickupLocation(Request $request, string $service)
     {
-        return view('pelanggan.order.pickup-location', $this->webService->pickupLocationData($service));
+        $user = auth()->user();
+        $primaryAddress = $user ? $user->addresses()->where('is_primary', true)->first() : null;
+
+        // Only auto-redirect if NOT forced (e.g. not clicking "Ubah" from booking)
+        if ($primaryAddress && !$request->has('force')) {
+            session([
+                'order.service'        => $service,
+                'order.address'        => $primaryAddress->address_detail,
+                'order.detail_address' => $primaryAddress->note ?? '',
+                'order.lat'            => (string) $primaryAddress->latitude,
+                'order.lng'            => (string) $primaryAddress->longitude,
+            ]);
+
+            return redirect()->route('order.booking');
+        }
+
+        $data = $this->webService->pickupLocationData($service);
+        $data['from'] = $request->query('from') ?? $request->query('amp;from');
+
+        return view('pelanggan.order.pickup-location', $data);
     }
 
     public function storePickupLocation(Request $request)
@@ -63,12 +82,13 @@ class OrderPageController
         return response()->json(['status' => 'success']);
     }
 
-    public function detail(Request $request)
+    public function detail(Request $request, ?string $id = null)
     {
         $status = $request->query('status', 'ongoing'); // 'ongoing' or 'finished'
+        $orderId = $id ?: 'IJK902H8MAHD';
         
         $order = [
-            'id' => 'IJK902H8MAHD',
+            'id' => $orderId,
             'service_type' => 'Express',
             'status' => $status === 'finished' ? 'finished' : 'ongoing',
             'status_label' => $status === 'finished' ? 'Ambil di Outlet' : 'Delivery',
@@ -81,12 +101,20 @@ class OrderPageController
             'progress' => $status === 'finished' ? 100 : 56,
             'current_step' => $status === 'finished' ? 'Selesai' : 'Mengerjakan Tahap Pengeringan',
             'payment_status' => $status === 'finished' ? 'Lunas' : 'Belum Bayar',
+            'payment_method' => 'QRIS',
+            'subtotal' => 33000,
+            'discount' => 0,
+            'tax' => 0,
             'total' => 33000,
+            'cash' => 33000,
+            'change' => 0,
             'items' => [
                 ['name' => 'Express', 'qty' => '3.3', 'price' => 10000, 'subtotal' => 33000]
             ],
             'logs' => [
-                ['time' => '08:30', 'date' => 'Senin, 18 Feb', 'note' => 'Mengerjakan Tahap Pengeringan']
+                ['time' => '08:30', 'date' => 'Senin, 18 Feb', 'note' => 'Mengerjakan Tahap Pengeringan'],
+                ['time' => '12:30', 'date' => 'Minggu, 19 Feb', 'note' => 'Mengerjakan Tahap Pencucian'],
+                ['time' => '08:30', 'date' => 'Minggu, 19 Feb', 'note' => 'Menerima Pesanan'],
             ]
         ];
 
@@ -96,6 +124,12 @@ class OrderPageController
     public function history(Request $request)
     {
         return view('pelanggan.order.history');
+    }
+
+    public function cancel(Request $request)
+    {
+        session()->forget('order');
+        return redirect()->route('home');
     }
 
     public function check(Request $request)

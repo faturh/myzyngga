@@ -19,6 +19,7 @@
 <body class="bg-[#e8eff9]">
 
     <div class="min-h-screen flex flex-col" x-data>
+        <x-zyngga-toast />
         {{-- HEADER --}}
         <x-dashboard-header 
             title="Lengkapi Detail Alamat" 
@@ -109,12 +110,18 @@
                     {{-- Card 3: Save to Profile (only for new address) --}}
                     @if(!isset($existingAddress))
                         <x-zyngga-card gap="py-0">
+                            @php 
+                                $addressCount = auth()->user() ? auth()->user()->addresses()->count() : 0;
+                                $isLimitReached = $addressCount >= 3;
+                            @endphp
                             <x-zyngga-switch 
                                 label="Simpan ke Daftar Alamat"
                                 description="Alamat ini akan tersimpan di profil Anda untuk pemesanan berikutnya"
                                 name="save_address"
                                 value="1"
-                                :checked="true"
+                                :checked="!$isLimitReached"
+                                :disabled="$isLimitReached"
+                                @click="if({{ $isLimitReached ? 'true' : 'false' }}) window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Maaf, kamu sudah melebihi batas pembuatan alamat (maksimal 3).', type: 'warning' } }))"
                             />
                         </x-zyngga-card>
                     @endif

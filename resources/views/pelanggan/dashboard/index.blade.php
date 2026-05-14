@@ -63,11 +63,8 @@
             <div class="px-5 py-[6px]">
                 <div class="bg-white rounded-lg p-4 space-y-4">
                     {{-- Section heading --}}
-                    <div class="flex items-center justify-between">
+                    <div class="h-8 flex items-center">
                         <x-zyngga-text variant="base" weight="medium">Pesan Sekarang</x-zyngga-text>
-                        <a href="{{ route('order.pickup', ['service' => 'regular']) }}">
-                            <x-zyngga-text variant="xs" weight="medium" color="primary">Detail Layanan</x-zyngga-text>
-                        </a>
                     </div>
 
                     {{-- Service icons: Kilat | Regular | Quick | Express | Satuan --}}
@@ -104,9 +101,14 @@
                     {{-- Section heading --}}
                     <div class="flex items-center justify-between h-8">
                         <x-zyngga-text variant="base" weight="medium">Pesanan Kamu</x-zyngga-text>
-                        <a href="{{ route('order.history') }}" onclick="event.stopPropagation()">
-                            <x-zyngga-text variant="xs" weight="medium" color="primary">Lihat semua</x-zyngga-text>
-                        </a>
+                        <x-zyngga-button 
+                            type="a" 
+                            href="{{ route('order.history') }}" 
+                            variant="tertiary" 
+                            size="s" 
+                            label="Lihat semua"                     
+                            onclick="event.stopPropagation()"
+                        />
                     </div>
 
                     {{-- Order info row --}}

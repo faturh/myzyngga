@@ -9,7 +9,9 @@ interface CustomerRepositoryInterface
 {
     public function findByUser(User $user): ?Pelanggan;
 
-    public function upsertProfileForUser(User $user, array $payload): Pelanggan;
+    public function findByPhone(string $phone): ?Pelanggan;
+
+    public function upsertProfile(?User $user, array $payload): Pelanggan;
 
     public function upsertAddress(Pelanggan $pelanggan, array $payload): \App\Models\CustomerAddress;
 

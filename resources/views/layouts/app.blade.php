@@ -33,5 +33,19 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+        <script>
+            document.addEventListener('livewire:navigated', () => { 
+                feather.replace();
+            });
+
+            document.addEventListener('livewire:initialized', () => {
+                feather.replace();
+                Livewire.hook('morph.updated', (el, component) => {
+                    feather.replace();
+                });
+            });
+        </script>
     </body>
 </html>

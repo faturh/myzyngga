@@ -63,6 +63,14 @@ export default {
                         'background-position': 'right center'
                     },
                 },
+            },
+            boxShadow: {
+                'sm': '0 0 4px rgba(0, 0, 0, 0.08)',
+                'DEFAULT': '0 0 8px rgba(0, 0, 0, 0.08)',
+                'md': '0 0 12px rgba(0, 0, 0, 0.08)',
+                'lg': '0 0 16px rgba(0, 0, 0, 0.08)',
+                'xl': '0 0 24px rgba(0, 0, 0, 0.08)',
+                '2xl': '0 0 32px rgba(0, 0, 0, 0.08)',
             }
         },
     },
