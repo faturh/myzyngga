@@ -52,7 +52,7 @@
                                 name="query"
                                 id="query"
                                 :value="old('query')"
-                                placeholder="Contoh: Fulan atau ZYG-12345"
+                                placeholder="Contoh: nama pelanggan atau nomor nota"
                                 :error="$errors->first('query')"
                             >
                                 <x-slot:iconRight><span></span></x-slot:iconRight>

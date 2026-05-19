@@ -1,6 +1,7 @@
 <?php
 
-use App\Modules\Admin\Presentation\Web\Controllers\WebDashboardController;
+use App\Modules\Customer\Presentation\Web\Controllers\CustomerDashboardController;
+use App\Modules\Customer\Presentation\Web\Controllers\CustomerNotificationController;
 use App\Modules\Order\Presentation\Web\Controllers\OrderPageController;
 use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
@@ -14,12 +15,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('dashboard');
     })->name('home');
 
-    Route::get('/dashboard', WebDashboardController::class)->name('dashboard');
+    Route::get('/dashboard', CustomerDashboardController::class)->name('dashboard');
 
     // Profile & Notifications
     Route::view('profile', 'pelanggan.profile.index')->name('profile');
     Route::view('profile/account', 'pelanggan.profile.account')->name('profile.account');
-    Route::view('notifications', 'pelanggan.notifications.index')->name('notifications');
+    Route::get('notifications', CustomerNotificationController::class)->name('notifications');
 
     // Address Management
     Route::get('addresses/create/details', [AddressController::class, 'createDetails'])->name('addresses.create.details');

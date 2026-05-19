@@ -137,7 +137,7 @@
                 <x-zyngga-card title="Status Pengerjaan">
                     <x-slot:headerAction>
                         <x-zyngga-status type="primary" size="L">
-                            <span x-text="status === 'finished' ? '100%' : '56%'"></span>
+                            {{ $order['progress'] }}%
                         </x-zyngga-status>
                     </x-slot:headerAction>
 
@@ -201,13 +201,15 @@
                     </x-slot:headerAction>
 
                     <div class="space-y-4">
+                        @foreach($order['items'] as $item)
                         <div class="flex justify-between items-start">
                             <div class="space-y-1">
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $order['items'][0]['name'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $order['items'][0]['qty'] }} x Rp{{ number_format($order['items'][0]['price'], 0, ',', '.') }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $item['qty'] }} x Rp{{ number_format($item['price'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
-                            <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['total'], 0, ',', '.') }}</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($item['subtotal'], 0, ',', '.') }}</x-zyngga-text>
                         </div>
+                        @endforeach
 
                         <div x-show="showPaymentDetail" x-collapse x-cloak class="space-y-3 pt-2">
                             <div class="flex justify-between">
@@ -227,7 +229,7 @@
                             
                             <div class="flex justify-between pt-2">
                                 <x-zyngga-text variant="sm" color="neutral-500">Metode Pembayaran</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900" x-text="isPaid ? 'QRIS' : 'Cash'"></x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $order['payment_method'] }}</x-zyngga-text>
                             </div>
                             <div class="flex justify-between">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Total</x-zyngga-text>

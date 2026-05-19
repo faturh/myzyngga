@@ -87,135 +87,76 @@
             <div class="w-full max-w-5xl mx-auto px-5">
                 <div class="flex flex-col">
                     
-                    {{-- Order 1: Diproses --}}
-                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Diproses'" 
-                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'ongoing']) }}'"
+                    @forelse($orders as $order)
+                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === '{{ $order['status'] }}'"
+                        onclick="window.location.href='{{ route('order.detail', ['id' => $order['id']]) }}'"
                         class="cursor-pointer"
                     >
                         <div class="flex items-start justify-between mb-5">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                    <x-zyngga-service-icon service="Express" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                    <x-zyngga-service-icon :service="$order['service']" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
                                 </div>
                                 <div class="flex flex-col">
-                                    <x-zyngga-text variant="lg" weight="medium">Express</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                                    <x-zyngga-text variant="lg" weight="medium">{{ $order['service'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" color="neutral-500">{{ $order['date'] }}</x-zyngga-text>
                                 </div>
                             </div>
-                            <x-zyngga-status type="secondary" size="M" icon="loader" label="Diproses" />
+                            <x-zyngga-status type="secondary" size="M" :icon="$order['status_icon']" :label="$order['status']" />
                         </div>
-                        
+
+                        @if($order['status'] !== 'Selesai')
                         <div class="flex items-center gap-4 mb-5">
                             <div class="progress-container flex-1">
-                                <div class="progress-bar" style="width: 56%"></div>
+                                <div class="progress-bar" style="width: {{ $order['progress'] }}%"></div>
                             </div>
-                            <x-zyngga-text variant="base" weight="medium">56%</x-zyngga-text>
+                            <x-zyngga-text variant="base" weight="medium">{{ $order['progress'] }}%</x-zyngga-text>
                         </div>
+                        @else
+                        <div class="space-y-1 mb-4">
+                            <div class="flex justify-between items-center">
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Jumlah</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">{{ $order['items_count'] }} items</x-zyngga-text>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Berat timbangan</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">{{ $order['weight'] }} kg</x-zyngga-text>
+                            </div>
+                        </div>
+                        @endif
 
                         <div class="flex items-center justify-between">
                             <div>
                                 <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
-                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
+                                <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($order['total'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
-                            <x-zyngga-button 
-                                type="a"
-                                href="https://wa.me/+6281297673318"
-                                target="_blank"
-                                variant="secondary"
-                                size="m"
-                                icon="message-circle"
-                                label="Chat"
-                                iconPosition="left"
-                                @click.stop=""
-                            />
+                            @if($order['status'] === 'Selesai')
+                                <x-zyngga-button
+                                    variant="primary"
+                                    size="m"
+                                    label="Ulangi Pesanan"
+                                    @click.stop=""
+                                />
+                            @else
+                                <x-zyngga-button
+                                    type="a"
+                                    href="https://wa.me/+6281297673318"
+                                    target="_blank"
+                                    variant="secondary"
+                                    size="m"
+                                    icon="message-circle"
+                                    label="Chat"
+                                    iconPosition="left"
+                                    @click.stop=""
+                                />
+                            @endif
                         </div>
                     </x-zyngga-card>
-
-                    {{-- Order 2: Selesai --}}
-                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Selesai'"
-                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'finished']) }}'"
-                        class="cursor-pointer"
-                    >
-                        <div class="flex items-start justify-between mb-5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                    <x-zyngga-service-icon service="Quick" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <x-zyngga-text variant="lg" weight="medium">Quick</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
-                                </div>
-                            </div>
-                            <x-zyngga-status type="secondary" size="M" icon="check" label="Selesai" />
-                        </div>
-
-                        <div class="space-y-1 mb-4">
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Jumlah</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">3 items</x-zyngga-text>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Berat timbangan</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">3.3 kg</x-zyngga-text>
-                            </div>
-                        </div>
-
-                        <div class="flex items-end justify-between">
-                            <div>
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
-                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
-                            </div>
-                            <x-zyngga-button 
-                                variant="primary"
-                                size="m"
-                                label="Ulangi Pesanan"
-                                @click.stop=""
-                            />
-                        </div>
+                    @empty
+                    <x-zyngga-card>
+                        <x-zyngga-text variant="sm" color="neutral-500">Belum ada riwayat pesanan.</x-zyngga-text>
                     </x-zyngga-card>
-
-                    {{-- Order 3: Selesai (Duplicate for UI demo) --}}
-                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Selesai'"
-                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'finished']) }}'"
-                        class="cursor-pointer"
-                    >
-                        <div class="flex items-start justify-between mb-5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                    <x-zyngga-service-icon service="Quick" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <x-zyngga-text variant="lg" weight="medium">Quick</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
-                                </div>
-                            </div>
-                            <x-zyngga-status type="secondary" size="M" icon="check" label="Selesai" />
-                        </div>
-
-                        <div class="space-y-1 mb-4">
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Jumlah</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">3 items</x-zyngga-text>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Berat timbangan</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">3.3 kg</x-zyngga-text>
-                            </div>
-                        </div>
-
-                        <div class="flex items-end justify-between">
-                            <div>
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
-                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
-                            </div>
-                            <x-zyngga-button 
-                                variant="primary"
-                                size="m"
-                                label="Ulangi Pesanan"
-                                @click.stop=""
-                            />
-                        </div>
-                    </x-zyngga-card>
+                    @endforelse
                 </div>
             </div>
 
