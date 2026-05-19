@@ -16,7 +16,7 @@
     $id = $id ?? $name . '-' . $value;
     // Base container classes
     $containerClasses = [
-        'flex items-center justify-between px-1 cursor-pointer group select-none transition-all duration-200',
+        'flex items-center justify-between cursor-pointer group select-none transition-all duration-200',
         $size === 'M' ? 'h-[32px]' : 'h-[56px]',
         $disabled ? 'opacity-50 cursor-not-allowed' : '',
     ];
@@ -35,7 +35,7 @@
         @endif
         
         <div class="flex flex-col">
-            <x-zyngga-text variant="sm" weight="semibold" class="leading-snug">
+            <x-zyngga-text variant="sm" weight="medium" class="leading-snug">
                 {{ $label }}
             </x-zyngga-text>
             @if($description)
@@ -48,7 +48,7 @@
 
     <div class="flex items-center gap-3">
         @if($additional)
-            <span class="text-[14px] text-[#0F0F0F] font-medium">{{ $additional }}</span>
+            <span class="text-[14px] text-[#0F0F0F] font-normal">{{ $additional }}</span>
         @endif
         
         <div class="relative flex items-center justify-center h-5 w-5">

@@ -1,6 +1,6 @@
 # Zyngga Laundry – Modern Laundry Platform
 
-A premium laundry management platform built with Laravel, Tailwind CSS, and Alpine.js, following a pixel-perfect design system from Figma.
+Aplikasi web berbasis Laravel untuk manajemen laundry modern, dengan Tailwind CSS, Alpine.js, dan implementasi backend modular berbasis DDD.
 
 ## 🎨 Design System
 

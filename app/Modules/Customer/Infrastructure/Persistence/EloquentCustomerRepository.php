@@ -16,16 +16,33 @@ class EloquentCustomerRepository implements CustomerRepositoryInterface
             ->first();
     }
 
-    public function upsertProfileForUser(User $user, array $payload): Pelanggan
+    public function findByPhone(string $phone): ?Pelanggan
     {
+        return Pelanggan::query()->where('telepon', $phone)->first();
+    }
+
+    public function upsertProfile(?User $user, array $payload): Pelanggan
+    {
+        if ($user) {
+            return Pelanggan::query()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nama' => $payload['nama'],
+                    'jenis_kelamin' => $payload['jenis_kelamin'] ?? 'L',
+                    'telepon' => $payload['telepon'],
+                    'alamat' => $payload['alamat'] ?? null,
+                ],
+            );
+        }
+
+        // For Guest: Find by phone or create new
         return Pelanggan::query()->updateOrCreate(
-            ['user_id' => $user->id],
+            ['telepon' => $payload['telepon']],
             [
                 'nama' => $payload['nama'],
-                'jenis_kelamin' => $payload['jenis_kelamin'],
-                'telepon' => $payload['telepon'],
+                'jenis_kelamin' => $payload['jenis_kelamin'] ?? 'L',
                 'alamat' => $payload['alamat'] ?? null,
-            ],
+            ]
         );
     }
 

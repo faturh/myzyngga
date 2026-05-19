@@ -16,246 +16,260 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         [x-cloak] { display: none !important; }
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #E8EFF9;
+            border-radius: 100px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #1660C1;
+            border-radius: 100px;
+        }
     </style>
 </head>
-<body x-data="{}" class="bg-zyngga-blue-50 min-h-screen">
-    {{-- Sidebar (rendered outside the max-w wrapper so overlay covers full screen) --}}
+<body x-data="{ desktopCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || (localStorage.getItem('sidebarCollapsed') === null && window.innerWidth >= 768 && window.innerWidth < 1024) }" class="bg-zyngga-blue-50 min-h-screen">
     <x-sidebar />
 
-    {{-- ─────────────────────────────────────────────────────────
-         HEADER — sticky, tidak ikut scroll
-    ───────────────────────────────────────────────────────── --}}
-    <x-dashboard-header
-        :name="Auth::user()->name"
-        :points="4"
-    />
+    {{-- Main Content Wrapper --}}
+    <div 
+        class="transition-all duration-300 ease-in-out min-h-screen flex flex-col"
+        :class="desktopCollapsed ? 'md:pr-[80px]' : 'md:pr-[280px]'"
+        @sidebar-toggled.window="desktopCollapsed = $event.detail.collapsed"
+        @resize.window="desktopCollapsed = (window.innerWidth >= 768 && window.innerWidth < 1024)"
+    >
+        {{-- Header --}}
+        <x-dashboard-header
+            :name="Auth::user()->name"
+            :points="4"
+            :showBell="true"
+        />
 
-    {{-- Outer wrapper constrained to mobile width, centered --}}
-    <div class="w-full max-w-[425px] mx-auto min-h-screen flex flex-col">
-
-        {{-- ─────────────────────────────────────────────────────────
-             PESAN SEKARANG CARD
-        ───────────────────────────────────────────────────────── --}}
-        <div class="px-5 py-[6px]">
-            <div class="bg-white rounded-lg p-4 space-y-4">
-                {{-- Hero banner image --}}
+        {{-- Main Section --}}
+        <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col">
+            {{-- ─────────────────────────────────────────────────────────
+                 HERO BANNER
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5 py-[6px]">
                 <div class="w-full aspect-[353/120] rounded-lg overflow-hidden relative">
-                    <img src="/figma/figma_banner_hero.png" alt="Banner" class="w-full h-full object-cover">
-                </div>
-
-                {{-- Section heading --}}
-                <div class="flex items-center justify-between">
-                    <x-zyngga-text variant="base" weight="semibold">Pesan Sekarang</x-zyngga-text>
-                </div>
-
-                {{-- Service icons: Kilat | Regular | Quick | Express — from Figma --}}
-                <div class="grid grid-cols-5">
-                    @php
-                        $services = [
-                            ['label' => 'Regular', 'icon' => 'refresh-cw'],
-                            ['label' => 'Quick',   'icon' => 'clock'],
-                            ['label' => 'Express', 'icon' => 'fast-forward'],
-                            ['label' => 'Kilat',   'icon' => 'zap'],
-                            ['label' => 'Satuan',   'icon' => 'zap'],
-                        ];
-                    @endphp
-                    @foreach ($services as $s)
-                        <a
-                            href="{{ route('order.pickup', ['service' => strtolower($s['label'])]) }}"
-                            class="flex flex-col items-center gap-2 h-16 justify-center hover:opacity-80 transition-opacity"
-                        >
-                            <div class="w-9 h-9 bg-zyngga-yellow-50 rounded-full flex items-center justify-center">
-                                <x-zyngga-service-icon service="{{ $s['label'] }}" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
-                            </div>
-                            <x-zyngga-text variant="sm" weight="medium">{{ $s['label'] }}</x-zyngga-text>
-                        </a>
-                    @endforeach
+                    <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
                 </div>
             </div>
-        </div>
 
-        {{-- ─────────────────────────────────────────────────────────
-             PESANAN KAMU CARD (active order)
-        ───────────────────────────────────────────────────────── --}}
-        <div class="px-5 py-[6px]">
-            <div class="bg-white rounded-lg p-4 space-y-4">
-                {{-- Section heading --}}
-                <div class="flex items-center justify-between h-8">
-                    <x-zyngga-text variant="base" weight="semibold">Pesanan Kamu</x-zyngga-text>
-                    <a href="{{ route('order.history') }}">
-                        <x-zyngga-text variant="xs" weight="semibold" color="primary">Lihat semua</x-zyngga-text>
-                    </a>
+            {{-- ─────────────────────────────────────────────────────────
+                 PESAN SEKARANG CARD
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5 py-[6px]">
+                <div class="bg-white rounded-lg p-4 space-y-4">
+                    {{-- Section heading --}}
+                    <div class="h-8 flex items-center">
+                        <x-zyngga-text variant="base" weight="medium">Pesan Sekarang</x-zyngga-text>
+                    </div>
+
+                    {{-- Service icons: Kilat | Regular | Quick | Express | Satuan --}}
+                    <div class="grid grid-cols-5">
+                        @php
+                            $services = [
+                                ['label' => 'Kilat',   'icon' => 'zap'],
+                                ['label' => 'Reguler', 'icon' => 'star'],
+                                ['label' => 'Quick',   'icon' => 'clock'],
+                                ['label' => 'Express', 'icon' => 'fast-forward'],
+                                ['label' => 'Satuan',  'icon' => 'package'],
+                            ];
+                        @endphp
+                        @foreach ($services as $s)
+                            <a
+                                href="{{ route('order.pickup', ['service' => strtolower($s['label'])]) }}"
+                                class="flex flex-col items-center gap-2 h-16 justify-center hover:opacity-80 transition-opacity"
+                            >
+                                <div class="w-9 h-9 bg-zyngga-yellow-50 rounded-full flex items-center justify-center">
+                                    <x-zyngga-service-icon service="{{ $s['label'] }}" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                </div>
+                                <x-zyngga-text variant="sm" weight="regular">{{ $s['label'] }}</x-zyngga-text>
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
+            </div>
 
-                {{-- Order row --}}
-                <div class="space-y-[10px]">
+            {{-- ─────────────────────────────────────────────────────────
+                 PESANAN KAMU CARD (active order)
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5 py-[6px]">
+                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail') }}'">
+                    {{-- Section heading --}}
+                    <div class="flex items-center justify-between h-8">
+                        <x-zyngga-text variant="base" weight="medium">Pesanan Kamu</x-zyngga-text>
+                        <x-zyngga-button 
+                            type="a" 
+                            href="{{ route('order.history') }}" 
+                            variant="tertiary" 
+                            size="s" 
+                            label="Lihat semua"                     
+                            onclick="event.stopPropagation()"
+                        />
+                    </div>
+
+                    {{-- Order info row --}}
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
+                                    <x-zyngga-service-icon service="Express" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <x-zyngga-text variant="lg" weight="medium">Express</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                                </div>
+                            </div>
+                            <x-zyngga-status type="secondary" size="M" icon="loader" label="Diproses" />
+                        </div>
+                        
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="progress-container flex-1">
+                                <div class="progress-bar" style="width: 56%"></div>
+                            </div>
+                            <x-zyngga-text variant="sm" weight="medium">56%</x-zyngga-text>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
+                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
+                            </div>
+                            <x-zyngga-button 
+                                type="a"
+                                href="https://wa.me/+6281297673318"
+                                target="_blank"
+                                variant="secondary"
+                                size="m"
+                                icon="message-circle"
+                                label="Chat"
+                                iconPosition="left"
+                                @click.stop=""
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ─────────────────────────────────────────────────────────
+                 PESANAN TERAKHIR CARD
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5 py-[6px]">
+                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail') }}'">
+                    <x-zyngga-text variant="base" weight="medium" class="h-8 flex items-center">Pesanan Terakhir</x-zyngga-text>
+
                     <div class="flex items-start justify-between">
-                        {{-- Left: service + estimated date --}}
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 bg-zyngga-yellow-50 rounded-full flex items-center justify-center">
-                                    <x-zyngga-service-icon service="Express" class="w-3.5 h-3.5 text-zyngga-yellow-300" />
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
+                                <x-zyngga-service-icon service="Quick" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                            </div>
+                            <div class="flex flex-col">
+                                <x-zyngga-text variant="lg" weight="medium">Quick</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                            </div>
+                        </div>
+                        <x-zyngga-status type="secondary" size="M" icon="check" label="Selesai" />
+                    </div>
+
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
+                            <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
+                        </div>
+                        <x-zyngga-button 
+                            variant="primary"
+                            size="m"
+                            label="Ulangi Pesanan"
+                            @click.stop=""
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {{-- ─────────────────────────────────────────────────────────
+                 ALUR PEMESANAN CARD
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5 py-[6px]">
+                <div class="bg-white rounded-lg p-4 space-y-4">
+                    <div class="h-8 flex items-center">
+                        <x-zyngga-text variant="base" weight="medium">Alur Pemesanan</x-zyngga-text>
+                    </div>
+
+                    <div class="space-y-6">
+                        @php
+                            $steps = [
+                                ['n' => '1', 'title' => 'Pesan Penjemputan', 'desc' => 'Pilih layanan dan atur jadwal jemput lewat aplikasi.'],
+                                ['n' => '2', 'title' => 'Proses Cuci', 'desc' => 'Kurir mengambil pakaian untuk dicuci.'],
+                                ['n' => '3', 'title' => 'Pantau Status', 'desc' => 'Cek progres pengerjaan secara real-time.'],
+                                ['n' => '4', 'title' => 'Antar & Bayar', 'desc' => 'Bayar dan pakaian bersih diantar kembali.'],
+                            ];
+                        @endphp
+                        @foreach ($steps as $step)
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full border border-zyngga-blue-300 flex items-center justify-center shrink-0">
+                                    <x-zyngga-text variant="xs" weight="medium" color="primary">{{ $step['n'] }}</x-zyngga-text>
                                 </div>
-                                <x-zyngga-text variant="lg" weight="semibold" as="p">Express</x-zyngga-text>
-                            </div>
-                            <x-zyngga-text variant="sm" color="neutral-500">Estimasi Selesai: Minggu, 10 Mar</x-zyngga-text>
-                        </div>
-                        {{-- Right: status badge --}}
-                        <x-zyngga-status type="secondary" size="M" icon="loader" label="Diproses" />
-                    </div>
-
-                    {{-- Progress bar --}}
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1 h-1 bg-zyngga-blue-50 rounded-full overflow-hidden">
-                            <div class="h-full bg-zyngga-blue-300 rounded-full" style="width:56%"></div>
-                        </div>
-                        <x-zyngga-text variant="base" weight="semibold">56%</x-zyngga-text>
-                    </div>
-                </div>
-
-                {{-- Detail button --}}
-                <x-zyngga-button 
-                    type="a"
-                    href="{{ route('order.detail') }}"
-                    variant="secondary"
-                    size="m"
-                    label="Lihat Detail"
-                    class="w-full"
-                />
-            </div>
-        </div>
-
-        {{-- ─────────────────────────────────────────────────────────
-             PROMO BANNER
-        ───────────────────────────────────────────────────────── --}}
-        <div class="px-5 py-[6px]">
-            <div class="w-full aspect-[385/168] rounded-lg overflow-hidden relative">
-                <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-gradient-to-br from-[#1660C1]/60 to-transparent flex flex-col justify-between p-5">
-                    <x-zyngga-text variant="base" weight="semibold" color="white" class="max-w-[180px]">
-                        Matahari Sembunyi?<br>Tenang, Ada Kami.
-                    </x-zyngga-text>
-                    <x-zyngga-button 
-                        variant="primary"
-                        size="s"
-                        icon="chevron-right"
-                        iconPosition="right"
-                        label="Pesan Sekarang"
-                        class="bg-white !text-zyngga-blue-300 hover:bg-gray-100"
-                    />
-                </div>
-            </div>
-        </div>
-
-        {{-- ─────────────────────────────────────────────────────────
-             PESANAN TERAKHIR CARD
-        ───────────────────────────────────────────────────────── --}}
-        <div class="px-5 py-[6px]">
-            <div class="bg-white rounded-lg p-4 space-y-4">
-                <x-zyngga-text variant="base" weight="semibold" class="h-8 flex items-center">Pesanan Terakhir</x-zyngga-text>
-
-                <div class="flex items-start justify-between">
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 bg-zyngga-yellow-50 rounded-full flex items-center justify-center">
-                                <x-zyngga-service-icon service="Quick" class="w-3.5 h-3.5 text-zyngga-yellow-300" />
-                            </div>
-                            <x-zyngga-text variant="lg" weight="semibold" as="p">Quick</x-zyngga-text>
-                        </div>
-                        <x-zyngga-text variant="sm" color="neutral-500">22 Agustus 2026</x-zyngga-text>
-                    </div>
-
-                    <x-zyngga-status type="secondary" size="M" icon="check" label="Selesai" />
-                </div>
-
-                <x-zyngga-button 
-                    variant="primary"
-                    size="m"
-                    icon="refresh-ccw"
-                    iconPosition="left"
-                    label="Ulangi Pesanan"
-                    class="w-full"
-                />
-            </div>
-        </div>
-
-        {{-- ─────────────────────────────────────────────────────────
-             ALUR PEMESANAN CARD
-        ───────────────────────────────────────────────────────── --}}
-        <div class="px-5 py-[6px]">
-            <div class="bg-white rounded-lg p-4 space-y-4">
-                <div class="h-8 flex items-center">
-                    <x-zyngga-text variant="base" weight="semibold">Alur Pemesanan</x-zyngga-text>
-                </div>
-
-                <div class="space-y-6">
-                    @php
-                        $steps = [
-                            ['n' => '1', 'title' => 'Pesan Penjemputan', 'desc' => 'Pilih layanan dan atur jadwal jemput lewat aplikasi.'],
-                            ['n' => '2', 'title' => 'Proses Cuci', 'desc' => 'Kurir mengambil pakaian untuk dicuci.'],
-                            ['n' => '3', 'title' => 'Pantau Status', 'desc' => 'Cek progres pengerjaan secara real-time.'],
-                            ['n' => '4', 'title' => 'Antar & Bayar', 'desc' => 'Bayar dan pakaian bersih diantar kembali.'],
-                        ];
-                    @endphp
-                    @foreach ($steps as $step)
-                        <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-full border border-zyngga-blue-300 flex items-center justify-center shrink-0">
-                                <x-zyngga-text variant="xs" weight="semibold" color="primary">{{ $step['n'] }}</x-zyngga-text>
-                            </div>
-                            <div class="space-y-1">
-                                <x-zyngga-text variant="sm" weight="medium" class="leading-none">{{ $step['title'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="xs" color="neutral-500">{{ $step['desc'] }}</x-zyngga-text>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        {{-- ─────────────────────────────────────────────────────────
-             OUTLET KAMI CARD
-        ───────────────────────────────────────────────────────── --}}
-        <div class="px-5 py-[6px]">
-            <div class="bg-white rounded-lg p-4 space-y-4">
-                <div class="h-8 flex items-center">
-                    <x-zyngga-text variant="base" weight="semibold">Outlet Kami</x-zyngga-text>
-                </div>
-
-                <div class="space-y-4">
-                    @php
-                        $outlets = [
-                            ['name' => 'Zyngga Laundry Sukabirus', 'address' => 'Jl. Sukabirus No. 99'],
-                            ['name' => 'Zyngga Laundry Sukapura', 'address' => 'Jl. Sukapura No. 97'],
-                        ];
-                    @endphp
-                    @foreach ($outlets as $outlet)
-                        <div class="flex items-center gap-4">
-                            <div class="w-[168px] h-[110px] rounded-lg overflow-hidden shrink-0">
-                                <img src="/figma/figma_outlet.png" alt="Outlet" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
                                 <div class="space-y-1">
-                                    <x-zyngga-text variant="base" weight="medium" class="leading-snug">{{ $outlet['name'] }}</x-zyngga-text>
-                                    <x-zyngga-text variant="xs" color="neutral-500">{{ $outlet['address'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="regular" class="leading-none">{{ $step['title'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="xs" color="neutral-500">{{ $step['desc'] }}</x-zyngga-text>
                                 </div>
-                                <x-zyngga-button 
-                                    variant="secondary"
-                                    size="s"
-                                    label="Cek Lokasi"
-                                    class="w-full"
-                                />
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {{-- ─────────────────────────────────────────────────────────
+                 OUTLET KAMI CARD
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5 py-[6px]">
+                <div class="bg-white rounded-lg p-4 space-y-4">
+                    <div class="h-8 flex items-center">
+                        <x-zyngga-text variant="base" weight="medium">Outlet Kami</x-zyngga-text>
+                    </div>
+
+                    <div class="space-y-4">
+                        @php
+                            $outlets = [
+                                ['name' => 'Zyngga Laundry Sukabirus', 'address' => 'Jl. Sukabirus No. 99', 'map' => 'https://maps.app.goo.gl/uMGkcaDueS74pU3T7'],
+                                ['name' => 'Zyngga Laundry Sukapura', 'address' => 'Jl. Sukapura No. 97', 'map' => 'https://maps.app.goo.gl/1DKMzTAJ7FbG9YDa7'],
+                            ];
+                        @endphp
+                        @foreach ($outlets as $outlet)
+                            <div class="flex items-center gap-4">
+                                <div class="w-[168px] h-[110px] rounded-lg overflow-hidden shrink-0">
+                                    <img src="/figma/figma_outlet.png" alt="Outlet" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
+                                    <div class="space-y-1">
+                                        <x-zyngga-text variant="base" weight="regular" class="leading-snug">{{ $outlet['name'] }}</x-zyngga-text>
+                                        <x-zyngga-text variant="xs" color="neutral-500">{{ $outlet['address'] }}</x-zyngga-text>
+                                    </div>
+                                    <x-zyngga-button 
+                                        type="a"
+                                        target="_blank"
+                                        variant="secondary"
+                                        size="s"
+                                        label="Cek Lokasi"
+                                        href="{{ $outlet['map'] }}"
+                                        class="w-fit !px-4"
+                                    />
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+        </main>
 
         {{-- ─────────────────────────────────────────────────────────
              FOOTER
         ───────────────────────────────────────────────────────── --}}
         <x-zyngga-footer />
-
     </div>
 
     @livewireScripts

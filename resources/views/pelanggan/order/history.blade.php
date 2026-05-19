@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cek Pesanan – Zyngga</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Riwayat Pesanan – Zyngga</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
@@ -11,212 +12,217 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     <style>
-        * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
-        html, body { margin: 0; background: #e8eff9; color: #0F0F0F; }
-        .action-item:hover { border-color: #1660C1; background: #e8eff9; }
+        * { font-family: 'DM Sans', sans-serif; }
+        html, body { margin: 0; background: #e8eff9; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         [x-cloak] { display: none !important; }
 
-        .order-card {
-            background: white;
-            border-radius: 8px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
 
-        .tab-btn {
-            height: 32px;
-            padding: 0 16px;
-            border-radius: 8px;
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 100px;
             font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
+            font-weight: 400;
+            cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
-        .tab-btn-active {
-            background: #e8eff9;
-            color: #1660C1;
+        .filter-chip.active {
             border: 1px solid #1660C1;
+            background: #E8EFF9;
+            color: #1660C1;
         }
-        .tab-btn-inactive {
+        .filter-chip.inactive {
             background: #F4F4F4;
-            color: #808080;
+            color: #0F0F0F;
             border: 1px solid transparent;
+        }
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #E8EFF9;
+            border-radius: 100px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #1660C1;
+            border-radius: 100px;
         }
     </style>
 </head>
-<body x-data="{ activeTab: 'Semua' }" class="bg-zyngga-blue-50">
-    <div class="w-full max-w-[425px] mx-auto min-h-screen flex flex-col">
-        <x-sidebar />
-        
+<body x-data="{ desktopCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || (localStorage.getItem('sidebarCollapsed') === null && window.innerWidth >= 768 && window.innerWidth < 1024), activeTab: 'Semua' }" class="bg-zyngga-blue-50 min-h-screen">
+    <x-sidebar active="order" />
+
+    {{-- Main Content Wrapper --}}
+    <div 
+        class="transition-all duration-300 ease-in-out min-h-screen flex flex-col"
+        :class="desktopCollapsed ? 'md:pr-[80px]' : 'md:pr-[280px]'"
+        @sidebar-toggled.window="desktopCollapsed = $event.detail.collapsed"
+        @resize.window="desktopCollapsed = (window.innerWidth >= 768 && window.innerWidth < 1024)"
+    >
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
-        <div class="sticky top-0 z-40 bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] px-5 py-5 mb-[6px]">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                    <x-zyngga-button 
-                        variant="neutral"
-                        size="l"
-                        icon="menu"
-                        iconPosition="only"
-                        @click="$dispatch('open-sidebar')"
-                    />
-                    <x-zyngga-text variant="lg" weight="semibold" as="h1">Pesanan</x-zyngga-text>
+        <x-dashboard-header 
+            title="Pesanan Kamu"
+            :showPoints="false"
+            :showMenu="true"
+            :maxWidth="'max-w-full'"
+        >
+            <x-slot:extra>
+                <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
+                    @foreach (['Semua', 'Belum Bayar', 'Diproses', 'Selesai'] as $tab)
+                        <button 
+                            @click="activeTab = '{{ $tab }}'"
+                            :class="activeTab === '{{ $tab }}' ? 'filter-chip active' : 'filter-chip inactive'"
+                        >
+                            {{ $tab }}
+                        </button>
+                    @endforeach
                 </div>
-                <x-zyngga-button 
-                    variant="neutral"
-                    size="l"
-                    icon="filter"
-                    iconPosition="only"
-                />
-            </div>
+            </x-slot:extra>
+        </x-dashboard-header>
 
-            {{-- Filter Tabs --}}
-            <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                <template x-for="tab in ['Semua', 'Belum Bayar', 'Diproses', 'Selesai']" :key="tab">
-                    <button 
-                        @click="activeTab = tab"
-                        :class="activeTab === tab ? 'tab-btn-active' : 'tab-btn-inactive'"
-                        class="tab-btn"
-                        x-text="tab"
-                    ></button>
-                </template>
-            </div>
-        </div>
-
-        {{-- ── ORDER LIST ─────────────────────────────────────────── --}}
-        <div class="px-5 py-[6px] flex flex-col gap-3">
-            
-            {{-- Order 1: Delivery --}}
-            <div class="order-card">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <div class="w-6 h-6 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                <x-zyngga-service-icon service="Express" class="w-3.5 h-3.5 text-zyngga-yellow-300" />
+        {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
+        <main class="flex-1 flex flex-col">
+            <div class="w-full max-w-5xl mx-auto px-5">
+                <div class="flex flex-col">
+                    
+                    {{-- Order 1: Diproses --}}
+                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Diproses'" 
+                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'ongoing']) }}'"
+                        class="cursor-pointer"
+                    >
+                        <div class="flex items-start justify-between mb-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
+                                    <x-zyngga-service-icon service="Express" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <x-zyngga-text variant="lg" weight="medium">Express</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                                </div>
                             </div>
-                            <x-zyngga-text variant="base" weight="semibold" class="tracking-tight">Express</x-zyngga-text>
+                            <x-zyngga-status type="secondary" size="M" icon="loader" label="Diproses" />
                         </div>
-                        <x-zyngga-text variant="xs" color="neutral-500" weight="medium" class="mt-1">2 Feb 2025 | 12:09</x-zyngga-text>
-                    </div>
-                    <x-zyngga-status type="secondary" size="M" icon="package" label="Delivery" />
-                </div>
-                
-                <div class="flex flex-col gap-2">
-                    <div class="flex justify-between items-center">
-                        <x-zyngga-text variant="sm" color="neutral-500" weight="medium">Jumlah</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="semibold">3 items</x-zyngga-text>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <x-zyngga-text variant="sm" color="neutral-500" weight="medium">Berat timbangan</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="semibold">3.3 kg</x-zyngga-text>
-                    </div>
-                </div>
-
-                <div class="flex items-end justify-between">
-                    <div>
-                        <x-zyngga-text variant="xs" color="neutral-500" weight="medium">Total</x-zyngga-text>
-                        <x-zyngga-text variant="base" weight="semibold">Rp33.000</x-zyngga-text>
-                    </div>
-                    <x-zyngga-button 
-                        type="a"
-                        href="{{ route('order.detail') }}"
-                        variant="primary"
-                        size="m"
-                        label="Lihat Detail"
-                    />
-                </div>
-            </div>
-
-            {{-- Order 2: Diproses --}}
-            <div class="order-card">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <div class="w-6 h-6 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                <x-zyngga-service-icon service="Satuan" class="w-3.5 h-3.5 text-zyngga-yellow-300" />
+                        
+                        <div class="flex items-center gap-4 mb-5">
+                            <div class="progress-container flex-1">
+                                <div class="progress-bar" style="width: 56%"></div>
                             </div>
-                            <x-zyngga-text variant="base" weight="semibold" class="tracking-tight">Satuan</x-zyngga-text>
+                            <x-zyngga-text variant="base" weight="medium">56%</x-zyngga-text>
                         </div>
-                        <x-zyngga-text variant="xs" color="neutral-500" weight="medium" class="mt-1">2 Feb 2025 | 12:09</x-zyngga-text>
-                    </div>
-                    <x-zyngga-status type="secondary" size="L" icon="refresh-cw" label="Diproses" />
-                </div>
-                
-                <div class="flex flex-col gap-2">
-                    <div class="flex justify-between items-center">
-                        <x-zyngga-text variant="sm" color="neutral-500" weight="medium">Jumlah</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="semibold">3 items</x-zyngga-text>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <x-zyngga-text variant="sm" color="neutral-500" weight="medium">Berat timbangan</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="semibold">3.3 kg</x-zyngga-text>
-                    </div>
-                </div>
 
-                <div class="flex items-end justify-between">
-                    <div>
-                        <x-zyngga-text variant="xs" color="neutral-500" weight="medium">Total</x-zyngga-text>
-                        <x-zyngga-text variant="base" weight="semibold">Rp33.000</x-zyngga-text>
-                    </div>
-                    <x-zyngga-button 
-                        type="a"
-                        href="{{ route('order.detail') }}"
-                        variant="primary"
-                        size="m"
-                        label="Lihat Detail"
-                    />
-                </div>
-            </div>
-
-            {{-- Order 3: Selesai --}}
-            <div class="order-card">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <div class="w-6 h-6 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                <x-zyngga-service-icon service="Satuan" class="w-3.5 h-3.5 text-zyngga-yellow-300" />
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
+                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
                             </div>
-                            <x-zyngga-text variant="base" weight="semibold" class="tracking-tight">Satuan</x-zyngga-text>
+                            <x-zyngga-button 
+                                type="a"
+                                href="https://wa.me/+6281297673318"
+                                target="_blank"
+                                variant="secondary"
+                                size="m"
+                                icon="message-circle"
+                                label="Chat"
+                                iconPosition="left"
+                                @click.stop=""
+                            />
                         </div>
-                        <x-zyngga-text variant="xs" color="neutral-500" weight="medium" class="mt-1">2 Feb 2025 | 12:09</x-zyngga-text>
-                    </div>
-                    <x-zyngga-status type="secondary" size="L" icon="check" label="Selesai" />
-                </div>
-                
-                <div class="flex flex-col gap-2">
-                    <div class="flex justify-between items-center">
-                        <x-zyngga-text variant="sm" color="neutral-500" weight="medium">Jumlah</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="semibold">3 items</x-zyngga-text>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <x-zyngga-text variant="sm" color="neutral-500" weight="medium">Berat timbangan</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="semibold">3.3 kg</x-zyngga-text>
-                    </div>
-                </div>
+                    </x-zyngga-card>
 
-                <div class="flex items-end justify-between">
-                    <div>
-                        <x-zyngga-text variant="xs" color="neutral-500" weight="medium">Total</x-zyngga-text>
-                        <x-zyngga-text variant="base" weight="semibold">Rp33.000</x-zyngga-text>
-                    </div>
-                    <x-zyngga-button 
-                        variant="primary"
-                        size="m"
-                        label="Ulangi Pesanan"
-                    />
+                    {{-- Order 2: Selesai --}}
+                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Selesai'"
+                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'finished']) }}'"
+                        class="cursor-pointer"
+                    >
+                        <div class="flex items-start justify-between mb-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
+                                    <x-zyngga-service-icon service="Quick" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <x-zyngga-text variant="lg" weight="medium">Quick</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                                </div>
+                            </div>
+                            <x-zyngga-status type="secondary" size="M" icon="check" label="Selesai" />
+                        </div>
+
+                        <div class="space-y-1 mb-4">
+                            <div class="flex justify-between items-center">
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Jumlah</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">3 items</x-zyngga-text>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Berat timbangan</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">3.3 kg</x-zyngga-text>
+                            </div>
+                        </div>
+
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
+                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
+                            </div>
+                            <x-zyngga-button 
+                                variant="primary"
+                                size="m"
+                                label="Ulangi Pesanan"
+                                @click.stop=""
+                            />
+                        </div>
+                    </x-zyngga-card>
+
+                    {{-- Order 3: Selesai (Duplicate for UI demo) --}}
+                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === 'Selesai'"
+                        onclick="window.location.href='{{ route('order.detail', ['id' => 'IJK902H8MAHD', 'status' => 'finished']) }}'"
+                        class="cursor-pointer"
+                    >
+                        <div class="flex items-start justify-between mb-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
+                                    <x-zyngga-service-icon service="Quick" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <x-zyngga-text variant="lg" weight="medium">Quick</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                                </div>
+                            </div>
+                            <x-zyngga-status type="secondary" size="M" icon="check" label="Selesai" />
+                        </div>
+
+                        <div class="space-y-1 mb-4">
+                            <div class="flex justify-between items-center">
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Jumlah</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">3 items</x-zyngga-text>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Berat timbangan</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">3.3 kg</x-zyngga-text>
+                            </div>
+                        </div>
+
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
+                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
+                            </div>
+                            <x-zyngga-button 
+                                variant="primary"
+                                size="m"
+                                label="Ulangi Pesanan"
+                                @click.stop=""
+                            />
+                        </div>
+                    </x-zyngga-card>
                 </div>
             </div>
 
-        </div>
+        </main>
 
         {{-- ── FOOTER ─────────────────────────────────────────────── --}}
-        <x-zyngga-footer />
-
+        <x-zyngga-footer :maxWidth="'max-w-full'" />
     </div>
 
     @livewireScripts
@@ -225,12 +231,8 @@
             feather.replace();
             setTimeout(() => feather.replace(), 500);
         });
-        document.addEventListener('livewire:load', function () {
-            feather.replace();
-        });
-        document.addEventListener('livewire:navigated', function () {
-            feather.replace();
-        });
+        document.addEventListener('livewire:load', function () { feather.replace(); });
+        document.addEventListener('livewire:navigated', function () { feather.replace(); });
     </script>
 </body>
 </html>

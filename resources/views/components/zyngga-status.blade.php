@@ -6,50 +6,42 @@
 ])
 
 @php
-    $baseClasses = "inline-flex items-center justify-center rounded-full transition-all duration-200 whitespace-nowrap gap-1";
+    $size = strtoupper($size);
+    $baseClasses = "inline-flex items-center justify-center rounded-full transition-all duration-200 whitespace-nowrap gap-1.5";
     
-    // Type colors for M and L sizes (with backgrounds)
-    $typeClasses = [
+    // Exact colors from Figma tokens
+    $typeClasses = match($type) {
         'primary'   => 'bg-zyngga-blue-300 text-white',
-        'secondary' => 'bg-zyngga-blue-50 text-zyngga-blue-300',
-        'success'   => 'bg-[#21B557]/10 text-[#21B557]',
-        'warning'   => 'bg-[#F2AF00]/10 text-[#F2AF00]',
-        'error'     => 'bg-[#EC0F04]/10 text-[#EC0F04]',
+        'secondary' => 'bg-[#E8EFF9] text-[#1660C1]',
+        'success'   => 'bg-[#E9F7EE] text-[#21B557]',
+        'warning'   => 'bg-[#FEF7E6] text-[#F2AF00]',
+        'error'     => 'bg-[#FEE7E6] text-[#DB0B00]',
         'neutral'   => 'bg-[#F4F4F4] text-[#808080]',
-    ][$type] ?? 'bg-zyngga-blue-300 text-white';
+        default     => 'bg-zyngga-blue-300 text-white',
+    };
 
-    // Size dimensions
-    $sizeClasses = [
+    // Height and Horizontal Padding from Figma metadata
+    $sizeClasses = match($size) {
         'L' => 'h-8 px-3',
-        'M' => 'h-7 px-2',
-        'S' => 'h-7', // No background for S size in the bottom row
-    ][$size] ?? 'h-8 px-3';
-
-    // Overwrite for 'S' size: transparent background, specific text colors
-    if ($size === 'S') {
-        $typeClasses = match($type) {
-            'primary', 'secondary' => 'bg-transparent text-zyngga-blue-300',
-            'success'   => 'bg-transparent text-[#21B557]',
-            'warning'   => 'bg-transparent text-[#F2AF00]',
-            'error'     => 'bg-transparent text-[#EC0F04]',
-            'neutral'   => 'bg-transparent text-[#808080]',
-            default     => 'bg-transparent text-zyngga-blue-300',
-        };
-    }
+        'M' => 'h-7 px-2.5',
+        'S' => 'h-7 px-2',
+        default => 'h-8 px-3',
+    };
 
     $iconSize = match($size) {
-        'L' => 'w-[18px] h-[18px]',
-        'M', 'S' => 'w-[14px] h-[14px]',
-        default => 'w-[18px] h-[18px]',
+        'L' => 'w-4 h-4',
+        'M', 'S' => 'w-3.5 h-3.5',
+        default => 'w-4 h-4',
     };
 
-    $textVariant = match($size) {
-        'L' => 'sm', // 14px
-        'M', 'S' => 'xs', // 12px
-        default => 'sm',
+    // Typography: medium (600) for all except maybe specific cases
+    $textWeight = 'font-medium';
+    
+    $textSize = match($size) {
+        'L' => 'text-[14px]',
+        'M', 'S' => 'text-[12px]',
+        default => 'text-[14px]',
     };
-
-    $textWeight = ($size === 'S') ? 'medium' : 'semibold';
 
     $finalClasses = $baseClasses . ' ' . $typeClasses . ' ' . $sizeClasses . ' ' . ($attributes->get('class') ?? '');
 @endphp
@@ -59,7 +51,7 @@
         <i data-feather="{{ $icon }}" class="{{ $iconSize }} shrink-0"></i>
     @endif
     
-    <span class="leading-none {{ $size === 'S' ? 'font-medium text-[12px]' : ($size === 'L' ? 'font-semibold text-[14px]' : 'font-semibold text-[12px]') }}">
+    <span class="leading-none {{ $textWeight }} {{ $textSize }}">
         {{ $label ?: $slot }}
     </span>
 </div>

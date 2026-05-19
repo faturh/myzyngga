@@ -4,19 +4,22 @@
     'icon'         => null,      // feather icon name
     'iconPosition' => 'none',    // none, left, right, only
     'label'        => '',
+    'label2'       => null,      // sub-label for double text buttons
     'type'         => 'button',  // button, submit, a
     'href'         => '#',
     'disabled'     => false,
 ])
 
 @php
-    $baseClasses = "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
+    $baseClasses = "inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
     
     $variantClasses = [
         'primary'   => 'bg-zyngga-blue-300 text-white hover:bg-zyngga-blue-400 active:bg-zyngga-blue-500',
         'secondary' => 'bg-white border border-zyngga-blue-300 text-zyngga-blue-300 hover:bg-zyngga-neutral-200 active:bg-zyngga-neutral-300',
         'tertiary'  => 'bg-transparent text-zyngga-blue-300 hover:bg-zyngga-blue-50 active:bg-zyngga-neutral-300',
         'neutral'   => 'bg-transparent text-zyngga-neutral-500 hover:bg-zyngga-neutral-200 active:bg-zyngga-neutral-300',
+        'danger'    => 'bg-zyngga-status-danger text-white hover:bg-red-600 active:bg-red-700',
+        'secondary-danger' => 'bg-white border border-zyngga-status-danger text-zyngga-status-danger hover:bg-red-50 active:bg-red-100',
     ][$variant] ?? $variantClasses['primary'];
 
     $sizeClasses = [
@@ -50,7 +53,12 @@
         @endif
         
         @if ($iconPosition !== 'only')
-            <span>{{ $label ?: $slot }}</span>
+            <div class="flex flex-col items-center">
+                <span>{{ $label ?: $slot }}</span>
+                @if($label2)
+                    <span class="text-[10px] opacity-80 font-normal leading-tight">{{ $label2 }}</span>
+                @endif
+            </div>
         @endif
 
         @if ($icon && $iconPosition === 'right')
@@ -64,7 +72,12 @@
         @endif
         
         @if ($iconPosition !== 'only')
-            <span>{{ $label ?: $slot }}</span>
+            <div class="flex flex-col items-center">
+                <span>{{ $label ?: $slot }}</span>
+                @if($label2)
+                    <span class="text-[10px] opacity-80 font-normal leading-tight">{{ $label2 }}</span>
+                @endif
+            </div>
         @endif
 
         @if ($icon && $iconPosition === 'right')

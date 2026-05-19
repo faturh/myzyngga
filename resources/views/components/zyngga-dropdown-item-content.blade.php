@@ -1,6 +1,6 @@
 @if($icon)
     <div class="shrink-0 flex items-center justify-center">
-        <i data-feather="{{ $icon }}" class="{{ $size === 's' ? 'w-4 h-4' : 'w-5 h-5' }} text-zyngga-blue-300"></i>
+        <i data-feather="{{ $icon }}" class="{{ $size === 's' ? 'w-4 h-4' : 'w-5 h-5' }} text-[#0F0F0F]"></i>
     </div>
 @endif
 
@@ -19,7 +19,7 @@
         
         @if($showChevron)
             <div class="shrink-0">
-                <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-neutral-400"></i>
+                <i data-feather="chevron-right" class="w-5 h-5 text-[#0F0F0F]"></i>
             </div>
         @endif
     </div>

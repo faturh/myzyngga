@@ -8,6 +8,8 @@ storage/framework/sessions/*
 storage/*.key
 /database/database.sqlite
 .env.backup
+.env.production
+storage/logs/*.log
 .phpunit.result.cache
 docker-compose.override.yml
 homestead.json
@@ -18,4 +20,7 @@ yarn-error.log
 .vscode/
 .figma_assets/
 .gemini/
+bootstrap/cache/*.php
+bootstrap/cache/*.tmp
+!bootstrap/cache/.gitkeep
 config.bat

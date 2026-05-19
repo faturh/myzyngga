@@ -34,9 +34,13 @@ class OrderWebService
 
     public function pickupLocationData(string $service): array
     {
+        $user = auth()->user();
+        $savedAddresses = $user ? $user->addresses : collect();
+
         return [
             'service' => $service,
             'serviceLabel' => self::SERVICE_LABELS[$service] ?? ucfirst($service),
+            'savedAddresses' => $savedAddresses,
         ];
     }
 
@@ -76,6 +80,10 @@ class OrderWebService
             'detailAddress' => session('order.detail_address', ''),
             'lat' => session('order.lat', ''),
             'lng' => session('order.lng', ''),
+            'pickupDate' => session('order.pickup_date', ''),
+            'pickupTime' => session('order.pickup_time', ''),
+            'parfum' => session('order.parfum', ''),
+            'note' => session('order.note', ''),
         ];
     }
 
@@ -96,10 +104,10 @@ class OrderWebService
         ]);
 
         $user = $request->user();
-        $pelanggan = $this->customerRepository->upsertProfileForUser($user, [
-            'nama' => $user->name,
+        $pelanggan = $this->customerRepository->upsertProfile($user, [
+            'nama' => $user ? $user->name : $request->input('customer_name'),
             'jenis_kelamin' => 'L',
-            'telepon' => '-',
+            'telepon' => $user ? ($user->phone ?? '-') : $request->input('customer_phone'),
             'alamat' => $data['address'],
         ]);
 
@@ -113,7 +121,7 @@ class OrderWebService
             return redirect()->back()->withErrors(['cabang' => 'Cabang belum tersedia.']);
         }
 
-        $orderService->createOrder(new CreateOrderData(
+        $order = $orderService->createOrder(new CreateOrderData(
             pelangganId: (int) $pelanggan->id,
             cabangId: (int) $cabangId,
             layananPrioritasId: (int) $layananPrioritasId,
@@ -127,9 +135,114 @@ class OrderWebService
             estimatedTotal: $this->resolveEstimatedTotal($data['selected_service_id']),
         ));
 
-        session()->forget(['order.service', 'order.address', 'order.detail_address', 'order.lat', 'order.lng']);
+        session()->forget('order');
 
-        return redirect()->route('dashboard')->with('success', 'Pesanan Anda berhasil dibuat!');
+        return redirect()->route('order.detail', ['id' => $order->id])->with('success', 'Pesanan Anda berhasil dibuat!');
+    }
+
+    public function pickupDetailsData(Request $request, string $service): array
+    {
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+        $address = $request->query('address');
+        $addressId = $request->query('address_id');
+
+        if (!$lat || !$lng || !$address) {
+            return [];
+        }
+
+        $existingAddress = null;
+        $user = auth()->user();
+        if ($addressId && $user) {
+            $existingAddress = $user->addresses()->find($addressId);
+        }
+
+        return compact('service', 'lat', 'lng', 'address', 'existingAddress');
+    }
+
+    public function storePickupDetails(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'service'        => 'required|string',
+            'label'          => 'required|string|max:255',
+            'address_detail' => 'required|string',
+            'latitude'       => 'required|numeric',
+            'longitude'      => 'required|numeric',
+            'note'           => 'nullable|string|max:255',
+            'address_id'     => 'nullable|exists:addresses,id',
+            'save_address'   => 'nullable|boolean',
+        ]);
+
+        $user = auth()->user();
+
+        if ($user && ($request->boolean('save_address') || $request->filled('address_id'))) {
+            if ($request->filled('address_id')) {
+                $address = $user->addresses()->find($request->address_id);
+                if ($address) {
+                    $address->update([
+                        'label' => $request->label,
+                        'address_detail' => $request->address_detail,
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                        'note' => $request->note,
+                    ]);
+                }
+            } else {
+                if ($user->addresses()->count() < 5) {
+                    $user->addresses()->create([
+                        'label' => $request->label,
+                        'address_detail' => $request->address_detail,
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                        'note' => $request->note,
+                        'is_primary' => $user->addresses()->count() === 0,
+                    ]);
+                }
+            }
+        }
+
+        session([
+            'order.service'        => $request->service,
+            'order.address'        => $request->address_detail,
+            'order.detail_address' => $request->note ?? '',
+            'order.lat'            => (string) $request->latitude,
+            'order.lng'            => (string) $request->longitude,
+        ]);
+
+        return redirect()->route('order.booking');
+    }
+
+    public function checkOrder(Request $request)
+    {
+        $request->validate([
+            'query' => 'required|string',
+            'phone_last_4' => 'required|digits:4',
+        ], [
+            'query.required' => 'Nama atau ID Delivery tidak boleh kosong.',
+            'phone_last_4.required' => '4 digit terakhir nomor WhatsApp tidak boleh kosong.',
+            'phone_last_4.digits' => 'Masukkan tepat 4 digit terakhir nomor WhatsApp.',
+        ]);
+
+        // Simple logic for searching and verifying order (placeholder)
+        if (str_contains(strtolower($request->input('query')), 'rafi') || str_contains(strtoupper($request->input('query')), 'ZYG-12345')) {
+            $orders = [
+                [
+                    'id' => 'IJK902H8MAHD',
+                    'customer_name' => 'Rafi Syihan',
+                    'phone_last_4' => '7890',
+                    'service' => 'Express',
+                    'date' => 'Minggu, 24 Feb | 12.09',
+                    'status' => 'Diproses',
+                    'progress' => 56,
+                    'total' => 33000
+                ]
+            ];
+            return back()->with('orders', $orders)->withInput();
+        }
+
+        return back()->withErrors([
+            'query' => 'Pesanan tidak ditemukan.'
+        ])->withInput();
     }
 
     private function resolvePickupDate(string $pickupDate): string

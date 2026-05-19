@@ -39,8 +39,38 @@ export default {
                         300: '#CCCCCC',
                         400: '#808080',
                         500: '#0F0F0F',
+                    },
+                    status: {
+                        success: '#21b557',
+                        warning: '#f2af00',
+                        error: '#ec0f04',
+                        info: '#2563eb',
+                        danger: '#ec0f04',
                     }
                 }
+            },
+            animation: {
+                'gradient-x': 'gradient-x 5s ease infinite',
+            },
+            keyframes: {
+                'gradient-x': {
+                    '0%, 100%': {
+                        'background-size': '200% 200%',
+                        'background-position': 'left center'
+                    },
+                    '50%': {
+                        'background-size': '200% 200%',
+                        'background-position': 'right center'
+                    },
+                },
+            },
+            boxShadow: {
+                'sm': '0 0 4px rgba(0, 0, 0, 0.08)',
+                'DEFAULT': '0 0 8px rgba(0, 0, 0, 0.08)',
+                'md': '0 0 12px rgba(0, 0, 0, 0.08)',
+                'lg': '0 0 16px rgba(0, 0, 0, 0.08)',
+                'xl': '0 0 24px rgba(0, 0, 0, 0.08)',
+                '2xl': '0 0 32px rgba(0, 0, 0, 0.08)',
             }
         },
     },
