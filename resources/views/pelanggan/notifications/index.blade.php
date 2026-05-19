@@ -84,85 +84,34 @@
         <main class="flex-1 flex flex-col">
             <div class="w-full max-w-5xl mx-auto px-5 py-[6px] flex flex-col gap-3">
                 
-                {{-- STATUS: Pesanan Selesai --}}
-                <div x-show="activeTab === 'Semua' || activeTab === 'Status'" class="notif-card">
+                @forelse($notifications as $notification)
+                <div x-show="activeTab === 'Semua' || activeTab === '{{ $notification['category'] }}'" class="notif-card">
+                    <div class="notif-icon-box {{ $notification['box_class'] }}">
+                        <i data-feather="{{ $notification['icon'] }}" class="w-5 h-5 {{ $notification['icon_class'] }}"></i>
+                    </div>
+                    <div class="flex-1 space-y-1 min-w-0">
+                        <div class="flex justify-between items-start gap-2">
+                            <x-zyngga-text variant="sm" weight="semibold" class="truncate">{{ $notification['title'] }}</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">{{ $notification['time'] }}</x-zyngga-text>
+                        </div>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
+                            {{ $notification['message'] }}
+                        </x-zyngga-text>
+                    </div>
+                </div>
+                @empty
+                <div class="notif-card">
                     <div class="notif-icon-box bg-[#E8EFF9]">
-                        <i data-feather="check-circle" class="w-5 h-5 text-zyngga-blue-300"></i>
+                        <i data-feather="bell" class="w-5 h-5 text-zyngga-blue-300"></i>
                     </div>
                     <div class="flex-1 space-y-1 min-w-0">
-                        <div class="flex justify-between items-start gap-2">
-                            <x-zyngga-text variant="sm" weight="semibold" class="truncate">Pesanan Selesai!</x-zyngga-text>
-                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">Baru saja</x-zyngga-text>
-                        </div>
+                        <x-zyngga-text variant="sm" weight="semibold" class="truncate">Belum ada notifikasi</x-zyngga-text>
                         <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
-                            Pesanan Quick Anda (IJK902H8MAHD) telah selesai dicuci dan siap diambil.
+                            Notifikasi pesanan akan muncul setelah kamu membuat transaksi.
                         </x-zyngga-text>
                     </div>
                 </div>
-
-                {{-- TRANSAKSI: Pembayaran Berhasil --}}
-                <div x-show="activeTab === 'Semua' || activeTab === 'Transaksi'" class="notif-card">
-                    <div class="notif-icon-box bg-[#E9F7EE]">
-                        <i data-feather="credit-card" class="w-5 h-5 text-zyngga-status-success"></i>
-                    </div>
-                    <div class="flex-1 space-y-1 min-w-0">
-                        <div class="flex justify-between items-start gap-2">
-                            <x-zyngga-text variant="sm" weight="semibold" class="truncate">Pembayaran Berhasil</x-zyngga-text>
-                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">15 menit lalu</x-zyngga-text>
-                        </div>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
-                            Pembayaran untuk pesanan #IJK902H8MAHD sebesar Rp33.000 telah kami terima.
-                        </x-zyngga-text>
-                    </div>
-                </div>
-
-                {{-- STATUS: Kurir Menuju Lokasi --}}
-                <div x-show="activeTab === 'Semua' || activeTab === 'Status'" class="notif-card">
-                    <div class="notif-icon-box bg-[#E8EFF9]">
-                        <i data-feather="truck" class="w-5 h-5 text-zyngga-blue-300"></i>
-                    </div>
-                    <div class="flex-1 space-y-1 min-w-0">
-                        <div class="flex justify-between items-start gap-2">
-                            <x-zyngga-text variant="sm" weight="semibold" class="truncate">Kurir Menuju Lokasi</x-zyngga-text>
-                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">2 jam yang lalu</x-zyngga-text>
-                        </div>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
-                            Kurir sedang menuju lokasi Anda untuk menjemput pakaian. Mohon tunggu ya!
-                        </x-zyngga-text>
-                    </div>
-                </div>
-
-                {{-- PROMO: Diskon --}}
-                <div x-show="activeTab === 'Semua' || activeTab === 'Promo'" class="notif-card">
-                    <div class="notif-icon-box bg-[#FDF4E9]">
-                        <i data-feather="gift" class="w-5 h-5 text-zyngga-yellow-300"></i>
-                    </div>
-                    <div class="flex-1 space-y-1 min-w-0">
-                        <div class="flex justify-between items-start gap-2">
-                            <x-zyngga-text variant="sm" weight="semibold" class="truncate">Promo Khusus Member</x-zyngga-text>
-                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">1 hari yang lalu</x-zyngga-text>
-                        </div>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
-                            Dapatkan diskon 20% untuk semua layanan Express hari ini. Gunakan kode: ZYNGGA20
-                        </x-zyngga-text>
-                    </div>
-                </div>
-
-                {{-- TRANSAKSI: Tagihan --}}
-                <div x-show="activeTab === 'Semua' || activeTab === 'Transaksi'" class="notif-card">
-                    <div class="notif-icon-box bg-[#E9F7EE]">
-                        <i data-feather="file-text" class="w-5 h-5 text-zyngga-status-success"></i>
-                    </div>
-                    <div class="flex-1 space-y-1 min-w-0">
-                        <div class="flex justify-between items-start gap-2">
-                            <x-zyngga-text variant="sm" weight="semibold" class="truncate">Tagihan Baru Tersedia</x-zyngga-text>
-                            <x-zyngga-text variant="xs" color="neutral-500" class="shrink-0">2 hari yang lalu</x-zyngga-text>
-                        </div>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
-                            Pesanan Anda telah selesai ditimbang. Segera lakukan pembayaran untuk proses selanjutnya.
-                        </x-zyngga-text>
-                    </div>
-                </div>
+                @endforelse
 
             </div>
         </main>

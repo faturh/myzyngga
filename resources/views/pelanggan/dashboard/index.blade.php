@@ -97,7 +97,7 @@
                  PESANAN KAMU CARD (active order)
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
-                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail') }}'">
+                <div class="bg-white rounded-lg p-4 space-y-4 {{ $activeOrder ? 'cursor-pointer' : '' }}" @if($activeOrder) onclick="window.location.href='{{ route('order.detail', ['id' => $activeOrder['id']]) }}'" @endif>
                     {{-- Section heading --}}
                     <div class="flex items-center justify-between h-8">
                         <x-zyngga-text variant="base" weight="medium">Pesanan Kamu</x-zyngga-text>
@@ -112,31 +112,32 @@
                     </div>
 
                     {{-- Order info row --}}
+                    @if($activeOrder)
                     <div class="space-y-3">
                         <div class="flex items-start justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                    <x-zyngga-service-icon service="Express" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                    <x-zyngga-service-icon :service="$activeOrder['service']" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
                                 </div>
                                 <div class="flex flex-col">
-                                    <x-zyngga-text variant="lg" weight="medium">Express</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                                    <x-zyngga-text variant="lg" weight="medium">{{ $activeOrder['service'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" color="neutral-500">{{ $activeOrder['date'] }}</x-zyngga-text>
                                 </div>
                             </div>
-                            <x-zyngga-status type="secondary" size="M" icon="loader" label="Diproses" />
+                            <x-zyngga-status type="secondary" size="M" :icon="$activeOrder['status_icon']" :label="$activeOrder['status']" />
                         </div>
                         
                         <div class="flex items-center gap-4 mb-4">
                             <div class="progress-container flex-1">
-                                <div class="progress-bar" style="width: 56%"></div>
+                                <div class="progress-bar" style="width: {{ $activeOrder['progress'] }}%"></div>
                             </div>
-                            <x-zyngga-text variant="sm" weight="medium">56%</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="medium">{{ $activeOrder['progress'] }}%</x-zyngga-text>
                         </div>
 
                         <div class="flex items-center justify-between">
                             <div>
                                 <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
-                                <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
+                                <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($activeOrder['total'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
                             <x-zyngga-button 
                                 type="a"
@@ -151,33 +152,39 @@
                             />
                         </div>
                     </div>
+                    @else
+                    <div class="py-2">
+                        <x-zyngga-text variant="sm" color="neutral-500">Belum ada pesanan aktif.</x-zyngga-text>
+                    </div>
+                    @endif
                 </div>
             </div>
 
             {{-- ─────────────────────────────────────────────────────────
                  PESANAN TERAKHIR CARD
             ───────────────────────────────────────────────────────── --}}
+            @if($latestOrder)
             <div class="px-5 py-[6px]">
-                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail') }}'">
+                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail', ['id' => $latestOrder['id']]) }}'">
                     <x-zyngga-text variant="base" weight="medium" class="h-8 flex items-center">Pesanan Terakhir</x-zyngga-text>
 
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                <x-zyngga-service-icon service="Quick" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                <x-zyngga-service-icon :service="$latestOrder['service']" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
                             </div>
                             <div class="flex flex-col">
-                                <x-zyngga-text variant="lg" weight="medium">Quick</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">Minggu, 24 Feb | 12.09</x-zyngga-text>
+                                <x-zyngga-text variant="lg" weight="medium">{{ $latestOrder['service'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $latestOrder['date'] }}</x-zyngga-text>
                             </div>
                         </div>
-                        <x-zyngga-status type="secondary" size="M" icon="check" label="Selesai" />
+                        <x-zyngga-status type="secondary" size="M" :icon="$latestOrder['status_icon']" :label="$latestOrder['status']" />
                     </div>
 
                     <div class="flex items-end justify-between">
                         <div>
                             <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
-                            <x-zyngga-text variant="base" weight="medium">Rp33.000</x-zyngga-text>
+                            <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($latestOrder['total'], 0, ',', '.') }}</x-zyngga-text>
                         </div>
                         <x-zyngga-button 
                             variant="primary"
@@ -188,6 +195,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             {{-- ─────────────────────────────────────────────────────────
                  ALUR PEMESANAN CARD
