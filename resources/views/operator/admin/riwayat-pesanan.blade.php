@@ -483,12 +483,9 @@
                                                 </button>
                                             </form>
                                             
-                                            <form action="{{ route('admin.riwayat-pesanan.proses', $item->id) }}" method="POST" class="flex-1 sm:flex-none">
-                                                @csrf
-                                                <button type="submit" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all">
-                                                    Proses Pesanan
-                                                </button>
-                                            </form>
+                                            <a href="{{ route('admin.riwayat-pesanan.proses-form', $item->id) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all block text-center">
+                                                 Proses Pesanan
+                                             </a>
                                         </div>
                                     @endif
                                 </div>

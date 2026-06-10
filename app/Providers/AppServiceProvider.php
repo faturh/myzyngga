@@ -13,6 +13,8 @@ use App\Modules\Payment\Domain\Repositories\PaymentRepositoryInterface;
 use App\Modules\Payment\Infrastructure\Persistence\EloquentPaymentRepository;
 use App\Modules\Transaksi\Domain\Repositories\TransaksiDashboardRepositoryInterface;
 use App\Modules\Transaksi\Infrastructure\Persistence\EloquentTransaksiDashboardRepository;
+use App\Modules\Transaksi\Domain\Repositories\ProsesTransaksiRepositoryInterface;
+use App\Modules\Transaksi\Infrastructure\Persistence\EloquentProsesTransaksiRepository;
 use App\Models\Transaksi;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentRepositoryInterface::class, EloquentPaymentRepository::class);
         $this->app->bind(AdminRepositoryInterface::class, EloquentAdminRepository::class);
         $this->app->bind(TransaksiDashboardRepositoryInterface::class, EloquentTransaksiDashboardRepository::class);
+        $this->app->bind(ProsesTransaksiRepositoryInterface::class, EloquentProsesTransaksiRepository::class);
     }
 
     /**

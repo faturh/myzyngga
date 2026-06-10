@@ -7,8 +7,14 @@ use App\Models\Operator;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 
+use App\Modules\Transaksi\Application\Services\ProsesTransaksiService;
+
 class OperatorController extends Controller
 {
+    public function __construct(
+        private readonly ProsesTransaksiService $prosesService
+    ) {}
+
     /**
      * Display the operator admin dashboard with dynamic metrics.
      */
@@ -96,15 +102,54 @@ class OperatorController extends Controller
     }
 
     /**
-     * Process order (update status to 'Proses').
+     * Show the order processing form.
      */
-    public function prosesTransaksi(string $id)
+    public function prosesForm(string $id)
     {
-        $transaksi = Transaksi::findOrFail($id);
-        $transaksi->status = 'Proses';
-        $transaksi->save();
+        try {
+            $transaksi = $this->prosesService->getProsesFormData($id);
+            
+            // Fetch available laundry items (JenisPakaian) for this branch
+            $itemsAvailable = \App\Models\JenisPakaian::where('cabang_id', $transaksi->cabang_id)->get();
+            if ($itemsAvailable->isEmpty()) {
+                $itemsAvailable = \App\Models\JenisPakaian::get();
+            }
 
-        return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
+            return view('operator.admin.proses-transaksi', compact('transaksi', 'itemsAvailable'));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.riwayat-pesanan')->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Process order (update status to 'Proses' and store items/weights).
+     */
+    public function prosesTransaksi(Request $request, string $id)
+    {
+        try {
+            $validated = $request->validate([
+                'actual_weight' => 'required|numeric|min:0.01',
+                'minimum_weight' => 'required|numeric|min:0',
+                'price_per_kg' => 'required|numeric|min:0',
+                'items' => 'required|array|min:1',
+                'items.*.nama_item' => 'required|string|max:255',
+                'items.*.qty' => 'required|integer|min:1',
+            ], [
+                'actual_weight.required' => 'Berat timbangan wajib diisi.',
+                'actual_weight.min' => 'Berat timbangan harus lebih besar dari 0 kg.',
+                'items.required' => 'List item laundry minimal harus berisi satu item.',
+                'items.min' => 'List item laundry minimal harus berisi satu item.',
+                'items.*.nama_item.required' => 'Nama item laundry wajib diisi.',
+                'items.*.qty.min' => 'Jumlah/Qty item minimal adalah 1.',
+            ]);
+
+            $this->prosesService->prosesTransaksi($id, $validated);
+
+            $transaksi = Transaksi::findOrFail($id);
+            return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
     }
 
     /**
