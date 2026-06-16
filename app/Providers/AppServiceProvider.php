@@ -53,5 +53,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('verify-payment', function (User $user) {
             return $user->isAdmin();
         });
+
+        if ($this->app->environment('production') || env('VERCEL') == '1') {
+            \URL::forceScheme('https');
+        }
     }
 }
