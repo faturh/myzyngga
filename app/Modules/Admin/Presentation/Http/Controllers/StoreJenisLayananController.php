@@ -22,7 +22,6 @@ class StoreJenisLayananController
                 'id' => $jenisLayanan->id,
                 'nama' => $jenisLayanan->nama,
                 'deskripsi' => $jenisLayanan->deskripsi,
-                'for_gamis' => (bool) $jenisLayanan->for_gamis,
                 'cabang_id' => $jenisLayanan->cabang_id,
             ],
         ], 201);

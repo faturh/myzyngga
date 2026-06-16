@@ -38,7 +38,7 @@ class PublicNotaLookupController
         return [
             [
                 'id' => $order->id,
-                'nota_pelanggan' => $order->nota_pelanggan,
+                'nota_pelanggan' => $order->nota,
                 'tanggal' => optional($order->waktu)->toDateString(),
                 'cabang_nama' => $order->cabang->nama ?? '-',
                 'pelanggan_nama' => $order->pelanggan->nama ?? '-',

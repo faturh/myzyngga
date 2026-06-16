@@ -28,8 +28,7 @@ class CreateOrderData
         $notaSuffix = strtoupper(substr(str_replace('-', '', (string) Str::uuid()), 0, 8));
 
         return [
-            'nota_layanan' => 'LYN-'.$notaSuffix,
-            'nota_pelanggan' => 'PLG-'.$notaSuffix,
+            'nota' => 'PLG-'.$notaSuffix,
             'waktu' => $now,
             'pickup_address' => $this->pickupAddress,
             'pickup_detail_address' => $this->pickupDetailAddress,
