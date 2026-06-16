@@ -24,3 +24,5 @@ bootstrap/cache/*.php
 bootstrap/cache/*.tmp
 !bootstrap/cache/.gitkeep
 config.bat
+.DS_Store
+
