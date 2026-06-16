@@ -6,7 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use App\Shared\Exceptions\DomainException;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
@@ -38,3 +40,19 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $exception->status());
         });
     })->create();
+
+if (isset($_ENV['VERCEL'])) {
+    $storagePath = '/tmp/storage';
+    if (!is_dir($storagePath)) {
+        mkdir($storagePath, 0755, true);
+        mkdir($storagePath . '/framework', 0755, true);
+        mkdir($storagePath . '/framework/views', 0755, true);
+        mkdir($storagePath . '/framework/cache', 0755, true);
+        mkdir($storagePath . '/framework/sessions', 0755, true);
+        mkdir($storagePath . '/logs', 0755, true);
+    }
+    $app->useStoragePath($storagePath);
+}
+
+return $app;
+

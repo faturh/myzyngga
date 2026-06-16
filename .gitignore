@@ -1,7 +1,7 @@
 node_modules/
 vendor/
 public/build/
-public/hot/
+public/hot
 storage/framework/views/*
 storage/framework/cache/*
 storage/framework/sessions/*
@@ -24,3 +24,5 @@ bootstrap/cache/*.php
 bootstrap/cache/*.tmp
 !bootstrap/cache/.gitkeep
 config.bat
+.DS_Store
+
