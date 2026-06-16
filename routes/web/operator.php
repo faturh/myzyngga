@@ -14,6 +14,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [TransaksiController::class, 'index'])->name('transaksi');
         Route::get('/jadwal', [TransaksiController::class, 'indexJadwal'])->name('transaksi.jadwal');
         Route::get('/lihat/{transaksi}', [TransaksiController::class, 'viewDetailTransaksi'])->name('transaksi.view');
+        Route::post('/lihat/{transaksi}/bukti-timbangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\UploadBuktiTimbanganController::class, 'upload'])->name('transaksi.upload_bukti_timbangan');
         Route::get('/tambah', [TransaksiController::class, 'createTransaksiCabang'])->name('transaksi.create');
         Route::post('/simpan', [TransaksiController::class, 'storeTransaksiCabang'])->name('transaksi.store');
         Route::get('/ubah/{transaksi}', [TransaksiController::class, 'editTransaksiCabang'])->name('transaksi.edit');
@@ -51,11 +52,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/transaksi/lurah/{cabang}/lihat/{transaksi}/layanan/{detailTransaksi}', [DetailLayananTransaksiController::class, 'viewDetailLayanan'])
         ->name('transaksi.lurah.view.layanan');
 
-    Route::prefix('transaksi-gamis')->group(function () {
-        Route::get('/', [TransaksiController::class, 'transaksiGamisHarian'])->name('transaksi-gamis');
-        Route::get('/semua', [TransaksiController::class, 'transaksiGamisSemua'])->name('transaksi-gamis.semua');
-        Route::get('/lihat/{transaksi}', [TransaksiController::class, 'viewDetailTransaksiGamis'])->name('transaksi-gamis.view');
-        Route::get('/lihat/{transaksi}/layanan/{detailTransaksi}', [DetailLayananTransaksiController::class, 'viewDetailLayananGamis'])
-            ->name('transaksi-gamis.view.layanan');
+    Route::prefix('laporan')->group(function () {
+        Route::get('/pendapatan-laundry', [\App\Http\Controllers\LaporanController::class, 'laporanPendapatanLaundry'])->name('laporan.pendapatan.laundry');
+        Route::post('/pendapatan-laundry/pdf', [\App\Http\Controllers\LaporanController::class, 'pdfLaporanPendapatanLaundry'])->name('laporan.pendapatan.laundry.pdf');
+        Route::get('/pelanggan', [\App\Http\Controllers\LaporanController::class, 'laporanPelanggan'])->name('laporan.pelanggan');
+        Route::post('/pelanggan/pdf', [\App\Http\Controllers\LaporanController::class, 'pdfLaporanPelanggan'])->name('laporan.pelanggan.pdf');
     });
+
 });
+

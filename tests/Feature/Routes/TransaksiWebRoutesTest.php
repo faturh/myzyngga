@@ -23,7 +23,7 @@ class TransaksiWebRoutesTest extends TestCase
         $this->assertTrue(Route::has('transaksi.cetak-struk'));
     }
 
-    public function test_transaksi_lurah_and_gamis_routes_are_registered(): void
+    public function test_transaksi_lurah_routes_are_registered(): void
     {
         $this->assertTrue(Route::has('transaksi.lurah'));
         $this->assertTrue(Route::has('transaksi.lurah.cabang'));
@@ -37,9 +37,5 @@ class TransaksiWebRoutesTest extends TestCase
         $this->assertTrue(Route::has('transaksi.lurah.cabang.delete'));
         $this->assertTrue(Route::has('transaksi.lurah.cabang.edit.status'));
         $this->assertTrue(Route::has('transaksi.lurah.cabang.update.status'));
-        $this->assertTrue(Route::has('transaksi-gamis'));
-        $this->assertTrue(Route::has('transaksi-gamis.semua'));
-        $this->assertTrue(Route::has('transaksi-gamis.view'));
-        $this->assertTrue(Route::has('transaksi-gamis.view.layanan'));
     }
 }

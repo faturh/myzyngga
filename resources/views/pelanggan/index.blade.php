@@ -330,7 +330,7 @@
                         $("#hasilCek").html(`
                             <p class="text-slate-800 mb-4 mt-1 leading-relaxed">
                                 Nota:
-                                <span class="text-blue-600 font-semibold"> `+ data[0].nota_pelanggan +`</span>
+                                <span class="text-blue-600 font-semibold"> `+ data[0].nota +`</span>
                             </p>
                             <p class="text-slate-800 mb-4 mt-1 leading-relaxed">
                                 Status:

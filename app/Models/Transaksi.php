@@ -15,8 +15,7 @@ class Transaksi extends Model
     public $incrementing = "true";
     public $timestamps = "true";
     protected $fillable = [
-        'nota_layanan',
-        'nota_pelanggan',
+        'nota',
         'waktu',
         'pickup_address',
         'pickup_detail_address',
@@ -35,11 +34,10 @@ class Transaksi extends Model
         'bayar',
         'kembalian',
         'status',
-        'konfirmasi_upah_gamis',
+        'bukti_timbangan',
         'layanan_prioritas_id',
         'pelanggan_id',
         'pegawai_id',
-        'gamis_id',
         'cabang_id',
     ];
 
@@ -73,11 +71,6 @@ class Transaksi extends Model
     public function pegawai()
     {
         return $this->belongsTo(User::class, 'pegawai_id');
-    }
-
-    public function gamis()
-    {
-        return $this->belongsTo(DetailGamis::class);
     }
 
     public function cabang()

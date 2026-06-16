@@ -32,8 +32,7 @@ class AdminService
         $suffix = strtoupper(substr(str_replace('-', '', (string) Str::uuid()), 0, 8));
 
         return $this->repository->createManualTransaksi([
-            'nota_layanan' => 'ADM-'.$suffix,
-            'nota_pelanggan' => 'ADP-'.$suffix,
+            'nota' => 'ZYG-'.$suffix,
             'waktu' => now(),
             'pickup_address' => $payload['pickup_address'] ?? null,
             'pickup_detail_address' => $payload['pickup_detail_address'] ?? null,
@@ -51,11 +50,9 @@ class AdminService
             'bayar' => (float) ($payload['bayar'] ?? 0),
             'kembalian' => (float) ($payload['kembalian'] ?? 0),
             'status' => $payload['status'] ?? 'created',
-            'konfirmasi_upah_gamis' => false,
             'layanan_prioritas_id' => (int) $payload['layanan_prioritas_id'],
             'pelanggan_id' => (int) $payload['pelanggan_id'],
             'pegawai_id' => (int) $payload['pegawai_id'],
-            'gamis_id' => $payload['gamis_id'] ?? null,
             'cabang_id' => (int) $payload['cabang_id'],
         ]);
     }

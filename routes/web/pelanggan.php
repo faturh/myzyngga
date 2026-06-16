@@ -61,6 +61,10 @@ Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
 
  Route::get('/order/{id}/request-delivery', [OrderPageController::class, 'requestDelivery'])
     ->name('order.request.delivery');
+ Route::get('/order/{id}/request-delivery/confirm', [OrderPageController::class, 'requestDeliveryConfirm'])
+    ->name('order.request.delivery.confirm');
+ Route::post('/order/{id}/request-delivery/store', [OrderPageController::class, 'storeRequestDelivery'])
+    ->name('order.request.delivery.store');
 
  Route::get('/order/{id}/complaint', [OrderPageController::class, 'complaint'])
     ->name('order.complaint');

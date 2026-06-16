@@ -33,7 +33,6 @@ class StoreTransaksiManualRequest extends FormRequest
             'pickup_time' => ['nullable', 'string', 'max:20'],
             'parfum' => ['nullable', 'string', 'max:100'],
             'catatan' => ['nullable', 'string', 'max:1000'],
-            'gamis_id' => ['nullable', 'integer', 'exists:detail_gamis,id'],
         ];
     }
 }

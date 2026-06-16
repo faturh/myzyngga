@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('gamis', function (Blueprint $table) {
-            $table->id();
-            $table->string('kartu_keluarga')->unique();
-            $table->text('alamat')->nullable();
-            $table->integer('rt');
-            $table->integer('rw');
-            $table->timestamps();
+        Schema::table('transaksi', function (Blueprint $table) {
+            $table->string('bukti_timbangan')->nullable()->after('status');
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('gamis');
+        Schema::table('transaksi', function (Blueprint $table) {
+            //
+        });
     }
 };

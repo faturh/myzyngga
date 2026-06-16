@@ -67,17 +67,11 @@
                         <x-kolom-status-transaksi :value="$transaksi->status" />
                     </label>
                     <div class="w-full flex flex-wrap justify-center gap-2 lg:flex-nowrap">
-                        <label class="form-control w-full lg:w-1/2">
+                        <label class="form-control w-full">
                             <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Nota Layanan</span>
+                                <span class="label-text font-semibold dark:text-slate-100">Nota</span>
                             </div>
-                            <input type="text" name="nota_layanan" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->nota_layanan }}" readonly />
-                        </label>
-                        <label class="form-control w-full lg:w-1/2">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Nota Pelanggan</span>
-                            </div>
-                            <input type="text" name="nota_pelanggan" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->nota_pelanggan }}" readonly />
+                            <input type="text" name="nota" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->nota }}" readonly />
                         </label>
                     </div>
                     <label class="form-control w-full">
@@ -93,25 +87,11 @@
                         <input type="text" name="pegawai_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->pelanggan->nama }}" readonly />
                     </label>
                     <div class="w-full flex flex-wrap justify-center gap-2 lg:flex-nowrap">
-                        <label class="form-control w-full lg:w-1/2">
+                        <label class="form-control w-full">
                             <div class="label">
                                 <span class="label-text font-semibold dark:text-slate-100">Pegawai</span>
                             </div>
-                            <input type="text" name="pegawai_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" readonly
-                                @if ($transaksi->pegawai->roles[0]->name == 'manajer_laundry')
-                                    value="{{ $transaksi->pegawai->manajer[0]->nama }}"
-                                @elseif ($transaksi->pegawai->roles[0]->name == 'pegawai_laundry')
-                                    value="{{ $transaksi->pegawai->pegawai[0]->nama }}"
-                                @elseif ($transaksi->pegawai->roles[0]->name == 'lurah')
-                                    value="{{ $transaksi->pegawai->lurah[0]->nama }}"
-                                @endif
-                            />
-                        </label>
-                        <label class="form-control w-full lg:w-1/2">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Gamis</span>
-                            </div>
-                            <input type="text" name="gamis_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->gamis_id ? $transaksi->gamis->nama : '-' }}" readonly />
+                            <input type="text" name="pegawai_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->pegawai->name }}" readonly />
                         </label>
                     </div>
                     <label class="form-control w-full">
@@ -169,6 +149,41 @@
                 </div>
             </div>
             {{-- Akhir Transaksi --}}
+
+            {{-- Awal Bukti Timbangan --}}
+            <div class="dark:bg-slate-850 dark:shadow-dark-xl relative mb-6 flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid border-transparent bg-white bg-clip-border shadow-xl">
+                <div class="border-b-solid mb-0 flex items-center justify-between rounded-t-2xl border-b-0 border-b-transparent p-6 pb-3">
+                    <h6 class="font-bold dark:text-white">Bukti Timbangan</h6>
+                </div>
+                <div class="flex-auto px-6 pb-6 pt-0">
+                    @if ($transaksi->bukti_timbangan)
+                        <div class="mb-4">
+                            <img src="{{ str_starts_with($transaksi->bukti_timbangan, 'http') ? $transaksi->bukti_timbangan : asset('storage/' . $transaksi->bukti_timbangan) }}" alt="Bukti Timbangan" class="max-w-full rounded-lg shadow-md md:max-w-md" />
+                        </div>
+                    @else
+                        <p class="text-sm text-slate-500 mb-4 dark:text-slate-400">Belum ada bukti timbangan yang diunggah.</p>
+                    @endif
+
+                    @if (!$cabang->deleted_at && $transaksi->status != 'Selesai' && $transaksi->status != 'Batal')
+                        <form action="{{ route('transaksi.upload_bukti_timbangan', $transaksi->id) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <label class="form-control w-full max-w-md">
+                                <div class="label">
+                                    <span class="label-text font-semibold dark:text-slate-100">Unggah Bukti Timbangan</span>
+                                </div>
+                                <input type="file" name="bukti_timbangan" class="file-input file-input-bordered w-full dark:file-input-info" required accept="image/*" />
+                                @error('bukti_timbangan')
+                                    <div class="label">
+                                        <span class="label-text-alt text-sm text-error">{{ $message }}</span>
+                                    </div>
+                                @enderror
+                            </label>
+                            <button type="submit" class="btn btn-warning mt-3 max-w-md text-slate-700">Simpan Bukti Timbangan</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+            {{-- Akhir Bukti Timbangan --}}
 
             {{-- Awal Tabel Detail Transaksi --}}
             <div class="dark:bg-slate-850 dark:shadow-dark-xl relative mb-6 flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid border-transparent bg-white bg-clip-border shadow-xl">

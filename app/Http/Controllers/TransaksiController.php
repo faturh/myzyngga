@@ -227,38 +227,6 @@ class TransaksiController extends Controller
         return view('operator.dashboard.transaksi.struk.index', $payload);
     }
 
-    public function konfirmasiUpah(Request $request)
-    {
-        $this->transaksiDashboardService->konfirmasiUpah($request);
-    }
-
-    public function transaksiGamisHarian()
-    {
-        try {
-            $payload = $this->transaksiDashboardService->transaksiGamisData(auth()->user(), true);
-
-            return view('operator.dashboard.transaksi.gamis.index', $payload);
-        } catch (DomainException $exception) {
-            abort($exception->status(), $exception->getMessage());
-        }
-    }
-
-    public function transaksiGamisSemua()
-    {
-        try {
-            $payload = $this->transaksiDashboardService->transaksiGamisData(auth()->user(), false);
-
-            return view('operator.dashboard.transaksi.gamis.index', $payload);
-        } catch (DomainException $exception) {
-            abort($exception->status(), $exception->getMessage());
-        }
-    }
-
-    public function viewDetailTransaksiGamis(Request $request)
-    {
-        $payload = $this->transaksiDashboardService->viewDetailTransaksiGamisData(auth()->user(), $request);
-
-        return view('operator.dashboard.transaksi.gamis.lihat', $payload);
-    }
 }
+
 
