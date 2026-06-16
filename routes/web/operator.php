@@ -14,6 +14,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [TransaksiController::class, 'index'])->name('transaksi');
         Route::get('/jadwal', [TransaksiController::class, 'indexJadwal'])->name('transaksi.jadwal');
         Route::get('/lihat/{transaksi}', [TransaksiController::class, 'viewDetailTransaksi'])->name('transaksi.view');
+        Route::post('/lihat/{transaksi}/bukti-timbangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\UploadBuktiTimbanganController::class, 'upload'])->name('transaksi.upload_bukti_timbangan');
         Route::get('/tambah', [TransaksiController::class, 'createTransaksiCabang'])->name('transaksi.create');
         Route::post('/simpan', [TransaksiController::class, 'storeTransaksiCabang'])->name('transaksi.store');
         Route::get('/ubah/{transaksi}', [TransaksiController::class, 'editTransaksiCabang'])->name('transaksi.edit');

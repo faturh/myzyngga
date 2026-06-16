@@ -83,10 +83,11 @@
                     }
 
                     if (items[2]) {
+                        let imgSrc = items[2].startsWith('http') ? items[2] : '{{ asset("storage") }}/' + items[2];
                         $("#foto-profile").html(`
                             <div class="avatar">
                                 <div class="w-24 rounded-full">
-                                    <img src="{{ asset("storage/` + items[2] + `") }}" alt="foto-profile" />
+                                    <img src="` + imgSrc + `" alt="foto-profile" />
                                 </div>
                             </div>
                         `);
