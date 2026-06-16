@@ -6,6 +6,17 @@
             let number = {{ $transaksi->detailTransaksi->count() +1 }};
             $('#addLayanan').click(function (e) {
                 e.preventDefault();
+                let jmlLayanan = document.getElementById('layananCart').children.length;
+                if (jmlLayanan >= 1) {
+                    Swal.fire({
+                        title: 'Info',
+                        text: 'Sistem saat ini membatasi maksimal 1 layanan per transaksi.',
+                        icon: 'info',
+                        confirmButtonColor: '#6419E6',
+                        confirmButtonText: 'OK',
+                    });
+                    return;
+                }
                 $("#layananCart").append(`
                     <div class="w-full flex flex-wrap justify-center items-center gap-2 lg:flex-nowrap">
                         <label class="form-control w-full lg:w-1/4">

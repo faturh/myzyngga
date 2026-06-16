@@ -186,6 +186,9 @@
                 {{-- ── SCROLLABLE CONTENT ──────────────────────────────────── --}}
                 <form method="POST" action="{{ route('order.confirm') }}" id="page-content" class="flex-1 flex flex-col">
         @csrf
+        @if ($errors->any())
+            <div x-init="$dispatch('toast', { message: '{{ $errors->first() }}', type: 'error' })"></div>
+        @endif
         <input type="hidden" name="service"        value="{{ $service }}">
         <input type="hidden" name="address"        value="{{ $address }}">
         <input type="hidden" name="lat"            value="{{ $lat }}">
@@ -194,13 +197,13 @@
         @php
             $todayCarbon = \Carbon\Carbon::now('Asia/Jakarta');
             $currentHour = $todayCarbon->hour;
-            $isTodayDisabled = $currentHour >= 18;
+            $isTodayDisabled = $currentHour >= 17;
             $defaultDate = $isTodayDisabled ? 'tomorrow' : 'today';
         @endphp
         <input type="hidden" name="pickup_date"   id="pickup_date"   value="{{ $pickupDate ?: $defaultDate }}">
-        <input type="hidden" name="pickup_time"   id="pickup_time"   value="{{ $pickupTime }}">
+        <input type="hidden" name="pickup_time"   id="pickup_time"   value="{{ $pickupTime ?: 'Standard' }}">
         <input type="hidden" name="parfum"        id="parfum"        value="{{ $parfum ?: 'Lavender' }}">
-        <input type="hidden" name="note"          id="note"          value="{{ $note }}">
+        <input type="hidden" name="catatan"       id="note"          value="{{ $note }}">
         
         {{-- ── LOKASI PICKUP ─────────────────────────────────── --}}
         <x-zyngga-card title="Lokasi Pickup">
@@ -271,6 +274,7 @@
                             <x-zyngga-input 
                                 name="customer_name"
                                 id="customer_name"
+                                value="{{ $customerName ?? '' }}"
                                 placeholder="Masukkan nama pelanggan"
                                 required
                             />
@@ -281,6 +285,7 @@
                             <x-zyngga-input 
                                 name="customer_phone"
                                 id="customer_phone"
+                                value="{{ $customerPhone ?? '' }}"
                                 placeholder="Masukkan nomor WhatsApp"
                                 required
                             />
@@ -291,6 +296,7 @@
                             <x-zyngga-input 
                                 name="customer_email"
                                 id="customer_email"
+                                value="{{ $customerEmail ?? '' }}"
                                 placeholder="Masukkan Email"
                                 type="email"
                                 required
@@ -305,6 +311,40 @@
                 </x-zyngga-card>
                 @endguest
         
+        {{-- ── JADWAL PICKUP ──────────────────────────────────── --}}
+        <x-zyngga-card>
+            <div class="space-y-4">
+                {{-- Antar-Jemput Toggle --}}
+                <x-zyngga-switch 
+                    name="is_roundtrip" 
+                    id="is_roundtrip"
+                    label="Antar-Jemput"
+                    :checked="$isRoundtrip" 
+                    value="1"
+                    onchange="isDirty = true; updateOrderSession({ is_roundtrip: this.checked ? 1 : 0 })"
+                >
+                    <x-slot:description>Kurir jemput dan antar kembali pakaianmu</x-slot:description>
+                </x-zyngga-switch>
+
+                {{-- Date options --}}
+                <div class="flex gap-2">
+                    @php
+                        $tomorrowCarbon = $todayCarbon->copy()->addDay();
+                    @endphp
+                    <button type="button" class="date-btn {{ !$isTodayDisabled ? 'selected' : 'opacity-40 bg-gray-50 pointer-events-none' }}" 
+                            onclick="selectDate('today', this)" {{ $isTodayDisabled ? 'disabled' : '' }}>
+                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Hari ini</x-zyngga-text>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $todayCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+                    </button>
+                    <button type="button" class="date-btn {{ $isTodayDisabled ? 'selected' : '' }}" 
+                            onclick="selectDate('tomorrow', this)">
+                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Besok</x-zyngga-text>
+                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrowCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
+                    </button>
+                </div>
+            </div>
+        </x-zyngga-card>
+
         {{-- ── JENIS LAYANAN ──────────────────────────────────── --}}
         <x-zyngga-card title="Jenis Layanan">
             <x-slot:headerAction>
@@ -373,51 +413,13 @@
                     onclick="selectServiceFromModal('{{ $svc['id'] }}')"
                 />
                 @if ($i < count($allServices) - 1)
-                    <x-zyngga-divider class=" my-1" />
+                    <x-zyngga-divider class=" !my-[6px]" />
                 @endif
             @endforeach
         </x-zyngga-selection-modal>
 
-        {{-- ── JADWAL PICKUP ──────────────────────────────────── --}}
-        <x-zyngga-card title="Jadwal Pickup">
-            <div class="space-y-3">
-                {{-- Date options --}}
-                <div class="flex gap-2">
-                    @php
-                        $tomorrowCarbon = $todayCarbon->copy()->addDay();
-                    @endphp
-                    <button type="button" class="date-btn {{ !$isTodayDisabled ? 'selected' : 'opacity-40 bg-gray-50 pointer-events-none' }}" 
-                            onclick="selectDate('today', this)" {{ $isTodayDisabled ? 'disabled' : '' }}>
-                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Hari ini</x-zyngga-text>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $todayCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                    </button>
-                    <button type="button" class="date-btn {{ $isTodayDisabled ? 'selected' : '' }}" 
-                            onclick="selectDate('tomorrow', this)">
-                        <x-zyngga-text variant="sm" weight="medium" class="m-0">Besok</x-zyngga-text>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrowCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                    </button>
-                </div>
-
-                {{-- Time chips --}}
-                <div class="flex gap-2">
-                    @foreach(['10:00','12:00','16:00','18:00'] as $time)
-                        @php $timeHour = (int) explode(':', $time)[0]; @endphp
-                        <button
-                            type="button"
-                            class="time-chip"
-                            data-time="{{ $time }}"
-                            data-hour="{{ $timeHour }}"
-                            onclick="selectTime('{{ $time }}', this)"
-                        >
-                            <x-zyngga-text variant="sm" weight="regular" class="inherit-color">{{ $time }}</x-zyngga-text>
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-        </x-zyngga-card>
-
         {{-- ── TAMBAHAN ───────────────────────────────────────── --}}
-        <x-zyngga-card title="Tambahan">
+        <x-zyngga-card>
             <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="window.dispatchEvent(new CustomEvent('open-parfum-modal'))">
                 <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Pilihan parfum</x-zyngga-text>
                 <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
@@ -440,12 +442,10 @@
         <x-zyngga-card title="Metode Pembayaran">
             @php
                 $payments = [
-                    ['id' => 'cash', 'label' => 'Cash',  'desc' => 'Pembayaran dilakukan kepada kurir',
+                    ['id' => 'cash', 'label' => 'Tunai',  'desc' => 'Bayar tunai via kurir atau di outlet',
                      'feather' => 'dollar-sign', 'color' => "theme('colors.zyngga.yellow.300')", 'bg' => "theme('colors.zyngga.yellow.50')"],
-                    ['id' => 'qris', 'label' => 'QRIS',  'desc' => 'Pembayaran dilakukan melalui admin',
+                    ['id' => 'qris', 'label' => 'Non tunai',  'desc' => 'Bayar via aplikasi (QRIS & transfer)',
                      'feather' => 'grid', 'color' => "theme('colors.zyngga.yellow.300')", 'bg' => "theme('colors.zyngga.yellow.50')"],
-                    ['id' => 'transfer', 'label' => 'Transfer Bank', 'desc' => 'Pembayaran dilakukan melalui admin',
-                     'feather' => 'home', 'color' => "theme('colors.zyngga.yellow.300')", 'bg' => "theme('colors.zyngga.yellow.50')"],
                 ];
             @endphp
 
@@ -710,58 +710,29 @@
         el.classList.add('selected');
         document.getElementById('pickup_date').value = val;
         
-        refreshTimeChips(val);
         // Refresh ETA based on new date
         applySelection(selectedId);
         isDirty = true;
         updateOrderSession({ pickup_date: val });
     }
 
-    // ── Time selection ─────────────────────────────────────────
-    function selectTime(val, el) {
-        if (el.disabled) return;
-        document.querySelectorAll('.time-chip').forEach(e => e.classList.remove('selected'));
-        el.classList.add('selected');
-        document.getElementById('pickup_time').value = val;
-        isDirty = true;
-        updateOrderSession({ pickup_time: val });
-    }
-
-    function refreshTimeChips(selectedDate) {
-        const chips = document.querySelectorAll('.time-chip');
-        let firstAvailable = null;
-        let anySelected = false;
-
-        chips.forEach(chip => {
-            const timeHour = parseInt(chip.dataset.hour);
-            let isDisabled = false;
-
-            if (selectedDate === 'today' && CURRENT_HOUR >= timeHour) {
-                isDisabled = true;
-            }
-
-            if (isDisabled) {
-                chip.disabled = true;
-                chip.classList.add('opacity-30', 'bg-gray-50', 'cursor-not-allowed');
-                chip.classList.remove('selected');
-            } else {
-                chip.disabled = false;
-                chip.classList.remove('opacity-30', 'bg-gray-50', 'cursor-not-allowed');
-                if (!firstAvailable) firstAvailable = chip;
-                if (chip.classList.contains('selected')) anySelected = true;
-            }
-        });
-
-        // Auto-select the first available time if nothing is validly selected
-        if (!anySelected && firstAvailable) {
-            selectTime(firstAvailable.dataset.time, firstAvailable);
-        }
-    }
-
     // ── Init on page load ──────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
         applySelection(selectedId);
-        refreshTimeChips(document.getElementById('pickup_date').value);
+        
+        // Enforce 17:00 threshold for "today" button
+        if (CURRENT_HOUR >= 17) {
+            const todayBtn = document.querySelector('button[onclick*="selectDate(\'today\'"]');
+            if (todayBtn) {
+                todayBtn.disabled = true;
+                todayBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                // Auto-select tomorrow if today is selected and now disabled
+                if (todayBtn.classList.contains('selected')) {
+                    const tomorrowBtn = document.querySelector('button[onclick*="selectDate(\'tomorrow\'"]');
+                    if (tomorrowBtn) selectDate('tomorrow', tomorrowBtn);
+                }
+            }
+        }
     });
 
 
@@ -913,8 +884,13 @@
     ['customer_name', 'customer_phone', 'customer_email'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
+            let debounceTimer;
             el.addEventListener('input', () => {
                 isDirty = true;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    updateOrderSession({ [id]: el.value.trim() });
+                }, 500);
             });
         }
     });
@@ -981,13 +957,7 @@
             if (dateBtn) selectDate(pDate, dateBtn);
         }
 
-        const pTime = "{{ $pickupTime }}";
-        if (pTime) {
-            setTimeout(() => {
-                const timeChip = document.querySelector(`.time-chip[data-time="${pTime}"]`);
-                if (timeChip) selectTime(pTime, timeChip);
-            }, 100);
-        }
+
     });
     document.addEventListener('livewire:load', function () {
         feather.replace();

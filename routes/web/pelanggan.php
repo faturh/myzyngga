@@ -27,18 +27,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('addresses', AddressController::class)->except(['show']);
     Route::post('addresses/{address}/primary', [AddressController::class, 'setPrimary'])->name('addresses.primary');
 
-    Route::post('/order/update-session', [OrderPageController::class, 'updateSession'])
-        ->name('order.update-session');
-    
-    Route::get('/order/cancel', [OrderPageController::class, 'cancel'])
-        ->name('order.cancel');
- 
- 
      Route::get('/order/history', [OrderPageController::class, 'history'])
         ->name('order.history');
 });
 
 // Public Order Routes (Enabled for Guests)
+Route::post('/order/update-session', [OrderPageController::class, 'updateSession'])
+    ->name('order.update-session');
+
+Route::get('/order/cancel', [OrderPageController::class, 'cancel'])
+    ->name('order.cancel');
+
 Route::get('/order/{service}/pickup', [OrderPageController::class, 'pickupLocation'])
     ->name('order.pickup');
 
@@ -59,6 +58,26 @@ Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
  
  Route::get('/order/detail/{id?}', [OrderPageController::class, 'detail'])
     ->name('order.detail');
+
+ Route::get('/order/{id}/request-delivery', [OrderPageController::class, 'requestDelivery'])
+    ->name('order.request.delivery');
+
+ Route::get('/order/{id}/complaint', [OrderPageController::class, 'complaint'])
+    ->name('order.complaint');
+ Route::post('/order/{id}/complaint', [OrderPageController::class, 'storeComplaint'])
+    ->name('order.complaint.store');
+
+ Route::get('/order/{id}/upgrade', [OrderPageController::class, 'upgrade'])
+    ->name('order.upgrade');
+
+ Route::post('/order/{id}/upgrade', [OrderPageController::class, 'processUpgrade'])
+    ->name('order.upgrade.process');
+
+ Route::get('/order/{id}/payment', [OrderPageController::class, 'payment'])
+    ->name('order.payment');
+
+ Route::post('/order/{id}/payment', [OrderPageController::class, 'updatePayment'])
+    ->name('order.payment.update');
 
 
 // Public Order Check

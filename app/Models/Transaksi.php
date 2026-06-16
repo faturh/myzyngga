@@ -24,6 +24,7 @@ class Transaksi extends Model
         'pickup_time',
         'parfum',
         'catatan',
+        'is_roundtrip',
         'total_biaya_layanan',
         'total_biaya_prioritas',
         'total_biaya_layanan_tambahan',
@@ -46,6 +47,7 @@ class Transaksi extends Model
         'waktu' => 'datetime',
         'pickup_date' => 'date',
         'paid_at' => 'datetime',
+        'is_roundtrip' => 'boolean',
     ];
 
     public function detailTransaksi()

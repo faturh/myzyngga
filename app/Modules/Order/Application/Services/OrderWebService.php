@@ -89,6 +89,10 @@ class OrderWebService
             'pickupTime' => session('order.pickup_time', ''),
             'parfum' => session('order.parfum', ''),
             'note' => session('order.note', ''),
+            'customerName' => session('order.customer_name', ''),
+            'customerPhone' => session('order.customer_phone', ''),
+            'customerEmail' => session('order.customer_email', ''),
+            'isRoundtrip' => session('order.is_roundtrip', true),
         ];
     }
 
@@ -177,6 +181,7 @@ class OrderWebService
             'parfum' => ['nullable', 'string'],
             'catatan' => ['nullable', 'string'],
             'payment' => ['required', 'string', Rule::in(['cash', 'qris', 'transfer'])],
+            'is_roundtrip' => ['nullable', 'boolean'],
         ]);
 
         $user = $request->user();
@@ -209,6 +214,7 @@ class OrderWebService
             catatan: $data['catatan'] ?? null,
             paymentMethod: $data['payment'],
             estimatedTotal: $this->resolveEstimatedTotal($data['selected_service_id']),
+            isRoundtrip: $request->boolean('is_roundtrip'),
         ));
 
         session()->forget('order');
@@ -315,6 +321,7 @@ class OrderWebService
     private function mapOrderCard(Transaksi $order): array
     {
         $statusLabel = $this->statusLabel($order);
+        $isRoundtrip = (bool) $order->is_roundtrip;
 
         return [
             'id' => (string) $order->id,
@@ -324,6 +331,9 @@ class OrderWebService
             'date' => $this->formatDateTime($order->waktu),
             'status' => $statusLabel,
             'status_icon' => $statusLabel === 'Selesai' ? 'check' : ($statusLabel === 'Belum Bayar' ? 'credit-card' : 'loader'),
+            'delivery_status' => $isRoundtrip ? 'Delivery' : 'Ambil di Outlet',
+            'delivery_icon' => $isRoundtrip ? 'truck' : 'shopping-bag',
+            'is_roundtrip' => $isRoundtrip,
             'progress' => $this->progressForStatus((string) $order->status),
             'total' => (float) $order->total_bayar_akhir,
             'items_count' => (int) $order->detailTransaksi->sum('total_pakaian'),
@@ -342,10 +352,11 @@ class OrderWebService
             'service_type' => $this->serviceName($order),
             'status' => $isFinished ? 'finished' : 'ongoing',
             'status_label' => $isFinished ? 'Ambil di Outlet' : $this->statusLabel($order),
+            'is_roundtrip' => (bool) $order->is_roundtrip,
             'customer_name' => $order->pelanggan->nama ?? '-',
             'customer_phone' => $order->pelanggan->telepon ?? '-',
             'address' => $order->pickup_address ?: ($order->pelanggan->alamat ?? '-'),
-            'address_detail' => $order->pickup_detail_address ?: ($order->cabang->alamat ?? '-'),
+            'address_detail' => $order->pickup_detail_address ?: '-',
             'order_date' => $this->formatDateTime($order->waktu),
             'estimated_finished' => $this->formatEstimatedFinished($order),
             'progress' => $this->progressForStatus((string) $order->status),
@@ -360,7 +371,43 @@ class OrderWebService
             'change' => (float) ($order->kembalian ?: 0),
             'items' => $this->mapOrderItems($order),
             'logs' => $this->mapOrderLogs($order),
+            'raw_status' => (string) $order->status,
+            'can_upgrade' => $this->canBeUpgraded($order),
+            'upgrade_fee' => (float) $order->total_biaya_prioritas,
+            'snap_token' => $this->getSnapToken($order),
         ];
+    }
+
+    private function getSnapToken(Transaksi $order): ?string
+    {
+        $unpaidAmount = max(0, (float) $order->total_bayar_akhir - (float) $order->bayar);
+        
+        if ($unpaidAmount <= 0) {
+            return null;
+        }
+
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
+        \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $order->id . '-' . time(),
+                'gross_amount' => $unpaidAmount,
+            ],
+            'customer_details' => [
+                'first_name' => $order->pelanggan->nama ?? 'Pelanggan Zyngga',
+                'phone' => $order->pelanggan->telepon ?? '081234567890',
+            ],
+        ];
+
+        try {
+            return \Midtrans\Snap::getSnapToken($params);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Midtrans Snap Error: ' . $e->getMessage());
+            return null;
+        }
     }
 
     private function mapOrderItems(Transaksi $order): array
@@ -374,13 +421,30 @@ class OrderWebService
 
             $firstServiceDetail = $detail->detailLayananTransaksi->first();
             $clothingName = $firstServiceDetail?->hargaJenisLayanan?->jenisPakaian?->nama;
-            $name = trim(($serviceNames ?: $this->serviceName($order)).($clothingName ? ' - '.$clothingName : ''));
+            
             $qty = (float) $detail->total_pakaian;
             $subtotal = (float) ($detail->total_biaya_layanan ?: 0);
             $price = $qty > 0 ? $subtotal / $qty : (float) $detail->harga_layanan_akhir;
 
+            $priority = (int) ($order->layananPrioritas->prioritas ?? 1);
+            $daysStr = match (true) {
+                $priority >= 99 => 'Hari ini',
+                $priority >= 3 => '1 hari',
+                $priority >= 2 => '2 hari',
+                default => '3 hari',
+            };
+
+            $isSatuan = $firstServiceDetail?->hargaJenisLayanan && strtolower($firstServiceDetail->hargaJenisLayanan->jenis_satuan) !== 'kg';
+            
+            if ($isSatuan && $clothingName) {
+                $name = "Satuan - " . $clothingName;
+            } else {
+                $serviceBase = $order->layananPrioritas->nama ?? 'Reguler';
+                $name = "{$serviceBase} ({$daysStr}) - " . $this->formatQuantity($qty) . "Kg";
+            }
+
             return [
-                'name' => $name ?: $this->serviceName($order),
+                'name' => $name,
                 'qty' => $this->formatQuantity($qty),
                 'price' => $price,
                 'subtotal' => $subtotal,
@@ -474,6 +538,26 @@ class OrderWebService
 
     private function serviceName(Transaksi $order): string
     {
+        $hasSatuan = $order->detailTransaksi->contains(function ($detail) {
+            $firstServiceDetail = $detail->detailLayananTransaksi->first();
+            $satuan = $firstServiceDetail?->hargaJenisLayanan?->jenis_satuan;
+            return $satuan && strtolower($satuan) !== 'kg';
+        });
+        
+        $hasKiloan = $order->detailTransaksi->contains(function ($detail) {
+            $firstServiceDetail = $detail->detailLayananTransaksi->first();
+            $satuan = $firstServiceDetail?->hargaJenisLayanan?->jenis_satuan;
+            return !$satuan || strtolower($satuan) === 'kg';
+        });
+
+        if ($hasSatuan && !$hasKiloan) {
+            return 'Satuan';
+        }
+        
+        if ($hasSatuan && $hasKiloan) {
+             return ($order->layananPrioritas->nama ?? 'Reguler') . ' & Satuan';
+        }
+
         return $order->layananPrioritas->nama ?? 'Reguler';
     }
 
@@ -517,6 +601,39 @@ class OrderWebService
     private function isFinished(Transaksi $order): bool
     {
         return $order->status === 'Selesai';
+    }
+
+    private function canBeUpgraded(Transaksi $order): bool
+    {
+        if ($order->status === 'Selesai') {
+            return false;
+        }
+
+        $currentPriority = $order->layananPrioritas;
+        if (!$currentPriority) {
+            return false;
+        }
+
+        $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
+            ->where('prioritas', '>', $currentPriority->prioritas)
+            ->get();
+
+        if ($availableUpgrades->isEmpty()) {
+            return false;
+        }
+
+        $baseDate = \Carbon\Carbon::parse($order->waktu ?? now());
+        foreach ($availableUpgrades as $upgrade) {
+            $durationHours = $this->getLayananDurationHours((int) $upgrade->prioritas);
+            $newFinishTime = $baseDate->copy()->addHours($durationHours);
+            $bufferHours = strtolower($upgrade->nama) === 'kilat' ? 1 : 5;
+            
+            if (now()->lte($newFinishTime->copy()->subHours($bufferHours))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function isPaid(Transaksi $order): bool
@@ -582,5 +699,159 @@ class OrderWebService
     private function resolveEstimatedTotal(string $serviceId): float
     {
         return (float) (self::SERVICE_ESTIMATED_TOTALS[$serviceId] ?? self::SERVICE_ESTIMATED_TOTALS['regular']);
+    }
+
+    public function upgradeData(string $id, ?User $user): array
+    {
+        $order = $this->orderRepository->findById($id);
+
+        if (!$order) {
+            throw new \Exception('Pesanan tidak ditemukan.');
+        }
+
+        if ($order->status === 'Selesai') {
+            throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
+        }
+
+        $currentPriority = $order->layananPrioritas;
+        if (!$currentPriority) {
+            throw new \Exception('Layanan pesanan tidak valid.');
+        }
+
+        $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
+            ->where('prioritas', '>', $currentPriority->prioritas)
+            ->get();
+
+        $upgrades = collect();
+        $baseDate = \Carbon\Carbon::parse($order->waktu ?? now());
+        
+        foreach ($availableUpgrades as $upgrade) {
+            $durationHours = $this->getLayananDurationHours((int) $upgrade->prioritas);
+            $newFinishTime = $baseDate->copy()->addHours($durationHours);
+
+            $desc = match ($upgrade->nama) {
+                'Reguler', 'Regular' => 'Layanan 3 hari (72 jam)',
+                'Quick' => 'Layanan 2 hari (48 jam)',
+                'Express' => 'Layanan 1 hari (24 jam)',
+                'Kilat' => 'Layanan 5 jam',
+                default => 'Layanan ' . $upgrade->nama,
+            };
+
+            $bufferHours = strtolower($upgrade->nama) === 'kilat' ? 1 : 5;
+            $isAvailable = now()->lte($newFinishTime->copy()->subHours($bufferHours));
+
+            $upgrades->push([
+                'id' => $upgrade->id,
+                'name' => $upgrade->nama,
+                'desc' => $desc,
+                'price' => (float) $upgrade->harga,
+                'is_available' => $isAvailable,
+            ]);
+        }
+
+        if ($upgrades->where('is_available', true)->isEmpty()) {
+            throw new \Exception('Tidak ada layanan upgrade yang memenuhi syarat waktu untuk pesanan ini.');
+        }
+
+        $upgrades = $upgrades->map(function($item) use ($currentPriority) {
+            $diff = $item['price'] - (float) $currentPriority->harga;
+            $item['price_diff'] = $diff > 0 ? $diff : 0;
+            return $item;
+        })->sortBy([
+            ['is_available', 'desc'],
+            ['price', 'asc'],
+        ]);
+
+        return [
+            'order' => $this->mapOrderDetail($order),
+            'currentService' => $currentPriority->nama,
+            'upgrades' => $upgrades->values()->all(),
+            'baseDate' => $baseDate->toIso8601String(),
+        ];
+    }
+
+    public function paymentData(string $id, ?User $user): array
+    {
+        $order = $this->orderRepository->findById($id);
+
+        if (!$order) {
+            throw new \Exception('Pesanan tidak ditemukan.');
+        }
+
+        if ($this->isFinished($order) || $this->isPaid($order)) {
+            throw new \Exception('Metode pembayaran tidak dapat diubah karena pesanan sudah lunas atau selesai.');
+        }
+
+        return [
+            'order' => $this->mapOrderDetail($order),
+        ];
+    }
+
+    public function updatePayment(string $id, string $method, ?User $user): void
+    {
+        $order = $this->orderRepository->findById($id);
+
+        if (!$order || $this->isFinished($order) || $this->isPaid($order)) {
+            throw new \Exception('Metode pembayaran tidak dapat diubah.');
+        }
+
+        $order->jenis_pembayaran = match(strtolower($method)) {
+            'qris' => 'QRIS',
+            'transfer' => 'Transfer',
+            default => 'Tunai',
+        };
+        $order->save();
+    }
+
+    public function processUpgrade(string $id, int $newServiceId, ?User $user, ?string $paymentMethod = null): void
+    {
+        $order = $this->orderRepository->findById($id);
+        if (!$order || $order->status === 'Selesai') {
+            throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
+        }
+
+        $currentPriority = $order->layananPrioritas;
+        $newPriority = \App\Models\LayananPrioritas::find($newServiceId);
+
+        if (!$newPriority || $newPriority->cabang_id !== $currentPriority->cabang_id || $newPriority->prioritas <= $currentPriority->prioritas) {
+            throw new \Exception('Layanan upgrade tidak valid.');
+        }
+
+        $baseDate = \Carbon\Carbon::parse($order->waktu ?? now());
+        $durationHours = $this->getLayananDurationHours((int) $newPriority->prioritas);
+        $newFinishTime = $baseDate->copy()->addHours($durationHours);
+
+        $bufferHours = strtolower($newPriority->nama) === 'kilat' ? 1 : 5;
+        if (now()->gt($newFinishTime->copy()->subHours($bufferHours))) {
+            throw new \Exception('Waktu pesanan sudah melebihi batas untuk upgrade ke layanan ini.');
+        }
+
+        $priceDiff = max(0, (float) $newPriority->harga - (float) $currentPriority->harga);
+        $totalWeight = $order->detailTransaksi->sum('total_pakaian') ?: 1; // Fallback to 1 if empty or 0
+        $totalPriceDiff = $priceDiff * $totalWeight;
+
+        $order->layanan_prioritas_id = $newPriority->id;
+        $order->total_biaya_prioritas = (float) $order->total_biaya_prioritas + $totalPriceDiff;
+        $order->total_bayar_akhir = (float) $order->total_bayar_akhir + $totalPriceDiff;
+
+        if ($paymentMethod && $this->isPaid($order)) {
+            $order->jenis_pembayaran = match(strtolower($paymentMethod)) {
+                'qris' => 'QRIS',
+                'transfer' => 'Transfer',
+                default => 'Tunai',
+            };
+        }
+
+        $order->save();
+    }
+
+    private function getLayananDurationHours(int $prioritas): int
+    {
+        return match (true) {
+            $prioritas >= 99 => 5,
+            $prioritas >= 3 => 24, 
+            $prioritas >= 2 => 48, 
+            default => 72, 
+        };
     }
 }

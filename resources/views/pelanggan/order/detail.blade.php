@@ -52,14 +52,39 @@
             vertical-align: middle;
         }
     </style>
+    <!-- Midtrans Snap -->
+    <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
 </head>
 <body class="bg-[#e8eff9]">
 
     <div class="min-h-screen flex flex-col" x-data="{ 
         status: '{{ $order['status'] }}',
+        rawStatus: '{{ $order['raw_status'] }}',
         isPaid: {{ $order['payment_status'] === 'Lunas' ? 'true' : 'false' }},
+        paymentMethod: '{{ strtoupper($order['payment_method'] ?? 'CASH') }}',
         showStatusDetail: false,
-        showPaymentDetail: false
+        showPaymentDetail: false,
+        snapToken: '{{ $order['snap_token'] ?? '' }}',
+        pay() {
+            if (!this.snapToken) {
+                window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Pembayaran sudah lunas atau token tidak tersedia.', type: 'error' } }));
+                return;
+            }
+            snap.pay(this.snapToken, {
+                onSuccess: function(result) {
+                    window.location.reload();
+                },
+                onPending: function(result) {
+                    window.location.reload();
+                },
+                onError: function(result) {
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Pembayaran gagal!', type: 'error' } }));
+                },
+                onClose: function() {
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Pembayaran dibatalkan.', type: 'error' } }));
+                }
+            });
+        }
     }">
         {{-- HEADER --}}
         <x-dashboard-header 
@@ -75,6 +100,12 @@
         <main class="flex-1 flex flex-col relative">
             <div class="w-full max-w-5xl mx-auto px-5 pb-[88px]">
                 
+                @if($errors->has('order'))
+                    <div x-init="$dispatch('toast', { message: '{{ $errors->first('order') }}', type: 'error' })"></div>
+                @endif
+                @if(session('success'))
+                    <div x-init="$dispatch('toast', { message: '{{ session('success') }}', type: 'success' })"></div>
+                @endif
                 {{-- CARD 1: ORDER INFO --}}
                 <x-zyngga-card padding="p-4" gap="py-[6px]">
                     <div class="flex items-start justify-between mb-4">
@@ -98,8 +129,8 @@
                         <x-zyngga-status 
                             :type="$order['status'] === 'finished' ? 'secondary' : 'secondary'" 
                             size="L" 
-                            :icon="$order['status'] === 'finished' ? 'shopping-bag' : 'truck'" 
-                            :label="$order['status'] === 'finished' ? 'Ambil di Outlet' : $order['status_label']" 
+                            :icon="$order['is_roundtrip'] ? 'truck' : 'shopping-bag'" 
+                            :label="$order['is_roundtrip'] ? 'Delivery' : 'Ambil di Outlet'" 
                         />
                     </div>
 
@@ -114,8 +145,13 @@
                         <div class="divider"></div>
 
                         <div class="space-y-1">
-                            <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $order['address'] }}</x-zyngga-text>
-                            <x-zyngga-text variant="sm" color="neutral-500" class="leading-relaxed">{{ $order['address_detail'] }}</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ explode(',', $order['address'])[0] }}</x-zyngga-text>
+                            <x-zyngga-text variant="sm" color="neutral-500" class="leading-relaxed">
+                                {{ $order['address'] }}
+                                @if($order['address_detail'] !== '-')
+                                    (Patokan: {{ $order['address_detail'] }})
+                                @endif
+                            </x-zyngga-text>
                         </div>
 
                         <div class="divider"></div>
@@ -192,6 +228,7 @@
                     </div>
                 </x-zyngga-card>
 
+                @if(!in_array($order['raw_status'], ['Baru', 'created']))
                 {{-- CARD 3: RINCIAN PEMBAYARAN --}}
                 <x-zyngga-card title="Rincian Pembayaran">
                     <x-slot:headerAction>
@@ -202,51 +239,43 @@
 
                     <div class="space-y-4">
                         @foreach($order['items'] as $item)
-                        <div class="flex justify-between items-start">
-                            <div class="space-y-1">
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $item['qty'] }} x Rp{{ number_format($item['price'], 0, ',', '.') }}</x-zyngga-text>
-                            </div>
+                        <div class="flex justify-between items-center">
+                            <x-zyngga-text variant="sm" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
                             <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($item['subtotal'], 0, ',', '.') }}</x-zyngga-text>
                         </div>
                         @endforeach
 
                         <div x-show="showPaymentDetail" x-collapse x-cloak class="space-y-3 pt-2">
+                            @if(isset($order['upgrade_fee']) && $order['upgrade_fee'] > 0)
                             <div class="flex justify-between">
-                                <x-zyngga-text variant="sm" color="neutral-500">Subtotal</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['subtotal'], 0, ',', '.') }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-900">Biaya Upgrade</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['upgrade_fee'], 0, ',', '.') }}</x-zyngga-text>
+                            </div>
+                            @endif
+                            <div class="flex justify-between">
+                                <x-zyngga-text variant="sm" color="neutral-900">Biaya Pengiriman</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp0</x-zyngga-text>
                             </div>
                             <div class="flex justify-between">
-                                <x-zyngga-text variant="sm" color="neutral-500">Diskon</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-900">Diskon</x-zyngga-text>
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['discount'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
                             <div class="flex justify-between pb-2">
-                                <x-zyngga-text variant="sm" color="neutral-500">Pajak</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-900">Pajak</x-zyngga-text>
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['tax'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
                             
                             <div class="divider"></div>
                             
                             <div class="flex justify-between pt-2">
-                                <x-zyngga-text variant="sm" color="neutral-500">Metode Pembayaran</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-900">Metode Pembayaran</x-zyngga-text>
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $order['payment_method'] }}</x-zyngga-text>
                             </div>
                             <div class="flex justify-between">
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Total</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-900">Total</x-zyngga-text>
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['total'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
-                            <template x-if="isPaid">
-                                <div class="space-y-3">
-                                    <div class="flex justify-between">
-                                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Tunai</x-zyngga-text>
-                                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['cash'], 0, ',', '.') }}</x-zyngga-text>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Kembalian</x-zyngga-text>
-                                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['change'], 0, ',', '.') }}</x-zyngga-text>
-                                    </div>
-                                </div>
-                            </template>
+
                         </div>
 
                         <div class="flex justify-center pt-2">
@@ -263,14 +292,26 @@
                         </div>
                     </div>
                 </x-zyngga-card>
+                @endif
 
+                @if(!in_array($order['raw_status'], ['Baru', 'created']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
                 {{-- CARD 4: BANTUAN/LAYANAN --}}
                 <x-zyngga-card title="Bantuan/Layanan">
                     <div class="flex flex-col gap-3">
                         <template x-if="status !== 'finished'">
                             <div class="flex flex-col gap-3">
-                                <x-zyngga-dropdown-item icon="arrow-up-circle" size="M">Upgrade Layanan</x-zyngga-dropdown-item>
-                                <x-zyngga-dropdown-item icon="help-circle" size="M">Ubah Metode Pembayaran</x-zyngga-dropdown-item>
+                                @if($order['can_upgrade'])
+                                <x-zyngga-dropdown-item type="a" href="{{ route('order.upgrade', $order['id']) }}" icon="arrow-up-circle" size="M">Upgrade Layanan</x-zyngga-dropdown-item>
+                                @endif
+
+                                @if(!$order['is_roundtrip'])
+                                <x-zyngga-dropdown-item 
+                                    type="a" 
+                                    href="{{ route('order.request.delivery', $order['id']) }}" 
+                                    icon="truck" 
+                                    size="M"
+                                >Ajukan Pengantaran</x-zyngga-dropdown-item>
+                                @endif
                             </div>
                         </template>
                         <template x-if="status === 'finished'">
@@ -282,11 +323,22 @@
                                     icon="message-square" 
                                     size="M"
                                 >Hubungi Kami</x-zyngga-dropdown-item>
-                                <x-zyngga-dropdown-item icon="info" size="M">Ajukan Komplain</x-zyngga-dropdown-item>
+                                
+                                @if(!$order['is_roundtrip'])
+                                <x-zyngga-dropdown-item 
+                                    type="a" 
+                                    href="{{ route('order.request.delivery', $order['id']) }}" 
+                                    icon="truck" 
+                                    size="M"
+                                >Ajukan Pengantaran</x-zyngga-dropdown-item>
+                                @endif
+
+                                <x-zyngga-dropdown-item type="a" href="{{ route('order.complaint', $order['id']) }}" icon="alert-circle" size="M">Ajukan Komplain</x-zyngga-dropdown-item>
                             </div>
                         </template>
                     </div>
                 </x-zyngga-card>
+                @endif
 
                 {{-- CARD 5: SYARAT DAN KETENTUAN --}}
                 <x-zyngga-card title="Syarat dan Ketentuan">
@@ -326,14 +378,23 @@
                                         size="l"
                                         variant="primary" 
                                         class="w-full h-full font-medium"
+                                        x-bind:disabled="paymentMethod === 'CASH' || ['Baru', 'created'].includes(rawStatus)"
+                                        x-bind:class="paymentMethod === 'CASH' || ['Baru', 'created'].includes(rawStatus) ? 'opacity-50 cursor-not-allowed' : ''"
+                                        @click="pay()"
                                     >
                                         <x-zyngga-text variant="base" weight="medium" color="white">Bayar Sekarang</x-zyngga-text>
                                     </x-zyngga-button>
                                 </template>
                                 <template x-if="isPaid">
-                                    <x-zyngga-status type="primary" size="L" class="w-full h-full">
-                                        Sudah Dibayar
-                                    </x-zyngga-status>
+                                    <x-zyngga-button 
+                                        type="button"
+                                        size="l"
+                                        variant="primary" 
+                                        class="w-full h-full font-medium opacity-50 cursor-not-allowed"
+                                        disabled
+                                    >
+                                        <x-zyngga-text variant="base" weight="medium" color="white">Sudah Dibayar</x-zyngga-text>
+                                    </x-zyngga-button>
                                 </template>
                             </div>
                         </div>
@@ -373,7 +434,7 @@
         >
             <div class="flex flex-col items-center text-center">
                 <div class="space-y-2 mb-8 px-2">
-                    <x-zyngga-text variant="lg" weight="bold" color="neutral-900" class="!text-[20px] leading-snug">
+                    <x-zyngga-text variant="lg" weight="medium" color="neutral-900" class="!text-[20px] leading-snug">
                         Simpan Nota Transaksi
                     </x-zyngga-text>
                     <x-zyngga-text variant="sm" weight="regular" color="neutral-500" class="!text-[#717171] leading-relaxed">
@@ -384,7 +445,7 @@
                 <div class="flex flex-col gap-3 w-full">
                     <x-zyngga-button 
                         variant="secondary" 
-                        size="l" 
+                        size="m" 
                         class="w-full !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
                         icon="send"
                         iconPosition="left"
@@ -393,7 +454,7 @@
                     />
                     <x-zyngga-button 
                         variant="primary" 
-                        size="l" 
+                        size="m" 
                         class="w-full !h-12"
                         icon="download"
                         iconPosition="left"

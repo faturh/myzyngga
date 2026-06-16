@@ -18,6 +18,7 @@ class CreateOrderData
         public readonly ?string $catatan,
         public readonly string $paymentMethod,
         public readonly float $estimatedTotal,
+        public readonly bool $isRoundtrip,
         public readonly ?int $pegawaiId = null,
     ) {}
 
@@ -36,6 +37,7 @@ class CreateOrderData
             'pickup_time' => $this->pickupTime,
             'parfum' => $this->parfum,
             'catatan' => $this->catatan,
+            'is_roundtrip' => $this->isRoundtrip,
             'total_biaya_layanan' => $this->estimatedTotal,
             'total_biaya_prioritas' => 0,
             'total_biaya_layanan_tambahan' => 0,

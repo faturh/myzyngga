@@ -93,10 +93,10 @@
                     <div class="grid grid-cols-5">
                         @php
                             $services = [
-                                ['label' => 'Kilat',   'icon' => 'zap',     'key' => 'kilat'],
                                 ['label' => 'Regular', 'icon' => 'star',    'key' => 'regular'],
                                 ['label' => 'Quick',   'icon' => 'clock',   'key' => 'quick'],
                                 ['label' => 'Express', 'icon' => 'fast-forward', 'key' => 'express'],
+                                ['label' => 'Kilat',   'icon' => 'zap',     'key' => 'kilat'],
                                 ['label' => 'Satuan',  'icon' => 'package', 'key' => 'satuan'],
                             ];
                         @endphp

@@ -114,4 +114,85 @@ class OrderPageController
         $orders = session('orders', []);
         return view('pelanggan.order.check', compact('orders'));
     }
+    public function complaint(Request $request, string $id)
+    {
+        $order = $this->webService->detailData($id, $request->user());
+        if (!$order) {
+            return redirect()->route('home');
+        }
+        return view('pelanggan.order.complaint', compact('order'));
+    }
+
+    public function storeComplaint(Request $request, string $id)
+    {
+        // For now, redirect back to order detail with a success toast message
+        return redirect()->route('order.detail', ['id' => $id])
+            ->with('success', 'Komplain berhasil dikirim');
+    }
+
+    public function requestDelivery(Request $request, string $id)
+    {
+        $order = $this->webService->detailData($id, $request->user());
+        if (!$order) {
+            return redirect()->route('home');
+        }
+        $savedAddresses = collect();
+        if ($request->user()) {
+            $savedAddresses = $request->user()->addresses()->get();
+        }
+        return view('pelanggan.order.request-delivery-location', [
+            'order' => $order,
+            'service' => $order['service_type'] ?? 'Reguler',
+            'from' => 'detail',
+            'savedAddresses' => $savedAddresses,
+        ]);
+    }
+
+    public function upgrade(Request $request, string $id)
+    {
+        try {
+            $data = $this->webService->upgradeData($id, $request->user());
+            return view('pelanggan.order.upgrade', $data);
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])->withErrors(['order' => $e->getMessage()]);
+        }
+    }
+
+    public function processUpgrade(Request $request, string $id)
+    {
+        $request->validate([
+            'new_service_id' => 'required|integer',
+            'payment_method' => 'nullable|string|in:cash,qris,transfer'
+        ]);
+
+        try {
+            $this->webService->processUpgrade($id, $request->new_service_id, $request->user(), $request->payment_method);
+            return redirect()->route('order.detail', ['id' => $id])->with('success', 'Pesanan berhasil di-upgrade!');
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])->withErrors(['order' => $e->getMessage()]);
+        }
+    }
+    public function payment(Request $request, string $id)
+    {
+        try {
+            $data = $this->webService->paymentData($id, $request->user());
+            return view('pelanggan.order.payment', $data);
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])->withErrors(['order' => $e->getMessage()]);
+        }
+    }
+
+    public function updatePayment(Request $request, string $id)
+    {
+        $request->validate([
+            'payment_method' => 'required|string|in:cash,qris,transfer'
+        ]);
+
+        try {
+            $this->webService->updatePayment($id, $request->payment_method, $request->user());
+            return redirect()->route('order.detail', ['id' => $id])->with('success', 'Metode pembayaran berhasil diubah!');
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])->withErrors(['order' => $e->getMessage()]);
+        }
+    }
 }

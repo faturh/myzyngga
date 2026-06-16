@@ -85,7 +85,7 @@
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col">
             <div class="w-full max-w-5xl mx-auto px-5">
-                <div class="flex flex-col">
+                <div class="flex flex-col min-h-[calc(100vh-240px)]">
                     
                     @forelse($orders as $order)
                     <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === '{{ $order['status'] }}'"
@@ -102,7 +102,7 @@
                                     <x-zyngga-text variant="sm" color="neutral-500">{{ $order['date'] }}</x-zyngga-text>
                                 </div>
                             </div>
-                            <x-zyngga-status type="secondary" size="M" :icon="$order['status_icon']" :label="$order['status']" />
+                            <x-zyngga-status type="secondary" size="M" :icon="$order['delivery_icon']" :label="$order['delivery_status']" />
                         </div>
 
                         @if($order['status'] !== 'Selesai')
@@ -153,9 +153,24 @@
                         </div>
                     </x-zyngga-card>
                     @empty
-                    <x-zyngga-card>
-                        <x-zyngga-text variant="sm" color="neutral-500">Belum ada riwayat pesanan.</x-zyngga-text>
-                    </x-zyngga-card>
+                    <div class="flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center min-h-[calc(100vh-240px)]">
+                        <div class="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center mb-5 shadow-sm">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2.5 9.5H21.5V18.5C21.5 20.16 20.16 21.5 18.5 21.5H5.5C3.84 21.5 2.5 20.16 2.5 18.5V9.5Z" fill="#C4C4C4"/>
+                                <path d="M2.5 9.5V6.5C2.5 4.84 3.84 3.5 5.5 3.5H18.5C20.16 3.5 21.5 4.84 21.5 6.5V9.5H2.5Z" fill="#C4C4C4" opacity="0.4"/>
+                                <path d="M9.17 12.83L14.83 18.5M14.83 12.83L9.17 18.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <x-zyngga-text variant="lg" weight="medium" class="mb-2 text-neutral-900 tracking-tight">Kamu Belum Memiliki Pesanan</x-zyngga-text>
+                        <x-zyngga-text variant="sm" color="neutral-500" class="mb-6 px-6 leading-[1.6]">Semua riwayat transaksi dan pengerjaan laundry kamu akan muncul di sini.</x-zyngga-text>
+                        <x-zyngga-button 
+                            type="a"
+                            href="{{ route('order.pickup', ['service' => 'reguler']) }}"
+                            variant="primary" 
+                            size="m" 
+                            label="Buat Pesanan" 
+                        />
+                    </div>
                     @endforelse
                 </div>
             </div>
@@ -163,7 +178,7 @@
         </main>
 
         {{-- ── FOOTER ─────────────────────────────────────────────── --}}
-        <x-zyngga-footer :maxWidth="'max-w-full'" />
+        <x-zyngga-footer />
     </div>
 
     @livewireScripts

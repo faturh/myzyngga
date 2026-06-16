@@ -10,7 +10,7 @@
     $id = $id ?? $name;
 @endphp
 
-<label for="{{ $id }}" class="flex items-center justify-between h-6 px-1 cursor-pointer group select-none transition-all duration-200 {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}">
+<label for="{{ $id }}" class="flex items-center justify-between min-h-[24px] cursor-pointer group select-none transition-all duration-200 {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}">
     <div class="flex flex-col">
         <x-zyngga-text variant="sm" weight="medium" class="leading-snug">
             {{ $label }}
