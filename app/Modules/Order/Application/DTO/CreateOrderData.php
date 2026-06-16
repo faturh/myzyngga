@@ -18,7 +18,7 @@ class CreateOrderData
         public readonly ?string $catatan,
         public readonly string $paymentMethod,
         public readonly float $estimatedTotal,
-        public readonly bool $isRoundtrip,
+        public readonly bool $isRoundtrip = false,
         public readonly ?int $pegawaiId = null,
     ) {}
 

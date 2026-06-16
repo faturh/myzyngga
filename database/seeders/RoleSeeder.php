@@ -14,23 +14,27 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         // Create Admin
-        User::create([
-            'name' => 'Admin Zyngga',
-            'username' => 'admin',
-            'slug' => 'admin',
-            'email' => 'admin@zyngga.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-        ]);
+        User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Admin Zyngga',
+                'slug' => 'admin',
+                'email' => 'admin@zyngga.com',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+            ]
+        );
 
         // Create Customer
-        User::create([
-            'name' => 'Customer Zyngga',
-            'username' => 'customer',
-            'slug' => 'customer',
-            'email' => 'customer@zyngga.com',
-            'password' => Hash::make('password'),
-            'role' => 'customer',
-        ]);
+        User::updateOrCreate(
+            ['username' => 'customer'],
+            [
+                'name' => 'Customer Zyngga',
+                'slug' => 'customer',
+                'email' => 'customer@zyngga.com',
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+            ]
+        );
     }
 }

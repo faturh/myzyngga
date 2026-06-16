@@ -25,7 +25,7 @@ class CustomerService
 
     public function upsertAddress(User $user, array $payload): \App\Models\CustomerAddress
     {
-        $profile = $this->repository->upsertProfileForUser($user, [
+        $profile = $this->repository->upsertProfile($user, [
             'nama' => $user->name,
             'jenis_kelamin' => $payload['jenis_kelamin'] ?? 'L',
             'telepon' => $payload['telepon'] ?? '-',
@@ -37,7 +37,7 @@ class CustomerService
 
     public function upsertPreference(User $user, array $payload): \App\Models\CustomerPreference
     {
-        $profile = $this->repository->upsertProfileForUser($user, [
+        $profile = $this->repository->upsertProfile($user, [
             'nama' => $user->name,
             'jenis_kelamin' => $payload['jenis_kelamin'] ?? 'L',
             'telepon' => $payload['telepon'] ?? '-',

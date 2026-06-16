@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Pilih Lokasi Pickup – Zyngga</title>
+    <title>Pilih Lokasi Pengantaran – Zyngga</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
@@ -159,7 +159,7 @@
             <div style="display:flex; align-items:center; height:40px; gap:8px;">
                 <x-zyngga-button 
                     type="a"
-                    href="{{ $from === 'booking' ? route('order.booking') : route('home') }}"
+                    href="{{ route('order.detail', ['id' => $order['id']]) }}"
                     variant="neutral"
                     size="l"
                     icon="arrow-left"
@@ -168,7 +168,7 @@
                 />
 
                 <x-zyngga-text variant="lg" weight="medium" as="h1" class="flex-1">
-                    Pilih Lokasi Pickup
+                    Pilih Lokasi Pengantaran
                 </x-zyngga-text>
             </div>
 
@@ -178,7 +178,7 @@
                     wrapperId="search-input-wrapper"
                     name="search_input"
                     id="search-input"
-                    placeholder="Cari lokasi pickup"
+                    placeholder="Cari lokasi pengantaran"
                     autocomplete="off"
                 >
                     <x-slot:iconLeft>
@@ -261,7 +261,7 @@
                         Menentukan lokasi...
                     </x-zyngga-text>
                     <x-zyngga-text id="loc-address" variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
-                        Geser pin di peta untuk memilih lokasi penjemputan
+                        Geser pin di peta untuk memilih lokasi pengantaran
                     </x-zyngga-text>
                 </div>
                 {{-- Loading spinner --}}
@@ -274,7 +274,7 @@
             <div id="distance-error" style="display:none; padding:12px 16px; background:#FEF2F2; border-radius:12px; border:1px solid #FEE2E2; align-items:center; gap:10px; margin-top:-4px;">
                 <i data-feather="alert-circle" class="w-5 h-5 text-[#EF4444] shrink-0"></i>
                 <x-zyngga-text variant="xs" weight="regular" color="danger">
-                    Maaf, lokasi Anda berada di luar jangkauan pickup kami.
+                    Maaf, lokasi Anda berada di luar jangkauan pengantaran kami.
                 </x-zyngga-text>
             </div>
 
@@ -288,7 +288,7 @@
                     size="l"
                     icon="arrow-right"
                     iconPosition="right"
-                    label="Atur Lokasi Pickup"
+                    label="Atur Lokasi Pengantaran"
                     class="w-full"
                     disabled
                 />
@@ -327,35 +327,13 @@
                     const address = document.getElementById('hidden-address').value;
                     const lat = document.getElementById('hidden-lat').value;
                     const lng = document.getElementById('hidden-lng').value;
-                    const service = "{{ $service }}";
                     
                     if (lat && lng && address) {
-                        if (currentAddressId) {
-                            // Direct submit for saved address
-                            const form = document.getElementById('direct-pickup-form');
-                            document.getElementById('direct-address').value = address;
-                            document.getElementById('direct-lat').value = lat;
-                            document.getElementById('direct-lng').value = lng;
-                            document.getElementById('direct-detail-address').value = currentNote;
-                            form.submit();
-                        } else {
-                            // Go to review for new address
-                            let url = `{{ route('order.pickup.details', ['service' => $service]) }}?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}`;
-                            window.location.href = url;
-                        }
+                        let url = `{{ route('order.request.delivery.confirm', ['id' => $order['id']]) }}?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}&detail_address=${encodeURIComponent(currentNote || '')}`;
+                        window.location.href = url;
                     }
                 }
             </script>
-
-            {{-- Hidden form for direct pickup confirmation --}}
-            <form id="direct-pickup-form" action="{{ route('order.pickup.store') }}" method="POST" style="display: none;">
-                @csrf
-                <input type="hidden" name="service" value="{{ $service }}">
-                <input type="hidden" name="address" id="direct-address">
-                <input type="hidden" name="detail_address" id="direct-detail-address">
-                <input type="hidden" name="lat" id="direct-lat">
-                <input type="hidden" name="lng" id="direct-lng">
-            </form>
 
             <input type="hidden" id="hidden-address" value="">
             <input type="hidden" id="hidden-lat" value="">

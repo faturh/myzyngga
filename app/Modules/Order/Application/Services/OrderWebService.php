@@ -854,4 +854,97 @@ class OrderWebService
             default => 72, 
         };
     }
+
+    public function storeComplaint(string $id, string $content, ?User $user): void
+    {
+        $order = $this->orderRepository->findById($id);
+        if (!$order) {
+            throw new \Exception('Pesanan tidak ditemukan.');
+        }
+
+        $pelanggan = $user ? $this->customerRepository->findByUser($user) : null;
+        if (!$pelanggan) {
+            $pelanggan = $order->pelanggan;
+        }
+
+        if (!$pelanggan) {
+            throw new \Exception('Pelanggan tidak valid.');
+        }
+
+        \App\Models\Complaint::create([
+            'transaksi_id' => $order->id,
+            'pelanggan_id' => $pelanggan->id,
+            'content' => $content,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function requestDeliveryConfirmData(string $id, Request $request): array
+    {
+        $order = $this->orderRepository->findById($id);
+        if (!$order) {
+            throw new \Exception('Pesanan tidak ditemukan.');
+        }
+
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+        $address = $request->query('address');
+        $detailAddress = $request->query('detail_address');
+
+        if (!$lat || !$lng || !$address) {
+            throw new \Exception('Lokasi pengantaran tidak lengkap.');
+        }
+
+        return [
+            'order' => $this->mapOrderDetail($order),
+            'service' => $this->serviceName($order),
+            'serviceLabel' => $this->serviceName($order),
+            'address' => $address,
+            'detailAddress' => $detailAddress ?? '',
+            'lat' => $lat,
+            'lng' => $lng,
+            'pickupDate' => session('order.pickup_date', ''),
+            'pickupTime' => session('order.pickup_time', ''),
+            'parfum' => session('order.parfum', 'Lavender'),
+            'note' => session('order.note', ''),
+        ];
+    }
+
+    public function storeRequestDelivery(string $id, Request $request, ?User $user): void
+    {
+        $order = $this->orderRepository->findById($id);
+        if (!$order) {
+            throw new \Exception('Pesanan tidak ditemukan.');
+        }
+
+        $request->validate([
+            'address' => 'required|string',
+            'detail_address' => 'nullable|string',
+            'lat' => 'required|numeric',
+            'lng' => 'required|numeric',
+            'pickup_date' => 'nullable|string',
+            'pickup_time' => 'nullable|string',
+            'parfum' => 'nullable|string',
+            'catatan' => 'nullable|string',
+        ]);
+
+        $order->pickup_address = $request->input('address');
+        $order->pickup_detail_address = $request->input('detail_address');
+        $order->is_roundtrip = true;
+        
+        if ($request->filled('pickup_date')) {
+            $order->pickup_date = $this->resolvePickupDate($request->input('pickup_date'));
+        }
+        if ($request->filled('pickup_time')) {
+            $order->pickup_time = $request->input('pickup_time');
+        }
+        if ($request->filled('parfum')) {
+            $order->parfum = $request->input('parfum');
+        }
+        if ($request->filled('catatan')) {
+            $order->catatan = $request->input('catatan');
+        }
+
+        $order->save();
+    }
 }

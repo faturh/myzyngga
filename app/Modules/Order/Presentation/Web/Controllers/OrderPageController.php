@@ -125,9 +125,18 @@ class OrderPageController
 
     public function storeComplaint(Request $request, string $id)
     {
-        // For now, redirect back to order detail with a success toast message
-        return redirect()->route('order.detail', ['id' => $id])
-            ->with('success', 'Komplain berhasil dikirim');
+        $request->validate([
+            'content' => 'required|string|max:1000',
+        ]);
+
+        try {
+            $this->webService->storeComplaint($id, $request->input('content'), $request->user());
+            return redirect()->route('order.detail', ['id' => $id])
+                ->with('success', 'Komplain berhasil dikirim');
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])
+                ->withErrors(['complaint' => $e->getMessage()]);
+        }
     }
 
     public function requestDelivery(Request $request, string $id)
@@ -146,6 +155,29 @@ class OrderPageController
             'from' => 'detail',
             'savedAddresses' => $savedAddresses,
         ]);
+    }
+
+    public function requestDeliveryConfirm(Request $request, string $id)
+    {
+        try {
+            $data = $this->webService->requestDeliveryConfirmData($id, $request);
+            return view('pelanggan.order.request-delivery-confirm', $data);
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])
+                ->withErrors(['order' => $e->getMessage()]);
+        }
+    }
+
+    public function storeRequestDelivery(Request $request, string $id)
+    {
+        try {
+            $this->webService->storeRequestDelivery($id, $request, $request->user());
+            return redirect()->route('order.detail', ['id' => $id])
+                ->with('success', 'Permintaan pengantaran berhasil diajukan!');
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])
+                ->withErrors(['order' => $e->getMessage()]);
+        }
     }
 
     public function upgrade(Request $request, string $id)
