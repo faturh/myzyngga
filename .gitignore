@@ -1,7 +1,7 @@
 node_modules/
 vendor/
 public/build/
-public/hot/
+public/hot
 storage/framework/views/*
 storage/framework/cache/*
 storage/framework/sessions/*
