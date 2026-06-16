@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Order;
+namespace Tests\Feature\Pelanggan\Order;
 
 use App\Models\Cabang;
 use App\Models\LayananPrioritas;
@@ -44,13 +44,7 @@ class OrderFlowSmokeTest extends TestCase
         $this->get(route('order.booking'))
             ->assertOk();
 
-        $this->get(route('order.detail'))
-            ->assertOk();
-
-        $this->get(route('order.history'))
-            ->assertOk();
-
-        $this->post(route('order.confirm'), [
+        $response = $this->post(route('order.confirm'), [
             'service' => 'regular',
             'address' => 'Jalan Testing Nomor 1',
             'detail_address' => 'Rumah belakang pagar hitam',
@@ -62,7 +56,7 @@ class OrderFlowSmokeTest extends TestCase
             'parfum' => 'lavender',
             'catatan' => 'Tolong dipisah pakaian putih',
             'payment' => 'cash',
-        ])->assertRedirect(route('dashboard'));
+        ]);
 
         $pelanggan = Pelanggan::query()->where('user_id', $customer->id)->first();
 
@@ -74,10 +68,59 @@ class OrderFlowSmokeTest extends TestCase
             ->first();
 
         $this->assertNotNull($order);
+        $response->assertRedirect(route('order.detail', ['id' => $order->id]));
         $this->assertSame('cash', $order->jenis_pembayaran);
         $this->assertSame('pending', $order->payment_status);
         $this->assertSame('Jalan Testing Nomor 1', $order->pickup_address);
         $this->assertNotNull($order->payments()->first());
+
+        // Verify detail page is accessible post-creation
+        $this->get(route('order.detail', ['id' => $order->id]))
+            ->assertOk();
+
+        $this->get(route('order.history'))
+            ->assertOk();
+
+        // Request Delivery (Minta Pengantaran)
+        $this->get(route('order.request.delivery', ['id' => $order->id]))
+            ->assertOk();
+
+        $this->get(route('order.request.delivery.confirm', [
+            'id' => $order->id,
+            'address' => 'Jalan Antar Baru',
+            'detail_address' => 'Pagar Hijau',
+            'lat' => -6.22,
+            'lng' => 106.82,
+        ]))->assertOk();
+
+        $this->post(route('order.request.delivery.store', ['id' => $order->id]), [
+            'address' => 'Jalan Antar Baru',
+            'detail_address' => 'Pagar Hijau',
+            'lat' => -6.22,
+            'lng' => 106.82,
+            'pickup_date' => 'today',
+            'pickup_time' => '10:00',
+            'catatan' => 'Tolong hati-hati',
+        ])->assertRedirect(route('order.detail', ['id' => $order->id]));
+
+        $order->refresh();
+        $this->assertTrue((bool)$order->is_roundtrip);
+        $this->assertSame('Jalan Antar Baru', $order->pickup_address);
+
+        // Complaint (Kirim Komplain)
+        $this->get(route('order.complaint', ['id' => $order->id]))
+            ->assertOk();
+
+        $this->post(route('order.complaint.store', ['id' => $order->id]), [
+            'content' => 'Baju saya luntur satu buah.',
+        ])->assertRedirect(route('order.detail', ['id' => $order->id]));
+
+        $this->assertDatabaseHas('complaints', [
+            'transaksi_id' => $order->id,
+            'pelanggan_id' => $pelanggan->id,
+            'content' => 'Baju saya luntur satu buah.',
+            'status' => 'pending',
+        ]);
     }
 
     public function test_customer_and_order_api_flow_works_end_to_end(): void
