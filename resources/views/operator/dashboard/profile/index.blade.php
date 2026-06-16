@@ -59,7 +59,7 @@
                         @if ($profile->foto)
                             <div class="avatar">
                                 <div class="w-24 rounded-full">
-                                    <img src="{{ asset("storage/" . $profile->foto) }}" alt="{{ $user->slug }}" />
+                                    <img src="{{ str_starts_with($profile->foto, 'http') ? $profile->foto : asset('storage/' . $profile->foto) }}" alt="{{ $user->slug }}" />
                                 </div>
                             </div>
                         @else

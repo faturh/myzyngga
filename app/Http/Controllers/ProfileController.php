@@ -107,7 +107,7 @@ class ProfileController extends Controller
         $validatedProfile['user_id'] = $user->id;
 
         if ($request->file('foto')) {
-            $validatedProfile['foto'] = $request->file('foto')->store('photo-profile');
+            $validatedProfile['foto'] = $request->file('foto')->storeOnCloudinary('photo-profile')->getSecurePath();
         }
 
         switch (auth()->user()->roles[0]->name) {
