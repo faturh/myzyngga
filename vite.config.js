@@ -16,4 +16,15 @@ export default defineConfig({
             host: hmrHost,
         },
     },
+    esbuild: {
+        target: 'es2022',
+    },
+    optimizeDeps: {
+        esbuildOptions: {
+            target: 'es2022',
+        },
+    },
+    build: {
+        target: 'es2022',
+    },
 });
