@@ -2,12 +2,16 @@
 
 use App\Http\Controllers\DetailLayananTransaksiController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\Operator\OperatorController;
 use App\Modules\Admin\Presentation\Web\Controllers\WebAdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['admin'])->group(function () {
-        Route::get('/admin/dashboard', WebAdminDashboardController::class)->name('admin.dashboard');
+        Route::get('/admin/dashboard', [OperatorController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/admin/riwayat-pesanan', [OperatorController::class, 'riwayatPesanan'])->name('admin.riwayat-pesanan');
+        Route::post('/admin/riwayat-pesanan/{id}/proses', [OperatorController::class, 'prosesTransaksi'])->name('admin.riwayat-pesanan.proses');
+        Route::post('/admin/riwayat-pesanan/{id}/batal', [OperatorController::class, 'batalkanTransaksi'])->name('admin.riwayat-pesanan.batal');
     });
 
     Route::prefix('transaksi')->group(function () {
