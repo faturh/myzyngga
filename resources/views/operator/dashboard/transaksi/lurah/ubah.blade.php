@@ -268,13 +268,6 @@
                 return $(this).val();
             }).get();
 
-            let gamis_id = "";
-            if ($("select[name='gamis_id']").val() == "null") {
-                gamis_id = null;
-            } else {
-                gamis_id = $("select[name='gamis_id']").val();
-            }
-
             let layananTambahan = [];
             layananTambahan = $('select[name="layanan_tambahan_id[]"]').map(function () {
                 return $(this).val();
@@ -286,7 +279,6 @@
                 data: {
                     "_token": "{{ csrf_token() }}",
                     "pelanggan_id": $("select[name='pelanggan_id']").val(),
-                    "gamis_id": gamis_id,
                     "total_biaya_layanan": $("input[name='total_biaya_layanan']").val(),
                     "total_biaya_prioritas": $("input[name='total_biaya_prioritas']").val(),
                     "total_biaya_layanan_tambahan": $("input[name='total_biaya_layanan_tambahan']").val(),
@@ -359,17 +351,11 @@
                 </div>
                 <div class="flex-auto px-6 pb-6 pt-0">
                     <div class="w-full flex flex-wrap justify-center gap-2 lg:flex-nowrap">
-                        <label class="form-control w-full lg:w-1/2">
+                        <label class="form-control w-full">
                             <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Nota Layanan</span>
+                                <span class="label-text font-semibold dark:text-slate-100">Nota</span>
                             </div>
-                            <input type="text" name="nota_layanan" class="input input-bordered w-full text-blue-700 bg-slate-300" value="{{ $transaksi->nota_layanan }}" readonly />
-                        </label>
-                        <label class="form-control w-full lg:w-1/2">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Nota Pelanggan</span>
-                            </div>
-                            <input type="text" name="nota_pelanggan" class="input input-bordered w-full text-blue-700 bg-slate-300" value="{{ $transaksi->nota_pelanggan }}" readonly />
+                            <input type="text" name="nota" class="input input-bordered w-full text-blue-700 bg-slate-300" value="{{ $transaksi->nota }}" readonly />
                         </label>
                     </div>
                     <form method="POST" enctype="multipart/form-data">
@@ -377,7 +363,7 @@
                         <label class="form-control w-full">
                             <div class="label">
                                 <span class="label-text font-semibold dark:text-slate-100">
-                                    <x-label-input-required :value="'Status'" />
+                                     <x-label-input-required :value="'Status'" />
                                 </span>
                             </div>
                             <select name="status" class="select select-bordered text-base text-blue-700 dark:bg-slate-100" required>
@@ -392,7 +378,7 @@
                             @enderror
                         </label>
                         <div class="w-full flex flex-wrap justify-center gap-2 lg:flex-nowrap">
-                            <label class="form-control w-full lg:w-1/2">
+                            <label class="form-control w-full">
                                 <div class="label">
                                     <span class="label-text font-semibold dark:text-slate-100">
                                         <x-label-input-required :value="'Pelanggan'" />
@@ -404,22 +390,6 @@
                                     @endforeach
                                 </select>
                                 @error("pelanggan_id")
-                                    <div class="label">
-                                        <span class="label-text-alt text-sm text-error">{{ $message }}</span>
-                                    </div>
-                                @enderror
-                            </label>
-                            <label class="form-control w-full lg:w-1/2">
-                                <div class="label">
-                                    <span class="label-text font-semibold dark:text-slate-100">Gamis</span>
-                                </div>
-                                <select name="gamis_id" class="select select-bordered text-base text-blue-700 dark:bg-slate-100">
-                                    <option value="null" selected>Tidak Perlu Gamis</option>
-                                    @foreach ($gamis as $item)
-                                        <option value="{{ $item->id }}" @if ($item->id == $transaksi->gamis_id) selected @endif>{{ $item->nama }}</option>
-                                    @endforeach
-                                </select>
-                                @error("gamis_id")
                                     <div class="label">
                                         <span class="label-text-alt text-sm text-error">{{ $message }}</span>
                                     </div>

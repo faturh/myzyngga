@@ -67,17 +67,11 @@
                         <x-kolom-status-transaksi :value="$transaksi->status" />
                     </label>
                     <div class="w-full flex flex-wrap justify-center gap-2 lg:flex-nowrap">
-                        <label class="form-control w-full lg:w-1/2">
+                        <label class="form-control w-full">
                             <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Nota Layanan</span>
+                                <span class="label-text font-semibold dark:text-slate-100">Nota</span>
                             </div>
-                            <input type="text" name="nota_layanan" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->nota_layanan }}" readonly />
-                        </label>
-                        <label class="form-control w-full lg:w-1/2">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Nota Pelanggan</span>
-                            </div>
-                            <input type="text" name="nota_pelanggan" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->nota_pelanggan }}" readonly />
+                            <input type="text" name="nota" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->nota }}" readonly />
                         </label>
                     </div>
                     <label class="form-control w-full">
@@ -93,25 +87,11 @@
                         <input type="text" name="pegawai_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->pelanggan->nama }}" readonly />
                     </label>
                     <div class="w-full flex flex-wrap justify-center gap-2 lg:flex-nowrap">
-                        <label class="form-control w-full lg:w-1/2">
+                        <label class="form-control w-full">
                             <div class="label">
                                 <span class="label-text font-semibold dark:text-slate-100">Pegawai</span>
                             </div>
-                            <input type="text" name="pegawai_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" readonly
-                                @if ($transaksi->pegawai->roles[0]->name == 'manajer_laundry')
-                                    value="{{ $transaksi->pegawai->manajer[0]->nama }}"
-                                @elseif ($transaksi->pegawai->roles[0]->name == 'pegawai_laundry')
-                                    value="{{ $transaksi->pegawai->pegawai[0]->nama }}"
-                                @elseif ($transaksi->pegawai->roles[0]->name == 'lurah')
-                                    value="{{ $transaksi->pegawai->lurah[0]->nama }}"
-                                @endif
-                            />
-                        </label>
-                        <label class="form-control w-full lg:w-1/2">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Gamis</span>
-                            </div>
-                            <input type="text" name="gamis_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->gamis_id ? $transaksi->gamis->nama : '-' }}" readonly />
+                            <input type="text" name="pegawai_id" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ $transaksi->pegawai->name }}" readonly />
                         </label>
                     </div>
                     <label class="form-control w-full">

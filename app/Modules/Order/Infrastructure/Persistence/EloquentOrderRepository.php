@@ -36,7 +36,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     {
         return Transaksi::query()
             ->with(self::ORDER_RELATIONS)
-            ->where('nota_pelanggan', $nota)
+            ->where('nota', $nota)
             ->first();
     }
 
@@ -107,8 +107,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
                     $query->where('id', $normalizedQuery);
                 }
                 $query
-                    ->orWhere('nota_layanan', 'like', '%'.$normalizedQuery.'%')
-                    ->orWhere('nota_pelanggan', 'like', '%'.$normalizedQuery.'%')
+                    ->orWhere('nota', 'like', '%'.$normalizedQuery.'%')
                     ->orWhereHas('pelanggan', function (Builder $customerQuery) use ($normalizedQuery) {
                         $customerQuery->where('nama', 'like', '%'.$normalizedQuery.'%')
                                       ->orWhereHas('user', function (Builder $userQuery) use ($normalizedQuery) {

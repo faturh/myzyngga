@@ -15,7 +15,7 @@
             });
         });
 
-        @role(['lurah', 'manajer_laundry', 'pegawai_laundry', 'gamis', 'pic'])
+        @role(['lurah', 'manajer_laundry', 'pegawai_laundry', 'pic'])
             // Pendapatan Per Bulan
             if (document.querySelector("#chart-pendapatan-bulanan")) {
                 let bulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
@@ -253,51 +253,6 @@
                     </div>
                 </div>
 
-                <!-- UMR -->
-                <div class="mb-6 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-                    <div class="dark:bg-slate-850 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
-                        <div class="flex-auto p-4">
-                            <div class="-mx-3 flex flex-row">
-                                <div class="w-2/3 max-w-full flex-none px-3">
-                                    <div>
-                                        <p class="mb-0 font-sans text-sm font-semibold uppercase leading-normal dark:text-white dark:opacity-60">UMR <span class="capitalize">{{ $umr->regional }}</span> ({{ $umr->tahun }})</p>
-                                        <h5 class="mb-2 font-bold text-blue-700 dark:text-white">Rp{{ number_format($umr->upah, 2, ',', '.') }}</h5>
-                                    </div>
-                                </div>
-                                <div class="basis-1/3 px-3 text-right">
-                                    <div class="rounded-circle inline-block h-12 w-12 bg-gradient-to-tl from-blue-500 to-violet-500 text-center">
-                                        <i class="ri-file-paper-2-line relative top-3 text-2xl leading-none text-white"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Jumlah Gamis -->
-                <div class="mb-6 w-full max-w-full px-3 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-                    <div class="dark:bg-slate-850 dark:shadow-dark-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white bg-clip-border shadow-xl">
-                        <div class="flex-auto p-4">
-                            <div class="-mx-3 flex flex-row">
-                                <div class="w-2/3 max-w-full flex-none px-3">
-                                    <div>
-                                        <p class="mb-0 font-sans text-sm font-semibold uppercase leading-normal dark:text-white dark:opacity-60">
-                                            Jumlah Gamis
-                                        </p>
-                                        <h5 class="mb-2 font-bold text-blue-700 dark:text-white">
-                                            {{ $jmlGamis }}
-                                        </h5>
-                                    </div>
-                                </div>
-                                <div class="basis-1/3 px-3 text-right">
-                                    <div class="rounded-circle inline-block h-12 w-12 bg-gradient-to-tl from-blue-500 to-violet-500 text-center">
-                                        <i class="ri-parent-fill relative top-3 text-2xl leading-none text-white"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- row 2 -->
@@ -519,21 +474,7 @@
                                         </td>
                                         <td class="border-b border-slate-600 bg-transparent text-left align-middle">
                                             <p class="text-base font-semibold leading-tight text-slate-500 dark:text-slate-200">
-                                                @php
-                                                    $userRole = $item->pegawai->roles[0]->name;
-                                                @endphp
-                                                @if ($userRole == 'manajer_laundry')
-                                                    {{ $item->pegawai->manajer->first()->nama }}
-                                                @elseif ($userRole == 'pegawai_laundry')
-                                                    {{ $item->pegawai->pegawai->first()->nama }}
-                                                @elseif ($userRole == 'lurah' || 'pic')
-                                                    {{ $item->pegawai->lurah->first()->nama }}
-                                                @endif
-                                            </p>
-                                        </td>
-                                        <td class="border-b border-slate-600 bg-transparent text-left align-middle">
-                                            <p class="text-base font-semibold leading-tight text-slate-500 dark:text-slate-200">
-                                                {{ $item->gamis_id ? $item->gamis->nama : "-" }}
+                                                {{ $item->pegawai->name }}
                                             </p>
                                         </td>
                                         <td class="border-b border-slate-600 bg-transparent text-left align-middle">
@@ -601,7 +542,8 @@
             </div>
         @endrole
 
-        @role(['gamis'])
+        {{-- Role gamis dan rw telah dihapus dari sistem --}}
+        @if(false)
             <!-- row 1 -->
             <div class="-mx-3 mb-3 flex flex-wrap">
                 <!-- Cabang -->
@@ -854,9 +796,9 @@
                     </div>
                 </div>
             </div>
-        @endrole
+        @endif
 
-        @role('rw')
+        @if(false) {{-- role rw dihapus --}}
             <!-- row 1 -->
             <div class="-mx-3 mb-3 flex flex-wrap">
                 <!-- RW -->
@@ -930,7 +872,7 @@
                     </div>
                 </div>
             </div>
-        @endrole
+        @endif
     </div>
 @endsection
 

@@ -16,7 +16,6 @@ class StoreJenisLayananRequest extends FormRequest
         return [
             'nama' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
-            'for_gamis' => ['required', 'boolean'],
             'cabang_id' => ['required', 'integer', 'exists:cabang,id'],
         ];
     }
