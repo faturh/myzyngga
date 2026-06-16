@@ -14,7 +14,6 @@ class UpsertTransaksiData
      */
     public function __construct(
         public readonly int $pelangganId,
-        public readonly ?int $gamisId,
         public readonly float $totalBiayaLayanan,
         public readonly float $totalBiayaPrioritas,
         public readonly float $totalBiayaLayananTambahan,
@@ -66,7 +65,6 @@ class UpsertTransaksiData
 
         return new self(
             pelangganId: (int) $validated['pelanggan_id'],
-            gamisId: isset($validated['gamis_id']) ? (int) $validated['gamis_id'] : null,
             totalBiayaLayanan: (float) $validated['total_biaya_layanan'],
             totalBiayaPrioritas: (float) $validated['total_biaya_prioritas'],
             totalBiayaLayananTambahan: (float) $validated['total_biaya_layanan_tambahan'],
@@ -87,8 +85,7 @@ class UpsertTransaksiData
         $notaSuffix = strtoupper(substr(str_replace('-', '', (string) Str::uuid()), 0, 10));
 
         return [
-            'nota_layanan' => 'layanan-'.$notaSuffix,
-            'nota_pelanggan' => 'pelanggan-'.$notaSuffix,
+            'nota' => 'pelanggan-'.$notaSuffix,
             'waktu' => $now,
             'total_biaya_layanan' => $this->totalBiayaLayanan,
             'total_biaya_prioritas' => $this->totalBiayaPrioritas,
@@ -101,7 +98,6 @@ class UpsertTransaksiData
             'cabang_id' => $cabangId,
             'pegawai_id' => $pegawaiId,
             'pelanggan_id' => $this->pelangganId,
-            'gamis_id' => $this->gamisId,
             'layanan_prioritas_id' => $this->layananPrioritasId,
         ];
     }
@@ -118,7 +114,6 @@ class UpsertTransaksiData
             'kembalian' => $this->kembalian,
             'status' => $this->status,
             'pelanggan_id' => $this->pelangganId,
-            'gamis_id' => $this->gamisId,
             'layanan_prioritas_id' => $this->layananPrioritasId,
         ];
     }

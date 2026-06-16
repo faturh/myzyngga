@@ -13,7 +13,6 @@ class UpsertTransaksiDataTest extends TestCase
     {
         $dto = UpsertTransaksiData::fromArray([
             'pelanggan_id' => 10,
-            'gamis_id' => 4,
             'total_biaya_layanan' => 12000,
             'total_biaya_prioritas' => 3000,
             'total_biaya_layanan_tambahan' => 2000,
@@ -44,7 +43,6 @@ class UpsertTransaksiDataTest extends TestCase
 
         UpsertTransaksiData::fromArray([
             'pelanggan_id' => 10,
-            'gamis_id' => null,
             'total_biaya_layanan' => 12000,
             'total_biaya_prioritas' => 3000,
             'total_biaya_layanan_tambahan' => 2000,

@@ -114,8 +114,7 @@ class PesananSeeder extends Seeder
             $nota1 = Carbon::parse($data['waktu'])->format('His-dmY') . '-' . ($i + 1);
             
             $transaksi = Transaksi::create([
-                'nota_layanan' => 'layanan-' . $nota1,
-                'nota_pelanggan' => 'pelanggan-' . $nota1,
+                'nota' => 'pelanggan-' . $nota1,
                 'waktu' => $data['waktu'],
                 'pickup_address' => $data['pickup_address'],
                 'pickup_date' => Carbon::parse($data['waktu'])->toDateString(),
@@ -131,11 +130,9 @@ class PesananSeeder extends Seeder
                 'bayar' => $data['payment_status'] === 'paid' ? $data['total_bayar_akhir'] : 0,
                 'kembalian' => 0,
                 'status' => $data['status'],
-                'konfirmasi_upah_gamis' => $data['status'] === 'Selesai' ? 1 : 0,
                 'layanan_prioritas_id' => $data['prioritas_id'],
                 'pelanggan_id' => $pelanggan->id,
                 'pegawai_id' => $pegawai->id,
-                'gamis_id' => $gamis->id,
                 'cabang_id' => $cabang->id,
             ]);
 

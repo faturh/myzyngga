@@ -36,15 +36,6 @@
                             <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Cabang</span>
                         </a>
                     </li>
-
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["umr"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("umr") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-currency-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">UMR</span>
-                        </a>
-                    </li>
                     {{-- Akhir Data Master --}}
                 @endrole
 
@@ -59,26 +50,6 @@
                             <i class="ri-user-3-fill relative top-0 text-lg leading-normal text-blue-500"></i>
                         </div>
                         <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Akun</span>
-                    </a>
-                </li>
-
-                @role("lurah")
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["rw", "rw.cabang", "rw.cabang.create", "rw.create", "rw.view", "rw.edit", "rw.edit.password", "rw.trash"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("rw") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-user-star-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">PIC & RW</span>
-                        </a>
-                    </li>
-                @endrole
-
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["gamis", "gamis.anggota"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("gamis") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-parent-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Gamis</span>
                     </a>
                 </li>
                 {{-- Akhir User Management --}}
@@ -196,62 +167,6 @@
                 {{-- Akhir Transaksi --}}
             @endrole
 
-            @role(["gamis"])
-                {{-- Awal Monitoring Transaksi Gamis --}}
-                <li class="mt-4 w-full">
-                    <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">Transaksi Gamis</h6>
-                </li>
-
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["transaksi-gamis"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("transaksi-gamis") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-todo-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Transaksi Harian</span>
-                    </a>
-                </li>
-
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["transaksi-gamis.semua"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("transaksi-gamis.semua") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-todo-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Transaksi Semua</span>
-                    </a>
-                </li>
-                {{-- Akhir Monitoring Transaksi Gamis --}}
-            @endrole
-
-            @role(["lurah", "manajer_laundry", "rw", "pic"])
-                {{-- Awal Monitoring Gamis --}}
-                <li class="mt-4 w-full">
-                    <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">Monitoring Gamis</h6>
-                </li>
-
-                @role(["lurah", "manajer_laundry", "pic"])
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["monitoring", "monitoring.gamis.riwayat"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("monitoring") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-bar-chart-box-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Monitoring Gamis</span>
-                        </a>
-                    </li>
-                @endrole
-
-                @role(["rw"])
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["monitoring.rw"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("monitoring.rw") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-bar-chart-box-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Monitoring Gamis</span>
-                        </a>
-                    </li>
-                @endrole
-                {{-- Akhir Monitoring Gamis --}}
-            @endrole
-
             @role(["lurah", "manajer_laundry", "pic"])
                 {{-- Awal Laporan --}}
                 <li class="mt-4 w-full">
@@ -267,27 +182,11 @@
                     </a>
                 </li>
                 <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["laporan.pendapatan.gamis"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("laporan.pendapatan.gamis") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-book-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Pendapatan Gamis</span>
-                    </a>
-                </li>
-                <li class="mt-0.5 w-full">
                     <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["laporan.pelanggan"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("laporan.pelanggan") }}">
                         <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
                             <i class="ri-book-fill relative top-0 text-lg leading-normal text-blue-500"></i>
                         </div>
                         <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Pelanggan</span>
-                    </a>
-                </li>
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["laporan.gamis"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("laporan.gamis") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-book-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Gamis</span>
                     </a>
                 </li>
                 {{-- Akhir Laporan --}}

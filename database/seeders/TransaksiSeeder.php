@@ -46,6 +46,8 @@ class TransaksiSeeder extends Seeder
         shuffle($conditions);
 
         $jmlPelanggan = 10;
+        $adminUser = \App\Models\User::where('role', 'admin')->first();
+        $pegawaiId = $adminUser ? $adminUser->id : 1;
         
         foreach ($conditions as $index => $cond) {
             $pelanggan = ($index % $jmlPelanggan) + 1;
@@ -76,13 +78,13 @@ class TransaksiSeeder extends Seeder
 
             $transaksi = null;
             if ($type === 'reguler') {
-                $transaksi = $this->createTransaksiReguler($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+                $transaksi = $this->createTransaksiReguler($pelanggan, $pegawaiId, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
             } elseif ($type === 'kilat') {
-                $transaksi = $this->createTransaksiKilat($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+                $transaksi = $this->createTransaksiKilat($pelanggan, $pegawaiId, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
             } elseif ($type === 'cahaya') {
-                $transaksi = $this->createTransaksiCahaya($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+                $transaksi = $this->createTransaksiCahaya($pelanggan, $pegawaiId, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
             } else {
-                $transaksi = $this->createTransaksiRegulerTambahan($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+                $transaksi = $this->createTransaksiRegulerTambahan($pelanggan, $pegawaiId, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
             }
             
             if ($transaksi) {
@@ -128,7 +130,7 @@ class TransaksiSeeder extends Seeder
         $tanggalUpgrade = Carbon::now()->subHours(5);
         $jamNotaUpgrade = $tanggalUpgrade->format('His');
         $tanggalNotaUpgrade = $tanggalUpgrade->format('dmY');
-        $transaksiUpgrade = $this->createTransaksiReguler(1, 1, 'Proses', $jamNotaUpgrade, $tanggalNotaUpgrade, $tanggalUpgrade, 0);
+        $transaksiUpgrade = $this->createTransaksiReguler(1, $pegawaiId, 'Proses', $jamNotaUpgrade, $tanggalNotaUpgrade, $tanggalUpgrade, 0);
         
         $transaksiUpgrade->update([
             'is_roundtrip' => true,
@@ -149,8 +151,7 @@ class TransaksiSeeder extends Seeder
     {
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 84000,
             'total_biaya_prioritas' => 0,
@@ -160,11 +161,9 @@ class TransaksiSeeder extends Seeder
             'bayar' => 100000,
             'kembalian' => 16000,
             'status' => $status,
-            'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 1,
             'pelanggan_id' => $pelanggan,
-            'pegawai_id' => 9,
-            'gamis_id' => $gamis,
+            'pegawai_id' => $gamis,
             'cabang_id' => 1,
         ]);
 
@@ -191,8 +190,7 @@ class TransaksiSeeder extends Seeder
     {
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 84000,
             'total_biaya_prioritas' => 36000,
@@ -202,11 +200,9 @@ class TransaksiSeeder extends Seeder
             'bayar' => 150000,
             'kembalian' => 30000,
             'status' => $status,
-            'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 2,
             'pelanggan_id' => $pelanggan,
-            'pegawai_id' => 8,
-            'gamis_id' => $gamis,
+            'pegawai_id' => $gamis,
             'cabang_id' => 1,
         ]);
 
@@ -233,8 +229,7 @@ class TransaksiSeeder extends Seeder
     {
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 84000,
             'total_biaya_prioritas' => 48000,
@@ -244,11 +239,9 @@ class TransaksiSeeder extends Seeder
             'bayar' => 150000,
             'kembalian' => 18000,
             'status' => $status,
-            'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 3,
             'pelanggan_id' => $pelanggan,
-            'pegawai_id' => 8,
-            'gamis_id' => $gamis,
+            'pegawai_id' => $gamis,
             'cabang_id' => 1,
         ]);
 
@@ -275,8 +268,7 @@ class TransaksiSeeder extends Seeder
     {
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 84000,
             'total_biaya_prioritas' => 0,
@@ -286,11 +278,9 @@ class TransaksiSeeder extends Seeder
             'bayar' => 110000,
             'kembalian' => 6000,
             'status' => $status,
-            'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 1,
             'pelanggan_id' => $pelanggan,
-            'pegawai_id' => 8,
-            'gamis_id' => $gamis,
+            'pegawai_id' => $gamis,
             'cabang_id' => 1,
         ]);
 

@@ -18,7 +18,6 @@ class UpdateTransaksiCabangRequest extends FormRequest
     {
         return [
             'pelanggan_id' => ['required', 'integer', 'exists:pelanggan,id'],
-            'gamis_id' => ['nullable', 'integer', 'exists:detail_gamis,id'],
             'total_biaya_layanan' => ['required', 'numeric', 'min:0'],
             'total_biaya_prioritas' => ['required', 'numeric', 'min:0'],
             'total_biaya_layanan_tambahan' => ['required', 'numeric', 'min:0'],

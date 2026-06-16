@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('nama');
             $table->text('deskripsi')->nullable();
-            $table->boolean('for_gamis');
             $table->foreignId('cabang_id')->constrained('cabang', 'id');
             $table->softDeletes();
             $table->timestamps();

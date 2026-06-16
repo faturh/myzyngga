@@ -65,8 +65,7 @@ class TransaksiSuksesSeeder extends Seeder
     {
         $nota1 = Carbon::now()->format('His') . '-' . $tanggalNota . '-' . str()->uuid();
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 138000,
             'total_biaya_prioritas' => 0,
@@ -79,7 +78,6 @@ class TransaksiSuksesSeeder extends Seeder
             'layanan_prioritas_id' => 1,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => 7,
-            'gamis_id' => $gamis,
             'cabang_id' => 1,
         ]);
 
@@ -120,8 +118,7 @@ class TransaksiSuksesSeeder extends Seeder
     {
         $nota1 = Carbon::now()->format('His') . '-' . $tanggalNota . '-' . str()->uuid();
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 138000,
             'total_biaya_prioritas' => 54000,
@@ -134,7 +131,6 @@ class TransaksiSuksesSeeder extends Seeder
             'layanan_prioritas_id' => 2,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => 7,
-            'gamis_id' => $gamis,
             'cabang_id' => 1,
         ]);
 
@@ -175,8 +171,7 @@ class TransaksiSuksesSeeder extends Seeder
     {
         $nota1 = Carbon::now()->format('His') . '-' . $tanggalNota . '-' . str()->uuid();
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 138000,
             'total_biaya_prioritas' => 72000,
@@ -189,7 +184,6 @@ class TransaksiSuksesSeeder extends Seeder
             'layanan_prioritas_id' => 3,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => 7,
-            'gamis_id' => $gamis,
             'cabang_id' => 1,
         ]);
 
@@ -230,8 +224,7 @@ class TransaksiSuksesSeeder extends Seeder
     {
         $nota1 = Carbon::now()->format('His') . '-' . $tanggalNota . '-' . str()->uuid();
         $transaksi = Transaksi::create([
-            'nota_layanan' => 'layanan-' . $nota1,
-            'nota_pelanggan' => 'pelanggan-' . $nota1,
+            'nota' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
             'total_biaya_layanan' => 138000,
             'total_biaya_prioritas' => 0,
@@ -244,7 +237,6 @@ class TransaksiSuksesSeeder extends Seeder
             'layanan_prioritas_id' => 1,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => 7,
-            'gamis_id' => $gamis,
             'cabang_id' => 1,
         ]);
 

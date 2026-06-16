@@ -13,8 +13,7 @@ return new class extends Migration
     {
         Schema::create('transaksi', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('nota_layanan')->unique();
-            $table->string('nota_pelanggan')->unique();
+            $table->string('nota')->unique();
             $table->dateTime('waktu');
             $table->double('total_biaya_layanan');
             $table->double('total_biaya_prioritas');
@@ -24,11 +23,9 @@ return new class extends Migration
             $table->double('bayar');
             $table->double('kembalian');
             $table->string('status');
-            $table->boolean('konfirmasi_upah_gamis')->default(0);
             $table->foreignId('layanan_prioritas_id')->constrained('layanan_prioritas', 'id');
             $table->foreignId('pelanggan_id')->constrained('pelanggan', 'id');
             $table->foreignId('pegawai_id')->constrained('users', 'id');
-            $table->foreignId('gamis_id')->nullable()->constrained('detail_gamis', 'id');
             $table->foreignId('cabang_id')->constrained('cabang', 'id');
             $table->timestamps();
         });
