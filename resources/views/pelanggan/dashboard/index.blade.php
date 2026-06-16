@@ -71,10 +71,10 @@
                     <div class="grid grid-cols-5">
                         @php
                             $services = [
-                                ['label' => 'Kilat',   'icon' => 'zap'],
                                 ['label' => 'Reguler', 'icon' => 'star'],
                                 ['label' => 'Quick',   'icon' => 'clock'],
                                 ['label' => 'Express', 'icon' => 'fast-forward'],
+                                ['label' => 'Kilat',   'icon' => 'zap'],
                                 ['label' => 'Satuan',  'icon' => 'package'],
                             ];
                         @endphp
@@ -124,7 +124,7 @@
                                     <x-zyngga-text variant="sm" color="neutral-500">{{ $activeOrder['date'] }}</x-zyngga-text>
                                 </div>
                             </div>
-                            <x-zyngga-status type="secondary" size="M" :icon="$activeOrder['status_icon']" :label="$activeOrder['status']" />
+                            <x-zyngga-status type="secondary" size="M" :icon="$activeOrder['delivery_icon']" :label="$activeOrder['delivery_status']" />
                         </div>
                         
                         <div class="flex items-center gap-4 mb-4">
@@ -178,7 +178,7 @@
                                 <x-zyngga-text variant="sm" color="neutral-500">{{ $latestOrder['date'] }}</x-zyngga-text>
                             </div>
                         </div>
-                        <x-zyngga-status type="secondary" size="M" :icon="$latestOrder['status_icon']" :label="$latestOrder['status']" />
+                        <x-zyngga-status type="secondary" size="M" :icon="$latestOrder['delivery_icon']" :label="$latestOrder['delivery_status']" />
                     </div>
 
                     <div class="flex items-end justify-between">

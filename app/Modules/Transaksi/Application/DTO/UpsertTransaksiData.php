@@ -46,6 +46,10 @@ class UpsertTransaksiData
             throw new DomainException('Payload detail transaksi tidak valid.', 422);
         }
 
+        if ($lineItemCount > 1) {
+            throw new DomainException('Sistem saat ini membatasi maksimal 1 jenis layanan per transaksi.', 422);
+        }
+
         foreach ($jenisPakaianIds as $index => $jenisPakaianId) {
             $selectedJenisLayanan = array_map('intval', $jenisLayananIds[$index] ?? []);
             if ($selectedJenisLayanan === []) {

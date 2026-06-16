@@ -16,75 +16,133 @@ class TransaksiSeeder extends Seeder
      */
     public function run(): void
     {
+        // 12 unique combinations to ensure coverage, plus 8 random ones = 20 total
+        $conditions = [
+            // Baru
+            ['status' => 'Baru', 'payment_status' => 'pending', 'is_roundtrip' => false],
+            ['status' => 'Baru', 'payment_status' => 'pending', 'is_roundtrip' => true],
+            ['status' => 'Baru', 'payment_status' => 'paid', 'is_roundtrip' => false],
+            ['status' => 'Baru', 'payment_status' => 'paid', 'is_roundtrip' => true],
+            
+            // Proses
+            ['status' => 'Proses', 'payment_status' => 'pending', 'is_roundtrip' => false],
+            ['status' => 'Proses', 'payment_status' => 'pending', 'is_roundtrip' => true],
+            ['status' => 'Proses', 'payment_status' => 'paid', 'is_roundtrip' => false],
+            ['status' => 'Proses', 'payment_status' => 'paid', 'is_roundtrip' => true],
+            
+            // Selesai
+            ['status' => 'Selesai', 'payment_status' => 'pending', 'is_roundtrip' => false],
+            ['status' => 'Selesai', 'payment_status' => 'pending', 'is_roundtrip' => true],
+            ['status' => 'Selesai', 'payment_status' => 'paid', 'is_roundtrip' => false],
+            ['status' => 'Selesai', 'payment_status' => 'paid', 'is_roundtrip' => true],
+        ];
+
+        // Pad to 20
+        for ($i = count($conditions); $i < 20; $i++) {
+            $conditions[] = $conditions[array_rand($conditions)];
+        }
+
+        // Shuffle to distribute them randomly in time
+        shuffle($conditions);
+
         $jmlPelanggan = 10;
-        $jmlTransaksi = 25;
-        $tanggalAwal = '2024-01-01';
-        $tanggalAkhir = 'now';
+        
+        foreach ($conditions as $index => $cond) {
+            $pelanggan = ($index % $jmlPelanggan) + 1;
+            $gamis = fake()->randomElement([1,2]);
+            // Orders closer to now for 'Baru', further for 'Selesai'
+            if ($cond['status'] === 'Baru') {
+                $tanggal = fake()->dateTimeBetween('-2 hours', 'now', 'Asia/Jakarta');
+            } elseif ($cond['status'] === 'Proses') {
+                $tanggal = fake()->dateTimeBetween('-5 days', '-1 days', 'Asia/Jakarta');
+            } else {
+                $tanggal = fake()->dateTimeBetween('-14 days', '-4 days', 'Asia/Jakarta');
+            }
 
-        for ($i = 1; $i <= $jmlTransaksi; $i++) {
-            $this->createTransaksiReguler(
-                fake()->numberBetween(1, $jmlPelanggan),
-                fake()->randomElement([1,2]),
-                fake()->randomElement(['Baru', 'Proses']),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('His'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('dmY'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')
-            );
-        }
-        for ($i = 1; $i <= $jmlTransaksi; $i++) {
-            $this->createTransaksiKilat(
-                fake()->numberBetween(1, $jmlPelanggan),
-                fake()->randomElement([1,2]),
-                fake()->randomElement(['Baru', 'Proses']),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('His'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('dmY'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')
-            );
-        }
-        for ($i = 1; $i <= $jmlTransaksi; $i++) {
-            $this->createTransaksiCahaya(
-                fake()->numberBetween(1, $jmlPelanggan),
-                fake()->randomElement([1,2]),
-                fake()->randomElement(['Baru', 'Proses']),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('His'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('dmY'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')
-            );
-        }
-        for ($i = 1; $i <= $jmlTransaksi; $i++) {
-            $this->createTransaksiRegulerTambahan(
-                fake()->numberBetween(1, $jmlPelanggan),
-                fake()->randomElement([1,2]),
-                fake()->randomElement(['Baru', 'Proses']),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('His'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('dmY'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')
-            );
+            $jamNota = $tanggal->format('His');
+            $tanggalNota = $tanggal->format('dmY');
+            
+            $type = fake()->randomElement(['reguler', 'kilat', 'cahaya', 'tambahan']);
+            
+            $slaHours = 72;
+            if ($type === 'kilat') {
+                $slaHours = 24;
+            } elseif ($type === 'cahaya') {
+                $slaHours = 12;
+            }
+            
+            $waktuPesan = Carbon::parse($tanggal);
+            $waktuSelesai = $waktuPesan->copy()->addHours($slaHours);
+
+            $transaksi = null;
+            if ($type === 'reguler') {
+                $transaksi = $this->createTransaksiReguler($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+            } elseif ($type === 'kilat') {
+                $transaksi = $this->createTransaksiKilat($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+            } elseif ($type === 'cahaya') {
+                $transaksi = $this->createTransaksiCahaya($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+            } else {
+                $transaksi = $this->createTransaksiRegulerTambahan($pelanggan, $gamis, $cond['status'], $jamNota, $tanggalNota, $tanggal, $cond['status'] === 'Selesai' ? 1 : 0);
+            }
+            
+            if ($transaksi) {
+                $updatedAt = $waktuPesan->copy();
+                if ($cond['status'] === 'Selesai') {
+                    $updatedAt = $waktuSelesai;
+                } elseif ($cond['status'] === 'Proses') {
+                    $updatedAt = $waktuPesan->copy()->addHours(fake()->numberBetween(1, max(1, $slaHours - 1)));
+                }
+
+                $transaksi->update([
+                    'is_roundtrip' => $cond['is_roundtrip'],
+                    'payment_status' => $cond['payment_status'],
+                    'pickup_address' => 'Jl. Percobaan No. ' . ($index + 1),
+                    'pickup_date' => $waktuPesan->toDateString(),
+                ]);
+
+                \Illuminate\Support\Facades\DB::table('transaksi')
+                    ->where('id', $transaksi->id)
+                    ->update([
+                        'created_at' => $waktuPesan,
+                        'updated_at' => $updatedAt,
+                    ]);
+
+                if ($cond['payment_status'] === 'paid') {
+                    $payment = $transaksi->payments()->create([
+                        'amount' => $transaksi->total_bayar_akhir,
+                        'method' => 'qris',
+                        'status' => 'paid',
+                    ]);
+                    
+                    \Illuminate\Support\Facades\DB::table('payments')
+                        ->where('id', $payment->id)
+                        ->update([
+                            'created_at' => $waktuPesan,
+                            'updated_at' => $waktuPesan,
+                        ]);
+                }
+            }
         }
 
-        // Transaksi Selesai
-        for ($i = 1; $i <= $jmlTransaksi; $i++) {
-            $this->createTransaksiReguler(
-                fake()->numberBetween(1, $jmlPelanggan),
-                fake()->randomElement([1,2]),
-                'Selesai',
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('His'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('dmY'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta'),
-                1
-            );
-        }
-        for ($i = 1; $i <= $jmlTransaksi; $i++) {
-            $this->createTransaksiRegulerTambahan(
-                fake()->numberBetween(1, $jmlPelanggan),
-                fake()->randomElement([1,2]),
-                'Selesai',
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('His'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta')->format('dmY'),
-                fake()->dateTimeBetween($tanggalAwal, $tanggalAkhir, 'Asia/Jakarta'),
-                1
-            );
-        }
+        // Add 1 specific transaction guaranteed to be upgradeable
+        $tanggalUpgrade = Carbon::now()->subHours(5);
+        $jamNotaUpgrade = $tanggalUpgrade->format('His');
+        $tanggalNotaUpgrade = $tanggalUpgrade->format('dmY');
+        $transaksiUpgrade = $this->createTransaksiReguler(1, 1, 'Proses', $jamNotaUpgrade, $tanggalNotaUpgrade, $tanggalUpgrade, 0);
+        
+        $transaksiUpgrade->update([
+            'is_roundtrip' => true,
+            'payment_status' => 'pending',
+            'pickup_address' => 'Jl. Khusus Upgrade Layanan No. 99',
+            'pickup_date' => $tanggalUpgrade->toDateString(),
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('transaksi')
+            ->where('id', $transaksiUpgrade->id)
+            ->update([
+                'created_at' => $tanggalUpgrade,
+                'updated_at' => $tanggalUpgrade->copy()->addHours(2),
+            ]);
     }
 
     public function createTransaksiReguler($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
@@ -94,13 +152,13 @@ class TransaksiSeeder extends Seeder
             'nota_layanan' => 'layanan-' . $nota1,
             'nota_pelanggan' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
-            'total_biaya_layanan' => 138000,
+            'total_biaya_layanan' => 84000,
             'total_biaya_prioritas' => 0,
-            'total_bayar_akhir' => 138000,
+            'total_bayar_akhir' => 84000,
             'total_biaya_layanan_tambahan' => 0,
             'jenis_pembayaran' => 'Tunai',
-            'bayar' => 150000,
-            'kembalian' => 12000,
+            'bayar' => 100000,
+            'kembalian' => 16000,
             'status' => $status,
             'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 1,
@@ -126,21 +184,7 @@ class TransaksiSeeder extends Seeder
             'detail_transaksi_id' => $detail1->id,
         ]);
 
-        $detail2 = DetailTransaksi::create([
-            'total_pakaian' => 12,
-            'harga_layanan_akhir' => 4500,
-            'total_biaya_layanan' => 54000,
-            'total_biaya_prioritas' => 0,
-            'transaksi_id' => $transaksi->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 5,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 6,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
+        return $transaksi;
     }
 
     public function createTransaksiKilat($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
@@ -150,13 +194,13 @@ class TransaksiSeeder extends Seeder
             'nota_layanan' => 'layanan-' . $nota1,
             'nota_pelanggan' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
-            'total_biaya_layanan' => 138000,
-            'total_biaya_prioritas' => 54000,
-            'total_bayar_akhir' => 192000,
+            'total_biaya_layanan' => 84000,
+            'total_biaya_prioritas' => 36000,
+            'total_bayar_akhir' => 120000,
             'total_biaya_layanan_tambahan' => 0,
             'jenis_pembayaran' => 'Tunai',
-            'bayar' => 200000,
-            'kembalian' => 8000,
+            'bayar' => 150000,
+            'kembalian' => 30000,
             'status' => $status,
             'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 2,
@@ -182,21 +226,7 @@ class TransaksiSeeder extends Seeder
             'detail_transaksi_id' => $detail1->id,
         ]);
 
-        $detail2 = DetailTransaksi::create([
-            'total_pakaian' => 12,
-            'harga_layanan_akhir' => 4500,
-            'total_biaya_layanan' => 54000,
-            'total_biaya_prioritas' => 18000,
-            'transaksi_id' => $transaksi->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 5,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 6,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
+        return $transaksi;
     }
 
     public function createTransaksiCahaya($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
@@ -206,13 +236,13 @@ class TransaksiSeeder extends Seeder
             'nota_layanan' => 'layanan-' . $nota1,
             'nota_pelanggan' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
-            'total_biaya_layanan' => 138000,
-            'total_biaya_prioritas' => 72000,
-            'total_bayar_akhir' => 210000,
+            'total_biaya_layanan' => 84000,
+            'total_biaya_prioritas' => 48000,
+            'total_bayar_akhir' => 132000,
             'total_biaya_layanan_tambahan' => 0,
             'jenis_pembayaran' => 'Tunai',
-            'bayar' => 220000,
-            'kembalian' => 10000,
+            'bayar' => 150000,
+            'kembalian' => 18000,
             'status' => $status,
             'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 3,
@@ -238,21 +268,7 @@ class TransaksiSeeder extends Seeder
             'detail_transaksi_id' => $detail1->id,
         ]);
 
-        $detail2 = DetailTransaksi::create([
-            'total_pakaian' => 12,
-            'harga_layanan_akhir' => 4500,
-            'total_biaya_layanan' => 54000,
-            'total_biaya_prioritas' => 24000,
-            'transaksi_id' => $transaksi->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 5,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 6,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
+        return $transaksi;
     }
 
     public function createTransaksiRegulerTambahan($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
@@ -262,13 +278,13 @@ class TransaksiSeeder extends Seeder
             'nota_layanan' => 'layanan-' . $nota1,
             'nota_pelanggan' => 'pelanggan-' . $nota1,
             'waktu' => $tanggal,
-            'total_biaya_layanan' => 138000,
+            'total_biaya_layanan' => 84000,
             'total_biaya_prioritas' => 0,
-            'total_bayar_akhir' => 158000,
+            'total_bayar_akhir' => 104000,
             'total_biaya_layanan_tambahan' => 20000,
             'jenis_pembayaran' => 'Tunai',
-            'bayar' => 200000,
-            'kembalian' => 42000,
+            'bayar' => 110000,
+            'kembalian' => 6000,
             'status' => $status,
             'konfirmasi_upah_gamis' => $konfirmasi,
             'layanan_prioritas_id' => 1,
@@ -294,22 +310,6 @@ class TransaksiSeeder extends Seeder
             'detail_transaksi_id' => $detail1->id,
         ]);
 
-        $detail2 = DetailTransaksi::create([
-            'total_pakaian' => 12,
-            'harga_layanan_akhir' => 4500,
-            'total_biaya_layanan' => 54000,
-            'total_biaya_prioritas' => 0,
-            'transaksi_id' => $transaksi->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 5,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
-        DetailLayananTransaksi::create([
-            'harga_jenis_layanan_id' => 6,
-            'detail_transaksi_id' => $detail2->id,
-        ]);
-
         LayananTambahanTransaksi::create([
             'layanan_tambahan_id' => 1,
             'transaksi_id' => $transaksi->id,
@@ -318,5 +318,7 @@ class TransaksiSeeder extends Seeder
             'layanan_tambahan_id' => 2,
             'transaksi_id' => $transaksi->id,
         ]);
+
+        return $transaksi;
     }
 }

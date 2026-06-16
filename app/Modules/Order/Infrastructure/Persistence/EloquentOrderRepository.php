@@ -100,8 +100,10 @@ class EloquentOrderRepository implements OrderRepositoryInterface
                 $query->where('telepon', 'like', '%'.$phoneLast4);
             })
             ->where(function (Builder $query) use ($normalizedQuery) {
+                if (\Illuminate\Support\Str::isUuid($normalizedQuery)) {
+                    $query->where('id', $normalizedQuery);
+                }
                 $query
-                    ->where('id', $normalizedQuery)
                     ->orWhere('nota_layanan', 'like', '%'.$normalizedQuery.'%')
                     ->orWhere('nota_pelanggan', 'like', '%'.$normalizedQuery.'%')
                     ->orWhereHas('pelanggan', function (Builder $customerQuery) use ($normalizedQuery) {

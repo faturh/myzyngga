@@ -10,6 +10,10 @@
     'icon' => null,
     'service' => null,
     'size' => 'L', // L or M
+    'radioType' => 'dot', // dot or check
+    'labelVariant' => 'sm',
+    'labelWeight' => 'medium',
+    'additionalClass' => 'text-[14px] text-[#0F0F0F] font-normal',
 ])
 
 @php
@@ -35,7 +39,7 @@
         @endif
         
         <div class="flex flex-col">
-            <x-zyngga-text variant="sm" weight="medium" class="leading-snug">
+            <x-zyngga-text :variant="$labelVariant" :weight="$labelWeight" class="leading-snug text-neutral-900">
                 {{ $label }}
             </x-zyngga-text>
             @if($description)
@@ -48,7 +52,7 @@
 
     <div class="flex items-center gap-3">
         @if($additional)
-            <span class="text-[14px] text-[#0F0F0F] font-normal">{{ $additional }}</span>
+            <span class="{{ $additionalClass }}">{{ $additional }}</span>
         @endif
         
         <div class="relative flex items-center justify-center h-5 w-5">
@@ -67,11 +71,13 @@
                         peer-checked:border-zyngga-blue-300 peer-checked:bg-zyngga-blue-300
                         group-hover:border-zyngga-blue-300">
             </div>
-            {{-- Checkmark icon --}}
+            {{-- Radio dot/check icon --}}
             <div class="absolute inset-0 flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-opacity duration-200 pointer-events-none">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                @if($radioType === 'check')
+                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                @else
+                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                @endif
             </div>
         </div>
     </div>

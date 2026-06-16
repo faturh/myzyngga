@@ -12,7 +12,7 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
-    #[Validate('required|string|email:rfc,dns', message: [
+    #[Validate('required|string|email:rfc', message: [
         'required' => 'Email wajib diisi.',
         'email' => 'Format email tidak valid (pastikan format benar, contoh: nama@email.com).'
     ])]

@@ -136,7 +136,7 @@
                                         <x-zyngga-text variant="sm" color="neutral-500">{{ $order['date'] }}</x-zyngga-text>
                                     </div>
                                 </div>
-                                <x-zyngga-status type="secondary" size="M" icon="loader" :label="$order['status']" />
+                                <x-zyngga-status type="secondary" size="M" :icon="$order['delivery_icon']" :label="$order['delivery_status']" />
                             </div>
                             
                             <div class="flex items-center gap-4 mb-5">
