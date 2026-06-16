@@ -97,7 +97,10 @@ class EloquentOrderRepository implements OrderRepositoryInterface
         return Transaksi::query()
             ->with(self::ORDER_RELATIONS)
             ->whereHas('pelanggan', function (Builder $query) use ($phoneLast4) {
-                $query->where('telepon', 'like', '%'.$phoneLast4);
+                $query->where('telepon', 'like', '%'.$phoneLast4)
+                      ->orWhereHas('user', function (Builder $userQuery) use ($phoneLast4) {
+                          $userQuery->where('phone', 'like', '%'.$phoneLast4);
+                      });
             })
             ->where(function (Builder $query) use ($normalizedQuery) {
                 if (\Illuminate\Support\Str::isUuid($normalizedQuery)) {
@@ -107,7 +110,10 @@ class EloquentOrderRepository implements OrderRepositoryInterface
                     ->orWhere('nota_layanan', 'like', '%'.$normalizedQuery.'%')
                     ->orWhere('nota_pelanggan', 'like', '%'.$normalizedQuery.'%')
                     ->orWhereHas('pelanggan', function (Builder $customerQuery) use ($normalizedQuery) {
-                        $customerQuery->where('nama', 'like', '%'.$normalizedQuery.'%');
+                        $customerQuery->where('nama', 'like', '%'.$normalizedQuery.'%')
+                                      ->orWhereHas('user', function (Builder $userQuery) use ($normalizedQuery) {
+                                          $userQuery->where('name', 'like', '%'.$normalizedQuery.'%');
+                                      });
                     });
             })
             ->latest('waktu')

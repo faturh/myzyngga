@@ -35,6 +35,7 @@ class Transaksi extends Model
         'bayar',
         'kembalian',
         'status',
+        'bukti_timbangan',
         'konfirmasi_upah_gamis',
         'layanan_prioritas_id',
         'pelanggan_id',

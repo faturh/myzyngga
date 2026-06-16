@@ -68,7 +68,7 @@
                                 <div class="avatar mt-3">
                                     <div class="w-24 rounded-full">
                                         @if ($profile->foto)
-                                            <img src="{{ asset("storage/" . $profile->foto) }}" alt="{{ $user->slug }}" class="img-preview" />
+                                            <img src="{{ str_starts_with($profile->foto, 'http') ? $profile->foto : asset('storage/' . $profile->foto) }}" alt="{{ $user->slug }}" class="img-preview" />
                                         @else
                                             @if ($profile->jenis_kelamin == "L")
                                                 <img class="img-preview" src="{{ asset("img/team-2.jpg") }}" />
