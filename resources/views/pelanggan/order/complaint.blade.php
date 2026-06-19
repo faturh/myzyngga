@@ -112,14 +112,14 @@
                                     <textarea 
                                         name="issue_description"
                                         id="issue_description"
-                                        maxlength="250"
+                                        maxlength="180"
                                         x-model="issueDesc"
                                         class="w-full h-32 p-4 border-[1.5px] border-zyngga-neutral-200 rounded-xl focus:border-zyngga-blue-300 focus:ring-0 outline-none transition-all duration-200 text-sm placeholder-zyngga-neutral-400 resize-none"
                                         placeholder="Ceritakan kendala yang kamu alami"
                                         required
                                     ></textarea>
                                     <div class="absolute bottom-3 right-4 text-xs text-zyngga-neutral-400">
-                                        <span x-text="issueDesc.length">0</span>/250
+                                        <span x-text="issueDesc.length">0</span>/180
                                     </div>
                                 </div>
                             </div>
@@ -128,8 +128,8 @@
                             <div>
                                 <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Gambar Bukti</x-zyngga-text>
                                 <div class="relative w-full rounded-xl border-2 border-dashed border-zyngga-neutral-200 bg-white p-6 flex flex-col items-center justify-center text-center">
-                                    <div class="w-12 h-12 bg-zyngga-neutral-50 rounded-full flex items-center justify-center mb-3">
-                                        <i data-feather="image" class="w-6 h-6 text-zyngga-neutral-500"></i>
+                                    <div class="w-12 h-12 bg-[#F4F4F4] rounded-full flex items-center justify-center mb-4">
+                                        <img src="{{ asset('assets/images/image.svg') }}" alt="Icon Gambar" width="24" height="24">
                                     </div>
                                     <x-zyngga-text variant="xs" color="neutral-500" class="mb-4">Format foto .jpg atau .png, maksimal 5MB</x-zyngga-text>
                                     

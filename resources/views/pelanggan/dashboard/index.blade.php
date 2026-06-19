@@ -187,6 +187,8 @@
                             <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($latestOrder['total'], 0, ',', '.') }}</x-zyngga-text>
                         </div>
                         <x-zyngga-button 
+                            type="a"
+                            href="{{ route('order.repeat', $latestOrder['id']) }}"
                             variant="primary"
                             size="m"
                             label="Ulangi Pesanan"
@@ -218,7 +220,7 @@
                         @foreach ($steps as $step)
                             <div class="flex items-start gap-3">
                                 <div class="w-8 h-8 rounded-full border border-zyngga-blue-300 flex items-center justify-center shrink-0">
-                                    <x-zyngga-text variant="xs" weight="medium" color="primary">{{ $step['n'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="xs" weight="medium" color="primary" class="leading-none pt-[2px]">{{ $step['n'] }}</x-zyngga-text>
                                 </div>
                                 <div class="space-y-1">
                                     <x-zyngga-text variant="sm" weight="regular" class="leading-none">{{ $step['title'] }}</x-zyngga-text>

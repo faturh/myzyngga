@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Pilih Lokasi Pickup – Zyngga</title>
+    <title>Pilih Lokasi Delivery – Zyngga</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
@@ -120,6 +120,7 @@
     <div class="min-h-screen flex flex-col">
         <div id="app-wrapper">
 
+
     {{-- ── Map area ───────────────────────────────────────────── --}}
     <div id="map"></div>
 
@@ -154,7 +155,10 @@
     </div>
 
     <div id="bottom-sheet">
+        {{-- Clickable drag handle area for expanding/collapsing --}}
+        <div id="drag-handle" style="position: absolute; top:0; left:0; right:0; height: 32px; cursor:pointer; z-index:50;"></div>
         <div id="bottom-sheet-content">
+            <div id="collapsible-top">
             {{-- Row 1: Back + Title only (no Ubah button) --}}
             <div style="display:flex; align-items:center; height:40px; gap:8px;">
                 <x-zyngga-button 
@@ -168,7 +172,7 @@
                 />
 
                 <x-zyngga-text variant="lg" weight="medium" as="h1" class="flex-1">
-                    Pilih Lokasi Pickup
+                    Pilih Lokasi Delivery
                 </x-zyngga-text>
             </div>
 
@@ -178,7 +182,7 @@
                     wrapperId="search-input-wrapper"
                     name="search_input"
                     id="search-input"
-                    placeholder="Cari lokasi pickup"
+                    placeholder="Cari lokasi delivery"
                     autocomplete="off"
                 >
                     <x-slot:iconLeft>
@@ -239,6 +243,7 @@
 
             {{-- Divider between search bar and address card --}}
             <div style="height:1px; background:#e8eff9; margin:4px 4px 0;"></div>
+            </div> <!-- End collapsible-top -->
 
             {{-- Address card — location icon vertically centered --}}
             <div
@@ -261,7 +266,7 @@
                         Menentukan lokasi...
                     </x-zyngga-text>
                     <x-zyngga-text id="loc-address" variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
-                        Geser pin di peta untuk memilih lokasi penjemputan
+                        Geser pin di peta untuk memilih lokasi pengantaran
                     </x-zyngga-text>
                 </div>
                 {{-- Loading spinner --}}
@@ -274,7 +279,7 @@
             <div id="distance-error" style="display:none; padding:12px 16px; background:#FEF2F2; border-radius:12px; border:1px solid #FEE2E2; align-items:center; gap:10px; margin-top:-4px;">
                 <i data-feather="alert-circle" class="w-5 h-5 text-[#EF4444] shrink-0"></i>
                 <x-zyngga-text variant="xs" weight="regular" color="danger">
-                    Maaf, lokasi Anda berada di luar jangkauan pickup kami.
+                    Lokasi Anda berada di luar jangkauan delivery kami.
                 </x-zyngga-text>
             </div>
 
@@ -288,7 +293,7 @@
                     size="l"
                     icon="arrow-right"
                     iconPosition="right"
-                    label="Atur Lokasi Pickup"
+                    label="Atur Lokasi Delivery"
                     class="w-full"
                     disabled
                 />
@@ -327,35 +332,14 @@
                     const address = document.getElementById('hidden-address').value;
                     const lat = document.getElementById('hidden-lat').value;
                     const lng = document.getElementById('hidden-lng').value;
-                    const service = "{{ $service }}";
                     
                     if (lat && lng && address) {
-                        if (currentAddressId) {
-                            // Direct submit for saved address
-                            const form = document.getElementById('direct-pickup-form');
-                            document.getElementById('direct-address').value = address;
-                            document.getElementById('direct-lat').value = lat;
-                            document.getElementById('direct-lng').value = lng;
-                            document.getElementById('direct-detail-address').value = currentNote;
-                            form.submit();
-                        } else {
-                            // Go to review for new address
-                            let url = `{{ route('order.pickup.details', ['service' => $service]) }}?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}`;
-                            window.location.href = url;
-                        }
+                        let url = `{{ route('order.request.delivery.confirm', ['id' => $order['id']]) }}?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}&note=${encodeURIComponent(currentNote)}`;
+                        window.location.href = url;
                     }
                 }
             </script>
 
-            {{-- Hidden form for direct pickup confirmation --}}
-            <form id="direct-pickup-form" action="{{ route('order.pickup.store') }}" method="POST" style="display: none;">
-                @csrf
-                <input type="hidden" name="service" value="{{ $service }}">
-                <input type="hidden" name="address" id="direct-address">
-                <input type="hidden" name="detail_address" id="direct-detail-address">
-                <input type="hidden" name="lat" id="direct-lat">
-                <input type="hidden" name="lng" id="direct-lng">
-            </form>
 
             <input type="hidden" id="hidden-address" value="">
             <input type="hidden" id="hidden-lat" value="">
@@ -373,6 +357,21 @@
         from { transform: rotate(0deg); }
         to   { transform: rotate(360deg); }
     }
+    #collapsible-top {
+        transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.35s ease;
+        max-height: 400px;
+        opacity: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    #bottom-sheet.collapsed #collapsible-top {
+        max-height: 0;
+        opacity: 0;
+        margin-bottom: 0;
+    }
 </style>
 
 <script>
@@ -387,17 +386,99 @@
 
     // ── Sync pin overlay height to visible map area ────────────────
     function syncPinOverlay() {
-        // We now center the pin to the entire map container instead of the visible area.
-        // No padding or height adjustments are needed.
+        const sheet = document.getElementById('bottom-sheet');
+        const rect = sheet.getBoundingClientRect();
+        const sheetTop = rect.top; // The exact pixel where the bottom sheet starts
+        
+        const mapEl = document.getElementById('map');
+        const pinOverlayEl = document.getElementById('pin-overlay');
+        
+        if (mapEl) {
+            mapEl.style.height = Math.max(0, sheetTop + 80) + 'px';
+            mapEl.style.bottom = 'auto';
+        }
+        if (pinOverlayEl) {
+            pinOverlayEl.style.height = Math.max(0, sheetTop + 80) + 'px';
+            pinOverlayEl.style.bottom = 'auto';
+        }
+        
+        if (map) {
+            map.setPadding({ bottom: 0, top: 0, left: 0, right: 0 });
+            google.maps.event.trigger(map, 'resize');
+        }
+        
+        const pinIcon = document.getElementById('pin-icon');
+        if (pinIcon) {
+            pinIcon.style.top = '50%';
+        }
     }
+
+    let isSheetExpanded = true;
+    
+    function animatePinSync() {
+        let start = null;
+        function step(timestamp) {
+            if (!start) start = timestamp;
+            syncPinOverlay();
+            if (timestamp - start < 350) {
+                requestAnimationFrame(step);
+            } else {
+                syncPinOverlay();
+                if (map) {
+                    map.panTo({lat: currentLat, lng: currentLng});
+                }
+            }
+        }
+        requestAnimationFrame(step);
+    }
+
+    function collapseSheet() {
+        if (!isSheetExpanded) return;
+        document.getElementById('bottom-sheet').classList.add('collapsed');
+        isSheetExpanded = false;
+        animatePinSync();
+    }
+
+    function expandSheet() {
+        if (isSheetExpanded) return;
+        document.getElementById('bottom-sheet').classList.remove('collapsed');
+        isSheetExpanded = true;
+        animatePinSync();
+    }
+
+    function toggleSheet() {
+        if (isSheetExpanded) collapseSheet();
+        else expandSheet();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const dragHandle = document.getElementById('drag-handle');
+        let startY = 0;
+
+        dragHandle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive: true});
+        dragHandle.addEventListener('touchend', e => {
+            let delta = e.changedTouches[0].clientY - startY;
+            if (delta > 30) collapseSheet();
+            else if (delta < -30) expandSheet();
+            else toggleSheet(); // click
+        });
+
+        dragHandle.addEventListener('mousedown', e => { startY = e.clientY; });
+        dragHandle.addEventListener('mouseup', e => {
+            let delta = e.clientY - startY;
+            if (delta > 30) collapseSheet();
+            else if (delta < -30) expandSheet();
+            else toggleSheet(); // click
+        });
+    });
 
     // ── Reverse geocode lat/lng → address string ─────────────────
     function reverseGeocode(lat, lng) {
         document.getElementById('geocode-spinner').style.display = 'block';
         document.getElementById('btn-submit').disabled = true;
         document.getElementById('btn-submit').style.opacity = '0.5';
-        document.getElementById('loc-name').textContent    = 'Menentukan lokasi...';
-        document.getElementById('loc-address').textContent = '';
+        
+        // Do not clear loc-name and loc-address to prevent layout height thrashing
 
         geocoder.geocode({ location: { lat, lng } }, (results, status) => {
             document.getElementById('geocode-spinner').style.display = 'none';
@@ -456,19 +537,22 @@
 
     function onMapDragEnd() {
         document.getElementById('pin-icon').classList.remove('dragging');
-        const center = map.getCenter();
-        currentLat   = center.lat();
-        currentLng   = center.lng();
+    }
+
+    function onMapCenterChanged() {
+        if (isMapMoving) return;
         
-        // Clear saved address context if map is manually moved
-        if (!isMapMoving) {
+        clearTimeout(geocodeTimer);
+        geocodeTimer = setTimeout(() => {
+            const center = map.getCenter();
+            currentLat   = center.lat();
+            currentLng   = center.lng();
+            
             currentAddressId = null;
             currentNote = '';
-        }
 
-        // Debounce: wait 600ms after drag ends before geocoding
-        clearTimeout(geocodeTimer);
-        geocodeTimer = setTimeout(() => reverseGeocode(currentLat, currentLng), 600);
+            reverseGeocode(currentLat, currentLng);
+        }, 500);
     }
 
     // ── Search / Autocomplete ────────────────────────────────────
@@ -574,21 +658,7 @@
         setTimeout(() => { isMapMoving = false; }, 800);
     }
 
-    function redirectToDetails() {
-        const address = document.getElementById('hidden-address').value;
-        const lat = document.getElementById('hidden-lat').value;
-        const lng = document.getElementById('hidden-lng').value;
-        
-        if (lat && lng && address) {
-            // ALWAYS Direct submit for booking flow to keep it fast
-            const form = document.getElementById('direct-pickup-form');
-            document.getElementById('direct-address').value = address;
-            document.getElementById('direct-lat').value = lat;
-            document.getElementById('direct-lng').value = lng;
-            document.getElementById('direct-detail-address').value = currentNote || '';
-            form.submit();
-        }
-    }
+
 
     // ── Map Init ──────────────────────────────────────────────────
     function initMap() {
@@ -596,6 +666,7 @@
             center: { lat: currentLat, lng: currentLng },
             zoom: 16,
             disableDefaultUI: true,
+            gestureHandling: 'greedy',
             styles: [
                 { featureType: 'poi',            stylers: [{ visibility: 'off' }] },
                 { featureType: 'transit',        stylers: [{ visibility: 'off' }] },
@@ -618,17 +689,7 @@
         // Track drag events on map (pin is always at center)
         map.addListener('dragstart', onMapDragStart);
         map.addListener('dragend',   onMapDragEnd);
-
-        // Also update on zoom change
-        map.addListener('zoom_changed', () => {
-            if (!isMapMoving) {
-                clearTimeout(geocodeTimer);
-                geocodeTimer = setTimeout(() => {
-                    const c = map.getCenter();
-                    reverseGeocode(c.lat(), c.lng());
-                }, 800);
-            }
-        });
+        map.addListener('center_changed', onMapCenterChanged);
 
         setupSearch();
         window.addEventListener('resize', syncPinOverlay);
