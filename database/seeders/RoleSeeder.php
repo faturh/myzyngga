@@ -14,7 +14,7 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         // Create Admin
-        User::updateOrCreate(
+        $admin = User::updateOrCreate(
             ['username' => 'admin'],
             [
                 'name' => 'Admin Zyngga',
@@ -24,9 +24,10 @@ class RoleSeeder extends Seeder
                 'role' => 'admin',
             ]
         );
+        $admin->assignRole('admin');
 
         // Create Customer
-        User::updateOrCreate(
+        $customer = User::updateOrCreate(
             ['username' => 'customer'],
             [
                 'name' => 'Customer Zyngga',
@@ -36,5 +37,6 @@ class RoleSeeder extends Seeder
                 'role' => 'customer',
             ]
         );
+        $customer->assignRole('customer');
     }
 }

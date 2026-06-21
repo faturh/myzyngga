@@ -15,5 +15,19 @@ export default defineConfig({
         hmr: {
             host: hmrHost,
         },
+        watch: {
+            ignored: (p) => p.includes('storage') || p.includes('bootstrap') || p.includes('node_modules'),
+        },
+    },
+    esbuild: {
+        target: 'es2022',
+    },
+    optimizeDeps: {
+        esbuildOptions: {
+            target: 'es2022',
+        },
+    },
+    build: {
+        target: 'es2022',
     },
 });

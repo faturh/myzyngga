@@ -14,8 +14,8 @@ class LayananPrioritasSeeder extends Seeder
      */
     public function run(): void
     {
-        $cabang = Cabang::where('id', 1)->first();
-        $cabang2 = Cabang::where('id', 2)->onlyTrashed()->first();
+        $cabang = Cabang::where('nama', 'Cabang Pusat Pertama')->first();
+        $cabang2 = Cabang::withTrashed()->where('nama', 'Cabang Kedua Uhuy')->first();
 
         //? Cabang 1
         LayananPrioritas::create([
