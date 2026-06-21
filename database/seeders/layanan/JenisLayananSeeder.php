@@ -14,8 +14,8 @@ class JenisLayananSeeder extends Seeder
      */
     public function run(): void
     {
-        $cabang = Cabang::where('id', 1)->first();
-        $cabang2 = Cabang::withTrashed()->where('id', 2)->first();
+        $cabang = Cabang::where('nama', 'Cabang Pusat Pertama')->first();
+        $cabang2 = Cabang::withTrashed()->where('nama', 'Cabang Kedua Uhuy')->first();
 
         if ($cabang) {
             //? Cabang 1

@@ -17,8 +17,8 @@ class HargaJenisLayananSeeder extends Seeder
      */
     public function run(): void
     {
-        $cabang = Cabang::where('id', 1)->first();
-        $cabang2 = Cabang::where('id', 2)->onlyTrashed()->first();
+        $cabang = Cabang::where('nama', 'Cabang Pusat Pertama')->first();
+        $cabang2 = Cabang::withTrashed()->where('nama', 'Cabang Kedua Uhuy')->first();
 
         //? Cabang 1
         $jenisLayananCuci = JenisLayanan::where(['nama' => 'Cuci', 'cabang_id' => $cabang->id])->first();
@@ -93,8 +93,8 @@ class HargaJenisLayananSeeder extends Seeder
         HargaJenisLayanan::create([
             'harga' => 1000,
             'jenis_satuan' => JenisSatuanLayanan::KG,
-            'jenis_layanan_id' => $jenisLayananCuci2->id,
-            'jenis_pakaian_id' => $jenisLayananSetrika2->id,
+            'jenis_layanan_id' => $jenisLayananSetrika2->id,
+            'jenis_pakaian_id' => $jenisPakaianKemeja2->id,
             'cabang_id' => $cabang2->id,
         ]);
     }

@@ -1,0 +1,166 @@
+<?php
+
+namespace App\Http\Controllers\Operator;
+
+use App\Http\Controllers\Controller;
+use App\Models\Operator;
+use App\Models\Transaksi;
+use Illuminate\Http\Request;
+
+use App\Modules\Transaksi\Application\Services\ProsesTransaksiService;
+
+class OperatorController extends Controller
+{
+    public function __construct(
+        private readonly ProsesTransaksiService $prosesService
+    ) {}
+
+    /**
+     * Display the operator admin dashboard with dynamic metrics.
+     */
+    public function dashboard()
+    {
+        $perluDiprosesCount = Operator::getPerluDiprosesCount();
+        $menungguPembayaranCount = Operator::getMenungguPembayaranCount();
+        $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
+        $pesananSelesaiCount = Operator::getPesananSelesaiCount();
+
+        return view('operator.admin.dashboard', compact(
+            'perluDiprosesCount',
+            'menungguPembayaranCount',
+            'perluDikerjakanCount',
+            'pesananSelesaiCount'
+        ));
+    }
+
+    /**
+     * Display the detailed order history (Riwayat Pesanan) page.
+     */
+    public function riwayatPesanan(Request $request)
+    {
+        $tab = $request->query('tab', 'perlu-diproses');
+        $search = $request->query('search');
+
+        // Dynamic badges count
+        $perluDiprosesCount = Operator::getPerluDiprosesCount();
+        $menungguPembayaranCount = Operator::getMenungguPembayaranCount();
+        $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
+        $pesananSelesaiCount = Operator::getPesananSelesaiCount();
+
+        // Query setup
+        $query = Transaksi::query()
+            ->with(['pelanggan.user', 'pegawai', 'cabang']);
+
+        // Search filter (Nomor Pesanan / Nota or Pelanggan Name)
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nota', 'like', "%{$search}%")
+                  ->orWhereHas('pelanggan', function ($pq) use ($search) {
+                      $pq->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Tab filter
+        switch ($tab) {
+            case 'perlu-diproses':
+                $query->whereIn('status', ['Baru', 'created']);
+                break;
+            case 'menunggu-pembayaran':
+                $query->where('status', 'Proses')
+                      ->where('payment_status', 'pending');
+                break;
+            case 'perlu-dikerjakan':
+                $query->where('status', 'Proses')
+                      ->where('payment_status', 'paid');
+                break;
+            case 'selesai':
+                $query->where('status', 'Selesai');
+                break;
+            case 'kendala':
+            case 'dibatalkan':
+                // Force empty result as per instruction: "sisanya kendala dan sedang di batalkan itu kosongin aja"
+                $query->whereRaw('1 = 0');
+                break;
+            case 'semua':
+            default:
+                // Return all
+                break;
+        }
+
+        $transaksi = $query->latest('waktu')->paginate(10)->withQueryString();
+
+        return view('operator.admin.riwayat-pesanan', compact(
+            'transaksi',
+            'tab',
+            'search',
+            'perluDiprosesCount',
+            'menungguPembayaranCount',
+            'perluDikerjakanCount',
+            'pesananSelesaiCount'
+        ));
+    }
+
+    /**
+     * Show the order processing form.
+     */
+    public function prosesForm(string $id)
+    {
+        try {
+            $transaksi = $this->prosesService->getProsesFormData($id);
+            
+            // Fetch available laundry items (JenisPakaian) for this branch
+            $itemsAvailable = \App\Models\JenisPakaian::where('cabang_id', $transaksi->cabang_id)->get();
+            if ($itemsAvailable->isEmpty()) {
+                $itemsAvailable = \App\Models\JenisPakaian::get();
+            }
+
+            return view('operator.admin.proses-transaksi', compact('transaksi', 'itemsAvailable'));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.riwayat-pesanan')->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Process order (update status to 'Proses' and store items/weights).
+     */
+    public function prosesTransaksi(Request $request, string $id)
+    {
+        try {
+            $validated = $request->validate([
+                'actual_weight' => 'required|numeric|min:0.01',
+                'minimum_weight' => 'required|numeric|min:0',
+                'price_per_kg' => 'required|numeric|min:0',
+                'items' => 'required|array|min:1',
+                'items.*.nama_item' => 'required|string|max:255',
+                'items.*.qty' => 'required|integer|min:1',
+            ], [
+                'actual_weight.required' => 'Berat timbangan wajib diisi.',
+                'actual_weight.min' => 'Berat timbangan harus lebih besar dari 0 kg.',
+                'items.required' => 'List item laundry minimal harus berisi satu item.',
+                'items.min' => 'List item laundry minimal harus berisi satu item.',
+                'items.*.nama_item.required' => 'Nama item laundry wajib diisi.',
+                'items.*.qty.min' => 'Jumlah/Qty item minimal adalah 1.',
+            ]);
+
+            $this->prosesService->prosesTransaksi($id, $validated);
+
+            $transaksi = Transaksi::findOrFail($id);
+            return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Cancel order (update status to 'Batal').
+     */
+    public function batalkanTransaksi(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->status = 'Batal';
+        $transaksi->save();
+
+        return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.');
+    }
+}
