@@ -11,6 +11,14 @@
       "dest": "/public/build/$1"
     },
     {
+      "src": "/(figma|images|img|css|js)/(.*)",
+      "dest": "/public/$1/$2"
+    },
+    {
+      "src": "/(.*\\.(png|jpg|jpeg|svg|gif|ico|webp))",
+      "dest": "/public/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/api/index.php"
     }
