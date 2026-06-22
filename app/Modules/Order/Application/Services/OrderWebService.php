@@ -1335,7 +1335,7 @@ class OrderWebService
         ];
     }
 
-    public function storeRequestDelivery(string $id, Request $request, ?User $user): void
+    public function storeDeliveryDetails(string $id, Request $request, ?User $user): void
     {
         $order = $this->orderRepository->findById($id);
         if (!$order) {
