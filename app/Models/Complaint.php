@@ -16,6 +16,12 @@ class Complaint extends Model
         'pelanggan_id',
         'content',
         'status',
+        'issue_types',
+        'image_path',
+    ];
+
+    protected $casts = [
+        'issue_types' => 'array',
     ];
 
     public function transaksi()

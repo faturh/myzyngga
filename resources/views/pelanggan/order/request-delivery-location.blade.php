@@ -552,21 +552,7 @@
         setTimeout(() => { isMapMoving = false; }, 800);
     }
 
-    function redirectToDetails() {
-        const address = document.getElementById('hidden-address').value;
-        const lat = document.getElementById('hidden-lat').value;
-        const lng = document.getElementById('hidden-lng').value;
-        
-        if (lat && lng && address) {
-            // ALWAYS Direct submit for booking flow to keep it fast
-            const form = document.getElementById('direct-pickup-form');
-            document.getElementById('direct-address').value = address;
-            document.getElementById('direct-lat').value = lat;
-            document.getElementById('direct-lng').value = lng;
-            document.getElementById('direct-detail-address').value = currentNote || '';
-            form.submit();
-        }
-    }
+
 
     // ── Map Init ──────────────────────────────────────────────────
     function initMap() {

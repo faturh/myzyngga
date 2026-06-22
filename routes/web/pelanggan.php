@@ -3,6 +3,7 @@
 use App\Modules\Customer\Presentation\Web\Controllers\CustomerDashboardController;
 use App\Modules\Customer\Presentation\Web\Controllers\CustomerNotificationController;
 use App\Modules\Order\Presentation\Web\Controllers\OrderPageController;
+use App\Modules\Order\Presentation\Web\Controllers\PublicStrukController;
 use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
 
@@ -87,3 +88,7 @@ Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
 // Public Order Check
 Route::match(['get', 'post'], '/order/check', [OrderPageController::class, 'check'])
     ->name('order.check');
+
+Route::get('/public-struk/{idOrNota}', PublicStrukController::class)
+    ->name('public.cetak-struk');
+

@@ -153,14 +153,14 @@
                         <x-zyngga-divider class="my-2" />
 
                         {{-- Pusat Bantuan --}}
-                        <button class="w-full flex items-center gap-4 h-14 group">
+                        <a href="https://wa.me/+6281297673318" target="_blank" class="w-full flex items-center gap-4 h-14 group">
                             <i data-feather="message-circle" class="w-6 h-6 text-zyngga-neutral-800"></i>
                             <div class="flex-1 text-left">
                                 <x-zyngga-text variant="sm" weight="medium">Pusat Bantuan</x-zyngga-text>
                                 <x-zyngga-text variant="xs" color="neutral-500">Hubungi kami jika ada kendala</x-zyngga-text>
                             </div>
                             <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
-                        </button>
+                        </a>
 
                         <x-zyngga-divider class="my-2" />
 
