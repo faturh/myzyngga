@@ -390,6 +390,7 @@ class OrderWebService
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
         \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+        \Midtrans\Config::$overrideNotifUrl = url('api/v1/payment/notification');
 
         $params = [
             'transaction_details' => [
