@@ -27,3 +27,4 @@ config.bat
 .DS_Store
 
 .vercel
+.env

@@ -48,6 +48,37 @@ class Transaksi extends Model
         'is_roundtrip' => 'boolean',
     ];
 
+    protected static function booted()
+    {
+        static::updated(function ($transaksi) {
+            // 1. Kirim email jika pembayaran di-update menjadi paid (Lunas)
+            if ($transaksi->wasChanged('payment_status') && $transaksi->payment_status === 'paid') {
+                $email = $transaksi->pelanggan->user->email ?? null;
+                if ($email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($email)
+                            ->send(new \App\Mail\PaymentConfirmedMail($transaksi));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Mail Error (Payment Confirmed): ' . $e->getMessage());
+                    }
+                }
+            }
+
+            // 2. Kirim email jika status laundry di-update menjadi 'Selesai'
+            if ($transaksi->wasChanged('status') && $transaksi->status === 'Selesai') {
+                $email = $transaksi->pelanggan->user->email ?? null;
+                if ($email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($email)
+                            ->send(new \App\Mail\OrderFinishedMail($transaksi));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Mail Error (Order Finished): ' . $e->getMessage());
+                    }
+                }
+            }
+        });
+    }
+
     public function detailTransaksi()
     {
         return $this->hasMany(DetailTransaksi::class);
