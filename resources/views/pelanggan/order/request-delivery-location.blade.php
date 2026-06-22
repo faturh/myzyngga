@@ -163,7 +163,7 @@
             <div style="display:flex; align-items:center; height:40px; gap:8px;">
                 <x-zyngga-button 
                     type="a"
-                    href="{{ $from === 'booking' ? route('order.booking') : route('home') }}"
+                    href="{{ route('order.detail', ['id' => $order['id']]) }}"
                     variant="neutral"
                     size="l"
                     icon="arrow-left"
@@ -339,7 +339,6 @@
                     }
                 }
             </script>
-
 
             <input type="hidden" id="hidden-address" value="">
             <input type="hidden" id="hidden-lat" value="">

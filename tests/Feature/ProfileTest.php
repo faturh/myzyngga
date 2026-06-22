@@ -19,9 +19,14 @@ class ProfileTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSeeVolt('profile.update-profile-information-form')
             ->assertSeeVolt('profile.update-password-form')
             ->assertSeeVolt('profile.delete-user-form');
+
+        $responseAccount = $this->actingAs($user)->get('/profile/account');
+
+        $responseAccount
+            ->assertOk()
+            ->assertSeeVolt('profile.update-profile-information-form');
     }
 
     public function test_profile_information_can_be_updated(): void
@@ -32,18 +37,17 @@ class ProfileTest extends TestCase
 
         $component = Volt::test('profile.update-profile-information-form')
             ->set('name', 'Test User')
-            ->set('email', 'test@example.com')
+            ->set('phone', '08123456789')
             ->call('updateProfileInformation');
 
         $component
             ->assertHasNoErrors()
-            ->assertNoRedirect();
+            ->assertRedirect(route('profile'));
 
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('08123456789', $user->phone);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
@@ -59,7 +63,7 @@ class ProfileTest extends TestCase
 
         $component
             ->assertHasNoErrors()
-            ->assertNoRedirect();
+            ->assertRedirect(route('profile'));
 
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
@@ -79,7 +83,7 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $this->assertSoftDeleted($user);
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

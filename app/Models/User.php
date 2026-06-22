@@ -83,35 +83,7 @@ class User extends Authenticatable
         return $this->belongsTo(Cabang::class);
     }
 
-    public function lurah()
-    {
-        return $this->hasMany(Lurah::class);
-    }
 
-    public function pic()
-    {
-        return $this->hasMany(PIC::class);
-    }
-
-    public function manajer()
-    {
-        return $this->hasMany(ManajerLaundry::class);
-    }
-
-    public function pegawai()
-    {
-        return $this->hasMany(PegawaiLaundry::class);
-    }
-
-    public function rw()
-    {
-        return $this->hasMany(RW::class);
-    }
-
-    public function gamis()
-    {
-        return $this->hasMany(DetailGamis::class);
-    }
 
     /**
      * Get the user's addresses.

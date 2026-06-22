@@ -21,10 +21,10 @@ class LandingPageController extends Controller
         $transaksi = Transaksi::query()
             ->join('cabang as c', 'transaksi.cabang_id', '=', 'c.id')
             ->join('pelanggan as p', 'transaksi.pelanggan_id', '=', 'p.id')
-            ->where('nota_pelanggan', $request->nota)
+            ->where('nota', $request->nota)
             ->select(
                 'transaksi.id',
-                'transaksi.nota_pelanggan',
+                'transaksi.nota',
                 DB::raw('DATE(transaksi.waktu) as tanggal'),
                 'c.nama as cabang_nama',
                 'p.nama as pelanggan_nama',

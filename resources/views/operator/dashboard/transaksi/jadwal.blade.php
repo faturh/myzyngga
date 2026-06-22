@@ -154,9 +154,6 @@
                                         Pegawai
                                     </th>
                                     <th class="bg-blue-500 text-xs font-bold uppercase text-white dark:text-white">
-                                        Gamis
-                                    </th>
-                                    <th class="bg-blue-500 text-xs font-bold uppercase text-white dark:text-white">
                                         Status
                                     </th>
                                     <th class="rounded-tr bg-blue-500 text-xs font-bold uppercase text-white dark:text-white">
@@ -189,21 +186,7 @@
                                         </td>
                                         <td class="border-b border-slate-600 bg-transparent text-left align-middle">
                                             <p class="text-base font-semibold leading-tight text-slate-500 dark:text-slate-200">
-                                                @php
-                                                    $userRole = $item->pegawai->roles[0]->name;
-                                                @endphp
-                                                @if ($userRole == 'manajer_laundry')
-                                                    {{ $item->pegawai->manajer->first()->nama }}
-                                                @elseif ($userRole == 'pegawai_laundry')
-                                                    {{ $item->pegawai->pegawai->first()->nama }}
-                                                @elseif ($userRole == 'lurah')
-                                                    {{ $item->pegawai->lurah->first()->nama }}
-                                                @endif
-                                            </p>
-                                        </td>
-                                        <td class="border-b border-slate-600 bg-transparent text-left align-middle">
-                                            <p class="text-base font-semibold leading-tight text-slate-500 dark:text-slate-200">
-                                                {{ $item->gamis_id ? $item->gamis->nama : "-" }}
+                                                {{ $item->pegawai->name }}
                                             </p>
                                         </td>
                                         <td class="border-b border-slate-600 bg-transparent text-left align-middle">

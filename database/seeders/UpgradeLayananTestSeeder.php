@@ -14,11 +14,10 @@ class UpgradeLayananTestSeeder extends Seeder
     public function run(): void
     {
         // Delete previous test orders to prevent clutter if seeded multiple times
-        Transaksi::where('nota_layanan', 'like', 'upgrade-test-%')->delete();
+        Transaksi::where('nota', 'like', 'upgrade-test-%')->delete();
 
         $layanans = LayananPrioritas::where('cabang_id', 1)->get();
         $pelanggan = 1; // Assuming customer 1 exists
-        $gamis = 1;
         
         $baseBiayaLayanan = 84000;
 
@@ -32,8 +31,7 @@ class UpgradeLayananTestSeeder extends Seeder
             $totalAkhir = $baseBiayaLayanan + $totalBiayaPrioritas;
 
             $transaksi = Transaksi::create([
-                'nota_layanan' => $nota,
-                'nota_pelanggan' => 'plg-' . $nota,
+                'nota' => 'plg-' . $nota,
                 'waktu' => $tanggal,
                 'total_biaya_layanan' => $baseBiayaLayanan,
                 'total_biaya_prioritas' => $totalBiayaPrioritas,
@@ -43,11 +41,9 @@ class UpgradeLayananTestSeeder extends Seeder
                 'bayar' => $totalAkhir + 10000,
                 'kembalian' => 10000,
                 'status' => 'Proses', // Set to Proses so it shows up in "Sedang Berlangsung"
-                'konfirmasi_upah_gamis' => 0,
                 'layanan_prioritas_id' => $layanan->id,
                 'pelanggan_id' => $pelanggan,
                 'pegawai_id' => 9,
-                'gamis_id' => $gamis,
                 'cabang_id' => 1,
             ]);
 

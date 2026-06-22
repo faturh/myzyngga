@@ -36,15 +36,5 @@ class DetailLayananTransaksiController extends Controller
         }
     }
 
-    public function viewDetailLayananGamis(Request $request)
-    {
-        $title = "Detail Transaksi Layanan";
-
-        $cabang = Cabang::withTrashed()->where('id', auth()->user()->cabang_id)->first();
-        $transaksi = Transaksi::where('id', $request->transaksi)->first();
-        $detailTransaksi = DetailTransaksi::where('id', $request->detailTransaksi)->orderBy('id', 'asc')->first();
-        $detailLayananTransaksi = DetailLayananTransaksi::where('detail_transaksi_id', $request->detailTransaksi)->orderBy('id', 'asc')->get();
-        return view('operator.dashboard.transaksi.gamis.layanan', compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'detailLayananTransaksi'));
-    }
 }
 

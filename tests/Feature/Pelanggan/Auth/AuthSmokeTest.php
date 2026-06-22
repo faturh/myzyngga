@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace Tests\Feature\Pelanggan\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -27,16 +27,16 @@ class AuthSmokeTest extends TestCase
 
         Livewire::test('pages.auth.register')
             ->set('name', 'Faturh Testing')
+            ->set('whatsapp', '08123456789')
             ->set('email', 'faturh-testing@example.com')
             ->set('password', 'password')
-            ->set('password_confirmation', 'password')
             ->call('register')
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('home', absolute: false));
 
         $user = User::query()->where('email', 'faturh-testing@example.com')->first();
 
         $this->assertNotNull($user);
-        $this->assertSame('Faturh Testing', $user->username);
+        $this->assertSame('08123456789', $user->username);
         $this->assertNotEmpty($user->slug);
         $this->assertTrue($user->hasRole('customer'));
         $this->assertAuthenticatedAs($user);
@@ -62,7 +62,7 @@ class AuthSmokeTest extends TestCase
             ->set('form.password', 'password')
             ->set('form.remember', true)
             ->call('login')
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('home', absolute: false));
 
         $this->assertAuthenticatedAs($user);
 

@@ -28,7 +28,7 @@
 </head>
 <body class="bg-[#e8eff9]">
 
-    <div class="min-h-screen flex flex-col" x-data>
+    <div class="min-h-screen flex flex-col" x-data="{ isDirty: false }">
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
             title="Pengajuan Delivery" 

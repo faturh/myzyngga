@@ -20,7 +20,7 @@ class StoreTransaksiManualController
         return ApiResponse::success([
             'transaksi' => [
                 'id' => $transaksi->id,
-                'nota_layanan' => $transaksi->nota_layanan,
+                'nota' => $transaksi->nota,
                 'status' => $transaksi->status,
                 'payment_status' => $transaksi->payment_status,
             ],

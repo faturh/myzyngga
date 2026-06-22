@@ -181,36 +181,17 @@ class OrderPageController
     public function storeComplaint(Request $request, string $id)
     {
         $request->validate([
-            'issue_types' => 'required|array|min:1',
-            'issue_description' => 'required|string|max:180',
-            'issue_image' => 'nullable|image|max:5120',
+            'content' => 'required|string|max:1000',
         ]);
 
-        $order = \App\Models\Transaksi::findOrFail($id);
-        
-        // Ensure user hasn't already filed a complaint for this order
-        $existing = \App\Models\Complaint::where('transaksi_id', $id)->first();
-        if ($existing) {
+        try {
+            $this->webService->storeComplaint($id, $request->input('content'), $request->user());
             return redirect()->route('order.detail', ['id' => $id])
-                ->withErrors(['error' => 'Anda sudah mengajukan komplain untuk pesanan ini.']);
+                ->with('success', 'Komplain berhasil dikirim');
+        } catch (\Exception $e) {
+            return redirect()->route('order.detail', ['id' => $id])
+                ->withErrors(['complaint' => $e->getMessage()]);
         }
-
-        $imagePath = null;
-        if ($request->hasFile('issue_image')) {
-            $imagePath = $request->file('issue_image')->storeOnCloudinary('complaints')->getSecurePath();
-        }
-
-        \App\Models\Complaint::create([
-            'user_id' => $request->user()->id,
-            'transaksi_id' => $id,
-            'issue_types' => $request->issue_types,
-            'description' => $request->issue_description,
-            'image_path' => $imagePath,
-            'status' => 'Menunggu Respon',
-        ]);
-
-        return redirect()->route('order.detail', ['id' => $id])
-            ->with('success', 'Komplain berhasil dikirim');
     }
 
     public function requestDelivery(Request $request, string $id)

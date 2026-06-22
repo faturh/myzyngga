@@ -2,31 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Complaint extends Model
 {
-    //
-    protected $fillable = [
-        'user_id',
-        'transaksi_id',
-        'issue_types',
-        'description',
-        'image_path',
-        'status',
-    ];
+    use HasFactory;
 
-    protected $casts = [
-        'issue_types' => 'array',
+    protected $table = 'complaints';
+
+    protected $fillable = [
+        'transaksi_id',
+        'pelanggan_id',
+        'content',
+        'status',
     ];
 
     public function transaksi()
     {
-        return $this->belongsTo(Transaksi::class, 'transaksi_id', 'id');
+        return $this->belongsTo(Transaksi::class);
     }
 
-    public function user()
+    public function pelanggan()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Pelanggan::class);
     }
 }

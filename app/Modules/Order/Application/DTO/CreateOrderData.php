@@ -20,7 +20,7 @@ class CreateOrderData
         public readonly ?string $catatan,
         public readonly string $paymentMethod,
         public readonly float $estimatedTotal,
-        public readonly bool $isRoundtrip,
+        public readonly bool $isRoundtrip = false,
         public readonly ?int $pegawaiId = null,
     ) {}
 
@@ -30,8 +30,7 @@ class CreateOrderData
         $notaSuffix = strtoupper(substr(str_replace('-', '', (string) Str::uuid()), 0, 8));
 
         return [
-            'nota_layanan' => 'LYN-'.$notaSuffix,
-            'nota_pelanggan' => 'PLG-'.$notaSuffix,
+            'nota' => 'PLG-'.$notaSuffix,
             'waktu' => $now,
             'pickup_address' => $this->pickupAddress,
             'pickup_detail_address' => $this->pickupDetailAddress,

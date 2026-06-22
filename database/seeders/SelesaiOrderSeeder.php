@@ -31,8 +31,7 @@ class SelesaiOrderSeeder extends Seeder
         $totalAkhir = $baseBiayaLayanan + $totalBiayaPrioritas;
 
         $transaksi = Transaksi::create([
-            'nota_layanan' => $nota,
-            'nota_pelanggan' => 'plg-' . $nota,
+            'nota' => 'plg-' . $nota,
             'waktu' => $tanggal,
             'total_biaya_layanan' => $baseBiayaLayanan,
             'total_biaya_prioritas' => $totalBiayaPrioritas,
@@ -42,11 +41,9 @@ class SelesaiOrderSeeder extends Seeder
             'bayar' => $totalAkhir,
             'kembalian' => 0,
             'status' => 'Selesai', // Set to Selesai
-            'konfirmasi_upah_gamis' => 0,
             'layanan_prioritas_id' => $layanan->id,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => 9,
-            'gamis_id' => $gamis,
             'cabang_id' => 1,
         ]);
 

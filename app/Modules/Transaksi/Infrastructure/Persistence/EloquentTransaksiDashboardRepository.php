@@ -51,7 +51,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->with(['pegawai' => function ($query) {
                 $query->withTrashed();
             }])
-            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama', 'gamis:id,nama'])
+            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama'])
             ->where('cabang_id', $cabangId)
             ->orderBy('waktu', 'desc')
             ->get();
@@ -63,7 +63,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->with(['pegawai' => function ($query) {
                 $query->withTrashed();
             }])
-            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama', 'gamis:id,nama'])
+            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama'])
             ->where('cabang_id', $cabangId)
             ->where('pegawai_id', $pegawaiId)
             ->orderBy('waktu', 'desc')
@@ -76,7 +76,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->with(['pegawai' => function ($query) {
                 $query->withTrashed();
             }])
-            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama', 'gamis:id,nama'])
+            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama'])
             ->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
             ->where('transaksi.cabang_id', $cabangId)
             ->where('transaksi.status', '!=', 'Selesai')
@@ -93,7 +93,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->with(['pegawai' => function ($query) {
                 $query->withTrashed();
             }])
-            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama', 'gamis:id,nama'])
+            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama'])
             ->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
             ->where('transaksi.cabang_id', $cabangId)
             ->where('transaksi.status', '!=', 'Selesai')
@@ -107,39 +107,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
 
     public function getMonitoringByCabang(int $cabangId): Collection
     {
-        return Transaksi::query()
-            ->with('pelanggan')
-            ->join('detail_transaksi as dt', 'transaksi.id', '=', 'dt.transaksi_id')
-            ->join('detail_layanan_transaksi as dlt', 'dt.id', '=', 'dlt.detail_transaksi_id')
-            ->join('harga_jenis_layanan as hjl', 'hjl.id', '=', 'dlt.harga_jenis_layanan_id')
-            ->join('jenis_layanan as jl', 'jl.id', '=', 'hjl.jenis_layanan_id')
-            ->join('jenis_pakaian as jp', 'jp.id', '=', 'hjl.jenis_pakaian_id')
-            ->join('detail_gamis as dg', 'dg.id', '=', 'transaksi.gamis_id')
-            ->select(
-                'transaksi.id as transaksi_id',
-                'transaksi.pelanggan_id',
-                'transaksi.total_bayar_akhir',
-                'dg.nama as nama_gamis',
-                DB::raw('DATE(transaksi.waktu) as tanggal'),
-                DB::raw('SUM(dt.total_pakaian * hjl.harga) as upah_gamis'),
-                'transaksi.total_biaya_layanan_tambahan',
-                'transaksi.konfirmasi_upah_gamis'
-            )
-            ->where('transaksi.cabang_id', $cabangId)
-            ->where('jl.for_gamis', true)
-            ->where('transaksi.status', 'Selesai')
-            ->groupBy(
-                'transaksi.id',
-                'transaksi.pelanggan_id',
-                'transaksi.total_bayar_akhir',
-                'dg.nama',
-                DB::raw('DATE(transaksi.waktu)'),
-                'transaksi.total_biaya_layanan_tambahan',
-                'transaksi.konfirmasi_upah_gamis'
-            )
-            ->orderBy('transaksi.waktu', 'asc')
-            ->orderBy('transaksi.gamis_id', 'asc')
-            ->get();
+        return collect();
     }
 
     public function findDetailCabangBySlugWithTrashed(string $slug): ?Cabang
@@ -191,10 +159,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
 
     public function getGamisOptionsByCabang(int $cabangId): Collection
     {
-        return User::query()
-            ->join('detail_gamis as dg', 'users.id', '=', 'dg.user_id')
-            ->where('users.cabang_id', $cabangId)
-            ->get();
+        return collect();
     }
 
     public function getJenisPakaianOptionsByCabang(int $cabangId): Collection
@@ -274,86 +239,22 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
 
     public function updateKonfirmasiUpah(string $transaksiId, bool $konfirmasi): void
     {
-        Transaksi::where('id', $transaksiId)->update([
-            'konfirmasi_upah_gamis' => $konfirmasi,
-        ]);
+        // No-op
     }
 
     public function getTransaksiGamisByUser(int $cabangId, int $userId, ?string $tanggal = null): Collection
     {
-        $query = Transaksi::query()
-            ->with(['pegawai' => function ($query) {
-                $query->withTrashed();
-            }])
-            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama', 'gamis:id,nama'])
-            ->join('detail_gamis as dg', 'dg.id', '=', 'transaksi.gamis_id')
-            ->where('dg.user_id', $userId)
-            ->where('transaksi.cabang_id', $cabangId)
-            ->select('transaksi.*');
-
-        if ($tanggal !== null) {
-            $query->where(DB::raw('DATE(transaksi.waktu)'), $tanggal);
-        }
-
-        return $query->orderBy('waktu', 'asc')->get();
+        return collect();
     }
 
     public function getMonitoringGamisByUser(int $cabangId, int $userId, ?string $tanggal = null): Collection
     {
-        $query = Transaksi::query()
-            ->with('pelanggan')
-            ->join('detail_transaksi as dt', 'transaksi.id', '=', 'dt.transaksi_id')
-            ->join('detail_layanan_transaksi as dlt', 'dt.id', '=', 'dlt.detail_transaksi_id')
-            ->join('harga_jenis_layanan as hjl', 'hjl.id', '=', 'dlt.harga_jenis_layanan_id')
-            ->join('jenis_layanan as jl', 'jl.id', '=', 'hjl.jenis_layanan_id')
-            ->join('jenis_pakaian as jp', 'jp.id', '=', 'hjl.jenis_pakaian_id')
-            ->join('detail_gamis as dg', 'dg.id', '=', 'transaksi.gamis_id')
-            ->select(
-                'transaksi.id as transaksi_id',
-                'transaksi.pelanggan_id',
-                'transaksi.total_bayar_akhir',
-                'dg.nama as nama_gamis',
-                DB::raw('DATE(transaksi.waktu) as tanggal'),
-                DB::raw('SUM(dt.total_pakaian * hjl.harga) as upah_gamis'),
-                'transaksi.total_biaya_layanan_tambahan',
-                'transaksi.konfirmasi_upah_gamis'
-            )
-            ->where('transaksi.cabang_id', $cabangId)
-            ->where('jl.for_gamis', true)
-            ->where('transaksi.status', 'Selesai')
-            ->where('dg.user_id', $userId);
-
-        if ($tanggal !== null) {
-            $query->where(DB::raw('DATE(transaksi.waktu)'), $tanggal);
-        }
-
-        return $query
-            ->groupBy(
-                'transaksi.id',
-                'transaksi.pelanggan_id',
-                'transaksi.total_bayar_akhir',
-                'dg.nama',
-                DB::raw('DATE(transaksi.waktu)'),
-                'transaksi.total_biaya_layanan_tambahan',
-                'transaksi.konfirmasi_upah_gamis'
-            )
-            ->orderBy('transaksi.waktu', 'asc')
-            ->orderBy('transaksi.gamis_id', 'asc')
-            ->get();
+        return collect();
     }
 
     public function findTransaksiDetailForGamis(int $userId, string $transaksiId): ?Transaksi
     {
-        return Transaksi::query()
-            ->with(['pegawai' => function ($query) {
-                $query->withTrashed();
-            }])
-            ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama', 'gamis:id,nama'])
-            ->join('detail_gamis as dg', 'dg.id', '=', 'transaksi.gamis_id')
-            ->where('dg.user_id', $userId)
-            ->where('transaksi.id', $transaksiId)
-            ->select('transaksi.*')
-            ->first();
+        return null;
     }
 
     public function storeTransaksiAggregate(array $transaksiPayload, array $detailGroups, array $layananTambahanIds): Transaksi

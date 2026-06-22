@@ -17,7 +17,6 @@ class JenisLayanan extends Model
     protected $fillable = [
         'nama',
         'deskripsi',
-        'for_gamis',
         'cabang_id',
     ];
 
