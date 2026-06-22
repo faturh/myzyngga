@@ -74,7 +74,7 @@
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
                 <div class="w-full aspect-[353/120] rounded-lg overflow-hidden relative">
-                    <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
+                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060573/myzyngga_assets/d992csqcoldopqufuqgz.png" alt="Promo Banner" class="w-full h-full object-cover">
                     
                 </div>
             </div>
@@ -130,7 +130,7 @@
                                 ['n' => '1', 'title' => 'Pesan Penjemputan', 'desc' => 'Pilih layanan dan atur jadwal jemput lewat aplikasi.'],
                                 ['n' => '2', 'title' => 'Proses Cuci', 'desc' => 'Kurir mengambil pakaian untuk dicuci.'],
                                 ['n' => '3', 'title' => 'Pantau Status', 'desc' => 'Cek progres pengerjaan secara real-time.'],
-                                ['n' => '4', 'title' => 'Antar & Bayar', 'desc' => 'Bayar dan pakaian bersih diantar kembali.'],
+                                ['n' => '4', 'title' => 'Antar & Bayar', 'desc' => 'Bayar and pakaian bersih diantar kembali.'],
                             ];
                         @endphp
                         @foreach ($steps as $step)
@@ -167,7 +167,7 @@
                         @foreach ($outlets as $outlet)
                             <div class="flex items-center gap-4">
                                 <div class="w-[168px] h-[110px] rounded-lg overflow-hidden shrink-0">
-                                    <img src="/figma/figma_outlet.png" alt="Outlet" class="w-full h-full object-cover">
+                                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060609/myzyngga_assets/dpk9dumi8qkyeiphpqxm.png" alt="Outlet" class="w-full h-full object-cover">
                                 </div>
                                 <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
                                     <div class="space-y-1">
