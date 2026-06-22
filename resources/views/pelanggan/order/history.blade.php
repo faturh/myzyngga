@@ -131,7 +131,20 @@
                                 <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($order['total'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
                             @if($order['status'] === 'Selesai')
+                                @php
+                                    $repeatService = 'reguler';
+                                    $serviceLower = strtolower($order['service'] ?? 'reguler');
+                                    if (str_contains($serviceLower, 'kilat')) {
+                                        $repeatService = 'kilat';
+                                    } elseif (str_contains($serviceLower, 'express') || str_contains($serviceLower, 'quick')) {
+                                        $repeatService = 'express';
+                                    } elseif (str_contains($serviceLower, 'satuan')) {
+                                        $repeatService = 'satuan';
+                                    }
+                                @endphp
                                 <x-zyngga-button
+                                    type="a"
+                                    href="{{ route('order.pickup', ['service' => $repeatService]) }}"
                                     variant="primary"
                                     size="m"
                                     label="Ulangi Pesanan"
