@@ -53,7 +53,7 @@
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
                 <div class="w-full aspect-[353/120] rounded-lg overflow-hidden relative">
-                    <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
+                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060573/myzyngga_assets/d992csqcoldopqufuqgz.png" alt="Promo Banner" class="w-full h-full object-cover">
                 </div>
             </div>
 
@@ -249,7 +249,7 @@
                         @foreach ($outlets as $outlet)
                             <div class="flex items-center gap-4">
                                 <div class="w-[168px] h-[110px] rounded-lg overflow-hidden shrink-0">
-                                    <img src="/figma/figma_outlet.png" alt="Outlet" class="w-full h-full object-cover">
+                                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060609/myzyngga_assets/dpk9dumi8qkyeiphpqxm.png" alt="Outlet" class="w-full h-full object-cover">
                                 </div>
                                 <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
                                     <div class="space-y-1">
