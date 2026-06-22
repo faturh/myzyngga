@@ -386,6 +386,17 @@
                     </template>
 
                     <template x-if="status === 'finished'">
+                        @php
+                            $repeatService = 'reguler';
+                            $serviceLower = strtolower($order['service_type'] ?? 'reguler');
+                            if (str_contains($serviceLower, 'kilat')) {
+                                $repeatService = 'kilat';
+                            } elseif (str_contains($serviceLower, 'express') || str_contains($serviceLower, 'quick')) {
+                                $repeatService = 'express';
+                            } elseif (str_contains($serviceLower, 'satuan')) {
+                                $repeatService = 'satuan';
+                            }
+                        @endphp
                         <div class="w-full flex items-center gap-4">
                             <x-zyngga-button 
                                 type="button"

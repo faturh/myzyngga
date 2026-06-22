@@ -181,11 +181,15 @@ class OrderPageController
     public function storeComplaint(Request $request, string $id)
     {
         $request->validate([
-            'content' => 'required|string|max:1000',
+            'content' => 'nullable|string|max:1000',
+            'issue_description' => 'nullable|string|max:1000',
+            'issue_types' => 'nullable|array',
+            'issue_types.*' => 'string|in:pakaian_rusak,masalah_pengantaran,status_pesanan,kendala_pembayaran,lainnya',
+            'issue_image' => 'nullable|image|max:5120',
         ]);
 
         try {
-            $this->webService->storeComplaint($id, $request->input('content'), $request->user());
+            $this->webService->storeComplaint($id, $request, $request->user());
             return redirect()->route('order.detail', ['id' => $id])
                 ->with('success', 'Komplain berhasil dikirim');
         } catch (\Exception $e) {
