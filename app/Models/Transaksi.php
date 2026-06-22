@@ -68,9 +68,37 @@ class Transaksi extends Model
         return $this->belongsTo(Pelanggan::class);
     }
 
+    protected static function booted()
+    {
+        static::saving(function ($transaksi) {
+            if (isset($transaksi->attributes['pegawai_id']) && isset($transaksi->cabang_id)) {
+                $rawPegawaiId = $transaksi->getRawPegawaiId();
+                if ($rawPegawaiId !== null) {
+                    $transaksi->attributes['pegawai_id'] = $transaksi->cabang_id . '_' . $rawPegawaiId;
+                }
+            }
+        });
+    }
+
+    public function getRawPegawaiId()
+    {
+        $val = $this->attributes['pegawai_id'] ?? null;
+        if (!$val) return null;
+        if (strpos($val, '_') !== false) {
+            $parts = explode('_', $val);
+            return (int) end($parts);
+        }
+        return (int) $val;
+    }
+
+    public function getUserIdAttribute()
+    {
+        return $this->getRawPegawaiId();
+    }
+
     public function pegawai()
     {
-        return $this->belongsTo(User::class, 'pegawai_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function cabang()

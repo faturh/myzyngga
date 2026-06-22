@@ -34,6 +34,18 @@ class OperatorController extends Controller
     }
 
     /**
+     * Display the employee salary sorting and management page.
+     */
+    public function gajiKaryawan()
+    {
+        $karyawan = \App\Models\User::role(['manajer_laundry', 'pegawai_laundry', 'gamis', 'pic', 'lurah'])
+            ->with('roles')
+            ->get();
+
+        return view('operator.admin.gaji-karyawan', compact('karyawan'));
+    }
+
+    /**
      * Display the detailed order history (Riwayat Pesanan) page.
      */
     public function riwayatPesanan(Request $request)

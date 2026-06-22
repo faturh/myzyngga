@@ -19,7 +19,7 @@
                                     <span class="label-text font-semibold dark:text-slate-100">
                                         <x-label-input-required :value="'Kartu Keluarga Gamis | '" />
                                     </span>
-                                    <a href="{{ route('gamis') }}" class="link link-primary dark:link-accent">Sudah membuat KK Gamis?</a>
+                                    <a href="#" class="link link-primary dark:link-accent">Sudah membuat KK Gamis?</a>
                                 </span>
                             </div>
                             <select name="gamis_id" class="select select-bordered" required>

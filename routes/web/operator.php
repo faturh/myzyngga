@@ -3,6 +3,7 @@
 use App\Http\Controllers\DetailLayananTransaksiController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Operator\OperatorController;
+use App\Http\Controllers\UserController;
 use App\Modules\Admin\Presentation\Web\Controllers\WebAdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/riwayat-pesanan/{id}/proses', [OperatorController::class, 'prosesForm'])->name('admin.riwayat-pesanan.proses-form');
         Route::post('/admin/riwayat-pesanan/{id}/proses', [OperatorController::class, 'prosesTransaksi'])->name('admin.riwayat-pesanan.proses');
         Route::post('/admin/riwayat-pesanan/{id}/batal', [OperatorController::class, 'batalkanTransaksi'])->name('admin.riwayat-pesanan.batal');
+        Route::get('/admin/gaji-karyawan', [OperatorController::class, 'gajiKaryawan'])->name('admin.gaji-karyawan');
+    });
+
+    Route::prefix('user')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('user');
+        Route::get('/tambah', [UserController::class, 'create'])->name('user.create');
+        Route::post('/simpan', [UserController::class, 'store'])->name('user.store');
+        Route::get('/lihat/{user}', [UserController::class, 'view'])->name('user.view');
+        Route::get('/ubah/{user}', [UserController::class, 'edit'])->name('user.edit');
+        Route::post('/ubah/{user}', [UserController::class, 'update'])->name('user.update');
+        Route::get('/ubah-password/{user}', [UserController::class, 'editPassword'])->name('user.edit.password');
+        Route::post('/ubah-password/{slug}', [UserController::class, 'updatePassword'])->name('user.update.password');
+        Route::post('/hapus', [UserController::class, 'delete'])->name('user.delete');
+        Route::get('/trash/{user}', [UserController::class, 'trash'])->name('user.trash');
+        Route::post('/pulih', [UserController::class, 'restore'])->name('user.restore');
+        Route::post('/destroy', [UserController::class, 'destroy'])->name('user.destroy');
+        Route::get('/cabang/{cabang}', [UserController::class, 'indexCabang'])->name('user.cabang');
+        Route::get('/cabang/{cabang}/tambah', [UserController::class, 'createUserCabang'])->name('user.cabang.create');
+        Route::post('/import', [UserController::class, 'import'])->name('user.import');
+        Route::get('/export', [UserController::class, 'export'])->name('user.export');
     });
 
     Route::prefix('transaksi')->group(function () {
