@@ -45,12 +45,16 @@ class TransaksiSeeder extends Seeder
         // Shuffle to distribute them randomly in time
         shuffle($conditions);
 
-        $jmlPelanggan = 10;
+        $pelangganIds = \App\Models\Pelanggan::pluck('id')->toArray();
+        if (empty($pelangganIds)) {
+            $pelangganIds = \App\Models\Pelanggan::factory(10)->create()->pluck('id')->toArray();
+        }
+        $jmlPelanggan = count($pelangganIds);
         $adminUser = \App\Models\User::where('role', 'admin')->first();
         $pegawaiId = $adminUser ? $adminUser->id : 1;
         
         foreach ($conditions as $index => $cond) {
-            $pelanggan = ($index % $jmlPelanggan) + 1;
+            $pelanggan = $pelangganIds[$index % $jmlPelanggan];
             $gamis = fake()->randomElement([1,2]);
             // Orders closer to now for 'Baru', further for 'Selesai'
             if ($cond['status'] === 'Baru') {
@@ -130,7 +134,7 @@ class TransaksiSeeder extends Seeder
         $tanggalUpgrade = Carbon::now()->subHours(5);
         $jamNotaUpgrade = $tanggalUpgrade->format('His');
         $tanggalNotaUpgrade = $tanggalUpgrade->format('dmY');
-        $transaksiUpgrade = $this->createTransaksiReguler(1, $pegawaiId, 'Proses', $jamNotaUpgrade, $tanggalNotaUpgrade, $tanggalUpgrade, 0);
+        $transaksiUpgrade = $this->createTransaksiReguler($pelangganIds[0], $pegawaiId, 'Proses', $jamNotaUpgrade, $tanggalNotaUpgrade, $tanggalUpgrade, 0);
         
         $transaksiUpgrade->update([
             'is_roundtrip' => true,
@@ -149,6 +153,7 @@ class TransaksiSeeder extends Seeder
 
     public function createTransaksiReguler($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
     {
+        $cabangId = \App\Models\Cabang::where('nama', 'Cabang Pusat Pertama')->value('id') ?? 1;
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
             'nota' => 'pelanggan-' . $nota1,
@@ -164,7 +169,7 @@ class TransaksiSeeder extends Seeder
             'layanan_prioritas_id' => 1,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => $gamis,
-            'cabang_id' => 1,
+            'cabang_id' => $cabangId,
         ]);
 
         $detail1 = DetailTransaksi::create([
@@ -188,6 +193,7 @@ class TransaksiSeeder extends Seeder
 
     public function createTransaksiKilat($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
     {
+        $cabangId = \App\Models\Cabang::where('nama', 'Cabang Pusat Pertama')->value('id') ?? 1;
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
             'nota' => 'pelanggan-' . $nota1,
@@ -203,7 +209,7 @@ class TransaksiSeeder extends Seeder
             'layanan_prioritas_id' => 2,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => $gamis,
-            'cabang_id' => 1,
+            'cabang_id' => $cabangId,
         ]);
 
         $detail1 = DetailTransaksi::create([
@@ -227,6 +233,7 @@ class TransaksiSeeder extends Seeder
 
     public function createTransaksiCahaya($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
     {
+        $cabangId = \App\Models\Cabang::where('nama', 'Cabang Pusat Pertama')->value('id') ?? 1;
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
             'nota' => 'pelanggan-' . $nota1,
@@ -242,7 +249,7 @@ class TransaksiSeeder extends Seeder
             'layanan_prioritas_id' => 3,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => $gamis,
-            'cabang_id' => 1,
+            'cabang_id' => $cabangId,
         ]);
 
         $detail1 = DetailTransaksi::create([
@@ -266,6 +273,7 @@ class TransaksiSeeder extends Seeder
 
     public function createTransaksiRegulerTambahan($pelanggan, $gamis, $status, $jamNota, $tanggalNota, $tanggal, $konfirmasi = 0)
     {
+        $cabangId = \App\Models\Cabang::where('nama', 'Cabang Pusat Pertama')->value('id') ?? 1;
         $nota1 = $jamNota . '-' . $tanggalNota . '-' . 1 . $pelanggan;
         $transaksi = Transaksi::create([
             'nota' => 'pelanggan-' . $nota1,
@@ -281,7 +289,7 @@ class TransaksiSeeder extends Seeder
             'layanan_prioritas_id' => 1,
             'pelanggan_id' => $pelanggan,
             'pegawai_id' => $gamis,
-            'cabang_id' => 1,
+            'cabang_id' => $cabangId,
         ]);
 
         $detail1 = DetailTransaksi::create([
