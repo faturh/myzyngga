@@ -21,7 +21,7 @@
     // Base container classes
     $containerClasses = [
         'flex items-center justify-between cursor-pointer group select-none transition-all duration-200',
-        $size === 'M' ? 'h-[32px]' : 'h-[56px]',
+        $size === 'M' ? 'h-[32px]' : ($size === '48' ? 'h-[48px]' : 'h-[56px]'),
         $disabled ? 'opacity-50 cursor-not-allowed' : '',
     ];
 @endphp
@@ -67,16 +67,18 @@
                 {{ $attributes }}
             >
             {{-- Custom Radio Circle --}}
-            <div class="w-5 h-5 rounded-full border-[1.5px] border-zyngga-blue-50 transition-all duration-200 
-                        peer-checked:border-zyngga-blue-300 peer-checked:bg-zyngga-blue-300
+            <div class="w-5 h-5 rounded-full border-[1.5px] border-zyngga-blue-50 bg-white transition-all duration-200 
+                        peer-checked:border-zyngga-blue-300
                         group-hover:border-zyngga-blue-300">
             </div>
             {{-- Radio dot/check icon --}}
             <div class="absolute inset-0 flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-opacity duration-200 pointer-events-none">
                 @if($radioType === 'check')
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    <div class="w-5 h-5 rounded-full bg-zyngga-blue-300 flex items-center justify-center">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
                 @else
-                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-zyngga-blue-300"></div>
                 @endif
             </div>
         </div>

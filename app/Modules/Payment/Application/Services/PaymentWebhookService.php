@@ -73,8 +73,18 @@ class PaymentWebhookService
         $order = $this->orderRepository->findById($orderId);
         if (!$order) return;
 
-        // If it's already fully paid, skip
-        if ((float)$order->bayar >= (float)$order->total_bayar_akhir) {
+        // Process pending metadata if any to calculate real target amount
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $targetAmount = (float) $order->total_bayar_akhir;
+        if (isset($meta['pending_upgrade'])) {
+            $targetAmount += (float) ($meta['pending_upgrade']['price_diff'] ?? 0);
+        }
+        if (isset($meta['pending_delivery'])) {
+            $targetAmount += (float) ($meta['pending_delivery']['delivery_fee'] ?? 0);
+        }
+
+        // If it's already fully paid against the new target amount, skip
+        if ((float)$order->bayar >= $targetAmount && $targetAmount > 0) {
             return;
         }
 
@@ -88,7 +98,42 @@ class PaymentWebhookService
             'jenis_pembayaran' => $paymentType === 'gopay' || $paymentType === 'qris' ? 'qris' : ($paymentType === 'credit_card' ? 'credit_card' : 'transfer'),
         ];
 
-        if ($newBayar >= (float)$order->total_bayar_akhir) {
+        // Process pending metadata if any
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $metaChanged = false;
+
+        if (isset($meta['pending_upgrade'])) {
+            $payload['layanan_prioritas_id'] = $meta['pending_upgrade']['new_service_id'];
+            $payload['total_biaya_prioritas'] = (float) $order->total_biaya_prioritas + (float) $meta['pending_upgrade']['price_diff'];
+            $payload['total_bayar_akhir'] = (float) $order->total_bayar_akhir + (float) $meta['pending_upgrade']['price_diff'];
+            
+            // Record to upgrade history
+            \App\Models\UpgradeLayanan::create([
+                'transaksi_id' => $orderId,
+                'layanan_asal_id' => $order->layanan_prioritas_id,
+                'layanan_tujuan_id' => $meta['pending_upgrade']['new_service_id'],
+                'biaya_upgrade' => (float) $meta['pending_upgrade']['price_diff'],
+            ]);
+
+            unset($meta['pending_upgrade']);
+            $metaChanged = true;
+        }
+
+        if (isset($meta['pending_delivery'])) {
+            $payload['pickup_address'] = $meta['pending_delivery']['address'];
+            $payload['pickup_detail_address'] = $meta['pending_delivery']['detail_address'];
+            $payload['is_roundtrip'] = true;
+            unset($meta['pending_delivery']);
+            $metaChanged = true;
+        }
+
+        if ($metaChanged) {
+            $payload['payment_metadata'] = json_encode($meta);
+        }
+
+        // Check if fully paid against the potentially updated total_bayar_akhir
+        $finalTotal = $payload['total_bayar_akhir'] ?? $order->total_bayar_akhir;
+        if ($newBayar >= (float)$finalTotal) {
             $payload['payment_status'] = 'paid';
             $payload['paid_at'] = now();
         }
