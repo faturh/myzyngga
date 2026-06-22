@@ -401,6 +401,17 @@
                     </template>
 
                     <template x-if="status === 'finished'">
+                        @php
+                            $repeatService = 'reguler';
+                            $serviceLower = strtolower($order['service_type'] ?? 'reguler');
+                            if (str_contains($serviceLower, 'kilat')) {
+                                $repeatService = 'kilat';
+                            } elseif (str_contains($serviceLower, 'express') || str_contains($serviceLower, 'quick')) {
+                                $repeatService = 'express';
+                            } elseif (str_contains($serviceLower, 'satuan')) {
+                                $repeatService = 'satuan';
+                            }
+                        @endphp
                         <div class="w-full flex items-center gap-4">
                             <x-zyngga-button 
                                 type="button"
@@ -413,7 +424,8 @@
                                 @click="window.dispatchEvent(new CustomEvent('open-modal-download'))"
                             />
                             <x-zyngga-button 
-                                type="button"
+                                type="a"
+                                href="{{ route('order.pickup', $repeatService) }}"
                                 size="l"
                                 variant="primary" 
                                 class="flex-1 !h-12 font-medium"
@@ -450,9 +462,25 @@
                         icon="send"
                         iconPosition="left"
                         label="Bagikan Nota"
-                        @click="isOpen = false"
+                        @click="
+                            isOpen = false;
+                            const shareUrl = '{{ route('public.cetak-struk', $order['id']) }}';
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: 'Nota Transaksi Zyngga',
+                                    text: 'Berikut adalah nota transaksi Zyngga dengan ID {{ $order['id'] }}',
+                                    url: shareUrl
+                                }).catch(err => console.log(err));
+                            } else {
+                                navigator.clipboard.writeText(shareUrl);
+                                $dispatch('toast', { message: 'Link nota berhasil disalin ke clipboard', type: 'success' });
+                            }
+                        "
                     />
                     <x-zyngga-button 
+                        type="a"
+                        href="{{ route('public.cetak-struk', $order['id']) }}"
+                        target="_blank"
                         variant="primary" 
                         size="m" 
                         class="w-full !h-12"

@@ -112,16 +112,9 @@ new class extends Component
     {{-- Card 1: Profile Picture --}}
     <x-zyngga-card>
         <div class="flex flex-col items-center justify-center">
-            <div class="w-24 h-24 rounded-full bg-zyngga-blue-300 flex items-center justify-center text-white text-4xl font-medium mb-4">
+            <div class="w-24 h-24 rounded-full bg-zyngga-blue-300 flex items-center justify-center text-white text-4xl font-medium">
                 <span x-text="currentName ? currentName.charAt(0).toUpperCase() : '?'"></span>
             </div>
-            <x-zyngga-button 
-                type="button" 
-                variant="secondary" 
-                size="s" 
-                icon="edit-3"
-                icon-position="left"
-                label="Ubah Foto"/>                       
         </div>
     </x-zyngga-card>
 

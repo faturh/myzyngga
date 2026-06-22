@@ -855,7 +855,7 @@ class OrderWebService
         };
     }
 
-    public function storeComplaint(string $id, string $content, ?User $user): void
+    public function storeComplaint(string $id, Request $request, ?User $user): void
     {
         $order = $this->orderRepository->findById($id);
         if (!$order) {
@@ -871,10 +871,22 @@ class OrderWebService
             throw new \Exception('Pelanggan tidak valid.');
         }
 
+        $imagePath = null;
+        if ($request->hasFile('issue_image')) {
+            $imagePath = $request->file('issue_image')->storeOnCloudinary('complaints')->getSecurePath();
+        }
+
+        $content = $request->input('issue_description') ?? $request->input('content');
+        if (empty($content)) {
+            throw new \Exception('Deskripsi masalah harus diisi.');
+        }
+
         \App\Models\Complaint::create([
             'transaksi_id' => $order->id,
             'pelanggan_id' => $pelanggan->id,
             'content' => $content,
+            'issue_types' => $request->input('issue_types') ?? ['lainnya'],
+            'image_path' => $imagePath,
             'status' => 'pending',
         ]);
     }
