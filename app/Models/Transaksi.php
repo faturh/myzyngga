@@ -19,6 +19,8 @@ class Transaksi extends Model
         'waktu',
         'pickup_address',
         'pickup_detail_address',
+        'pickup_lat',
+        'pickup_lng',
         'pickup_date',
         'pickup_time',
         'parfum',
@@ -39,6 +41,8 @@ class Transaksi extends Model
         'pelanggan_id',
         'pegawai_id',
         'cabang_id',
+        'midtrans_order_id',
+        'payment_metadata',
     ];
 
     protected $casts = [
@@ -97,6 +101,16 @@ class Transaksi extends Model
     public function pelanggan()
     {
         return $this->belongsTo(Pelanggan::class);
+    }
+
+    public function notaKeluar()
+    {
+        return $this->hasMany(NotaKeluar::class, 'transaksi_id');
+    }
+
+    public function upgradeLayanans()
+    {
+        return $this->hasMany(UpgradeLayanan::class, 'transaksi_id')->orderBy('created_at', 'desc');
     }
 
     public function pegawai()

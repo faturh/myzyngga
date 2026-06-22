@@ -137,7 +137,7 @@
             background: white;
             border-top: 1px solid #F4F4F4;
             border-radius: 16px 16px 0 0;
-            padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+            padding: 16px 0px calc(16px + env(safe-area-inset-bottom, 0px));
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -202,7 +202,7 @@
         @endphp
         <input type="hidden" name="pickup_date"   id="pickup_date"   value="{{ $pickupDate ?: $defaultDate }}">
         <input type="hidden" name="pickup_time"   id="pickup_time"   value="{{ $pickupTime ?: 'Standard' }}">
-        <input type="hidden" name="parfum"        id="parfum"        value="{{ $parfum ?: 'Lavender' }}">
+        <input type="hidden" name="parfum"        id="parfum"        value="{{ $parfum ?: 'Fresh' }}">
         <input type="hidden" name="catatan"       id="note"          value="{{ $note }}">
         
         {{-- ── LOKASI PICKUP ─────────────────────────────────── --}}
@@ -423,7 +423,7 @@
             <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="window.dispatchEvent(new CustomEvent('open-parfum-modal'))">
                 <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Pilihan parfum</x-zyngga-text>
                 <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
-                    <x-zyngga-text id="selected-parfum" variant="sm" class="m-0 truncate text-right">Lavender</x-zyngga-text>
+                    <x-zyngga-text id="selected-parfum" variant="sm" class="m-0 truncate text-right">Fresh</x-zyngga-text>
                     <i data-feather="chevron-right" class="w-4 h-4 text-[#808080] shrink-0"></i>
                 </div>
             </div>
@@ -438,39 +438,6 @@
             </div>
         </x-zyngga-card>
 
-        {{-- ── METODE PEMBAYARAN ──────────────────────────────── --}}
-        <x-zyngga-card title="Metode Pembayaran">
-            @php
-                $payments = [
-                    ['id' => 'cash', 'label' => 'Tunai',  'desc' => 'Bayar tunai via kurir atau di outlet',
-                     'feather' => 'dollar-sign', 'color' => "theme('colors.zyngga.yellow.300')", 'bg' => "theme('colors.zyngga.yellow.50')"],
-                    ['id' => 'qris', 'label' => 'Non tunai',  'desc' => 'Bayar via aplikasi (QRIS & transfer)',
-                     'feather' => 'grid', 'color' => "theme('colors.zyngga.yellow.300')", 'bg' => "theme('colors.zyngga.yellow.50')"],
-                ];
-            @endphp
-
-            <div class="flex flex-col">
-                @foreach($payments as $i => $pay)
-                    <x-zyngga-radio-row 
-                        name="payment"
-                        id="payment-{{ $pay['id'] }}"
-                        value="{{ $pay['id'] }}"
-                        :label="$pay['label']"
-                        :description="$pay['desc']"
-                        :checked="$pay['id'] === 'cash'"
-                    >
-                        <x-slot:icon>
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zyngga-yellow-50">
-                                <i data-feather="{{ $pay['feather'] }}" class="w-[18px] h-[18px] text-zyngga-yellow-300"></i>
-                            </div>
-                        </x-slot:icon>
-                    </x-zyngga-radio-row>
-                    @if ($i < count($payments) - 1)
-                        <x-zyngga-divider class=" my-2" />
-                    @endif
-                @endforeach
-            </div>
-        </x-zyngga-card>
     </form>
 
     {{-- ── STICKY FOOTER ──────────────────────────────────────── --}}
@@ -540,7 +507,7 @@
     openEvent="open-parfum-modal"
     closeEvent="close-parfum-modal"
 >
-    @php $parfums = ['Lavender','Rose','Jasmine','Fresh','Unscented']; @endphp
+    @php $parfums = ['Lavender','Rose','Jasmine','Fresh','Tanpa Parfum']; @endphp
     @foreach ($parfums as $i => $p)
         <x-zyngga-radio-row 
             name="modal_parfum"
@@ -548,7 +515,7 @@
             value="{{ $p }}"
             :label="$p"
             size="M"
-            :checked="$p === 'Lavender'"
+            :checked="$p === 'Fresh'"
             onclick="chooseParfum('{{ $p }}')"
         />
         @if ($i < count($parfums) - 1)
@@ -592,20 +559,57 @@
 <script>
     // ── Service catalogue (mirrors PHP $allServices) ───────────
     const ALL_SERVICES = [
-        { id: 'regular', name: 'Regular', desc: 'Layanan 3 hari (72 jam)',   price: 'Rp4.850/kg',      eta: 3 },
-        { id: 'quick',   name: 'Quick',   desc: 'Layanan 2 hari (48 jam)',   price: 'Rp6.000/kg',      eta: 2 },
-        { id: 'express', name: 'Express', desc: 'Layanan 1 hari (24 jam)',   price: 'Rp6.250/kg',      eta: 1 },
-        { id: 'kilat',   name: 'Kilat',   desc: 'Layanan 5 jam',              price: 'Rp7.850/kg',      eta: 0 },
-        { id: 'satuan',  name: 'Satuan',  desc: 'Selimut, Bed Cover, dll.',  price: 'Mulai Rp10.000',  eta: 3 },
+        { id: 'regular', name: 'Regular', desc: 'Layanan 3 hari (72 jam)',   price: 'Rp4.850/kg',      workingHours: 30, originalEta: 3 },
+        { id: 'quick',   name: 'Quick',   desc: 'Layanan 2 hari (48 jam)',   price: 'Rp6.000/kg',      workingHours: 20, originalEta: 2 },
+        { id: 'express', name: 'Express', desc: 'Layanan 1 hari (24 jam)',   price: 'Rp6.250/kg',      workingHours: 10, originalEta: 1 },
+        { id: 'kilat',   name: 'Kilat',   desc: 'Layanan 5 jam',              price: 'Rp7.850/kg',      workingHours: 5,  originalEta: 0 },
+        { id: 'satuan',  name: 'Satuan',  desc: 'Selimut, Bed Cover, dll.',  price: 'Mulai Rp10.000',  workingHours: 30, originalEta: 3 },
     ];
+
+    function calculateWorkingHoursETA(startDate, hoursToAdd) {
+        let date = new Date(startDate);
+        
+        if (date.getHours() < 8) {
+            date.setHours(8, 0, 0, 0);
+        } else if (date.getHours() >= 18) {
+            date.setDate(date.getDate() + 1);
+            date.setHours(8, 0, 0, 0);
+        }
+        
+        while (hoursToAdd > 0) {
+            let endOfDay = new Date(date);
+            endOfDay.setHours(18, 0, 0, 0);
+            
+            let minutesLeftToday = Math.floor((endOfDay - date) / 60000);
+            
+            if (minutesLeftToday <= 0) {
+                date.setDate(date.getDate() + 1);
+                date.setHours(8, 0, 0, 0);
+                continue;
+            }
+            
+            let minutesToAdd = hoursToAdd * 60;
+            
+            if (minutesToAdd <= minutesLeftToday) {
+                date.setMinutes(date.getMinutes() + minutesToAdd);
+                hoursToAdd = 0;
+            } else {
+                date.setDate(date.getDate() + 1);
+                date.setHours(8, 0, 0, 0);
+                hoursToAdd -= (minutesLeftToday / 60);
+            }
+        }
+        return date;
+    }
 
     // The service currently selected (read from the server-rendered initial value)
     let selectedId = document.getElementById('selected_service_id').value || 'regular';
 
     // ── Render both card slots ─────────────────────────────────
     function renderCardSlots() {
-        const selIdx   = ALL_SERVICES.findIndex(s => s.id === selectedId);
-        const selected = ALL_SERVICES[selIdx] || ALL_SERVICES[0];
+        let selIdx   = ALL_SERVICES.findIndex(s => s.id === selectedId);
+        if (selIdx === -1) selIdx = 0;
+        const selected = ALL_SERVICES[selIdx];
 
         // Slot 1: the next service after selected (wraps around, skipping selected)
         const altIdx   = (selIdx + 1) % ALL_SERVICES.length;
@@ -660,21 +664,25 @@
     function updateFooterServiceLabel(id) {
         const svc = ALL_SERVICES.find(s => s.id === id) || ALL_SERVICES[0];
         
-        // Label: Name (X hari) or Name (Hari yang sama)
-        const daysLabel = svc.eta === 0 ? 'Hari yang sama' : `${svc.eta} hari`;
+        // Label: Name (X hari) or Name (5 jam)
+        const daysLabel = svc.originalEta === 0 ? '5 jam' : `${svc.originalEta} hari`;
         document.getElementById('footer-service-label').textContent = `${svc.name} (${daysLabel})`;
         
         // ETA Date calculation based on Pickup Date
         const pickupDateVal = document.getElementById('pickup_date').value;
-        const offset = (pickupDateVal === 'tomorrow') ? 1 : 0;
+        const startDate = new Date();
+        if (pickupDateVal === 'tomorrow') {
+            startDate.setDate(startDate.getDate() + 1);
+            startDate.setHours(8, 0, 0, 0);
+        }
 
-        const d = new Date();
-        d.setDate(d.getDate() + svc.eta + offset);
+        const d = calculateWorkingHoursETA(startDate, svc.workingHours);
         const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        const formattedDate = `${dayNames[d.getDay()]}, ${d.getDate()} ${monthNames[d.getMonth()]}`;
+        const formattedTime = d.getHours().toString().padStart(2, '0') + '.' + d.getMinutes().toString().padStart(2, '0');
+        const formattedDate = `${dayNames[d.getDay()]}, ${d.getDate()} ${monthNames[d.getMonth()]} | ${formattedTime}`;
         
-        document.getElementById('footer-eta').textContent = `Estimasi Selesai: ${formattedDate}`;
+        document.getElementById('footer-eta').textContent = `Selesai: ${formattedDate}`;
 
         // 3. Re-render card slots: slot-0 = selected, slot-1 = alternative
         renderCardSlots();

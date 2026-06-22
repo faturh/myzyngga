@@ -4,79 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Konfirmasi Pengantaran – Zyngga</title>
+    <title>Konfirmasi Delivery – Zyngga</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
         html, body { margin: 0; background: #e8eff9; }
 
-        /* ── date button ── */
-        .date-btn {
-            flex: 1;
-            border: 1.5px solid #e8eff9;
-            border-radius: 12px;
-            padding: 14px 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: white;
-            text-align: left;
-            height: 72px;
-        }
-        .date-btn:hover {
-            border-color: #1660C1;
-            background: #e8eff9;
-        }
-        .date-btn.selected {
-            border-color: #1660C1;
-            background: #e8eff9;
-        }
-
-        /* ── addon row ── */
-        .addon-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 32px;
-            cursor: pointer;
-        }
-
-        /* ── sticky footer ── */
-        #sticky-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            background: white;
-            border-top: 1px solid #F4F4F4;
-            border-radius: 16px 16px 0 0;
-            padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 50;
-            box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-        }
-
-        @media (min-width: 768px) {
-            #sticky-footer {
-                left: 0;
-                right: 0;
-                transform: none;
-            }
-        }
-
         /* ── map thumbnail ── */
         #map-thumb {
             width: 100%;
-            height: 144px;
+            height: 160px;
             border-radius: 8px;
             overflow: hidden;
+            margin-bottom: 12px;
         }
         #map-thumb iframe { width:100%; height:100%; border:0; }
     </style>
@@ -86,9 +31,8 @@
     <div class="min-h-screen flex flex-col" x-data="{ isDirty: false }">
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
-            title="Konfirmasi Pengantaran" 
-            :backUrl="route('order.request.delivery', $order['id'])" 
-            :backAction="'window.location.href=\'' . route('order.request.delivery', $order['id']) . '\''"
+            title="Pengajuan Delivery" 
+            :backUrl="route('order.detail', ['id' => $order['id']])" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -97,207 +41,258 @@
 
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col relative">
-            <div class="w-full max-w-5xl mx-auto px-5 pb-[88px] pt-4">
-                {{-- ── FORM CONTENT ──────────────────────────────────── --}}
-                <form method="POST" action="{{ route('order.request.delivery.store', $order['id']) }}" id="page-content" class="flex-1 flex flex-col space-y-4">
+            <div class="w-full max-w-5xl mx-auto px-5 pb-[88px]">
+                <form method="POST" action="{{ route('order.delivery.store', ['id' => $order['id']]) }}" id="page-content" class="flex-1 flex flex-col">
                     @csrf
-                    
+                    @if ($errors->any())
+                        <div x-init="$dispatch('toast', { message: '{{ $errors->first() }}', type: 'error' })"></div>
+                    @endif
                     <input type="hidden" name="address" value="{{ $address }}">
-                    <input type="hidden" name="detail_address" value="{{ $detailAddress }}">
-                    <input type="hidden" name="lat" value="{{ $lat }}">
-                    <input type="hidden" name="lng" value="{{ $lng }}">
+                    <input type="hidden" name="lat"     value="{{ $lat }}">
+                    <input type="hidden" name="lng"     value="{{ $lng }}">
 
-                    @php
-                        $todayCarbon = \Carbon\Carbon::now('Asia/Jakarta');
-                        $currentHour = $todayCarbon->hour;
-                        $isTodayDisabled = $currentHour >= 17;
-                        $defaultDate = $isTodayDisabled ? 'tomorrow' : 'today';
-                    @endphp
-                    <input type="hidden" name="pickup_date" id="pickup_date" value="{{ $defaultDate }}">
-                    <input type="hidden" name="pickup_time" id="pickup_time" value="Standard">
-                    <input type="hidden" name="catatan" id="note" value="">
-
-                    {{-- ── LOKASI PENGANTARAN ────────────────────────────── --}}
-                    <x-zyngga-card title="Lokasi Pengantaran">
+                    {{-- ── LOKASI DELIVERY ─────────────────────────────────── --}}
+                    <x-zyngga-card title="Lokasi Delivery">
                         <x-slot:headerAction>
                             <x-zyngga-button 
                                 type="a"
-                                href="{{ route('order.request.delivery', $order['id']) }}?lat={{ $lat }}&lng={{ $lng }}&address={{ urlencode($address) }}"
+                                href="{{ route('order.request.delivery', ['id' => $order['id'], 'change' => 1]) }}"
                                 variant="secondary"
                                 size="s"
                                 label="Ubah"
                             />
                         </x-slot:headerAction>
-                        
-                        {{-- Map thumbnail ── --}}
-                        <div id="map-thumb" class="mb-4 relative">
-                            <iframe
-                                loading="lazy"
-                                allowfullscreen
-                                referrerpolicy="no-referrer-when-downgrade"
-                                src="https://www.google.com/maps/embed/v1/search?key={{ config('services.google.maps_key') }}&q={{ $lat }},{{ $lng }}&zoom=18&maptype=roadmap"
-                                style="pointer-events:none;"
-                            ></iframe>
+
+                        <div id="map-thumb" class="mb-4 relative h-[144px] w-full rounded-xl overflow-hidden border border-zyngga-neutral-100">
+                            @if($lat && $lng)
+                                <iframe 
+                                    loading="lazy"
+                                    allowfullscreen
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google.maps_key', '') }}&q={{ $lat }},{{ $lng }}&zoom=17"
+                                    style="pointer-events:none;"
+                                    class="w-full h-full border-0 pointer-events-none"
+                                ></iframe>
+                                <a
+                                    href="{{ route('order.request.delivery', ['id' => $order['id'], 'change' => 1]) }}"
+                                    class="absolute inset-0 z-10 block cursor-pointer"
+                                    aria-label="Edit lokasi delivery"
+                                    title="Edit lokasi delivery"
+                                ></a>
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-gray-500">Peta tidak tersedia</div>
+                            @endif
                         </div>
-                        
-                        {{-- Address with Icon --}}
+
                         <div class="flex items-start gap-3">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zyngga-blue-50">
                                 <i data-feather="map-pin" class="w-5 h-5 text-zyngga-blue-300"></i>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <x-zyngga-text variant="sm" weight="medium">
-                                    {{ explode(',', $address)[0] }}
+                                    {{ explode(',', $address)[0] ?? 'Alamat' }}
                                 </x-zyngga-text>
                                 <x-zyngga-text variant="xs" color="neutral-500" class="overflow-hidden text-overflow-ellipsis line-clamp-2">
-                                    {{ $address }}
+                                    {{ $address ?: 'Alamat tidak ditemukan' }}
                                 </x-zyngga-text>
-                                @if($detailAddress)
-                                    <x-zyngga-text variant="xs" color="neutral-700" class="mt-1 font-medium">
-                                        Detail: {{ $detailAddress }}
-                                    </x-zyngga-text>
-                                @endif
                             </div>
+                        </div>
+
+                        {{-- Catatan Patokan --}}
+                        <div class="mt-3">
+                            <x-zyngga-input 
+                                name="detail_address" 
+                                id="note" 
+                                placeholder="Contoh: Rumah warna biru, pagar putih..."
+                                value="{{ $note }}"
+                            >
+                                <x-slot:iconRight>
+                                    <i data-feather="edit-2" class="w-4 h-4 text-zyngga-neutral-900 pointer-events-none"></i>
+                                </x-slot:iconRight>
+                            </x-zyngga-input>
                         </div>
                     </x-zyngga-card>
 
-                    {{-- ── JADWAL PENGANTARAN ──────────────────────────────── --}}
-                    <x-zyngga-card title="Jadwal Pengantaran">
+                    {{-- ── RINCIAN PEMBAYARAN ─────────────────────────────────── --}}
+                    <x-zyngga-card title="Rincian Pembayaran">
                         <div class="space-y-4">
-                            <div class="flex gap-2">
-                                @php
-                                    $tomorrowCarbon = $todayCarbon->copy()->addDay();
-                                @endphp
-                                <button type="button" id="date-today" class="date-btn {{ !$isTodayDisabled ? 'selected' : 'opacity-40 bg-gray-50 pointer-events-none' }}" 
-                                        onclick="selectDate('today')" {{ $isTodayDisabled ? 'disabled' : '' }}>
-                                    <x-zyngga-text variant="sm" weight="medium" class="m-0">Hari ini</x-zyngga-text>
-                                    <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $todayCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                                </button>
-                                <button type="button" id="date-tomorrow" class="date-btn {{ $isTodayDisabled ? 'selected' : '' }}" 
-                                        onclick="selectDate('tomorrow')">
-                                    <x-zyngga-text variant="sm" weight="medium" class="m-0">Besok</x-zyngga-text>
-                                    <x-zyngga-text variant="xs" color="neutral-500" class="m-0 mt-0.5">{{ $tomorrowCarbon->isoFormat('D MMM YYYY') }}</x-zyngga-text>
-                                </button>
+                            <div class="space-y-1">
+                                @if(isset($order['items']) && count($order['items']) > 0)
+                                    @foreach($order['items'] as $item)
+                                    <div class="flex justify-between items-center">
+                                        <x-zyngga-text variant="sm" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
+                                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ $order['payment_status'] === 'Lunas' ? '0' : number_format($item['subtotal'], 0, ',', '.') }}</x-zyngga-text>
+                                    </div>
+                                    @endforeach
+                                @endif
+
+                                @if(isset($order['upgrade_fee']) && $order['upgrade_fee'] > 0)
+                                <div class="flex justify-between">
+                                    <x-zyngga-text variant="sm" color="neutral-900">Biaya Upgrade</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ $order['payment_status'] === 'Lunas' ? '0' : number_format($order['upgrade_fee'], 0, ',', '.') }}</x-zyngga-text>
+                                </div>
+                                @endif
+                                <div class="flex justify-between">
+                                    <x-zyngga-text variant="sm" color="neutral-900">Biaya Pengiriman</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp0</x-zyngga-text>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="flex justify-between">
+                                    <x-zyngga-text variant="sm" color="neutral-900">Diskon</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ isset($order['discount']) ? number_format($order['discount'], 0, ',', '.') : '0' }}</x-zyngga-text>
+                                </div>
+                                <div class="flex justify-between">
+                                    <x-zyngga-text variant="sm" color="neutral-900">Pajak</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ isset($order['tax']) ? number_format($order['tax'], 0, ',', '.') : '0' }}</x-zyngga-text>
+                                </div>
+                            </div>
+                                
+                            <x-zyngga-divider />
+
+                            <div class="flex justify-between">
+                                <x-zyngga-text variant="sm" color="neutral-900">Total</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ $order['payment_status'] === 'Lunas' ? '0' : (isset($order['total']) ? number_format($order['total'], 0, ',', '.') : '0') }}</x-zyngga-text>
                             </div>
                         </div>
                     </x-zyngga-card>
 
-                    {{-- ── CATATAN OPERASIONAL ───────────────────────────── --}}
-                    <x-zyngga-card>
-                        <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="openCatatan()">
-                            <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Catatan Driver (Opsional)</x-zyngga-text>
-                            <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
-                                <x-zyngga-text id="catatan-label" variant="sm" color="neutral-500" class="m-0 truncate text-right">Buat catatan</x-zyngga-text>
-                                <i data-feather="chevron-right" class="w-4 h-4 text-[#808080] shrink-0"></i>
-                            </div>
+                    {{-- ── STICKY FOOTER ─────────────────────────────────────── --}}
+                    <div id="sticky-footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-zyngga-neutral-200 p-4 z-40">
+                        <div class="w-full max-w-5xl mx-auto">
+                            @php
+                                $isLunas = $order['payment_status'] === 'Lunas' || (isset($order['total']) && $order['total'] <= 0);
+                            @endphp
+                            <x-zyngga-button 
+                                type="button"
+                                variant="primary"
+                                size="l"
+                                class="w-full"
+                                onclick="submitDelivery()"
+                                label="{{ $isLunas ? 'Ajukan Pengantaran' : 'Bayar Sekarang' }}"
+                            />
                         </div>
-                    </x-zyngga-card>
+                    </div>
                 </form>
             </div>
         </main>
-
-        {{-- ── STICKY FOOTER ──────────────────────────────────────── --}}
-        <div id="sticky-footer">
-            <div class="max-w-5xl mx-auto w-full px-5 flex items-center justify-between">
-                <div>
-                    <x-zyngga-text variant="base" weight="medium" class="m-0">Konfirmasi Alamat</x-zyngga-text>
-                    <x-zyngga-text variant="xs" color="neutral-500" class="m-0">Harap pastikan alamat sudah benar</x-zyngga-text>
-                </div>
-
-                <x-zyngga-button 
-                    type="button"
-                    variant="primary"
-                    size="l"
-                    label="Konfirmasi Pengantaran"
-                    class="ml-4"
-                    onclick="submitDeliveryForm()"
-                />
-            </div>
-        </div>
-
-        {{-- ── MODAL: CATATAN ──────────────────────────────────────── --}}
-        <x-zyngga-selection-modal 
-            id="catatan-modal-root" 
-            title="Tambah Catatan"
-            openEvent="open-catatan-modal"
-            closeEvent="close-catatan-modal"
-        >
-            <div class="space-y-4">
-                <div class="relative">
-                    <textarea 
-                        id="modal-catatan-input"
-                        maxlength="60"
-                        class="w-full h-32 p-4 border-[1.5px] border-zyngga-blue-50 rounded-xl focus:border-zyngga-blue-300 focus:ring-0 outline-none transition-all duration-200 text-sm placeholder-zyngga-neutral-400"
-                        placeholder="Tambahkan instruksi pengiriman khusus (misal: titip satpam)"
-                        oninput="document.getElementById('catatan-char-count').textContent = this.value.length"
-                    ></textarea>
-                    <div class="absolute bottom-3 right-4 text-xs text-zyngga-neutral-400">
-                        <span id="catatan-char-count">0</span>/60
-                    </div>
-                </div>
-                
-                <x-zyngga-button 
-                    type="button"
-                    variant="primary"
-                    size="l"
-                    label="Simpan"
-                    class="w-full"
-                    onclick="saveCatatan()"
-                />
-            </div>
-        </x-zyngga-selection-modal>
     </div>
 
+    {{-- ── TOAST CONTAINER ───────────────────────────────────────── --}}
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-[calc(100%-40px)] max-w-[400px]"></div>
+
+    {{-- ── MODAL: PAYMENT SUCCESS ───────────────────────────── --}}
+    <x-zyngga-selection-modal 
+        id="payment-success-modal" 
+        openEvent="open-payment-success-modal"
+        closeEvent="close-payment-success-modal"
+    >
+        <x-zyngga-confirm-view 
+            :image="asset('images/illustrations/confirm_order.png')"
+            title="Pembayaran Berhasil!"
+            description="Terima kasih, pembayaran pengajuan pengantaran Anda telah berhasil."
+            primaryLabel="Lihat Detail Pesanan"
+            primaryAction="window.location.href = window.redirectUrl"
+        />
+    </x-zyngga-selection-modal>
+
+    {{-- ── MODAL: PAYMENT FAILED ───────────────────────────── --}}
+    <x-zyngga-selection-modal 
+        id="payment-failed-modal" 
+        openEvent="open-payment-failed-modal"
+        closeEvent="close-payment-failed-modal"
+    >
+        <x-zyngga-confirm-view 
+            :image="asset('images/illustrations/cancel_order.png')"
+            title="Pembayaran Dibatalkan"
+            description="Proses pembayaran tidak diselesaikan. Pengajuan Anda telah dibatalkan."
+            primaryLabel="Tutup"
+            primaryAction="window.location.reload()"
+        />
+    </x-zyngga-selection-modal>
+
     <script>
-        function selectDate(val) {
-            document.getElementById('pickup_date').value = val;
-            const todayBtn = document.getElementById('date-today');
-            const tomorrowBtn = document.getElementById('date-tomorrow');
-
-            if (val === 'today') {
-                todayBtn.classList.add('selected');
-                tomorrowBtn.classList.remove('selected');
-            } else {
-                tomorrowBtn.classList.add('selected');
-                todayBtn.classList.remove('selected');
-            }
-        }
-
-        function openCatatan() {
-            window.dispatchEvent(new CustomEvent('open-catatan-modal'));
-        }
-        function closeCatatan() {
-            window.dispatchEvent(new CustomEvent('close-catatan-modal'));
-        }
-        function saveCatatan() {
-            const val = document.getElementById('modal-catatan-input').value.trim();
-            const label = document.getElementById('catatan-label');
-            const noteInput = document.getElementById('note');
-
-            if (val) {
-                label.textContent = val;
-                label.classList.remove('text-zyngga-neutral-400');
-                label.classList.add('text-zyngga-neutral-900');
-            } else {
-                label.textContent = 'Buat catatan';
-                label.classList.add('text-zyngga-neutral-400');
-                label.classList.remove('text-zyngga-neutral-900');
-            }
-
-            if (noteInput) {
-                noteInput.value = val;
-            }
-
-            closeCatatan();
-        }
-
-        function submitDeliveryForm() {
-            document.getElementById('page-content').submit();
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             feather.replace();
         });
+
+        // Toast handling
+        window.addEventListener('toast', (e) => {
+            const { message, type = 'success' } = e.detail;
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const isError = type === 'error';
+            const bgColor = isError ? 'bg-[#FEF2F2]' : 'bg-[#F0FDF4]';
+            const borderColor = isError ? 'border-[#FEE2E2]' : 'border-[#DCFCE7]';
+            const iconColor = isError ? 'text-[#EF4444]' : 'text-[#22C55E]';
+            const textColor = isError ? 'text-[#991B1B]' : 'text-[#166534]';
+            const iconName = isError ? 'alert-circle' : 'check-circle';
+
+            toast.className = `flex items-start gap-3 p-4 rounded-xl border ${bgColor} ${borderColor} shadow-sm transition-all duration-300 translate-y-[-100%] opacity-0`;
+            toast.innerHTML = `
+                <i data-feather="${iconName}" class="w-5 h-5 ${iconColor} shrink-0 mt-0.5"></i>
+                <p class="text-sm font-medium ${textColor} flex-1 leading-snug">${message}</p>
+                <button onclick="this.parentElement.remove()" class="p-1 hover:bg-black/5 rounded-full transition-colors shrink-0">
+                    <i data-feather="x" class="w-4 h-4 ${iconColor} opacity-70"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+            feather.replace();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-100%]', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        });
+
+        function submitDelivery() {
+            const form = document.getElementById('page-content');
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    @if($order['payment_status'] === 'Lunas' || (isset($order['total']) && $order['total'] <= 0))
+                        window.location.href = data.redirect || '{{ route('order.detail', $order['id']) }}';
+                    @else
+                        window.location.href = '{{ route('order.payment-method', $order['id']) }}';
+                    @endif
+                } else {
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: data.message || 'Gagal mengajukan pengantaran.', type: 'error' } }));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Terjadi kesalahan sistem.', type: 'error' } }));
+            });
+        }
+
+        function rollbackDelivery(reload = true) {
+            fetch('{{ route('order.delivery.rollback', $order['id']) }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                }
+            }).then(() => {
+                if (reload) window.location.reload();
+            });
+        }
     </script>
 </body>
 </html>

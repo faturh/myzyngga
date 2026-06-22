@@ -49,9 +49,25 @@
             background: #1660C1;
             border-radius: 100px;
         }
+        .history-container-height {
+            min-height: calc(100vh - 255px);
+        }
+        @media (min-width: 768px) {
+            .history-container-height {
+                min-height: calc(100vh - 216px);
+            }
+        }
     </style>
+    @php
+        $tabCounts = [
+            'Semua' => count($orders),
+            'Belum Bayar' => collect($orders)->where('status', 'Belum Bayar')->count(),
+            'Diproses' => collect($orders)->where('status', 'Diproses')->count(),
+            'Selesai' => collect($orders)->where('status', 'Selesai')->count(),
+        ];
+    @endphp
 </head>
-<body x-data="{ desktopCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || (localStorage.getItem('sidebarCollapsed') === null && window.innerWidth >= 768 && window.innerWidth < 1024), activeTab: 'Semua' }" class="bg-zyngga-blue-50 min-h-screen">
+<body x-data="{ desktopCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || (localStorage.getItem('sidebarCollapsed') === null && window.innerWidth >= 768 && window.innerWidth < 1024), activeTab: 'Semua', counts: {{ json_encode($tabCounts) }} }" class="bg-zyngga-blue-50 min-h-screen">
     <x-sidebar active="order" />
 
     {{-- Main Content Wrapper --}}
@@ -69,7 +85,7 @@
             :maxWidth="'max-w-full'"
         >
             <x-slot:extra>
-                <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
+                <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide">
                     @foreach (['Semua', 'Belum Bayar', 'Diproses', 'Selesai'] as $tab)
                         <button 
                             @click="activeTab = '{{ $tab }}'"
@@ -85,7 +101,7 @@
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col">
             <div class="w-full max-w-5xl mx-auto px-5">
-                <div class="flex flex-col min-h-[calc(100vh-240px)]">
+                <div class="flex flex-col history-container-height">
                     
                     @forelse($orders as $order)
                     <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === '{{ $order['status'] }}'"
@@ -144,7 +160,7 @@
                                 @endphp
                                 <x-zyngga-button
                                     type="a"
-                                    href="{{ route('order.pickup', ['service' => $repeatService]) }}"
+                                    href="{{ route('order.repeat', $order['id']) }}"
                                     variant="primary"
                                     size="m"
                                     label="Ulangi Pesanan"
@@ -166,13 +182,9 @@
                         </div>
                     </x-zyngga-card>
                     @empty
-                    <div class="flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center min-h-[calc(100vh-240px)]">
-                        <div class="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center mb-5 shadow-sm">
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2.5 9.5H21.5V18.5C21.5 20.16 20.16 21.5 18.5 21.5H5.5C3.84 21.5 2.5 20.16 2.5 18.5V9.5Z" fill="#C4C4C4"/>
-                                <path d="M2.5 9.5V6.5C2.5 4.84 3.84 3.5 5.5 3.5H18.5C20.16 3.5 21.5 4.84 21.5 6.5V9.5H2.5Z" fill="#C4C4C4" opacity="0.4"/>
-                                <path d="M9.17 12.83L14.83 18.5M14.83 12.83L9.17 18.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                    <div class="flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center history-container-height">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-5 shadow-sm">
+                            <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Pesanan" width="36" height="36">
                         </div>
                         <x-zyngga-text variant="lg" weight="medium" class="mb-2 text-neutral-900 tracking-tight">Kamu Belum Memiliki Pesanan</x-zyngga-text>
                         <x-zyngga-text variant="sm" color="neutral-500" class="mb-6 px-6 leading-[1.6]">Semua riwayat transaksi dan pengerjaan laundry kamu akan muncul di sini.</x-zyngga-text>
@@ -185,6 +197,16 @@
                         />
                     </div>
                     @endforelse
+
+                    @if(count($orders) > 0)
+                    <div x-cloak x-show="counts[activeTab] === 0" class="flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center history-container-height">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-5 shadow-sm">
+                            <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Pesanan" width="36" height="36">
+                        </div>
+                        <x-zyngga-text variant="lg" weight="medium" class="mb-2 text-neutral-900 tracking-tight">Kategori Kosong</x-zyngga-text>
+                        <x-zyngga-text variant="sm" color="neutral-500" class="mb-6 px-6 leading-[1.6]">Belum ada riwayat pesanan yang sesuai dengan kategori ini.</x-zyngga-text>
+                    </div>
+                    @endif
                 </div>
             </div>
 
