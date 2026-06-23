@@ -31,7 +31,7 @@ class HargaJenisLayananController extends Controller
         }
 
         $jenisLayanan = JenisLayanan::where('cabang_id', $userCabang)->orderBy('created_at', 'asc')->get();
-        $jenisPakaian = JenisPakaian::where('cabang_id', $userCabang)->orderBy('created_at', 'asc')->get();
+        $jenisPakaian = JenisPakaian::orderBy('nama', 'asc')->get();
 
         $hargaJenisLayanan = HargaJenisLayanan::query()
             ->join('jenis_layanan as jl', 'harga_jenis_layanan.jenis_layanan_id', '=', 'jl.id')

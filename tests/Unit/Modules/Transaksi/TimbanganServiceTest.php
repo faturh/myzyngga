@@ -8,21 +8,22 @@ use App\Models\LayananPrioritas;
 use App\Models\Pelanggan;
 use App\Models\User;
 use App\Models\Cabang;
-use App\Modules\Transaksi\Application\Services\ProsesTransaksiService;
+use App\Models\JenisPakaian;
+use App\Modules\Transaksi\Application\Services\TimbanganService;
 use App\Shared\Exceptions\DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class ProsesTransaksiServiceTest extends TestCase
+class TimbanganServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    private ProsesTransaksiService $service;
+    private TimbanganService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->service = $this->app->make(ProsesTransaksiService::class);
+        $this->service = $this->app->make(TimbanganService::class);
     }
 
     public function test_proses_transaksi_calculates_correct_totals_when_actual_weight_is_above_minimum()
@@ -80,7 +81,7 @@ class ProsesTransaksiServiceTest extends TestCase
         $proses = $this->service->prosesTransaksi($transaksi->id, $data);
 
         // Assert
-        $this->assertDatabaseHas('proses_transaksi', [
+        $this->assertDatabaseHas('timbangan', [
             'transaksi_id' => $transaksi->id,
             'actual_weight' => 4.5,
             'minimum_weight' => 3.0,
@@ -89,15 +90,18 @@ class ProsesTransaksiServiceTest extends TestCase
             'total_price' => 22500, // 4.5 * 5000 = 22500
         ]);
 
-        $this->assertDatabaseHas('proses_transaksi_items', [
-            'proses_transaksi_id' => $proses->id,
-            'nama_item' => 'Baju Kaos',
+        $kaos = JenisPakaian::where('nama', 'Baju Kaos')->firstOrFail();
+        $jeans = JenisPakaian::where('nama', 'Celana Jeans')->firstOrFail();
+
+        $this->assertDatabaseHas('list_pakaian_timbangan', [
+            'timbangan_id' => $proses->id,
+            'jenis_pakaian_id' => $kaos->id,
             'qty' => 5,
         ]);
 
-        $this->assertDatabaseHas('proses_transaksi_items', [
-            'proses_transaksi_id' => $proses->id,
-            'nama_item' => 'Celana Jeans',
+        $this->assertDatabaseHas('list_pakaian_timbangan', [
+            'timbangan_id' => $proses->id,
+            'jenis_pakaian_id' => $jeans->id,
             'qty' => 2,
         ]);
 
@@ -163,7 +167,7 @@ class ProsesTransaksiServiceTest extends TestCase
         $proses = $this->service->prosesTransaksi($transaksi->id, $data);
 
         // Assert
-        $this->assertDatabaseHas('proses_transaksi', [
+        $this->assertDatabaseHas('timbangan', [
             'transaksi_id' => $transaksi->id,
             'actual_weight' => 2.0,
             'minimum_weight' => 3.0,

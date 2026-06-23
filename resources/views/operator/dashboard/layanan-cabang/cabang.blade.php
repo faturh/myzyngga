@@ -326,7 +326,6 @@
             // Loading effect start
             let loading = `<span class="loading loading-dots loading-md text-blue-500"></span>`;
             $("#loading_edit1").html(loading);
-            $("#loading_edit2").html(loading);
 
             $.ajax({
                 type: "get",
@@ -336,19 +335,11 @@
                     "id": id
                 },
                 success: function(data) {
-                    // console.log(data);
-                    let items = [];
-                    $.each(data, function(key, val) {
-                        items.push(val);
-                    });
-
-                    $("input[name='nama']").val(items[1]);
-                    $("textarea[name='deskripsi']").val(items[2]);
+                    $("input[name='nama']").val(data.nama);
 
                     // Loading effect end
                     loading = "";
                     $("#loading_edit1").html(loading);
-                    $("#loading_edit2").html(loading);
                 }
             });
         }
@@ -357,7 +348,6 @@
             // Loading effect start
             let loading = `<span class="loading loading-dots loading-md text-purple-600"></span>`;
             $("#loading_edit1").html(loading);
-            $("#loading_edit2").html(loading);
 
             $.ajax({
                 type: "get",
@@ -367,28 +357,20 @@
                     "id": id
                 },
                 success: function(data) {
-                    // console.log(data);
-                    let items = [];
-                    $.each(data, function(key, val) {
-                        items.push(val);
-                    });
-
-                    $("input[name='id']").val(items[0]);
-                    $("input[name='nama']").val(items[1]);
-                    $("textarea[name='deskripsi']").val(items[2]);
+                    $("input[name='id']").val(data.id);
+                    $("input[name='nama']").val(data.nama);
 
                     // Loading effect end
                     loading = "";
                     $("#loading_edit1").html(loading);
-                    $("#loading_edit2").html(loading);
                 }
             });
         }
 
-        function delete_button_jenis_pakaian(id, cabang_id, nama) {
+        function delete_button_jenis_pakaian(id, nama) {
             Swal.fire({
                 title: 'Apakah Anda yakin?',
-                html: "<p>Data akan masuk ke dalam Trash!</p>" +
+                html: "<p>Data akan dihapus permanen beserta seluruh harga jenis layanannya!</p>" +
                     "<div class='divider'></div>" +
                     "<b>Data: " + nama + "</b>",
                 icon: 'warning',
@@ -404,8 +386,7 @@
                         url: "{{ route('jenis-pakaian.delete') }}",
                         data: {
                             "_token": "{{ csrf_token() }}",
-                            "id": id,
-                            "cabang_id": cabang_id
+                            "id": id
                         },
                         success: function(response) {
                             Swal.fire({
@@ -1074,17 +1055,7 @@
                                         </div>
                                     @enderror
                                 </label>
-                                <label class="form-control w-full">
-                                    <div class="label">
-                                        <span class="label-text font-semibold">Deskripsi</span>
-                                    </div>
-                                    <textarea name="deskripsi" placeholder="Deskripsi" class="textarea textarea-bordered w-full text-base text-blue-500">{{ old('deskripsi') }}</textarea>
-                                    @error('deskripsi')
-                                        <div class="label">
-                                            <span class="label-text-alt text-error text-sm">{{ $message }}</span>
-                                        </div>
-                                    @enderror
-                                </label>
+
                                 <button type="submit" class="btn btn-success mt-3 w-full text-white">Tambah</button>
                             </form>
                         </div>
@@ -1110,13 +1081,7 @@
                                 </div>
                                 <input type="text" name="nama" class="input input-bordered w-full text-blue-700" readonly />
                             </label>
-                            <label class="form-control w-full">
-                                <div class="label">
-                                    <span class="label-text font-semibold">Deskripsi</span>
-                                    <span class="label-text-alt" id="loading_edit2"></span>
-                                </div>
-                                <textarea name="deskripsi" class="textarea textarea-bordered w-full text-base text-blue-500" readonly></textarea>
-                            </label>
+
                         </div>
                     </div>
                 </div>
@@ -1150,18 +1115,7 @@
                                         </div>
                                     @enderror
                                 </label>
-                                <label class="form-control w-full">
-                                    <div class="label">
-                                        <span class="label-text font-semibold">Deskripsi</span>
-                                        <span class="label-text-alt" id="loading_edit2"></span>
-                                    </div>
-                                    <textarea name="deskripsi" placeholder="Deskripsi" class="textarea textarea-bordered w-full text-base text-blue-500"></textarea>
-                                    @error('deskripsi')
-                                        <div class="label">
-                                            <span class="label-text-alt text-error text-sm">{{ $message }}</span>
-                                        </div>
-                                    @enderror
-                                </label>
+
                                 <button type="submit" class="btn btn-warning mt-3 w-full text-slate-700">Perbarui</button>
                             </form>
                         </div>
@@ -1261,7 +1215,7 @@
                                                             <label for="edit_button_jenis_pakaian" class="btn btn-outline btn-warning btn-sm" onclick="return edit_button_jenis_pakaian('{{ $item->id }}')">
                                                                 <i class="ri-pencil-fill text-base"></i>
                                                             </label>
-                                                            <label for="delete_button_jenis_pakaian" class="btn btn-outline btn-error btn-sm" onclick="return delete_button_jenis_pakaian('{{ $item->id }}', '{{ $item->cabang_id }}', '{{ $item->nama }}')">
+                                                            <label for="delete_button_jenis_pakaian" class="btn btn-outline btn-error btn-sm" onclick="return delete_button_jenis_pakaian('{{ $item->id }}', '{{ $item->nama }}')">
                                                                 <i class="ri-delete-bin-line text-base"></i>
                                                             </label>
                                                         @endrole

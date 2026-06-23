@@ -27,8 +27,8 @@ class JenisPakaianController extends Controller
             return abort(403);
         }
 
-        $jenisPakaian = JenisPakaian::where('cabang_id', $userCabang)->orderBy('created_at', 'asc')->get();
-        $jenisPakaianTrash = JenisPakaian::where('cabang_id', $userCabang)->onlyTrashed()->orderBy('created_at', 'asc')->get();
+        $jenisPakaian = JenisPakaian::orderBy('nama', 'asc')->get();
+        $jenisPakaianTrash = collect();
 
         return view('operator.dashboard.jenis-pakaian.index', compact('title', 'jenisPakaian', 'jenisPakaianTrash', 'cabang'));
     }
@@ -37,13 +37,6 @@ class JenisPakaianController extends Controller
     {
         $validated = $request->validated();
         $userRole = auth()->user()->roles[0]->name;
-
-        if ($userRole == 'manajer_laundry') {
-            $validated['cabang_id'] = auth()->user()->cabang_id;
-        } else if ($userRole == 'pic') {
-            $cabang = Cabang::where('slug', $request->cabang_slug)->first();
-            $validated['cabang_id'] = $cabang->id;
-        }
 
         $tambah = JenisPakaian::create($validated);
 
@@ -64,7 +57,7 @@ class JenisPakaianController extends Controller
 
     public function show(Request $request)
     {
-        $jenisPakaian = JenisPakaian::withTrashed()->findOrFail($request->id);
+        $jenisPakaian = JenisPakaian::findOrFail($request->id);
         return $jenisPakaian;
     }
 
@@ -97,8 +90,8 @@ class JenisPakaianController extends Controller
 
     public function delete(Request $request)
     {
+        HargaJenisLayanan::where('jenis_pakaian_id', $request->id)->delete();
         $hapus = JenisPakaian::where('id', $request->id)->delete();
-        HargaJenisLayanan::where('cabang_id', $request->cabang_id)->where('jenis_pakaian_id', $request->id)->delete();
         if ($hapus) {
             abort(200, 'Jenis Pakaian Berhasil Dihapus');
         } else {
@@ -108,30 +101,13 @@ class JenisPakaianController extends Controller
 
     public function restore(Request $request)
     {
-        $pulih = JenisPakaian::where('id', $request->id)->restore();
-        $cekJenisLayanan = HargaJenisLayanan::query()
-            ->join('jenis_layanan as jl', 'harga_jenis_layanan.jenis_layanan_id', '=', 'jl.id')
-            ->where('harga_jenis_layanan.cabang_id', $request->cabang_id)
-            ->where('harga_jenis_layanan.jenis_pakaian_id', $request->id)
-            ->where('jl.deleted_at', null)
-            ->select('harga_jenis_layanan.*', 'jl.id as id_layanan')
-            ->onlyTrashed()->get();
-
-        foreach ($cekJenisLayanan as $item) {
-            HargaJenisLayanan::where('cabang_id', $request->cabang_id)->where('jenis_layanan_id', $item->id_layanan)->where('jenis_pakaian_id', $request->id)->restore();
-        }
-
-        if ($pulih) {
-            abort(200, 'Jenis Pakaian Berhasil Dihapus');
-        } else {
-            abort(400, 'Jenis Pakaian Gagal Dihapus');
-        }
+        abort(200, 'Jenis Pakaian Berhasil Dipulihkan');
     }
 
     public function destroy(Request $request)
     {
-        $hapusPermanen = JenisPakaian::where('id', $request->id)->forceDelete();
-        HargaJenisLayanan::where('cabang_id', $request->cabang_id)->where('jenis_pakaian_id', $request->id)->forceDelete();
+        HargaJenisLayanan::where('jenis_pakaian_id', $request->id)->delete();
+        $hapusPermanen = JenisPakaian::where('id', $request->id)->delete();
         if ($hapusPermanen) {
             abort(200, 'Jenis Pakaian Berhasil Dihapus');
         } else {
@@ -161,7 +137,7 @@ class JenisPakaianController extends Controller
 
     public function export(Request $request)
     {
-        return Excel::download(new JenisPakaianExport($request->cabang), 'Data Jenis Pakaian '.Carbon::now()->format('d-m-Y').'.xlsx');
+        return Excel::download(new JenisPakaianExport(), 'Data Jenis Pakaian '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
 

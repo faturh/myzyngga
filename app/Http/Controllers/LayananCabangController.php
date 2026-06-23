@@ -37,7 +37,7 @@ class LayananCabangController extends Controller
 
         $jenisLayanan = JenisLayanan::where('cabang_id', $cabang->id)->orderBy('created_at', 'asc')->get();
         $layananTambahan = LayananTambahan::where('cabang_id', $cabang->id)->orderBy('created_at', 'asc')->get();
-        $jenisPakaian = JenisPakaian::where('cabang_id', $cabang->id)->orderBy('created_at', 'asc')->get();
+        $jenisPakaian = JenisPakaian::orderBy('nama', 'asc')->get();
         $hargaJenisLayanan = HargaJenisLayanan::query()
             ->join('jenis_layanan as jl', 'harga_jenis_layanan.jenis_layanan_id', '=', 'jl.id')
             ->join('jenis_pakaian as jp', 'harga_jenis_layanan.jenis_pakaian_id', '=', 'jp.id')
@@ -60,7 +60,7 @@ class LayananCabangController extends Controller
 
         $jenisLayananTrash = JenisLayanan::where('cabang_id', $cabang->id)->onlyTrashed()->orderBy('created_at', 'asc')->get();
         $layananTambahanTrash = LayananTambahan::where('cabang_id', $cabang->id)->onlyTrashed()->orderBy('created_at', 'asc')->get();
-        $jenisPakaianTrash = JenisPakaian::where('cabang_id', $cabang->id)->onlyTrashed()->orderBy('created_at', 'asc')->get();
+        $jenisPakaianTrash = collect();
         $hargaJenisLayananTrash = HargaJenisLayanan::query()
             ->join('jenis_layanan as jl', 'harga_jenis_layanan.jenis_layanan_id', '=', 'jl.id')
             ->join('jenis_pakaian as jp', 'harga_jenis_layanan.jenis_pakaian_id', '=', 'jp.id')

@@ -44,7 +44,7 @@ class UserController extends Controller
         $cabang = Cabang::get();
         $role = Role::get();
 
-        if ($userRole == 'lurah' || $userRole == 'pic') {
+        if ($userRole == 'lurah' || $userRole == 'pic' || $userRole == 'admin') {
             $manajer = User::whereHas('roles', function($q) { $q->where('name', 'manajer_laundry'); })->with('cabang')->get();
             $pegawai = User::whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->with('cabang')->get();
             $gamis = collect();
@@ -92,7 +92,7 @@ class UserController extends Controller
         $userRole = auth()->user()->roles[0]->name;
         $user = User::where('slug', $request->user)->first();
 
-        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic') {
+        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
         } else if ($user->slug == auth()->user()->slug ) {
             return to_route('profile', $user->slug);
@@ -129,7 +129,7 @@ class UserController extends Controller
         $kkGamis = collect();
         $isCabang = [false];
 
-        if ($userRole == 'pic') {
+        if ($userRole == 'admin' || $userRole == 'pic') {
             $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
             $cabang = Cabang::where('deleted_at', null)->get();
         } else if ($userRole == 'manajer_laundry') {
@@ -190,7 +190,7 @@ class UserController extends Controller
             abort(403, 'USER DOES NOT HAVE PERMISSION.');
         }
 
-        if ($userRole == 'pic') {
+        if ($userRole == 'admin' || $userRole == 'pic') {
             $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
             $cabang = Cabang::where('deleted_at', null)->get();
         } else if ($userRole == 'manajer_laundry') {
@@ -199,7 +199,7 @@ class UserController extends Controller
         }
 
         $user = User::where('slug', $request->user)->first();
-        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic') {
+        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
         } else if ($user->slug == auth()->user()->slug ) {
             return to_route('profile', $user->slug);
@@ -268,7 +268,7 @@ class UserController extends Controller
         }
 
         $user = User::where('slug', $request->user)->first();
-        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic') {
+        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
         } else if ($user->slug == auth()->user()->slug ) {
             return to_route('profile', $user->slug);
@@ -319,7 +319,7 @@ class UserController extends Controller
         $userRole = auth()->user()->roles[0]->name;
         $user = User::where('slug', $request->user)->onlyTrashed()->first();
 
-        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic') {
+        if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
         } else if ($user->slug == auth()->user()->slug ) {
             return to_route('profile', $user->slug);
@@ -379,7 +379,7 @@ class UserController extends Controller
         $title = "Users Management";
 
         $userRole = auth()->user()->roles[0]->name;
-        if ($userRole != 'lurah' && $userRole != 'pic') {
+        if ($userRole != 'lurah' && $userRole != 'pic' && $userRole != 'admin') {
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
@@ -414,7 +414,7 @@ class UserController extends Controller
     public function createUserCabang(Request $request)
     {
         $userRole = auth()->user()->roles[0]->name;
-        if ($userRole != 'pic') {
+        if ($userRole != 'pic' && $userRole != 'admin') {
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 

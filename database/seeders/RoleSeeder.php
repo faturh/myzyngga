@@ -38,5 +38,70 @@ class RoleSeeder extends Seeder
             ]
         );
         $customer->assignRole('customer');
+
+        // Seed mock employees with different roles and salaries
+        $employees = [
+            [
+                'username' => 'budi',
+                'name' => 'Budi Gunawan',
+                'slug' => 'budi-gunawan',
+                'email' => 'budi@zyngga.com',
+                'password' => Hash::make('password'),
+                'role' => 'manajer_laundry',
+                'phone' => '08123456780',
+                'cabang_id' => 1,
+                'gaji' => 5000000,
+            ],
+            [
+                'username' => 'siti',
+                'name' => 'Siti Aminah',
+                'slug' => 'siti-aminah',
+                'email' => 'siti@zyngga.com',
+                'password' => Hash::make('password'),
+                'role' => 'pegawai_laundry',
+                'phone' => '08123456781',
+                'cabang_id' => 1,
+                'gaji' => 3500000,
+            ],
+            [
+                'username' => 'andi',
+                'name' => 'Andi Wijaya',
+                'slug' => 'andi-wijaya',
+                'email' => 'andi@zyngga.com',
+                'password' => Hash::make('password'),
+                'role' => 'pegawai_laundry',
+                'phone' => '08123456782',
+                'cabang_id' => 1,
+                'gaji' => 3200000,
+            ],
+            [
+                'username' => 'joko',
+                'name' => 'Joko Widodo',
+                'slug' => 'joko-widodo',
+                'email' => 'joko@zyngga.com',
+                'password' => Hash::make('password'),
+                'role' => 'gamis',
+                'phone' => '08123456783',
+                'cabang_id' => 1,
+                'gaji' => 2500000,
+            ],
+        ];
+
+        foreach ($employees as $emp) {
+            $user = User::updateOrCreate(
+                ['username' => $emp['username']],
+                [
+                    'name' => $emp['name'],
+                    'slug' => $emp['slug'],
+                    'email' => $emp['email'],
+                    'password' => $emp['password'],
+                    'role' => $emp['role'],
+                    'phone' => $emp['phone'],
+                    'cabang_id' => $emp['cabang_id'],
+                    'gaji' => $emp['gaji'],
+                ]
+            );
+            $user->assignRole($emp['role']);
+        }
     }
 }

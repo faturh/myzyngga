@@ -2,8 +2,6 @@
 
 namespace Database\Seeders\layanan;
 
-use Carbon\Carbon;
-use App\Models\Cabang;
 use App\Models\JenisPakaian;
 use Illuminate\Database\Seeder;
 
@@ -14,41 +12,17 @@ class JenisPakaianSeeder extends Seeder
      */
     public function run(): void
     {
-        $cabang = Cabang::where('nama', 'Cabang Pusat Pertama')->first();
-        $cabang2 = Cabang::withTrashed()->where('nama', 'Cabang Kedua Uhuy')->first();
-
-        //? Cabang 1
         JenisPakaian::create([
             'nama' => 'Kemeja',
-            'cabang_id' => $cabang->id,
         ]);
         JenisPakaian::create([
             'nama' => 'Kaos',
-            'cabang_id' => $cabang->id,
         ]);
         JenisPakaian::create([
             'nama' => 'Jeans',
-            'cabang_id' => $cabang->id,
         ]);
         JenisPakaian::create([
             'nama' => 'Jas',
-            'cabang_id' => $cabang->id,
-            'deleted_at' => Carbon::now(),
-        ]);
-
-        //? Cabang 2
-        JenisPakaian::create([
-            'nama' => 'Kemeja',
-            'cabang_id' => $cabang2->id,
-        ]);
-        JenisPakaian::create([
-            'nama' => 'Kaos',
-            'cabang_id' => $cabang2->id,
-        ]);
-        JenisPakaian::create([
-            'nama' => 'Jas',
-            'cabang_id' => $cabang2->id,
-            'deleted_at' => Carbon::now(),
         ]);
     }
 }

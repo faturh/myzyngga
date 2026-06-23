@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Riwayat Pesanan - {{ config('app.name', 'Zyngga') }}</title>
+    <title>Gaji Karyawan - {{ config('app.name', 'Zyngga') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,9 +28,9 @@
             transform: translateY(-2px);
         }
         
+        /* Custom scrollbar for sidebar */
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
-            height: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: transparent;
@@ -89,7 +89,7 @@
                 <div>
                     <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
                         <i data-feather="home" class="w-3.5 h-3.5"></i>
-                        <span>Tokoku</span>
+                        <span>Dashboard</span>
                     </div>
                     <ul class="space-y-1">
                         <li>
@@ -115,8 +115,8 @@
                     </div>
                     <ul class="space-y-1">
                         <li>
-                            <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-50/70 text-blue-600 border border-blue-100/20 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                            <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
                                 Riwayat Pesanan
                             </a>
                         </li>
@@ -131,8 +131,8 @@
                     </div>
                     <ul class="space-y-1">
                         <li>
-                            <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                            <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-50/70 text-blue-600 border border-blue-100/20 transition-all">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                                 Gaji Karyawan
                             </a>
                         </li>
@@ -232,8 +232,8 @@
                             </div>
                             <ul class="space-y-1">
                                 <li>
-                                    <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-50/70 text-blue-600 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                    <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
                                         Riwayat Pesanan
                                     </a>
                                 </li>
@@ -247,8 +247,8 @@
                             </div>
                             <ul class="space-y-1">
                                 <li>
-                                    <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                                    <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-50/70 text-blue-600 transition-all">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                                         Gaji Karyawan
                                     </a>
                                 </li>
@@ -288,7 +288,7 @@
                                 <a href="#" class="block px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 font-semibold">Tutup Toko</a>
                             </div>
                         </div>
-                        <a href="{{ route('admin.riwayat-pesanan') }}" class="font-bold text-blue-600 px-1 py-2 transition-colors">Pesanan</a>
+                        <a href="{{ route('admin.riwayat-pesanan') }}" class="font-semibold text-slate-500 hover:text-blue-600 px-1 py-2 transition-colors">Pesanan</a>
                         <a href="#" class="font-semibold text-slate-500 hover:text-blue-600 px-1 py-2 transition-colors">Keuangan</a>
                         <a href="#" class="font-semibold text-slate-500 hover:text-blue-600 px-1 py-2 transition-colors">Profil Toko</a>
                     </nav>
@@ -328,239 +328,95 @@
             <!-- CONTENT INNER CONTAINER -->
             <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar">
                 
-                <div class="max-w-7xl mx-auto space-y-6">
+                <!-- Inner Page Grid -->
+                <div class="max-w-4xl mx-auto">
                     
-                    <!-- Alerts for Success/Error -->
-                    @if(session('success'))
-                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold px-4 py-3 rounded-xl flex items-center gap-2">
-                            <i data-feather="check-circle" class="w-4 h-4 stroke-[2.5]"></i>
-                            <span>{{ session('success') }}</span>
-                        </div>
-                    @endif
-
-                    <!-- TOP HEADER TITLE ROW -->
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-                        <div>
-                            <h1 class="text-2xl font-extrabold text-[#0f172a] tracking-tight">Riwayat Pesanan</h1>
-                            <p class="text-xs font-semibold text-slate-400 mt-1">Kelola dan pantau status transaksi laundry tokomu.</p>
-                        </div>
-                        <button class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all">
-                            <i data-feather="download" class="w-3.5 h-3.5"></i>
-                            Unduh Riwayat Pesanan
-                        </button>
-                    </div>
-
-                    <!-- TABS NAVIGATION -->
-                    <div class="flex border-b border-slate-100 overflow-x-auto scrollbar-none gap-8 text-xs font-bold">
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses', 'search' => $search]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-diproses' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Perlu Diproses
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-diproses' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $perluDiprosesCount }}
-                            </span>
-                        </a>
-
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Menunggu Pembayaran
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $menungguPembayaranCount }}
-                            </span>
-                        </a>
-
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Perlu Dikerjakan
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-dikerjakan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $perluDikerjakanCount }}
-                            </span>
-                        </a>
-
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'selesai', 'search' => $search]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'selesai' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Pesanan Selesai
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">
-                                {{ $pesananSelesaiCount }}
-                            </span>
-                        </a>
-
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala', 'search' => $search]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'kendala' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Kendala Pesanan
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">0</span>
-                        </a>
-
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Sedang Dibatalkan
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">0</span>
-                        </a>
-
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'semua', 'search' => $search]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Semua Pesanan
-                        </a>
-                    </div>
-
-                    <!-- SEARCH & FILTER ROW -->
-                    <form method="GET" action="{{ route('admin.riwayat-pesanan') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
-                        <input type="hidden" name="tab" value="{{ $tab }}">
+                    <!-- LEFT/CENTER CONTENT PANEL -->
+                    <div class="w-full space-y-6 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm"
+                         x-data="{
+                             sortOrder: 'default',
+                             employees: {{ $karyawan->map(function($user) {
+                                 return [
+                                     'id' => $user->id,
+                                     'name' => $user->name ?? $user->username,
+                                     'role' => str_replace('_', ' ', ucwords($user->roles->first()?->name ?? 'pegawai_laundry', '_')),
+                                     'gaji' => (int) ($user->gaji ?? 0),
+                                     'initial' => strtoupper(substr($user->name ?? $user->username, 0, 2)),
+                                 ];
+                             })->values()->toJson() }},
+                             get sortedEmployees() {
+                                 if (this.sortOrder === 'asc') {
+                                     return [...this.employees].sort((a, b) => a.gaji - b.gaji);
+                                 } else if (this.sortOrder === 'desc') {
+                                     return [...this.employees].sort((a, b) => b.gaji - a.gaji);
+                                 }
+                                 return this.employees;
+                             }
+                         }">
                         
-                        <div class="relative col-span-1">
-                            <select class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 outline-none appearance-none">
-                                <option>Nomor Pesanan</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                                <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
-                            </div>
-                        </div>
-
-                        <div class="relative col-span-1 sm:col-span-2">
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ $search }}" 
-                                   placeholder="Cari Nomor Pesanan atau Nama Pembeli..." 
-                                   class="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:bg-white transition-all">
-                            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
-                                <i data-feather="search" class="w-3.5 h-3.5"></i>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm">
-                                Terapkan
-                            </button>
-                            @if(!empty($search))
-                                <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs px-3 py-2.5 rounded-xl flex items-center justify-center transition-all">
-                                    Reset
-                                </a>
-                            @endif
-                        </div>
-                    </form>
-
-                    <!-- TRANSAKSI CARDS / LIST -->
-                    <div class="space-y-4">
-                        @forelse($transaksi as $item)
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-5">
-                                
-                                <!-- Header Card -->
-                                <div class="flex flex-wrap justify-between items-center border-b border-slate-50 pb-4 gap-2">
-                                    <div class="flex items-center gap-3">
-                                        <!-- Status Badge -->
-                                        @if(in_array($item->status, ['Baru', 'created']))
-                                            <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">Butuh diproses</span>
-                                        @elseif($item->status === 'Proses')
-                                            @if($item->payment_status === 'pending')
-                                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">Menunggu Pembayaran</span>
-                                            @else
-                                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Perlu Dikerjakan</span>
-                                            @endif
-                                        @elseif($item->status === 'Selesai')
-                                            <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">Selesai</span>
-                                        @elseif($item->status === 'Batal')
-                                            <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Dibatalkan</span>
-                                        @else
-                                            <span class="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">{{ $item->status }}</span>
-                                        @endif
-
-                                        <span class="text-xs font-bold text-blue-600 font-mono">{{ $item->nota }}</span>
-                                    </div>
-                                    <div class="text-[11px] font-semibold text-slate-400">
-                                        Tanggal Transaksi: <span class="text-slate-600">{{ $item->waktu->format('d M Y H:i:s') }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Body Card -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-semibold">
-                                    <!-- Laundry Service Details -->
-                                    <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                        <p class="text-[#0f172a] font-extrabold text-sm capitalize">
-                                            {{ $item->layananPrioritas->nama ?? 'Layanan Laundry' }}
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Parfum: <span class="text-slate-700 font-medium">{{ $item->parfum ?? 'Standard' }}</span>
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Layanan: <span class="text-slate-700 font-medium">{{ $item->is_roundtrip ? 'Antar-Jemput' : 'Satu Arah' }}</span>
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Metode Pembayaran: <span class="text-slate-700 font-medium uppercase">{{ $item->jenis_pembayaran }}</span>
-                                        </p>
-                                    </div>
-
-                                    <!-- Customer Details -->
-                                    <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                        <p class="text-[#0f172a] font-extrabold">Informasi Pembeli</p>
-                                        <div class="space-y-1">
-                                            <p class="text-slate-400">Nama: <span class="text-slate-700">{{ $item->pelanggan->nama ?? 'N/A' }}</span></p>
-                                            <p class="text-slate-400">Telepon: <span class="text-slate-700">{{ $item->pelanggan->telepon ?? 'N/A' }}</span></p>
-                                            <p class="text-slate-400">Alamat: <span class="text-slate-700 font-normal line-clamp-2">{{ $item->pickup_address ?? 'N/A' }}</span></p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Laundry Notes / Specific Instructions -->
-                                    <div class="space-y-1.5">
-                                        <p class="text-[#0f172a] font-extrabold">Catatan Khusus</p>
-                                        <p class="text-slate-500 font-normal leading-relaxed">
-                                            {{ $item->catatan ?? '-' }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Footer Card / Action Buttons -->
-                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-t border-slate-50 pt-4 gap-4">
-                                    <div>
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pendapatan</p>
-                                        <p class="text-base font-extrabold text-[#0f172a]">
-                                            Rp {{ number_format($item->total_bayar_akhir, 0, ',', '.') }}
-                                        </p>
-                                    </div>
-
-                                    <!-- Actions for "Perlu Diproses" (status 'Baru' / 'created') -->
-                                    @if(in_array($item->status, ['Baru', 'created']))
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
-                                            <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="flex-1 sm:flex-none">
-                                                @csrf
-                                                <button type="submit" class="w-full text-center border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition-all">
-                                                    Batalkan Pesanan
-                                                </button>
-                                            </form>
-                                            
-                                            <a href="{{ route('admin.riwayat-pesanan.proses-form', $item->id) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all block text-center">
-                                                 Proses Pesanan
-                                             </a>
-                                        </div>
-                                    @endif
-                                </div>
-
-                            </div>
-                        @empty
-                            <!-- Empty State -->
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-12 text-center flex flex-col items-center justify-center">
-                                <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mb-4">
-                                    <i data-feather="inbox" class="w-8 h-8"></i>
-                                </div>
-                                <h3 class="text-sm font-bold text-[#0f172a]">Belum ada pesanan</h3>
-                                <p class="text-xs font-semibold text-slate-400 mt-1 max-w-xs mx-auto">
-                                    Tidak ada transaksi laundry yang ditemukan untuk kategori atau pencarian saat ini.
+                        <!-- Header Row inside Card -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
+                            <div>
+                                <h1 class="text-xl font-extrabold text-[#0f172a] leading-none">Daftar Gaji Karyawan</h1>
+                                <p class="text-xs font-semibold text-slate-400 mt-1.5">
+                                    Urutkan dan pantau pengeluaran gaji karyawan toko laundry Anda.
                                 </p>
                             </div>
-                        @endforelse
+                            
+                            <!-- Actions -->
+                            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="text-slate-400 font-semibold whitespace-nowrap">Urutkan Gaji:</span>
+                                    <select x-model="sortOrder" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all">
+                                        <option value="default">Default</option>
+                                        <option value="asc">Terendah -> Tertinggi</option>
+                                        <option value="desc">Tertinggi -> Terendah</option>
+                                    </select>
+                                </div>
+                                <a href="{{ route('user.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                                    <i data-feather="plus" class="w-4 h-4"></i>
+                                    Tambah Karyawan
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Employees List Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="pb-3 pl-2">Karyawan</th>
+                                        <th class="pb-3">Jabatan / Role</th>
+                                        <th class="pb-3 text-right pr-2">Gaji Bulanan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 text-xs">
+                                    <template x-for="emp in sortedEmployees" :key="emp.id">
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-4 pl-2">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shadow-sm" x-text="emp.initial"></div>
+                                                    <div>
+                                                        <p class="font-extrabold text-[#0f172a] text-sm" x-text="emp.name"></p>
+                                                        <span class="text-[10px] text-slate-400 font-medium">ID Karyawan: #<span x-text="emp.id"></span></span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 font-semibold text-slate-500 capitalize" x-text="emp.role"></td>
+                                            <td class="py-4 text-right pr-2 font-black text-[#0f172a] text-sm" x-text="'Rp ' + emp.gaji.toLocaleString('id-ID')"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- PAGINATION LINKS -->
-                    @if($transaksi->hasPages())
-                        <div class="mt-6 flex justify-center">
-                            {{ $transaksi->links() }}
-                        </div>
-                    @endif
-
                 </div>
-
+                
             </div>
-
+            
         </div>
-
+        
     </div>
 
     <!-- Initialize Icons -->

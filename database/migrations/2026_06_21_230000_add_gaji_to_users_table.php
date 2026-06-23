@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jenis_pakaian', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
+        Schema::table('users', function (Blueprint $table) {
+            $table->unsignedInteger('gaji')->nullable()->after('cabang_id');
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jenis_pakaian');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('gaji');
+        });
     }
 };

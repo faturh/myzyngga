@@ -122,6 +122,28 @@
                         </li>
                     </ul>
                 </div>
+
+                <!-- Group 3: Karyawan -->
+                <div>
+                    <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <i data-feather="users" class="w-3.5 h-3.5"></i>
+                        <span>Karyawan</span>
+                    </div>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                                Gaji Karyawan
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('user.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                                Tambah Karyawan
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
             
             <!-- Sidebar Footer Info -->
@@ -213,6 +235,27 @@
                                     <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
                                         <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
                                         Riwayat Pesanan
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                <i data-feather="users" class="w-3.5 h-3.5"></i>
+                                <span>Karyawan</span>
+                            </div>
+                            <ul class="space-y-1">
+                                <li>
+                                    <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                                        Gaji Karyawan
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('user.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                                        Tambah Karyawan
                                     </a>
                                 </li>
                             </ul>
@@ -468,6 +511,8 @@
                     <!-- RIGHT SIDEBAR PANEL -->
                     <aside class="w-full lg:w-80 shrink-0 space-y-6">
                         
+
+
                         <!-- Info Card -->
                         <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
                             <div class="flex items-center gap-2 border-b border-slate-50 pb-3">
