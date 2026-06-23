@@ -180,6 +180,7 @@ class OrderWebService
             'pickup_time' => ['required', 'string'],
             'parfum' => ['nullable', 'string'],
             'catatan' => ['nullable', 'string'],
+            'payment' => ['nullable', 'string', Rule::in(['cash', 'qris', 'transfer'])],
 
             'is_roundtrip' => ['nullable', 'boolean'],
         ]);
@@ -214,7 +215,7 @@ class OrderWebService
             pickupLng: isset($data['lng']) && $data['lng'] !== '' ? (float) $data['lng'] : null,
             parfum: $data['parfum'] ?? null,
             catatan: $data['catatan'] ?? null,
-            paymentMethod: 'qris',
+            paymentMethod: $data['payment'] ?? 'qris',
             estimatedTotal: $this->resolveEstimatedTotal($data['selected_service_id']),
             isRoundtrip: $request->boolean('is_roundtrip'),
         ));
@@ -433,7 +434,7 @@ class OrderWebService
         $params = [
             'transaction_details' => [
                 'order_id' => $order->id . '-' . time(),
-                'gross_amount' => $unpaidAmount,
+                'gross_amount' => (int) round($unpaidAmount),
             ],
             'customer_details' => [
                 'first_name' => $order->pelanggan->nama ?? 'Pelanggan Zyngga',
