@@ -2,15 +2,16 @@
 
 namespace App\Modules\Transaksi\Application\Services;
 
-use App\Models\ProsesTransaksi;
+use App\Models\Timbangan;
 use App\Models\Transaksi;
-use App\Modules\Transaksi\Domain\Repositories\ProsesTransaksiRepositoryInterface;
+use App\Modules\Transaksi\Domain\Repositories\TimbanganRepositoryInterface;
 use App\Shared\Exceptions\DomainException;
+use App\Models\JenisPakaian;
 
-class ProsesTransaksiService
+class TimbanganService
 {
     public function __construct(
-        private readonly ProsesTransaksiRepositoryInterface $repository
+        private readonly TimbanganRepositoryInterface $repository
     ) {}
 
     /**
@@ -30,7 +31,7 @@ class ProsesTransaksiService
     /**
      * Process transaction by saving items and actual scale weight.
      */
-    public function prosesTransaksi(string $id, array $data): ProsesTransaksi
+    public function prosesTransaksi(string $id, array $data): Timbangan
     {
         $transaksi = $this->repository->findTransaksiById($id);
 
@@ -69,16 +70,21 @@ class ProsesTransaksiService
         if (!empty($data['items']) && is_array($data['items'])) {
             foreach ($data['items'] as $item) {
                 if (!empty($item['nama_item']) && isset($item['qty'])) {
+                    // Resolve nama_item to jenis_pakaian_id
+                    $jenisPakaian = JenisPakaian::firstOrCreate([
+                        'nama' => trim($item['nama_item'])
+                    ]);
+
                     $itemsData[] = [
-                        'nama_item' => $item['nama_item'],
+                        'jenis_pakaian_id' => $jenisPakaian->id,
                         'qty' => (int) $item['qty'],
                     ];
                 }
             }
         }
 
-        // Store proses records
-        $proses = $this->repository->storeProsesTransaksi($prosesData, $itemsData);
+        // Store timbangan records
+        $proses = $this->repository->storeTimbangan($prosesData, $itemsData);
 
         // Update transaction status and total bayar akhir
         $this->repository->updateTransaksiStatusAndTotal($transaksi->id, 'Proses', $totalPrice);

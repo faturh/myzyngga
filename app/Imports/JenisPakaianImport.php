@@ -16,13 +16,10 @@ class JenisPakaianImport implements ToModel, WithHeadingRow
     */
     public function model(array $row)
     {
-        $cabang = Cabang::where('slug', $row['cabang'])->first();
-        $nama = JenisPakaian::withTrashed()->where('nama', $row['nama_pakaian'])->where('cabang_id', $cabang->id)->first();
+        $nama = JenisPakaian::where('nama', $row['nama_pakaian'])->first();
         if (empty($nama)) {
             return new JenisPakaian([
                 'nama' => $row['nama_pakaian'],
-                'deskripsi' => $row['deskripsi'],
-                'cabang_id' => $cabang->id,
             ]);
         }
     }

@@ -110,4 +110,9 @@ class Transaksi extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function timbangan()
+    {
+        return $this->hasOne(Timbangan::class, 'transaksi_id');
+    }
 }

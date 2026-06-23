@@ -10,6 +10,7 @@ use Database\Seeders\layanan\JenisPakaianSeeder;
 use Database\Seeders\layanan\LayananTambahanSeeder;
 use Database\Seeders\layanan\LayananPrioritasSeeder;
 use Database\Seeders\layanan\HargaJenisLayananSeeder;
+use Database\Seeders\layanan\JenisParfumSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -31,6 +32,7 @@ class DatabaseSeeder extends Seeder
             JenisLayananSeeder::class,
             LayananTambahanSeeder::class,
             JenisPakaianSeeder::class,
+            JenisParfumSeeder::class,
             HargaJenisLayananSeeder::class,
             LayananPrioritasSeeder::class,
 

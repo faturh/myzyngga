@@ -2,13 +2,13 @@
 
 namespace App\Modules\Transaksi\Infrastructure\Persistence;
 
-use App\Models\ProsesTransaksi;
-use App\Models\ProsesTransaksiItem;
+use App\Models\Timbangan;
+use App\Models\ListPakaianTimbangan;
 use App\Models\Transaksi;
-use App\Modules\Transaksi\Domain\Repositories\ProsesTransaksiRepositoryInterface;
+use App\Modules\Transaksi\Domain\Repositories\TimbanganRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
-class EloquentProsesTransaksiRepository implements ProsesTransaksiRepositoryInterface
+class EloquentTimbanganRepository implements TimbanganRepositoryInterface
 {
     /**
      * Find a transaction by its UUID.
@@ -26,21 +26,21 @@ class EloquentProsesTransaksiRepository implements ProsesTransaksiRepositoryInte
      *
      * @param array $prosesData
      * @param array $itemsData
-     * @return ProsesTransaksi
+     * @return Timbangan
      */
-    public function storeProsesTransaksi(array $prosesData, array $itemsData): ProsesTransaksi
+    public function storeTimbangan(array $prosesData, array $itemsData): Timbangan
     {
         return DB::transaction(function () use ($prosesData, $itemsData) {
-            $proses = ProsesTransaksi::create($prosesData);
+            $timbangan = Timbangan::create($prosesData);
 
             foreach ($itemsData as $item) {
-                $proses->items()->create([
-                    'nama_item' => $item['nama_item'],
+                $timbangan->items()->create([
+                    'jenis_pakaian_id' => $item['jenis_pakaian_id'],
                     'qty' => $item['qty'],
                 ]);
             }
 
-            return $proses;
+            return $timbangan;
         });
     }
 

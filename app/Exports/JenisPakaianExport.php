@@ -12,11 +12,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class JenisPakaianExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
-    protected $cabang;
-
-    public function __construct($cabang)
+    public function __construct()
     {
-        $this->cabang = $cabang;
     }
 
     /**
@@ -24,18 +21,13 @@ class JenisPakaianExport implements FromCollection, WithHeadings, WithMapping, W
     */
     public function collection()
     {
-        return JenisPakaian::query()
-            ->join('cabang as c', 'c.id', '=', 'jenis_pakaian.cabang_id')
-            ->where('c.slug', $this->cabang)
-            ->orderBy('jenis_pakaian.id', 'asc')->get(['jenis_pakaian.*', 'c.slug']);
+        return JenisPakaian::orderBy('nama', 'asc')->get();
     }
 
     public function map($data): array
     {
         return [
             $data->nama,
-            $data->deskripsi,
-            $data->slug,
         ];
     }
 
@@ -43,8 +35,6 @@ class JenisPakaianExport implements FromCollection, WithHeadings, WithMapping, W
     {
         return [
             'nama_pakaian',
-            'deskripsi',
-            'cabang',
         ];
     }
 

@@ -164,7 +164,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
 
     public function getJenisPakaianOptionsByCabang(int $cabangId): Collection
     {
-        return JenisPakaian::where('cabang_id', $cabangId)->get();
+        return JenisPakaian::all();
     }
 
     public function getLayananPrioritasOptionsByCabang(int $cabangId): Collection

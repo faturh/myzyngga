@@ -4,6 +4,12 @@ use App\Http\Controllers\DetailLayananTransaksiController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Operator\OperatorController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LayananCabangController;
+use App\Http\Controllers\JenisLayananController;
+use App\Http\Controllers\LayananTambahanController;
+use App\Http\Controllers\JenisPakaianController;
+use App\Http\Controllers\HargaJenisLayananController;
+use App\Http\Controllers\LayananPrioritasController;
 use App\Modules\Admin\Presentation\Web\Controllers\WebAdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -83,6 +89,106 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pendapatan-laundry/pdf', [\App\Http\Controllers\LaporanController::class, 'pdfLaporanPendapatanLaundry'])->name('laporan.pendapatan.laundry.pdf');
         Route::get('/pelanggan', [\App\Http\Controllers\LaporanController::class, 'laporanPelanggan'])->name('laporan.pelanggan');
         Route::post('/pelanggan/pdf', [\App\Http\Controllers\LaporanController::class, 'pdfLaporanPelanggan'])->name('laporan.pelanggan.pdf');
+    });
+
+    // Layanan Cabang
+    Route::group([
+        'prefix' => 'layanan-cabang',
+        'middleware' => ['role:lurah|pic'],
+    ], function() {
+        Route::get('/', [LayananCabangController::class, 'index'])->name('layanan-cabang');
+        Route::get('/{cabang}', [LayananCabangController::class, 'indexCabang'])->name('layanan-cabang.cabang');
+        Route::get('/{cabang}/trash', [LayananCabangController::class, 'indexCabangTrash'])->name('layanan-cabang.cabang.trash');
+    });
+
+    // Jenis Layanan
+    Route::group([
+        'prefix' => 'jenis-layanan',
+        'middleware' => ['role:lurah|manajer_laundry|pic'],
+    ], function() {
+        Route::get('/', [JenisLayananController::class, 'index'])->name('jenis-layanan');
+        Route::post('/tambah', [JenisLayananController::class, 'store'])->name('jenis-layanan.store');
+        Route::get('/lihat', [JenisLayananController::class, 'show'])->name('jenis-layanan.show');
+        Route::get('/ubah', [JenisLayananController::class, 'edit'])->name('jenis-layanan.edit');
+        Route::post('/ubah', [JenisLayananController::class, 'update'])->name('jenis-layanan.update');
+        Route::post('/hapus', [JenisLayananController::class, 'delete'])->name('jenis-layanan.delete');
+        Route::get('/trash', [JenisLayananController::class, 'trash'])->name('jenis-layanan.trash');
+        Route::post('/pulihkan', [JenisLayananController::class, 'restore'])->name('jenis-layanan.restore');
+        Route::post('/hapus-permanen', [JenisLayananController::class, 'destroy'])->name('jenis-layanan.destroy');
+        Route::post('/impor', [JenisLayananController::class, 'import'])->name('jenis-layanan.import');
+        Route::get('/ekspor', [JenisLayananController::class, 'export'])->name('jenis-layanan.export');
+    });
+
+    // Layanan Tambahan
+    Route::group([
+        'prefix' => 'layanan-tambahan',
+        'middleware' => ['role:lurah|manajer_laundry|pic'],
+    ], function() {
+        Route::get('/', [LayananTambahanController::class, 'index'])->name('layanan-tambahan');
+        Route::post('/tambah', [LayananTambahanController::class, 'store'])->name('layanan-tambahan.store');
+        Route::get('/lihat', [LayananTambahanController::class, 'show'])->name('layanan-tambahan.show');
+        Route::get('/ubah', [LayananTambahanController::class, 'edit'])->name('layanan-tambahan.edit');
+        Route::post('/ubah', [LayananTambahanController::class, 'update'])->name('layanan-tambahan.update');
+        Route::post('/hapus', [LayananTambahanController::class, 'delete'])->name('layanan-tambahan.delete');
+        Route::get('/trash', [LayananTambahanController::class, 'trash'])->name('layanan-tambahan.trash');
+        Route::post('/pulihkan', [LayananTambahanController::class, 'restore'])->name('layanan-tambahan.restore');
+        Route::post('/hapus-permanen', [LayananTambahanController::class, 'destroy'])->name('layanan-tambahan.destroy');
+        Route::post('/impor', [LayananTambahanController::class, 'import'])->name('layanan-tambahan.import');
+        Route::get('/ekspor', [LayananTambahanController::class, 'export'])->name('layanan-tambahan.export');
+    });
+
+    // Jenis Pakaian
+    Route::group([
+        'prefix' => 'jenis-pakaian',
+        'middleware' => ['role:lurah|manajer_laundry|pic'],
+    ], function() {
+        Route::get('/', [JenisPakaianController::class, 'index'])->name('jenis-pakaian');
+        Route::post('/tambah', [JenisPakaianController::class, 'store'])->name('jenis-pakaian.store');
+        Route::get('/lihat', [JenisPakaianController::class, 'show'])->name('jenis-pakaian.show');
+        Route::get('/ubah', [JenisPakaianController::class, 'edit'])->name('jenis-pakaian.edit');
+        Route::post('/ubah', [JenisPakaianController::class, 'update'])->name('jenis-pakaian.update');
+        Route::post('/hapus', [JenisPakaianController::class, 'delete'])->name('jenis-pakaian.delete');
+        Route::get('/trash', [JenisPakaianController::class, 'trash'])->name('jenis-pakaian.trash');
+        Route::post('/pulihkan', [JenisPakaianController::class, 'restore'])->name('jenis-pakaian.restore');
+        Route::post('/hapus-permanen', [JenisPakaianController::class, 'destroy'])->name('jenis-pakaian.destroy');
+        Route::post('/impor', [JenisPakaianController::class, 'import'])->name('jenis-pakaian.import');
+        Route::get('/ekspor', [JenisPakaianController::class, 'export'])->name('jenis-pakaian.export');
+    });
+
+    // Harga Jenis Layanan
+    Route::group([
+        'prefix' => 'harga-jenis-layanan',
+        'middleware' => ['role:lurah|manajer_laundry|pic'],
+    ], function() {
+        Route::get('/', [HargaJenisLayananController::class, 'index'])->name('harga-jenis-layanan');
+        Route::post('/tambah', [HargaJenisLayananController::class, 'store'])->name('harga-jenis-layanan.store');
+        Route::get('/lihat', [HargaJenisLayananController::class, 'show'])->name('harga-jenis-layanan.show');
+        Route::get('/ubah', [HargaJenisLayananController::class, 'edit'])->name('harga-jenis-layanan.edit');
+        Route::post('/ubah', [HargaJenisLayananController::class, 'update'])->name('harga-jenis-layanan.update');
+        Route::post('/hapus', [HargaJenisLayananController::class, 'delete'])->name('harga-jenis-layanan.delete');
+        Route::get('/trash', [HargaJenisLayananController::class, 'trash'])->name('harga-jenis-layanan.trash');
+        Route::post('/pulihkan', [HargaJenisLayananController::class, 'restore'])->name('harga-jenis-layanan.restore');
+        Route::post('/hapus-permanen', [HargaJenisLayananController::class, 'destroy'])->name('harga-jenis-layanan.destroy');
+        Route::post('/impor', [HargaJenisLayananController::class, 'import'])->name('harga-jenis-layanan.import');
+        Route::get('/ekspor', [HargaJenisLayananController::class, 'export'])->name('harga-jenis-layanan.export');
+    });
+
+    // Layanan Prioritas
+    Route::group([
+        'prefix' => 'layanan-prioritas',
+        'middleware' => ['role:lurah|manajer_laundry|pic'],
+    ], function() {
+        Route::get('/', [LayananPrioritasController::class, 'index'])->name('layanan-prioritas');
+        Route::post('/tambah', [LayananPrioritasController::class, 'store'])->name('layanan-prioritas.store');
+        Route::get('/lihat', [LayananPrioritasController::class, 'show'])->name('layanan-prioritas.show');
+        Route::get('/ubah', [LayananPrioritasController::class, 'edit'])->name('layanan-prioritas.edit');
+        Route::post('/ubah', [LayananPrioritasController::class, 'update'])->name('layanan-prioritas.update');
+        Route::post('/hapus', [LayananPrioritasController::class, 'delete'])->name('layanan-prioritas.delete');
+        Route::get('/trash', [LayananPrioritasController::class, 'trash'])->name('layanan-prioritas.trash');
+        Route::post('/pulihkan', [LayananPrioritasController::class, 'restore'])->name('layanan-prioritas.restore');
+        Route::post('/hapus-permanen', [LayananPrioritasController::class, 'destroy'])->name('layanan-prioritas.destroy');
+        Route::post('/impor', [LayananPrioritasController::class, 'import'])->name('layanan-prioritas.import');
+        Route::get('/ekspor', [LayananPrioritasController::class, 'export'])->name('layanan-prioritas.export');
     });
 
 });

@@ -20,7 +20,7 @@ class HargaJenisLayananImport implements ToModel, WithHeadingRow
     {
         $cabang = Cabang::where('slug', $row['cabang'])->first();
         $namaLayanan = JenisLayanan::withTrashed()->where('nama', $row['nama_layanan'])->where('cabang_id', $cabang->id)->first();
-        $namaPakaian = JenisPakaian::withTrashed()->where('nama', $row['nama_pakaian'])->where('cabang_id', $cabang->id)->first();
+        $namaPakaian = JenisPakaian::where('nama', $row['nama_pakaian'])->first();
         $hargaJenisLayanan = HargaJenisLayanan::withTrashed()->where('jenis_layanan_id', $namaLayanan->id)->where('jenis_pakaian_id', $namaPakaian->id)->where('cabang_id', $cabang->id)->first();
 
         if (empty($hargaJenisLayanan) && ($row['jenis_satuan'] == 'Kg' || $row['jenis_satuan'] == 'Perjalanan')) {
