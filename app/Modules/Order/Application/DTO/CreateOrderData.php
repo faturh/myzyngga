@@ -14,14 +14,14 @@ class CreateOrderData
         public readonly ?string $pickupDetailAddress,
         public readonly string $pickupDate,
         public readonly string $pickupTime,
-        public readonly ?float $pickupLat,
-        public readonly ?float $pickupLng,
         public readonly ?string $parfum,
         public readonly ?string $catatan,
         public readonly string $paymentMethod,
         public readonly float $estimatedTotal,
         public readonly bool $isRoundtrip = false,
         public readonly ?int $pegawaiId = null,
+        public readonly ?float $pickupLat = null,
+        public readonly ?float $pickupLng = null,
     ) {}
 
     public function toPersistencePayload(int $pegawaiId): array
