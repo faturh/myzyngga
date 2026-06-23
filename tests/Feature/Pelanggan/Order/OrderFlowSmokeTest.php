@@ -82,7 +82,7 @@ class OrderFlowSmokeTest extends TestCase
             ->assertOk();
 
         // Request Delivery (Minta Pengantaran)
-        $this->get(route('order.request.delivery', ['id' => $order->id]))
+        $this->get(route('order.request.delivery', ['id' => $order->id, 'change' => 1]))
             ->assertOk();
 
         $this->get(route('order.request.delivery.confirm', [
@@ -93,7 +93,7 @@ class OrderFlowSmokeTest extends TestCase
             'lng' => 106.82,
         ]))->assertOk();
 
-        $this->post(route('order.request.delivery.store', ['id' => $order->id]), [
+        $this->post(route('order.delivery.store', ['id' => $order->id]), [
             'address' => 'Jalan Antar Baru',
             'detail_address' => 'Pagar Hijau',
             'lat' => -6.22,
@@ -102,6 +102,14 @@ class OrderFlowSmokeTest extends TestCase
             'pickup_time' => '10:00',
             'catatan' => 'Tolong hati-hati',
         ])->assertRedirect(route('order.detail', ['id' => $order->id]));
+
+        app(\App\Modules\Payment\Application\Services\PaymentWebhookService::class)->handleMidtransNotification([
+            'transaction_status' => 'settlement',
+            'payment_type' => 'qris',
+            'order_id' => $order->id . '-' . time(),
+            'fraud_status' => 'accept',
+            'gross_amount' => $order->total_bayar_akhir,
+        ]);
 
         $order->refresh();
         $this->assertTrue((bool)$order->is_roundtrip);
