@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
@@ -28,7 +29,7 @@
             background: white;
             border-top: 1px solid #F4F4F4;
             border-radius: 16px 16px 0 0;
-            padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+            padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px));
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -65,15 +66,21 @@
 
     <div class="min-h-screen flex flex-col" x-data="{ 
         selectedService: '',
-        paymentMethod: '{{ strtolower($order['payment_method']) === 'qris' ? 'qris' : 'cash' }}',
+
         upgradesData: {{ json_encode(array_map(function($u) {
-            $days = match(strtolower($u['name'])) {
+            $originalEta = match(strtolower($u['name'])) {
                 'kilat' => 0,
                 'express' => 1,
                 'quick' => 2,
                 default => 3,
             };
-            return ['id' => (string) $u['id'], 'name' => $u['name'], 'eta' => $days, 'price_diff' => $u['price_diff'], 'is_available' => $u['is_available']];
+            $workingHours = match(strtolower($u['name'])) {
+                'kilat' => 5,
+                'express' => 10,
+                'quick' => 20,
+                default => 30,
+            };
+            return ['id' => (string) $u['id'], 'name' => $u['name'], 'eta' => $originalEta, 'workingHours' => $workingHours, 'price_diff' => $u['price_diff'], 'is_available' => $u['is_available']];
         }, $upgrades)) }},
         totalWeight: {{ collect($order['items'])->sum(fn($i) => (float) $i['qty']) }},
         baseTotal: {{ $order['payment_status'] === 'Lunas' ? 0 : $order['total'] }},
@@ -95,16 +102,45 @@
         },
         get selectedServiceName() {
             if (!this.selectedData) return 'Pilih Layanan';
-            let daysLabel = this.selectedData.eta === 0 ? 'Hari yang sama' : this.selectedData.eta + ' hari';
+            let daysLabel = this.selectedData.eta === 0 ? '5 jam' : this.selectedData.eta + ' hari';
             return this.selectedData.name + ' (' + daysLabel + ')';
+        },
+        calculateETA(startDate, hoursToAdd) {
+            let date = new Date(startDate);
+            if (date.getHours() < 8) {
+                date.setHours(8, 0, 0, 0);
+            } else if (date.getHours() >= 18) {
+                date.setDate(date.getDate() + 1);
+                date.setHours(8, 0, 0, 0);
+            }
+            while (hoursToAdd > 0) {
+                let endOfDay = new Date(date);
+                endOfDay.setHours(18, 0, 0, 0);
+                let minutesLeftToday = Math.floor((endOfDay - date) / 60000);
+                if (minutesLeftToday <= 0) {
+                    date.setDate(date.getDate() + 1);
+                    date.setHours(8, 0, 0, 0);
+                    continue;
+                }
+                let minutesToAdd = hoursToAdd * 60;
+                if (minutesToAdd <= minutesLeftToday) {
+                    date.setMinutes(date.getMinutes() + minutesToAdd);
+                    hoursToAdd = 0;
+                } else {
+                    date.setDate(date.getDate() + 1);
+                    date.setHours(8, 0, 0, 0);
+                    hoursToAdd -= (minutesLeftToday / 60);
+                }
+            }
+            return date;
         },
         get selectedServiceETA() {
             if (!this.selectedData) return 'Pilih layanan untuk melihat estimasi';
-            let d = new Date('{{ $baseDate }}');
-            d.setDate(d.getDate() + this.selectedData.eta);
+            let d = this.calculateETA('{{ $baseDate }}', this.selectedData.workingHours);
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-            return 'Estimasi Selesai: ' + days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+            const formattedTime = d.getHours().toString().padStart(2, '0') + '.' + d.getMinutes().toString().padStart(2, '0');
+            return 'Selesai: ' + days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' | ' + formattedTime;
         }
     }">
         <x-dashboard-header 
@@ -167,8 +203,13 @@
                         {{-- Available Upgrades --}}
                         @foreach($upgrades as $index => $upgrade)
                             @php
-                                $minHours = strtolower($upgrade['name']) === 'kilat' ? '1' : '5';
-                                $toastMsg = "Waktu tidak cukup. Layanan " . $upgrade['name'] . " membutuhkan sisa waktu pemrosesan setidaknya " . $minHours . " jam.";
+                                $maxElapsedHours = match(strtolower($upgrade['name'])) {
+                                    'kilat' => 3,
+                                    'express' => 12,
+                                    'quick' => 24,
+                                    default => 24,
+                                };
+                                $toastMsg = "Layanan " . $upgrade['name'] . " hanya tersedia jika pesanan diproses kurang dari " . $maxElapsedHours . " jam yang lalu.";
                             @endphp
                             <div {!! !$upgrade['is_available'] ? '@click="$dispatch(\'toast\', { message: \''.$toastMsg.'\', type: \'error\' })"' : '' !!}>
                                 <x-zyngga-radio-row 
@@ -192,14 +233,15 @@
                     {{-- CARD 2: RINCIAN PEMBAYARAN --}}
                     <x-zyngga-card title="Rincian Pembayaran">
                         <div class="space-y-4">
-                            @foreach($order['items'] as $item)
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ $order['payment_status'] === 'Lunas' ? '0' : number_format($item['subtotal'], 0, ',', '.') }}</x-zyngga-text>
-                            </div>
-                            @endforeach
+                            {{-- Group 1: Layanan, Upgrade, Pengiriman --}}
+                            <div class="space-y-1">
+                                @foreach($order['items'] as $item)
+                                <div class="flex justify-between items-center">
+                                    <x-zyngga-text variant="sm" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ $order['payment_status'] === 'Lunas' ? '0' : number_format($item['subtotal'], 0, ',', '.') }}</x-zyngga-text>
+                                </div>
+                                @endforeach
 
-                            <div class="space-y-3 pt-2">
                                 <div class="flex justify-between">
                                     <x-zyngga-text variant="sm" color="neutral-900">Biaya Upgrade</x-zyngga-text>
                                     <x-zyngga-text variant="sm" weight="medium" color="neutral-900" x-text="'Rp' + new Intl.NumberFormat('id-ID').format(priceDiffTotal || 0)"></x-zyngga-text>
@@ -208,21 +250,26 @@
                                     <x-zyngga-text variant="sm" color="neutral-900">Biaya Pengiriman</x-zyngga-text>
                                     <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp0</x-zyngga-text>
                                 </div>
+                            </div>
+
+                            {{-- Group 2: Diskon, Pajak --}}
+                            <div class="space-y-1">
                                 <div class="flex justify-between">
                                     <x-zyngga-text variant="sm" color="neutral-900">Diskon</x-zyngga-text>
                                     <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['discount'], 0, ',', '.') }}</x-zyngga-text>
                                 </div>
-                                <div class="flex justify-between pb-2">
+                                <div class="flex justify-between">
                                     <x-zyngga-text variant="sm" color="neutral-900">Pajak</x-zyngga-text>
                                     <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['tax'], 0, ',', '.') }}</x-zyngga-text>
                                 </div>
+                            </div>
                                 
-                                <div class="divider"></div>
+                            <div class="divider"></div>
 
-                                <div class="flex justify-between">
-                                    <x-zyngga-text variant="sm" color="neutral-900">Total</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900" x-text="'Rp' + new Intl.NumberFormat('id-ID').format(newTotal)"></x-zyngga-text>
-                                </div>
+                            {{-- Group 4: Total --}}
+                            <div class="flex justify-between">
+                                <x-zyngga-text variant="sm" color="neutral-900">Total</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900" x-text="'Rp' + new Intl.NumberFormat('id-ID').format(newTotal)"></x-zyngga-text>
                             </div>
                         </div>
                     </x-zyngga-card>
@@ -235,7 +282,7 @@
 
             {{-- STICKY FOOTER --}}
             <div id="sticky-footer">
-                <div class="max-w-5xl mx-auto w-full px-5 flex items-center justify-between">
+                <div class="max-w-5xl mx-auto w-full px-4 flex items-center justify-between">
                     <div>
                         <x-zyngga-text x-text="selectedServiceName" variant="base" weight="medium" class="m-0"></x-zyngga-text>
                         <div class="flex items-center gap-1.5 mt-1">
@@ -250,31 +297,44 @@
                         size="l"
                         class="ml-4"
                         x-bind:disabled="!selectedService"
-                        @click="window.dispatchEvent(new CustomEvent('open-confirm-modal'))"
-                        label="Ubah Layanan"
+                        @click="submitUpgrade()"
+                        label="Bayar Sekarang"
                     />
                 </div>
             </div>
         </main>
-        
-        {{-- ── MODAL: KONFIRMASI UPGRADE ───────────────────────────── --}}
+
+        <x-zyngga-toast />
+
+        {{-- ── MODAL: PAYMENT SUCCESS ───────────────────────────── --}}
         <x-zyngga-selection-modal 
-            id="confirm-modal-root" 
-            openEvent="open-confirm-modal"
-            closeEvent="close-confirm-modal"
+            id="payment-success-modal" 
+            openEvent="open-payment-success-modal"
+            closeEvent="close-payment-success-modal"
         >
             <x-zyngga-confirm-view 
                 :image="asset('images/illustrations/confirm_order.png')"
-                title="Yakin ingin mengubah layanan ini?"
-                description="Apakah Anda yakin ingin melanjutkan? Periksa detailnya sebelum melanjutkan."
-                primaryLabel="Ubah Layanan"
-                secondaryLabel="Batalkan"
-                primaryAction="document.getElementById('page-content').submit()"
-                secondaryAction="isOpen=false"
+                title="Pembayaran Berhasil!"
+                description="Terima kasih, pembayaran upgrade layanan Anda telah berhasil."
+                primaryLabel="Lihat Detail Pesanan"
+                primaryAction="window.location.href = window.redirectUrl"
             />
         </x-zyngga-selection-modal>
 
-        <x-zyngga-toast />
+        {{-- ── MODAL: PAYMENT FAILED ───────────────────────────── --}}
+        <x-zyngga-selection-modal 
+            id="payment-failed-modal" 
+            openEvent="open-payment-failed-modal"
+            closeEvent="close-payment-failed-modal"
+        >
+            <x-zyngga-confirm-view 
+                :image="asset('images/illustrations/cancel_order.png')"
+                title="Pembayaran Dibatalkan"
+                description="Proses pembayaran tidak diselesaikan. Pengajuan Anda telah dibatalkan."
+                primaryLabel="Tutup"
+                primaryAction="window.location.reload()"
+            />
+        </x-zyngga-selection-modal>
     </div>
 
     @livewireScripts
@@ -299,6 +359,45 @@
             initFeather();
             if (++count > 5) clearInterval(interval);
         }, 500);
+
+        function submitUpgrade() {
+            const form = document.getElementById('page-content');
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to native payment method selection
+                    window.location.href = '{{ route('order.payment-method', $order['id']) }}';
+                } else {
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: data.message || 'Gagal memproses upgrade.', type: 'error' } }));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Terjadi kesalahan sistem.', type: 'error' } }));
+            });
+        }
+
+        function rollbackUpgrade(reload = true) {
+            fetch('{{ route('order.upgrade.rollback', $order['id']) }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                }
+            }).then(() => {
+                if (reload) window.location.reload();
+            });
+        }
     </script>
 </body>
 </html>

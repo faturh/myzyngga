@@ -53,7 +53,7 @@
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
                 <div class="w-full aspect-[353/120] rounded-lg overflow-hidden relative">
-                    <img src="/figma/figma_banner_promo.png" alt="Promo Banner" class="w-full h-full object-cover">
+                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060573/myzyngga_assets/d992csqcoldopqufuqgz.png" alt="Promo Banner" class="w-full h-full object-cover">
                 </div>
             </div>
 
@@ -187,6 +187,8 @@
                             <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($latestOrder['total'], 0, ',', '.') }}</x-zyngga-text>
                         </div>
                         <x-zyngga-button 
+                            type="a"
+                            href="{{ route('order.repeat', $latestOrder['id']) }}"
                             variant="primary"
                             size="m"
                             label="Ulangi Pesanan"
@@ -218,7 +220,7 @@
                         @foreach ($steps as $step)
                             <div class="flex items-start gap-3">
                                 <div class="w-8 h-8 rounded-full border border-zyngga-blue-300 flex items-center justify-center shrink-0">
-                                    <x-zyngga-text variant="xs" weight="medium" color="primary">{{ $step['n'] }}</x-zyngga-text>
+                                    <x-zyngga-text variant="xs" weight="medium" color="primary" class="leading-none pt-[2px]">{{ $step['n'] }}</x-zyngga-text>
                                 </div>
                                 <div class="space-y-1">
                                     <x-zyngga-text variant="sm" weight="regular" class="leading-none">{{ $step['title'] }}</x-zyngga-text>
@@ -249,7 +251,7 @@
                         @foreach ($outlets as $outlet)
                             <div class="flex items-center gap-4">
                                 <div class="w-[168px] h-[110px] rounded-lg overflow-hidden shrink-0">
-                                    <img src="/figma/figma_outlet.png" alt="Outlet" class="w-full h-full object-cover">
+                                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060609/myzyngga_assets/dpk9dumi8qkyeiphpqxm.png" alt="Outlet" class="w-full h-full object-cover">
                                 </div>
                                 <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
                                     <div class="space-y-1">

@@ -26,3 +26,5 @@ bootstrap/cache/*.tmp
 config.bat
 .DS_Store
 
+.vercel
+.env

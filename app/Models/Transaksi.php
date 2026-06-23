@@ -19,6 +19,8 @@ class Transaksi extends Model
         'waktu',
         'pickup_address',
         'pickup_detail_address',
+        'pickup_lat',
+        'pickup_lng',
         'pickup_date',
         'pickup_time',
         'parfum',
@@ -39,6 +41,8 @@ class Transaksi extends Model
         'pelanggan_id',
         'pegawai_id',
         'cabang_id',
+        'midtrans_order_id',
+        'payment_metadata',
     ];
 
     protected $casts = [
@@ -47,6 +51,46 @@ class Transaksi extends Model
         'paid_at' => 'datetime',
         'is_roundtrip' => 'boolean',
     ];
+
+    protected static function booted()
+    {
+        static::saving(function ($transaksi) {
+            if (isset($transaksi->attributes['pegawai_id']) && isset($transaksi->cabang_id)) {
+                $rawPegawaiId = $transaksi->getRawPegawaiId();
+                if ($rawPegawaiId !== null) {
+                    $transaksi->attributes['pegawai_id'] = $transaksi->cabang_id . '_' . $rawPegawaiId;
+                }
+            }
+        });
+
+        static::updated(function ($transaksi) {
+            // 1. Kirim email jika pembayaran di-update menjadi paid (Lunas)
+            if ($transaksi->wasChanged('payment_status') && $transaksi->payment_status === 'paid') {
+                $email = $transaksi->pelanggan->user->email ?? null;
+                if ($email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($email)
+                            ->send(new \App\Mail\PaymentConfirmedMail($transaksi));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Mail Error (Payment Confirmed): ' . $e->getMessage());
+                    }
+                }
+            }
+
+            // 2. Kirim email jika status laundry di-update menjadi 'Selesai'
+            if ($transaksi->wasChanged('status') && $transaksi->status === 'Selesai') {
+                $email = $transaksi->pelanggan->user->email ?? null;
+                if ($email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($email)
+                            ->send(new \App\Mail\OrderFinishedMail($transaksi));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Mail Error (Order Finished): ' . $e->getMessage());
+                    }
+                }
+            }
+        });
+    }
 
     public function detailTransaksi()
     {
@@ -68,18 +112,6 @@ class Transaksi extends Model
         return $this->belongsTo(Pelanggan::class);
     }
 
-    protected static function booted()
-    {
-        static::saving(function ($transaksi) {
-            if (isset($transaksi->attributes['pegawai_id']) && isset($transaksi->cabang_id)) {
-                $rawPegawaiId = $transaksi->getRawPegawaiId();
-                if ($rawPegawaiId !== null) {
-                    $transaksi->attributes['pegawai_id'] = $transaksi->cabang_id . '_' . $rawPegawaiId;
-                }
-            }
-        });
-    }
-
     public function getRawPegawaiId()
     {
         $val = $this->attributes['pegawai_id'] ?? null;
@@ -94,6 +126,16 @@ class Transaksi extends Model
     public function getUserIdAttribute()
     {
         return $this->getRawPegawaiId();
+    }
+
+    public function notaKeluar()
+    {
+        return $this->hasMany(NotaKeluar::class, 'transaksi_id');
+    }
+
+    public function upgradeLayanans()
+    {
+        return $this->hasMany(UpgradeLayanan::class, 'transaksi_id')->orderBy('created_at', 'desc');
     }
 
     public function pegawai()

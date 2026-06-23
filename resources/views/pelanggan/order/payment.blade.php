@@ -28,7 +28,7 @@
             background: white;
             border-top: 1px solid #F4F4F4;
             border-radius: 16px 16px 0 0;
-            padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+            padding: 16px 0px calc(16px + env(safe-area-inset-bottom, 0px));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -63,7 +63,7 @@
 </head>
 <body class="bg-[#e8eff9]">
 
-    <div class="min-h-screen flex flex-col" x-data="{ paymentMethod: '{{ strtolower($order['payment_method']) === 'qris' ? 'qris' : (strtolower($order['payment_method']) === 'transfer' ? 'transfer' : 'cash') }}' }">
+    <div class="min-h-screen flex flex-col" x-data="{ paymentMethod: '{{ strtolower($order['payment_method']) === 'qris' ? 'qris' : (strtolower($order['payment_method']) === 'transfer' ? 'transfer' : 'qris') }}' }">
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
             title="Ubah Metode Pembayaran" 
@@ -85,8 +85,6 @@
                     <x-zyngga-card title="Metode Pembayaran">
                         @php
                             $payments = [
-                                ['id' => 'cash', 'label' => 'Tunai',  'desc' => 'Bayar tunai via kurir atau di outlet',
-                                 'feather' => 'dollar-sign', 'color' => "theme('colors.zyngga.yellow.300')", 'bg' => "theme('colors.zyngga.yellow.50')"],
                                 ['id' => 'qris', 'label' => 'Non tunai',  'desc' => 'Bayar via aplikasi (QRIS & transfer)',
                                  'feather' => 'grid', 'color' => "theme('colors.zyngga.yellow.300')", 'bg' => "theme('colors.zyngga.yellow.50')"]
                             ];

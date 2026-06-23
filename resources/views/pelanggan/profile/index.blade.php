@@ -38,7 +38,7 @@
             :showMenu="true"
         />
 
-        <main class="w-full max-w-5xl mx-auto px-5 flex-1 flex flex-col ">
+        <main class="w-full max-w-5xl mx-auto px-5 flex-1 flex flex-col" style="min-height: calc(100vh - 200px);">
             
             {{-- 1. User Profile Card --}}
             <x-zyngga-card>
@@ -152,15 +152,15 @@
 
                         <x-zyngga-divider class="my-2" />
 
-                        {{-- Pusat Bantuan --}}
-                        <button class="w-full flex items-center gap-4 h-14 group">
-                            <i data-feather="message-circle" class="w-6 h-6 text-zyngga-neutral-800"></i>
+                        {{-- Riwayat Komplain --}}
+                        <a href="{{ route('profile.complaints') }}" class="w-full flex items-center gap-4 h-14 group">
+                            <i data-feather="alert-circle" class="w-6 h-6 text-zyngga-neutral-800"></i>
                             <div class="flex-1 text-left">
-                                <x-zyngga-text variant="sm" weight="medium">Pusat Bantuan</x-zyngga-text>
-                                <x-zyngga-text variant="xs" color="neutral-500">Hubungi kami jika ada kendala</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">Riwayat Komplain</x-zyngga-text>
+                                <x-zyngga-text variant="xs" color="neutral-500">Lihat status pengajuan komplain</x-zyngga-text>
                             </div>
                             <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
-                        </button>
+                        </a>
 
                         <x-zyngga-divider class="my-2" />
 

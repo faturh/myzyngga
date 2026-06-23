@@ -13,7 +13,6 @@
     <style>
         * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
         html, body { margin: 0; background: #e8eff9; min-height: 100%; }
-        #page-content { padding-bottom: 100px; }
     </style>
 </head>
 <body x-data="{ 
@@ -39,7 +38,7 @@
         
         {{-- MAIN CONTENT --}}
         <main class="flex-1 flex flex-col relative">
-            <div class="w-full max-w-5xl mx-auto px-5" id="page-content">
+            <div class="w-full max-w-5xl mx-auto px-5 flex flex-col" style="min-height: calc(100vh - 200px);" id="page-content">
 
                 {{-- Search Form Card --}}
                 <x-zyngga-card title="Informasi Pesanan">
@@ -99,6 +98,31 @@
                     </form>
                 </x-zyngga-card>
                 
+                {{-- Info Card --}}
+                <x-zyngga-card>
+                    <div class="flex items-center justify-between min-h-[56px]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
+                                <i data-feather="help-circle" class="w-5 h-5 text-zyngga-blue-300"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <x-zyngga-text variant="sm" weight="medium" class="leading-snug">Butuh bantuan?</x-zyngga-text>
+                                <x-zyngga-text variant="xs" color="neutral-500" class="leading-snug mt-0.5">Hubungi kami via WhatsApp</x-zyngga-text>
+                            </div>
+                        </div>
+                        <x-zyngga-button 
+                            type="a"
+                            href="https://wa.me/+6281297673318"
+                            target="_blank"
+                            variant="secondary"
+                            size="m"
+                            icon="message-circle"
+                            label="Chat"
+                            iconPosition="left"
+                        />
+                    </div>
+                </x-zyngga-card>
+
                 {{-- Order Tracking Results --}}
                 @if(isset($orders) && count($orders) > 0)
                     @foreach($orders as $order)
@@ -112,11 +136,11 @@
                                     <x-zyngga-text variant="base" weight="medium" class="text-zyngga-neutral-900">{{ $order['customer_name'] }}</x-zyngga-text>
                                     <x-zyngga-text variant="sm" color="neutral-500">*** {{ $order['phone_last_4'] }}</x-zyngga-text>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <x-zyngga-text variant="base" weight="medium" class="text-zyngga-neutral-900">{{ $order['id'] }}</x-zyngga-text>
+                                <div class="flex items-center justify-between text-sm">
+                                    <x-zyngga-text variant="sm" color="neutral-500" class="truncate font-mono">{{ $order['nota_layanan'] }}</x-zyngga-text>
                                     <button 
-                                        @click.stop="navigator.clipboard.writeText('{{ $order['id'] }}'); $dispatch('toast', { message: 'ID Pesanan berhasil disalin', type: 'success' })"
-                                        class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors"
+                                        @click.stop="navigator.clipboard.writeText('{{ $order['nota_layanan'] }}'); $dispatch('toast', { message: 'ID Pesanan berhasil disalin', type: 'success' })"
+                                        class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors ml-2"
                                     >
                                         <i data-feather="copy" class="w-4 h-4"></i>
                                     </button>
@@ -149,31 +173,6 @@
                         </x-zyngga-card>
                     @endforeach
                 @endif
-
-                {{-- Info Card --}}
-                <x-zyngga-card>
-                    <div class="flex items-center justify-between min-h-[56px]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
-                                <i data-feather="help-circle" class="w-5 h-5 text-zyngga-blue-300"></i>
-                            </div>
-                            <div class="flex flex-col">
-                                <x-zyngga-text variant="sm" weight="medium" class="leading-snug">Butuh bantuan?</x-zyngga-text>
-                                <x-zyngga-text variant="xs" color="neutral-500" class="leading-snug mt-0.5">Hubungi kami via WhatsApp</x-zyngga-text>
-                            </div>
-                        </div>
-                        <x-zyngga-button 
-                            type="a"
-                            href="https://wa.me/+6281297673318"
-                            target="_blank"
-                            variant="secondary"
-                            size="m"
-                            icon="message-circle"
-                            label="Chat"
-                            iconPosition="left"
-                        />
-                    </div>
-                </x-zyngga-card>
 
             </div>
         </main>
