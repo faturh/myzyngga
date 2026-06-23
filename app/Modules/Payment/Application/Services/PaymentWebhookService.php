@@ -12,13 +12,17 @@ class PaymentWebhookService
     ) {
     }
 
-    public function handleMidtransNotification(): void
+    public function handleMidtransNotification(?array $mockPayload = null): void
     {
-        try {
-            $notification = new \Midtrans\Notification();
-        } catch (\Exception $e) {
-            Log::error('Midtrans Webhook Error: ' . $e->getMessage());
-            return;
+        if ($mockPayload !== null) {
+            $notification = (object) $mockPayload;
+        } else {
+            try {
+                $notification = new \Midtrans\Notification();
+            } catch (\Exception $e) {
+                Log::error('Midtrans Webhook Error: ' . $e->getMessage());
+                return;
+            }
         }
 
         $transaction = $notification->transaction_status;
@@ -68,7 +72,7 @@ class PaymentWebhookService
         }
     }
 
-    private function markAsPaid(string $orderId, \Midtrans\Notification $notification): void
+    private function markAsPaid(string $orderId, object $notification): void
     {
         $order = $this->orderRepository->findById($orderId);
         if (!$order) return;
