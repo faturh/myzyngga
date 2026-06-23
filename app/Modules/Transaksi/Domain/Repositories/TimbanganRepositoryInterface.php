@@ -2,10 +2,10 @@
 
 namespace App\Modules\Transaksi\Domain\Repositories;
 
-use App\Models\ProsesTransaksi;
+use App\Models\Timbangan;
 use App\Models\Transaksi;
 
-interface ProsesTransaksiRepositoryInterface
+interface TimbanganRepositoryInterface
 {
     /**
      * Find a transaction by its UUID.
@@ -16,13 +16,13 @@ interface ProsesTransaksiRepositoryInterface
     public function findTransaksiById(string $id): Transaksi;
 
     /**
-     * Store processing details and its items, and update transaction status.
+     * Store timbangan details and its items, and update transaction status.
      *
      * @param array $prosesData
      * @param array $itemsData
-     * @return ProsesTransaksi
+     * @return Timbangan
      */
-    public function storeProsesTransaksi(array $prosesData, array $itemsData): ProsesTransaksi;
+    public function storeTimbangan(array $prosesData, array $itemsData): Timbangan;
 
     /**
      * Update transaction status, total_biaya_layanan, and recalculate total_bayar_akhir.

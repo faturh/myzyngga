@@ -65,7 +65,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             }])
             ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama'])
             ->where('cabang_id', $cabangId)
-            ->where('pegawai_id', $pegawaiId)
+            ->where('pegawai_id', $cabangId . '_' . $pegawaiId)
             ->orderBy('waktu', 'desc')
             ->get();
     }
@@ -98,7 +98,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->where('transaksi.cabang_id', $cabangId)
             ->where('transaksi.status', '!=', 'Selesai')
             ->where('transaksi.status', '!=', 'Batal')
-            ->where('pegawai_id', $pegawaiId)
+            ->where('transaksi.pegawai_id', $cabangId . '_' . $pegawaiId)
             ->orderBy('lp.prioritas', 'desc')
             ->orderBy('transaksi.waktu', 'asc')
             ->select('transaksi.*')
@@ -164,7 +164,7 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
 
     public function getJenisPakaianOptionsByCabang(int $cabangId): Collection
     {
-        return JenisPakaian::where('cabang_id', $cabangId)->get();
+        return JenisPakaian::all();
     }
 
     public function getLayananPrioritasOptionsByCabang(int $cabangId): Collection

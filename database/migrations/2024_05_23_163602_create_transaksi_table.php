@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('status');
             $table->foreignId('layanan_prioritas_id')->constrained('layanan_prioritas', 'id');
             $table->foreignId('pelanggan_id')->constrained('pelanggan', 'id');
-            $table->foreignId('pegawai_id')->constrained('users', 'id');
+            $table->string('pegawai_id');
             $table->foreignId('cabang_id')->constrained('cabang', 'id');
             $table->timestamps();
         });

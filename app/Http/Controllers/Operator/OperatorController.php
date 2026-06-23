@@ -7,12 +7,12 @@ use App\Models\Operator;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 
-use App\Modules\Transaksi\Application\Services\ProsesTransaksiService;
+use App\Modules\Transaksi\Application\Services\TimbanganService;
 
 class OperatorController extends Controller
 {
     public function __construct(
-        private readonly ProsesTransaksiService $prosesService
+        private readonly TimbanganService $prosesService
     ) {}
 
     /**
@@ -31,6 +31,18 @@ class OperatorController extends Controller
             'perluDikerjakanCount',
             'pesananSelesaiCount'
         ));
+    }
+
+    /**
+     * Display the employee salary sorting and management page.
+     */
+    public function gajiKaryawan()
+    {
+        $karyawan = \App\Models\User::role(['manajer_laundry', 'pegawai_laundry', 'gamis', 'pic', 'lurah'])
+            ->with('roles')
+            ->get();
+
+        return view('operator.admin.gaji-karyawan', compact('karyawan'));
     }
 
     /**
@@ -109,11 +121,8 @@ class OperatorController extends Controller
         try {
             $transaksi = $this->prosesService->getProsesFormData($id);
             
-            // Fetch available laundry items (JenisPakaian) for this branch
-            $itemsAvailable = \App\Models\JenisPakaian::where('cabang_id', $transaksi->cabang_id)->get();
-            if ($itemsAvailable->isEmpty()) {
-                $itemsAvailable = \App\Models\JenisPakaian::get();
-            }
+            // Fetch available laundry items (JenisPakaian)
+            $itemsAvailable = \App\Models\JenisPakaian::get();
 
             return view('operator.admin.proses-transaksi', compact('transaksi', 'itemsAvailable'));
         } catch (\Exception $e) {

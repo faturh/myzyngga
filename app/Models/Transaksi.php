@@ -54,6 +54,15 @@ class Transaksi extends Model
 
     protected static function booted()
     {
+        static::saving(function ($transaksi) {
+            if (isset($transaksi->attributes['pegawai_id']) && isset($transaksi->cabang_id)) {
+                $rawPegawaiId = $transaksi->getRawPegawaiId();
+                if ($rawPegawaiId !== null) {
+                    $transaksi->attributes['pegawai_id'] = $transaksi->cabang_id . '_' . $rawPegawaiId;
+                }
+            }
+        });
+
         static::updated(function ($transaksi) {
             // 1. Kirim email jika pembayaran di-update menjadi paid (Lunas)
             if ($transaksi->wasChanged('payment_status') && $transaksi->payment_status === 'paid') {
@@ -103,6 +112,22 @@ class Transaksi extends Model
         return $this->belongsTo(Pelanggan::class);
     }
 
+    public function getRawPegawaiId()
+    {
+        $val = $this->attributes['pegawai_id'] ?? null;
+        if (!$val) return null;
+        if (strpos($val, '_') !== false) {
+            $parts = explode('_', $val);
+            return (int) end($parts);
+        }
+        return (int) $val;
+    }
+
+    public function getUserIdAttribute()
+    {
+        return $this->getRawPegawaiId();
+    }
+
     public function notaKeluar()
     {
         return $this->hasMany(NotaKeluar::class, 'transaksi_id');
@@ -115,7 +140,7 @@ class Transaksi extends Model
 
     public function pegawai()
     {
-        return $this->belongsTo(User::class, 'pegawai_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function cabang()
@@ -126,5 +151,10 @@ class Transaksi extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function timbangan()
+    {
+        return $this->hasOne(Timbangan::class, 'transaksi_id');
     }
 }

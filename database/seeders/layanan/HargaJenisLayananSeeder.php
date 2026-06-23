@@ -24,9 +24,9 @@ class HargaJenisLayananSeeder extends Seeder
         $jenisLayananCuci = JenisLayanan::where(['nama' => 'Cuci', 'cabang_id' => $cabang->id])->first();
         $jenisLayananSetrika = JenisLayanan::where(['nama' => 'Setrika', 'cabang_id' => $cabang->id])->first();
 
-        $jenisPakaianKaos = JenisPakaian::where(['nama' => 'Kaos', 'cabang_id' => $cabang->id])->first();
-        $jenisPakaianKemeja = JenisPakaian::where(['nama' => 'Kemeja', 'cabang_id' => $cabang->id])->first();
-        $jenisPakaianJeans = JenisPakaian::where(['nama' => 'Jeans', 'cabang_id' => $cabang->id])->first();
+        $jenisPakaianKaos = JenisPakaian::where('nama', 'Kaos')->first();
+        $jenisPakaianKemeja = JenisPakaian::where('nama', 'Kemeja')->first();
+        $jenisPakaianJeans = JenisPakaian::where('nama', 'Jeans')->first();
 
         //? Seeder --> make Harga Jenis Layanan Kaos
         HargaJenisLayanan::create([
@@ -80,7 +80,7 @@ class HargaJenisLayananSeeder extends Seeder
         $jenisLayananCuci2 = JenisLayanan::where(['nama' => 'Cuci', 'cabang_id' => $cabang2->id])->first();
         $jenisLayananSetrika2 = JenisLayanan::where(['nama' => 'Setrika', 'cabang_id' => $cabang2->id])->first();
 
-        $jenisPakaianKemeja2 = JenisPakaian::where(['nama' => 'Kemeja', 'cabang_id' => $cabang2->id])->first();
+        $jenisPakaianKemeja2 = JenisPakaian::where('nama', 'Kemeja')->first();
 
         //? Seeder --> make Harga Jenis Layanan Kemeja
         HargaJenisLayanan::create([

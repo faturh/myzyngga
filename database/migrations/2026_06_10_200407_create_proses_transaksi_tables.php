@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('proses_transaksi', function (Blueprint $table) {
+        Schema::create('timbangan', function (Blueprint $table) {
             $table->id();
             $table->foreignUuid('transaksi_id')->constrained('transaksi')->onDelete('cascade');
             $table->string('nota')->index();
@@ -23,10 +23,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('proses_transaksi_items', function (Blueprint $table) {
+        Schema::create('list_pakaian_timbangan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('proses_transaksi_id')->constrained('proses_transaksi')->onDelete('cascade');
-            $table->string('nama_item');
+            $table->foreignId('timbangan_id')->constrained('timbangan')->onDelete('cascade');
+            $table->foreignId('jenis_pakaian_id')->constrained('jenis_pakaian')->onDelete('cascade');
             $table->integer('qty');
             $table->timestamps();
         });
@@ -37,7 +37,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('proses_transaksi_items');
-        Schema::dropIfExists('proses_transaksi');
+        Schema::dropIfExists('list_pakaian_timbangan');
+        Schema::dropIfExists('timbangan');
     }
 };

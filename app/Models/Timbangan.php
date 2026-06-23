@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProsesTransaksi extends Model
+class Timbangan extends Model
 {
     use HasFactory;
 
-    protected $table = 'proses_transaksi';
+    protected $table = 'timbangan';
 
     protected $fillable = [
         'transaksi_id',
@@ -28,6 +28,6 @@ class ProsesTransaksi extends Model
 
     public function items()
     {
-        return $this->hasMany(ProsesTransaksiItem::class, 'proses_transaksi_id');
+        return $this->hasMany(ListPakaianTimbangan::class, 'timbangan_id');
     }
 }
