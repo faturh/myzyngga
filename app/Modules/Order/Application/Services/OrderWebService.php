@@ -1386,4 +1386,30 @@ class OrderWebService
 
         $order->save();
     }
+
+    public function complaintsHistoryData(User $user): Collection
+    {
+        $pelanggan = $this->customerRepository->findByUser($user);
+        if (!$pelanggan) {
+            return collect();
+        }
+
+        return \App\Models\Complaint::with('transaksi')
+            ->where('pelanggan_id', $pelanggan->id)
+            ->latest()
+            ->get();
+    }
+
+    public function complaintDetailData(string $id, User $user): \App\Models\Complaint
+    {
+        $pelanggan = $this->customerRepository->findByUser($user);
+        if (!$pelanggan) {
+            throw new \Exception('Pelanggan tidak valid.');
+        }
+
+        return \App\Models\Complaint::with('transaksi')
+            ->where('pelanggan_id', $pelanggan->id)
+            ->findOrFail($id);
+    }
 }
+
