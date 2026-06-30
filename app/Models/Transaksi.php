@@ -43,6 +43,7 @@ class Transaksi extends Model
         'cabang_id',
         'midtrans_order_id',
         'payment_metadata',
+        'list_status_pengerjaan_id',
     ];
 
     protected $casts = [
@@ -59,6 +60,15 @@ class Transaksi extends Model
                 $rawPegawaiId = $transaksi->getRawPegawaiId();
                 if ($rawPegawaiId !== null) {
                     $transaksi->attributes['pegawai_id'] = $transaksi->cabang_id . '_' . $rawPegawaiId;
+                }
+            }
+
+            // Sync list_status_pengerjaan_id when payment_status changes to paid
+            if (isset($transaksi->attributes['payment_status']) && $transaksi->attributes['payment_status'] === 'paid') {
+                $currentStatusId = $transaksi->attributes['list_status_pengerjaan_id'] ?? null;
+                if ($currentStatusId == 2 || $currentStatusId === null) {
+                    $transaksi->attributes['list_status_pengerjaan_id'] = 3;
+                    $transaksi->attributes['status'] = 'Proses';
                 }
             }
         });
@@ -156,5 +166,59 @@ class Transaksi extends Model
     public function timbangan()
     {
         return $this->hasOne(Timbangan::class, 'transaksi_id');
+    }
+
+    public function statusPengerjaan()
+    {
+        return $this->belongsTo(ListStatusPengerjaan::class, 'list_status_pengerjaan_id');
+    }
+
+    public function setStatusAttribute($value)
+    {
+        $this->attributes['status'] = $value;
+        
+        $mapping = [
+            'baru' => 1,
+            'created' => 1,
+            'proses' => ($this->payment_status === 'paid' ? 3 : 2),
+            'siap ambil' => 4,
+            'siap_ambil' => 4,
+            'antar' => 4,
+            'pengantaran' => 4,
+            'selesai' => 5,
+            'completed' => 5,
+            'kendala' => 6,
+            'batal' => 7,
+            'dibatalkan' => 7,
+            'cancelled' => 7,
+            'jemput' => 8,
+            'penjemputan' => 8,
+            'picked_up' => 8,
+        ];
+        
+        $normalized = strtolower(trim($value ?? ''));
+        if (isset($mapping[$normalized])) {
+            $this->attributes['list_status_pengerjaan_id'] = $mapping[$normalized];
+        }
+    }
+
+    public function setListStatusPengerjaanIdAttribute($value)
+    {
+        $this->attributes['list_status_pengerjaan_id'] = $value;
+        
+        $mapping = [
+            1 => 'Baru',
+            2 => 'Proses',
+            3 => 'Proses',
+            4 => 'Siap Ambil',
+            5 => 'Selesai',
+            6 => 'Kendala',
+            7 => 'Batal',
+            8 => 'Jemput',
+        ];
+        
+        if (isset($mapping[$value])) {
+            $this->attributes['status'] = $mapping[$value];
+        }
     }
 }

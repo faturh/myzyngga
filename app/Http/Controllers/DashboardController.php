@@ -20,19 +20,19 @@ class DashboardController extends Controller
             $jmlCabang = Cabang::count();
             $jmlUser = User::count();
 
-            $transaksiBaru = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('status', 'Baru')->count();
-            $transaksiProses = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('status', 'Proses')->count();
-            $transaksiSiapDiambil = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('status', 'Siap Diambil')->count();
-            $transaksiPengantaran = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('status', 'Antar')->count();
-            $transaksiPenjemputan = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('status', 'Jemput')->count();
-            $transaksiSelesai = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('status', 'Selesai')->count();
-            $transaksiBatal = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('status', 'Batal')->count();
+            $transaksiBaru = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('list_status_pengerjaan_id', 1)->count();
+            $transaksiProses = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('list_status_pengerjaan_id', 3)->count();
+            $transaksiSiapDiambil = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('list_status_pengerjaan_id', 4)->count();
+            $transaksiPengantaran = 0;
+            $transaksiPenjemputan = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('list_status_pengerjaan_id', 8)->count();
+            $transaksiSelesai = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('list_status_pengerjaan_id', 5)->count();
+            $transaksiBatal = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('list_status_pengerjaan_id', 7)->count();
 
             $jadwalLayanan = Transaksi::query()
                 ->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
                 ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
-                ->where('transaksi.status', '!=', 'Selesai')
-                ->where('transaksi.status', '!=', 'Batal')
+                ->where('transaksi.list_status_pengerjaan_id', '!=', 5)
+                ->where('transaksi.list_status_pengerjaan_id', '!=', 7)
                 ->where(DB::raw('DATE(transaksi.waktu)'), Carbon::now()->format('Y-m-d'))
                 ->orderBy('lp.prioritas', 'desc')
                 ->orderBy('transaksi.waktu', 'asc')
@@ -41,12 +41,12 @@ class DashboardController extends Controller
 
             $pendapatanHari = Transaksi::query()
                 ->where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))
-                ->where('status', 'Selesai')
+                ->where('list_status_pengerjaan_id', 5)
                 ->sum('total_bayar_akhir');
 
             $transaksiBulanan = Transaksi::query()
                 ->where(DB::raw('YEAR(waktu)'), Carbon::now()->format('Y'))
-                ->where('status', 'Selesai')
+                ->where('list_status_pengerjaan_id', 5)
                 ->groupBy(DB::raw('MONTH(waktu)'))
                 ->select(DB::raw('MONTH(waktu) as bulan'), DB::raw('SUM(total_bayar_akhir) as hasil'))
                 ->get()
@@ -60,7 +60,7 @@ class DashboardController extends Controller
             }
 
             $transaksiTahunan = Transaksi::query()
-                ->where('status', 'Selesai')
+                ->where('list_status_pengerjaan_id', 5)
                 ->groupBy(DB::raw('YEAR(waktu)'))
                 ->select(DB::raw('YEAR(waktu) as tahun'), DB::raw('SUM(total_bayar_akhir) as hasil'))
                 ->get()
@@ -80,20 +80,20 @@ class DashboardController extends Controller
             $jmlUser = User::where('cabang_id', $cabang->id)->count();
             $jmlCabang = null;
 
-            $transaksiBaru = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('status', 'Baru')->count();
-            $transaksiProses = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('status', 'Proses')->count();
-            $transaksiSiapDiambil = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('status', 'Siap Diambil')->count();
-            $transaksiPengantaran = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('status', 'Antar')->count();
-            $transaksiPenjemputan = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('status', 'Jemput')->count();
-            $transaksiSelesai = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('status', 'Selesai')->count();
-            $transaksiBatal = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('status', 'Batal')->count();
+            $transaksiBaru = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('list_status_pengerjaan_id', 1)->count();
+            $transaksiProses = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('list_status_pengerjaan_id', 3)->count();
+            $transaksiSiapDiambil = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('list_status_pengerjaan_id', 4)->count();
+            $transaksiPengantaran = 0;
+            $transaksiPenjemputan = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('list_status_pengerjaan_id', 8)->count();
+            $transaksiSelesai = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('list_status_pengerjaan_id', 5)->count();
+            $transaksiBatal = Transaksi::where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))->where('cabang_id', $cabang->id)->where('list_status_pengerjaan_id', 7)->count();
 
             $jadwalLayanan = Transaksi::query()
                 ->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
                 ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
                 ->where('transaksi.cabang_id', $cabang->id)
-                ->where('transaksi.status', '!=', 'Selesai')
-                ->where('transaksi.status', '!=', 'Batal')
+                ->where('transaksi.list_status_pengerjaan_id', '!=', 5)
+                ->where('transaksi.list_status_pengerjaan_id', '!=', 7)
                 ->where(DB::raw('DATE(transaksi.waktu)'), Carbon::now()->format('Y-m-d'))
                 ->orderBy('lp.prioritas', 'desc')
                 ->orderBy('transaksi.waktu', 'asc')
@@ -103,13 +103,13 @@ class DashboardController extends Controller
             $pendapatanHari = Transaksi::query()
                 ->where('cabang_id', $cabang->id)
                 ->where(DB::raw('DATE(waktu)'), Carbon::now()->format('Y-m-d'))
-                ->where('status', 'Selesai')
+                ->where('list_status_pengerjaan_id', 5)
                 ->sum('total_bayar_akhir');
 
             $transaksiBulanan = Transaksi::query()
                 ->where('cabang_id', $cabang->id)
                 ->where(DB::raw('YEAR(waktu)'), Carbon::now()->format('Y'))
-                ->where('status', 'Selesai')
+                ->where('list_status_pengerjaan_id', 5)
                 ->groupBy(DB::raw('MONTH(waktu)'))
                 ->select(DB::raw('MONTH(waktu) as bulan'), DB::raw('SUM(total_bayar_akhir) as hasil'))
                 ->get()
@@ -124,7 +124,7 @@ class DashboardController extends Controller
 
             $transaksiTahunan = Transaksi::query()
                 ->where('cabang_id', $cabang->id)
-                ->where('status', 'Selesai')
+                ->where('list_status_pengerjaan_id', 5)
                 ->groupBy(DB::raw('YEAR(waktu)'))
                 ->select(DB::raw('YEAR(waktu) as tahun'), DB::raw('SUM(total_bayar_akhir) as hasil'))
                 ->get()

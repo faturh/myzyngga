@@ -61,10 +61,11 @@ class EloquentTimbanganRepository implements TimbanganRepositoryInterface
             + (double) ($transaksi->total_biaya_prioritas ?? 0) 
             + (double) ($transaksi->total_biaya_layanan_tambahan ?? 0);
 
-        return Transaksi::where('id', $id)->update([
-            'status' => $status,
-            'total_biaya_layanan' => $totalBiayaLayanan,
-            'total_bayar_akhir' => $totalBayarAkhir,
-        ]);
+        $transaksi->status = $status;
+        $transaksi->total_biaya_layanan = $totalBiayaLayanan;
+        $transaksi->total_bayar_akhir = $totalBayarAkhir;
+        $transaksi->save();
+
+        return 1;
     }
 }

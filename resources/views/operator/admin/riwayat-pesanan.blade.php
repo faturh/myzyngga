@@ -376,6 +376,14 @@
                             </span>
                         </a>
 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'proses-pengerjaan', 'search' => $search, 'sort' => $sort]) }}" 
+                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'proses-pengerjaan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                            Proses Pengerjaan
+                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'proses-pengerjaan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                                {{ $prosesPengerjaanCount }}
+                            </span>
+                        </a>
+
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'selesai', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'selesai' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Pesanan Selesai
@@ -387,13 +395,25 @@
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'kendala' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Kendala Pesanan
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">0</span>
+                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'kendala' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                                {{ $kendalaPesananCount }}
+                            </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Sedang Dibatalkan
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">0</span>
+                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'dibatalkan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                                {{ $sedangDibatalkanCount }}
+                            </span>
+                        </a>
+
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'sedang-dijemput', 'search' => $search, 'sort' => $sort]) }}" 
+                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'sedang-dijemput' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                            Sedang Dijemput
+                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'sedang-dijemput' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                                {{ $sedangDijemputCount }}
+                            </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'semua', 'search' => $search, 'sort' => $sort]) }}" 

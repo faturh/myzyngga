@@ -79,8 +79,8 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama'])
             ->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
             ->where('transaksi.cabang_id', $cabangId)
-            ->where('transaksi.status', '!=', 'Selesai')
-            ->where('transaksi.status', '!=', 'Batal')
+            ->where('transaksi.list_status_pengerjaan_id', '!=', 5)
+            ->where('transaksi.list_status_pengerjaan_id', '!=', 7)
             ->orderBy('lp.prioritas', 'desc')
             ->orderBy('transaksi.waktu', 'asc')
             ->select('transaksi.*')
@@ -96,8 +96,8 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
             ->with(['pelanggan:id,nama', 'layananPrioritas:id,nama'])
             ->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
             ->where('transaksi.cabang_id', $cabangId)
-            ->where('transaksi.status', '!=', 'Selesai')
-            ->where('transaksi.status', '!=', 'Batal')
+            ->where('transaksi.list_status_pengerjaan_id', '!=', 5)
+            ->where('transaksi.list_status_pengerjaan_id', '!=', 7)
             ->where('transaksi.pegawai_id', $cabangId . '_' . $pegawaiId)
             ->orderBy('lp.prioritas', 'desc')
             ->orderBy('transaksi.waktu', 'asc')
@@ -234,7 +234,13 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
 
     public function updateTransaksiStatusByCabang(int $cabangId, string $transaksiId, string $status): int
     {
-        return Transaksi::where('cabang_id', $cabangId)->where('id', $transaksiId)->update(['status' => $status]);
+        $transaksi = Transaksi::where('cabang_id', $cabangId)->where('id', $transaksiId)->first();
+        if ($transaksi) {
+            $transaksi->status = $status;
+            $transaksi->save();
+            return 1;
+        }
+        return 0;
     }
 
     public function updateKonfirmasiUpah(string $transaksiId, bool $konfirmasi): void
@@ -293,10 +299,14 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
     public function updateTransaksiAggregate(int $cabangId, string $transaksiId, array $transaksiPayload, array $detailGroups, array $layananTambahanIds): int
     {
         return DB::transaction(function () use ($cabangId, $transaksiId, $transaksiPayload, $detailGroups, $layananTambahanIds) {
-            $updated = Transaksi::query()
-                ->where('cabang_id', $cabangId)
-                ->where('id', $transaksiId)
-                ->update($transaksiPayload);
+            $transaksi = Transaksi::where('cabang_id', $cabangId)->where('id', $transaksiId)->first();
+            if ($transaksi) {
+                $transaksi->fill($transaksiPayload);
+                $transaksi->save();
+                $updated = 1;
+            } else {
+                $updated = 0;
+            }
 
             $detailIds = DetailTransaksi::query()
                 ->where('transaksi_id', $transaksiId)

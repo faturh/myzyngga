@@ -45,8 +45,8 @@ class EloquentOrderRepository implements OrderRepositoryInterface
         return Transaksi::query()
             ->with(self::ORDER_RELATIONS)
             ->where('pelanggan_id', $pelangganId)
-            ->when($finished === true, fn (Builder $query) => $query->where('status', 'Selesai'))
-            ->when($finished === false, fn (Builder $query) => $query->where('status', '!=', 'Selesai'))
+            ->when($finished === true, fn (Builder $query) => $query->where('list_status_pengerjaan_id', 5))
+            ->when($finished === false, fn (Builder $query) => $query->where('list_status_pengerjaan_id', '!=', 5))
             ->latest('waktu')
             ->first();
     }

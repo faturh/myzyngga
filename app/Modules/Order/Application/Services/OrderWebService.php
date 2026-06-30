@@ -960,8 +960,8 @@ class OrderWebService
         }
 
         return match ((string) $order->status) {
-            'Baru' => 'Baru',
-            'Proses' => 'Diproses',
+            'Baru', 'Perlu Diproses' => 'Baru',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Diproses',
             default => (string) $order->status,
         };
     }
@@ -969,9 +969,9 @@ class OrderWebService
     private function currentStep(Transaksi $order): string
     {
         return match ((string) $order->status) {
-            'Selesai' => 'Selesai',
-            'Proses' => 'Pesanan sedang diproses',
-            'Baru' => 'Pesanan diterima',
+            'Selesai', 'Pesanan Selesai' => 'Selesai',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Pesanan sedang diproses',
+            'Baru', 'Perlu Diproses' => 'Pesanan diterima',
             default => (string) $order->status,
         };
     }
@@ -979,21 +979,21 @@ class OrderWebService
     private function progressForStatus(string $status): int
     {
         return match ($status) {
-            'Selesai' => 100,
-            'Proses' => 56,
-            'Baru' => 20,
+            'Selesai', 'Pesanan Selesai' => 100,
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 56,
+            'Baru', 'Perlu Diproses' => 20,
             default => 10,
         };
     }
 
     private function isFinished(Transaksi $order): bool
     {
-        return $order->status === 'Selesai';
+        return $order->list_status_pengerjaan_id == 5 || $order->status === 'Selesai' || $order->status === 'Pesanan Selesai';
     }
 
     private function canBeUpgraded(Transaksi $order): bool
     {
-        if ($order->status === 'Selesai') {
+        if ($this->isFinished($order)) {
             return false;
         }
 
@@ -1135,7 +1135,7 @@ class OrderWebService
             throw new \Exception('Pesanan tidak ditemukan.');
         }
 
-        if ($order->status === 'Selesai') {
+        if ($this->isFinished($order)) {
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
 
@@ -1238,7 +1238,7 @@ class OrderWebService
     public function processUpgrade(string $id, int $newServiceId, ?User $user, ?string $paymentMethod = null): void
     {
         $order = $this->orderRepository->findById($id);
-        if (!$order || $order->status === 'Selesai') {
+        if (!$order || $this->isFinished($order)) {
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
 

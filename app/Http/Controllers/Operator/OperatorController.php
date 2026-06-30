@@ -58,7 +58,11 @@ class OperatorController extends Controller
         $perluDiprosesCount = Operator::getPerluDiprosesCount();
         $menungguPembayaranCount = Operator::getMenungguPembayaranCount();
         $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
+        $prosesPengerjaanCount = Operator::getProsesPengerjaanCount();
         $pesananSelesaiCount = Operator::getPesananSelesaiCount();
+        $kendalaPesananCount = Operator::getKendalaPesananCount();
+        $sedangDibatalkanCount = Operator::getSedangDibatalkanCount();
+        $sedangDijemputCount = Operator::getSedangDijemputCount();
 
         // Query setup
         $query = Transaksi::query()
@@ -77,23 +81,28 @@ class OperatorController extends Controller
         // Tab filter
         switch ($tab) {
             case 'perlu-diproses':
-                $query->whereIn('status', ['Baru', 'created']);
+                $query->where('list_status_pengerjaan_id', 1);
                 break;
             case 'menunggu-pembayaran':
-                $query->where('status', 'Proses')
-                      ->where('payment_status', 'pending');
+                $query->where('list_status_pengerjaan_id', 2);
                 break;
             case 'perlu-dikerjakan':
-                $query->where('status', 'Proses')
-                      ->where('payment_status', 'paid');
+                $query->where('list_status_pengerjaan_id', 3);
+                break;
+            case 'proses-pengerjaan':
+                $query->where('list_status_pengerjaan_id', 4);
                 break;
             case 'selesai':
-                $query->where('status', 'Selesai');
+                $query->where('list_status_pengerjaan_id', 5);
                 break;
             case 'kendala':
+                $query->where('list_status_pengerjaan_id', 6);
+                break;
             case 'dibatalkan':
-                // Force empty result as per instruction: "sisanya kendala dan sedang di batalkan itu kosongin aja"
-                $query->whereRaw('1 = 0');
+                $query->where('list_status_pengerjaan_id', 7);
+                break;
+            case 'sedang-dijemput':
+                $query->where('list_status_pengerjaan_id', 8);
                 break;
             case 'semua':
             default:
@@ -153,7 +162,11 @@ class OperatorController extends Controller
             'perluDiprosesCount',
             'menungguPembayaranCount',
             'perluDikerjakanCount',
-            'pesananSelesaiCount'
+            'prosesPengerjaanCount',
+            'pesananSelesaiCount',
+            'kendalaPesananCount',
+            'sedangDibatalkanCount',
+            'sedangDijemputCount'
         ));
     }
 

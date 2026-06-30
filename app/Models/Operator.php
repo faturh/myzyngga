@@ -11,7 +11,7 @@ class Operator extends Model
      */
     public static function getPerluDiprosesCount(): int
     {
-        return Transaksi::whereIn('status', ['Baru', 'created'])->count();
+        return Transaksi::where('list_status_pengerjaan_id', 1)->count();
     }
 
     /**
@@ -19,9 +19,7 @@ class Operator extends Model
      */
     public static function getMenungguPembayaranCount(): int
     {
-        return Transaksi::where('status', 'Proses')
-            ->where('payment_status', 'pending')
-            ->count();
+        return Transaksi::where('list_status_pengerjaan_id', 2)->count();
     }
 
     /**
@@ -29,9 +27,7 @@ class Operator extends Model
      */
     public static function getPerluDikerjakanCount(): int
     {
-        return Transaksi::where('status', 'Proses')
-            ->where('payment_status', 'paid')
-            ->count();
+        return Transaksi::where('list_status_pengerjaan_id', 3)->count();
     }
 
     /**
@@ -39,6 +35,38 @@ class Operator extends Model
      */
     public static function getPesananSelesaiCount(): int
     {
-        return Transaksi::where('status', 'Selesai')->count();
+        return Transaksi::where('list_status_pengerjaan_id', 5)->count();
+    }
+
+    /**
+     * Get count of orders in progress (status 'Siap Ambil', 'Antar', or 'Jemput').
+     */
+    public static function getProsesPengerjaanCount(): int
+    {
+        return Transaksi::where('list_status_pengerjaan_id', 4)->count();
+    }
+
+    /**
+     * Get count of orders with obstacle (status 'Kendala Pesanan').
+     */
+    public static function getKendalaPesananCount(): int
+    {
+        return Transaksi::where('list_status_pengerjaan_id', 6)->count();
+    }
+
+    /**
+     * Get count of cancelled orders (status 'Sedang Dibatalkan').
+     */
+    public static function getSedangDibatalkanCount(): int
+    {
+        return Transaksi::where('list_status_pengerjaan_id', 7)->count();
+    }
+
+    /**
+     * Get count of orders being picked up (status 'Sedang Dijemput').
+     */
+    public static function getSedangDijemputCount(): int
+    {
+        return Transaksi::where('list_status_pengerjaan_id', 8)->count();
     }
 }

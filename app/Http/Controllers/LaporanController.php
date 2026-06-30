@@ -29,7 +29,7 @@ class LaporanController extends Controller
             ->select('transaksi.nota', DB::raw("DATE(transaksi.waktu) as tanggal"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'transaksi.total_bayar_akhir as pendapatan_laundry', 'c.nama as nama_cabang', 'c.id as cabang_id')
             ->where(DB::raw("DATE(transaksi.waktu)"), '>=', $tanggalAwal)
             ->where(DB::raw("DATE(transaksi.waktu)"), '<=', $tanggalAkhir)
-            ->where('transaksi.status', 'Selesai')
+            ->where('transaksi.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.nota', DB::raw("DATE(transaksi.waktu)"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'c.nama', 'c.id')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
@@ -71,7 +71,7 @@ class LaporanController extends Controller
             ->select('transaksi.nota', DB::raw("DATE(transaksi.waktu) as tanggal"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'transaksi.total_bayar_akhir as pendapatan_laundry', 'c.nama as nama_cabang', 'c.id as cabang_id')
             ->where(DB::raw("DATE(transaksi.waktu)"), '>=', $tanggalAwal)
             ->where(DB::raw("DATE(transaksi.waktu)"), '<=', $tanggalAkhir)
-            ->where('transaksi.status', 'Selesai')
+            ->where('transaksi.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.nota', DB::raw("DATE(transaksi.waktu)"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'c.nama', 'c.id')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
@@ -138,7 +138,7 @@ class LaporanController extends Controller
                         });
                 });
             })
-            ->where('transaksi.status', 'Selesai')
+            ->where('transaksi.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw("MONTH(transaksi.waktu)"), DB::raw("YEAR(transaksi.waktu)"), 'c.id', 'c.nama')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
@@ -192,7 +192,7 @@ class LaporanController extends Controller
                         });
                 });
             })
-            ->where('transaksi.status', 'Selesai')
+            ->where('transaksi.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw("MONTH(transaksi.waktu)"), DB::raw("YEAR(transaksi.waktu)"), 'c.id', 'c.nama')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
