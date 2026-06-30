@@ -402,7 +402,11 @@
         }
         
         if (map) {
-            map.setPadding({ bottom: 0, top: 0, left: 0, right: 0 });
+            if (typeof map.setPadding === 'function') {
+                map.setPadding({ bottom: 0, top: 0, left: 0, right: 0 });
+            } else if (typeof map.setOptions === 'function') {
+                map.setOptions({ padding: { bottom: 0, top: 0, left: 0, right: 0 } });
+            }
             google.maps.event.trigger(map, 'resize');
         }
         

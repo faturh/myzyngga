@@ -144,14 +144,18 @@ class OrderPageController
 
     public function complaintsHistory(Request $request)
     {
-        $complaints = \App\Models\Complaint::with('transaksi')->where('user_id', $request->user()->id)->latest()->get();
+        $complaints = $this->webService->complaintsHistoryData($request->user());
         return view('pelanggan.profile.complaints', compact('complaints'));
     }
 
     public function complaintDetail(Request $request, $id)
     {
-        $complaint = \App\Models\Complaint::with('transaksi')->where('user_id', $request->user()->id)->findOrFail($id);
-        return view('pelanggan.profile.complaint-detail', compact('complaint'));
+        try {
+            $complaint = $this->webService->complaintDetailData($id, $request->user());
+            return view('pelanggan.profile.complaint-detail', compact('complaint'));
+        } catch (\Exception $e) {
+            return redirect()->route('profile.complaints')->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
     public function cancel(Request $request)
