@@ -52,6 +52,7 @@ class OperatorController extends Controller
     {
         $tab = $request->query('tab', 'perlu-diproses');
         $search = $request->query('search');
+        $sort = $request->query('sort', 'deadline');
 
         // Dynamic badges count
         $perluDiprosesCount = Operator::getPerluDiprosesCount();
@@ -100,12 +101,55 @@ class OperatorController extends Controller
                 break;
         }
 
-        $transaksi = $query->latest('waktu')->paginate(10)->withQueryString();
+        // Apply sorting
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        if ($sort === 'deadline') {
+            if ($driver === 'pgsql') {
+                $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                      ->select('transaksi.*')
+                      ->orderByRaw("
+                          transaksi.waktu + (
+                              CASE 
+                                  WHEN LOWER(lp.nama) = 'kilat' THEN INTERVAL '5 hours'
+                                  WHEN LOWER(lp.nama) = 'express' THEN INTERVAL '10 hours'
+                                  WHEN LOWER(lp.nama) = 'quick' THEN INTERVAL '20 hours'
+                                  ELSE INTERVAL '30 hours'
+                              END
+                          ) ASC
+                      ");
+            } else {
+                $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                      ->select('transaksi.*')
+                      ->orderByRaw("
+                          datetime(transaksi.waktu, 
+                              CASE 
+                                  WHEN LOWER(lp.nama) = 'kilat' THEN '+5 hours'
+                                  WHEN LOWER(lp.nama) = 'express' THEN '+10 hours'
+                                  WHEN LOWER(lp.nama) = 'quick' THEN '+20 hours'
+                                  ELSE '+30 hours'
+                              END
+                          ) ASC
+                      ");
+            }
+        } elseif ($sort === 'terbaru') {
+            $query->orderBy('waktu', 'desc');
+        } elseif ($sort === 'terlama') {
+            $query->orderBy('waktu', 'asc');
+        } elseif ($sort === 'prioritas_desc') {
+            $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                  ->select('transaksi.*')
+                  ->orderBy('lp.prioritas', 'desc');
+        } else {
+            $query->orderBy('waktu', 'desc');
+        }
+
+        $transaksi = $query->paginate(10)->withQueryString();
 
         return view('operator.admin.riwayat-pesanan', compact(
             'transaksi',
             'tab',
             'search',
+            'sort',
             'perluDiprosesCount',
             'menungguPembayaranCount',
             'perluDikerjakanCount',

@@ -352,7 +352,7 @@
 
                     <!-- TABS NAVIGATION -->
                     <div class="flex border-b border-slate-100 overflow-x-auto scrollbar-none gap-8 text-xs font-bold">
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses', 'search' => $search]) }}" 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-diproses' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Perlu Diproses
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-diproses' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
@@ -360,7 +360,7 @@
                             </span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search]) }}" 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Menunggu Pembayaran
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
@@ -368,7 +368,7 @@
                             </span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search]) }}" 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Perlu Dikerjakan
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-dikerjakan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
@@ -376,7 +376,7 @@
                             </span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'selesai', 'search' => $search]) }}" 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'selesai', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'selesai' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Pesanan Selesai
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">
@@ -384,31 +384,44 @@
                             </span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala', 'search' => $search]) }}" 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'kendala' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Kendala Pesanan
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">0</span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search]) }}" 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Sedang Dibatalkan
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">0</span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'semua', 'search' => $search]) }}" 
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'semua', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Semua Pesanan
                         </a>
                     </div>
 
                     <!-- SEARCH & FILTER ROW -->
-                    <form method="GET" action="{{ route('admin.riwayat-pesanan') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
+                    <form method="GET" action="{{ route('admin.riwayat-pesanan') }}" class="grid grid-cols-1 sm:grid-cols-5 gap-4 bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
                         <input type="hidden" name="tab" value="{{ $tab }}">
                         
                         <div class="relative col-span-1">
                             <select class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 outline-none appearance-none">
                                 <option>Nomor Pesanan</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                                <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Sorting -->
+                        <div class="relative col-span-1">
+                            <select name="sort" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 outline-none appearance-none cursor-pointer">
+                                <option value="deadline" {{ $sort === 'deadline' ? 'selected' : '' }}>Deadline Terdekat</option>
+                                <option value="terbaru" {{ $sort === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                <option value="terlama" {{ $sort === 'terlama' ? 'selected' : '' }}>Terlama</option>
+                                <option value="prioritas_desc" {{ $sort === 'prioritas_desc' ? 'selected' : '' }}>Prioritas Teratas</option>
                             </select>
                             <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
                                 <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
@@ -430,7 +443,7 @@
                             <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm">
                                 Terapkan
                             </button>
-                            @if(!empty($search))
+                            @if(!empty($search) || $sort !== 'deadline')
                                 <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs px-3 py-2.5 rounded-xl flex items-center justify-center transition-all">
                                     Reset
                                 </a>
