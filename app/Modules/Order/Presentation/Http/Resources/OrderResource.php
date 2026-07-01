@@ -12,7 +12,15 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'nota' => $this->nota,
-            'status' => $this->status,
+            'status' => match($this->status) {
+                'Perlu Diproses', 'Baru', 'created' => 'created',
+                'Sedang Dijemput', 'Jemput', 'picked_up' => 'picked_up',
+                'Proses Pengerjaan', 'Proses', 'Perlu Dikerjakan', 'Menunggu Pembayaran', 'in_progress' => 'in_progress',
+                'ready_for_delivery' => 'ready_for_delivery',
+                'Pesanan Selesai', 'Selesai', 'completed' => 'completed',
+                'Sedang Dibatalkan', 'Batal', 'cancelled' => 'cancelled',
+                default => $this->status,
+            },
             'pickup' => [
                 'address' => $this->pickup_address,
                 'detail_address' => $this->pickup_detail_address,

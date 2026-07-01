@@ -419,6 +419,10 @@ class OrderWebService
 
     private function getSnapToken(Transaksi $order): ?string
     {
+        if ($this->isUnweighed($order)) {
+            return null;
+        }
+
         $unpaidAmount = max(0, (float) $order->total_bayar_akhir - (float) $order->bayar);
         
         if ($unpaidAmount <= 0) {
@@ -454,6 +458,10 @@ class OrderWebService
         $order = $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Order tidak ditemukan.');
+        }
+
+        if ($this->isUnweighed($order)) {
+            throw new \Exception('Pesanan Anda belum ditimbang oleh operator.');
         }
 
         $existingMeta = json_decode($order->payment_metadata, true) ?? [];
@@ -960,8 +968,8 @@ class OrderWebService
         }
 
         return match ((string) $order->status) {
-            'Baru' => 'Baru',
-            'Proses' => 'Diproses',
+            'Baru', 'Perlu Diproses' => 'Baru',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Diproses',
             default => (string) $order->status,
         };
     }
@@ -969,9 +977,9 @@ class OrderWebService
     private function currentStep(Transaksi $order): string
     {
         return match ((string) $order->status) {
-            'Selesai' => 'Selesai',
-            'Proses' => 'Pesanan sedang diproses',
-            'Baru' => 'Pesanan diterima',
+            'Selesai', 'Pesanan Selesai' => 'Selesai',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Pesanan sedang diproses',
+            'Baru', 'Perlu Diproses' => 'Pesanan diterima',
             default => (string) $order->status,
         };
     }
@@ -979,21 +987,26 @@ class OrderWebService
     private function progressForStatus(string $status): int
     {
         return match ($status) {
-            'Selesai' => 100,
-            'Proses' => 56,
-            'Baru' => 20,
+            'Selesai', 'Pesanan Selesai' => 100,
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 56,
+            'Baru', 'Perlu Diproses' => 20,
             default => 10,
         };
     }
 
     private function isFinished(Transaksi $order): bool
     {
-        return $order->status === 'Selesai';
+        return $order->list_status_pengerjaan_id == 5 || $order->status === 'Selesai' || $order->status === 'Pesanan Selesai';
+    }
+
+    private function isUnweighed(Transaksi $order): bool
+    {
+        return in_array($order->status, ['Baru', 'created', 'Perlu Diproses']);
     }
 
     private function canBeUpgraded(Transaksi $order): bool
     {
-        if ($order->status === 'Selesai') {
+        if ($this->isFinished($order)) {
             return false;
         }
 
@@ -1135,7 +1148,7 @@ class OrderWebService
             throw new \Exception('Pesanan tidak ditemukan.');
         }
 
-        if ($order->status === 'Selesai') {
+        if ($this->isFinished($order)) {
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
 
@@ -1214,6 +1227,10 @@ class OrderWebService
             throw new \Exception('Metode pembayaran tidak dapat diubah karena pesanan sudah lunas atau selesai.');
         }
 
+        if ($this->isUnweighed($order)) {
+            throw new \Exception('Pesanan Anda belum ditimbang oleh operator.');
+        }
+
         return [
             'order' => $this->mapOrderDetail($order),
         ];
@@ -1238,7 +1255,7 @@ class OrderWebService
     public function processUpgrade(string $id, int $newServiceId, ?User $user, ?string $paymentMethod = null): void
     {
         $order = $this->orderRepository->findById($id);
-        if (!$order || $order->status === 'Selesai') {
+        if (!$order || $this->isFinished($order)) {
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
 
@@ -1386,4 +1403,30 @@ class OrderWebService
 
         $order->save();
     }
+
+    public function complaintsHistoryData(User $user): Collection
+    {
+        $pelanggan = $this->customerRepository->findByUser($user);
+        if (!$pelanggan) {
+            return collect();
+        }
+
+        return \App\Models\Complaint::with('transaksi')
+            ->where('pelanggan_id', $pelanggan->id)
+            ->latest()
+            ->get();
+    }
+
+    public function complaintDetailData(string $id, User $user): \App\Models\Complaint
+    {
+        $pelanggan = $this->customerRepository->findByUser($user);
+        if (!$pelanggan) {
+            throw new \Exception('Pelanggan tidak valid.');
+        }
+
+        return \App\Models\Complaint::with('transaksi')
+            ->where('pelanggan_id', $pelanggan->id)
+            ->findOrFail($id);
+    }
 }
+
