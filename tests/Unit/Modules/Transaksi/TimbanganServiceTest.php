@@ -107,7 +107,7 @@ class TimbanganServiceTest extends TestCase
 
         $this->assertDatabaseHas('transaksi', [
             'id' => $transaksi->id,
-            'status' => 'Proses',
+            'status' => 'Perlu Dikerjakan',
             'total_biaya_layanan' => 22500,
             'total_bayar_akhir' => 22500,
         ]);
@@ -178,7 +178,7 @@ class TimbanganServiceTest extends TestCase
 
         $this->assertDatabaseHas('transaksi', [
             'id' => $transaksi->id,
-            'status' => 'Proses',
+            'status' => 'Perlu Dikerjakan',
             'total_biaya_layanan' => 15000,
             'total_bayar_akhir' => 15000,
         ]);

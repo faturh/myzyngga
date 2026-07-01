@@ -207,6 +207,64 @@ class OrderFlowSmokeTest extends TestCase
             ->assertJsonPath('data.order.status', 'in_progress');
     }
 
+    public function test_operator_can_work_and_complete_order()
+    {
+        $admin = $this->createAdminUser();
+        $this->actingAs($admin);
+        
+        $customer = $this->createCustomerUser('test-op@example.com', 'test-op');
+        
+        $pelanggan = Pelanggan::create([
+            'user_id' => $customer->id,
+            'nama' => 'Test Op Customer',
+            'jenis_kelamin' => 'L',
+            'telepon' => '081234567890',
+            'alamat' => 'Jalan Test Op',
+        ]);
+        
+        [$cabang, $lp] = $this->ensureOrderReferencesExist();
+        
+        $transaksi = Transaksi::create([
+            'nota' => 'NOT-TEST-OP',
+            'waktu' => now(),
+            'total_biaya_layanan' => 10000,
+            'total_biaya_prioritas' => 0,
+            'total_biaya_layanan_tambahan' => 0,
+            'total_bayar_akhir' => 10000,
+            'jenis_pembayaran' => 'cash',
+            'bayar' => 0,
+            'kembalian' => 0,
+            'status' => 'Perlu Dikerjakan',
+            'layanan_prioritas_id' => $lp->id,
+            'pelanggan_id' => $pelanggan->id,
+            'pegawai_id' => (string)$admin->id,
+            'cabang_id' => $cabang->id,
+        ]);
+        
+        // Start working on transaction
+        $this->post("/admin/riwayat-pesanan/{$transaksi->id}/kerjakan")
+            ->assertRedirect();
+            
+        $transaksi->refresh();
+        $this->assertEquals('Proses Pengerjaan', $transaksi->status);
+        $this->assertEquals(4, $transaksi->list_status_pengerjaan_id);
+        
+        // Complete transaction
+        $this->post("/admin/riwayat-pesanan/{$transaksi->id}/selesaikan")
+            ->assertRedirect();
+            
+        $transaksi->refresh();
+        // Since payment is pending, it should go to 'Menunggu Pembayaran'
+        $this->assertEquals('Menunggu Pembayaran', $transaksi->status);
+        $this->assertEquals(2, $transaksi->list_status_pengerjaan_id);
+
+        // Verify history log creation
+        $this->assertDatabaseCount('list_history_pengerjaan', 3);
+        $latestLog = \App\Models\ListHistoryPengerjaan::latest()->first();
+        $this->assertEquals(4, $latestLog->status_sebelumnya);
+        $this->assertEquals(2, $latestLog->status_sesudahnya);
+    }
+
     private function createAdminUser(): User
     {
         $this->ensureRoleExists('admin');
@@ -216,6 +274,7 @@ class OrderFlowSmokeTest extends TestCase
             'slug' => 'admin-smoke',
             'email' => 'admin-smoke@example.com',
             'password' => 'password',
+            'role' => 'admin',
             'email_verified_at' => now(),
         ]);
 

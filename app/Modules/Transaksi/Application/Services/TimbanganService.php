@@ -21,7 +21,7 @@ class TimbanganService
     {
         $transaksi = $this->repository->findTransaksiById($id);
 
-        if (!in_array($transaksi->status, ['Baru', 'created'])) {
+        if (!in_array($transaksi->status, ['Baru', 'created', 'Perlu Diproses'])) {
             throw new DomainException('Hanya pesanan berstatus baru yang dapat diproses.', 422);
         }
 
@@ -35,7 +35,7 @@ class TimbanganService
     {
         $transaksi = $this->repository->findTransaksiById($id);
 
-        if (!in_array($transaksi->status, ['Baru', 'created'])) {
+        if (!in_array($transaksi->status, ['Baru', 'created', 'Perlu Diproses'])) {
             throw new DomainException('Hanya pesanan berstatus baru yang dapat diproses.', 422);
         }
 

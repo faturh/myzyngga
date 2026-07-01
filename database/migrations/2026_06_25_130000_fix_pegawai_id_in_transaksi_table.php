@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        try {
+            \Illuminate\Support\Facades\DB::statement('ALTER TABLE transaksi DROP CONSTRAINT IF EXISTS transaksi_pegawai_id_foreign');
+        } catch (\Exception $e) {
+            // Ignore
+        }
+
         Schema::table('transaksi', function (Blueprint $table) {
-            // Drop foreign key constraint
-            $table->dropForeign('transaksi_pegawai_id_foreign');
-            
             // Change pegawai_id column to string
             $table->string('pegawai_id')->change();
         });

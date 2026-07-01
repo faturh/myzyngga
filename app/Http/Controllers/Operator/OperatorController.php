@@ -52,12 +52,17 @@ class OperatorController extends Controller
     {
         $tab = $request->query('tab', 'perlu-diproses');
         $search = $request->query('search');
+        $sort = $request->query('sort', 'deadline');
 
         // Dynamic badges count
         $perluDiprosesCount = Operator::getPerluDiprosesCount();
         $menungguPembayaranCount = Operator::getMenungguPembayaranCount();
         $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
+        $prosesPengerjaanCount = Operator::getProsesPengerjaanCount();
         $pesananSelesaiCount = Operator::getPesananSelesaiCount();
+        $kendalaPesananCount = Operator::getKendalaPesananCount();
+        $sedangDibatalkanCount = Operator::getSedangDibatalkanCount();
+        $sedangDijemputCount = Operator::getSedangDijemputCount();
 
         // Query setup
         $query = Transaksi::query()
@@ -76,23 +81,28 @@ class OperatorController extends Controller
         // Tab filter
         switch ($tab) {
             case 'perlu-diproses':
-                $query->whereIn('status', ['Baru', 'created']);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 1));
                 break;
             case 'menunggu-pembayaran':
-                $query->where('status', 'Proses')
-                      ->where('payment_status', 'pending');
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 2));
                 break;
             case 'perlu-dikerjakan':
-                $query->where('status', 'Proses')
-                      ->where('payment_status', 'paid');
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 3));
+                break;
+            case 'proses-pengerjaan':
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 4));
                 break;
             case 'selesai':
-                $query->where('status', 'Selesai');
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 5));
                 break;
             case 'kendala':
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 6));
+                break;
             case 'dibatalkan':
-                // Force empty result as per instruction: "sisanya kendala dan sedang di batalkan itu kosongin aja"
-                $query->whereRaw('1 = 0');
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7));
+                break;
+            case 'sedang-dijemput':
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 8));
                 break;
             case 'semua':
             default:
@@ -100,16 +110,63 @@ class OperatorController extends Controller
                 break;
         }
 
-        $transaksi = $query->latest('waktu')->paginate(10)->withQueryString();
+        // Apply sorting
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        if ($sort === 'deadline') {
+            if ($driver === 'pgsql') {
+                $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                      ->select('transaksi.*')
+                      ->orderByRaw("
+                          transaksi.waktu + (
+                              CASE 
+                                  WHEN LOWER(lp.nama) = 'kilat' THEN INTERVAL '5 hours'
+                                  WHEN LOWER(lp.nama) = 'express' THEN INTERVAL '10 hours'
+                                  WHEN LOWER(lp.nama) = 'quick' THEN INTERVAL '20 hours'
+                                  ELSE INTERVAL '30 hours'
+                              END
+                          ) ASC
+                      ");
+            } else {
+                $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                      ->select('transaksi.*')
+                      ->orderByRaw("
+                          datetime(transaksi.waktu, 
+                              CASE 
+                                  WHEN LOWER(lp.nama) = 'kilat' THEN '+5 hours'
+                                  WHEN LOWER(lp.nama) = 'express' THEN '+10 hours'
+                                  WHEN LOWER(lp.nama) = 'quick' THEN '+20 hours'
+                                  ELSE '+30 hours'
+                              END
+                          ) ASC
+                      ");
+            }
+        } elseif ($sort === 'terbaru') {
+            $query->orderBy('waktu', 'desc');
+        } elseif ($sort === 'terlama') {
+            $query->orderBy('waktu', 'asc');
+        } elseif ($sort === 'prioritas_desc') {
+            $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                  ->select('transaksi.*')
+                  ->orderBy('lp.prioritas', 'desc');
+        } else {
+            $query->orderBy('waktu', 'desc');
+        }
+
+        $transaksi = $query->paginate(10)->withQueryString();
 
         return view('operator.admin.riwayat-pesanan', compact(
             'transaksi',
             'tab',
             'search',
+            'sort',
             'perluDiprosesCount',
             'menungguPembayaranCount',
             'perluDikerjakanCount',
-            'pesananSelesaiCount'
+            'prosesPengerjaanCount',
+            'pesananSelesaiCount',
+            'kendalaPesananCount',
+            'sedangDibatalkanCount',
+            'sedangDijemputCount'
         ));
     }
 
@@ -171,5 +228,36 @@ class OperatorController extends Controller
         $transaksi->save();
 
         return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.');
+    }
+
+    /**
+     * Start working on transaction (update status to 'Proses Pengerjaan').
+     */
+    public function kerjakanTransaksi(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->status = 'proses pengerjaan';
+        $transaksi->save();
+
+        return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan.');
+    }
+
+    /**
+     * Complete transaction pengerjaan (update status to 'selesai').
+     */
+    public function selesaikanPengerjaan(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->status = 'selesai';
+        $transaksi->save();
+
+        $message = 'Pengerjaan pesanan #' . $transaksi->nota . ' telah selesai.';
+        if ($transaksi->list_status_pengerjaan_id == 2) {
+            $message .= ' Menunggu pelunasan pembayaran dari pelanggan.';
+        } else {
+            $message .= ' Pembayaran sudah lunas, status menjadi Selesai.';
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 }

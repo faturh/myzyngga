@@ -216,7 +216,7 @@
                     </div>
                 </x-zyngga-card>
 
-                @if(!in_array($order['raw_status'], ['Baru', 'created']))
+                @if(!in_array($order['raw_status'], ['Baru', 'created', 'Perlu Diproses']))
                 {{-- CARD 3: RINCIAN PEMBAYARAN --}}
                 <x-zyngga-card title="Rincian Pembayaran">
                     <x-slot:headerAction>
@@ -275,7 +275,7 @@
                 </x-zyngga-card>
                 @endif
 
-                @if(!in_array($order['raw_status'], ['Baru', 'created']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
+                @if(!in_array($order['raw_status'], ['Baru', 'created', 'Perlu Diproses']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
                 {{-- CARD 4: BANTUAN/LAYANAN --}}
                 <x-zyngga-card title="Bantuan/Layanan">
                     <div class="flex flex-col gap-3">
@@ -363,8 +363,8 @@
                                         size="l"
                                         variant="primary" 
                                         class="w-full h-full font-medium"
-                                        x-bind:disabled="['Baru', 'created'].includes(rawStatus)"
-                                        x-bind:class="['Baru', 'created'].includes(rawStatus) ? 'opacity-50 cursor-not-allowed' : ''"
+                                        x-bind:disabled="['Baru', 'created', 'Perlu Diproses'].includes(rawStatus)"
+                                        x-bind:class="['Baru', 'created', 'Perlu Diproses'].includes(rawStatus) ? 'opacity-50 cursor-not-allowed' : ''"
                                         @click="pay()"
                                     >
                                         <x-zyngga-text variant="base" weight="medium" color="white">Bayar Sekarang</x-zyngga-text>
