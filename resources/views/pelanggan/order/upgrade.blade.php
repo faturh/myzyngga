@@ -229,7 +229,7 @@
                         @endforeach
                     </x-zyngga-card>
 
-                    @if(!in_array($order['raw_status'], ['Baru', 'created']))
+                    @if(!in_array($order['raw_status'], ['Baru', 'created', 'Perlu Diproses']))
                     {{-- CARD 2: RINCIAN PEMBAYARAN --}}
                     <x-zyngga-card title="Rincian Pembayaran">
                         <div class="space-y-4">

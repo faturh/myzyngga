@@ -43,7 +43,7 @@ class Transaksi extends Model
         'cabang_id',
         'midtrans_order_id',
         'payment_metadata',
-        'list_status_pengerjaan_id',
+        'list_pengerjaan_id',
     ];
 
     protected $casts = [
@@ -52,6 +52,10 @@ class Transaksi extends Model
         'paid_at' => 'datetime',
         'is_roundtrip' => 'boolean',
     ];
+
+    public $pending_status_id = null;
+    public $status_changed_from = null;
+    public $status_changed_to = null;
 
     protected static function booted()
     {
@@ -64,16 +68,78 @@ class Transaksi extends Model
             }
 
             // Sync list_status_pengerjaan_id when payment_status changes to paid
+            $newStatusId = $transaksi->pending_status_id ?? $transaksi->list_status_pengerjaan_id;
+            if (!$newStatusId) {
+                $newStatusId = 1;
+            }
+
             if (isset($transaksi->attributes['payment_status']) && $transaksi->attributes['payment_status'] === 'paid') {
-                $currentStatusId = $transaksi->attributes['list_status_pengerjaan_id'] ?? null;
-                if ($currentStatusId == 2 || $currentStatusId === null) {
-                    $transaksi->attributes['list_status_pengerjaan_id'] = 3;
-                    $transaksi->attributes['status'] = 'Proses';
+                if ($newStatusId == 2) {
+                    $newStatusId = 5;
+                    $transaksi->attributes['status'] = 'Pesanan Selesai';
                 }
+            }
+
+            // Generate UUID if not set
+            if (!$transaksi->id) {
+                $transaksi->id = (string) \Illuminate\Support\Str::uuid();
+            }
+
+            $oldStatusId = null;
+            $listPengerjaan = null;
+
+            if ($transaksi->list_pengerjaan_id) {
+                $listPengerjaan = ListPengerjaan::find($transaksi->list_pengerjaan_id);
+                if ($listPengerjaan) {
+                    $oldStatusId = $listPengerjaan->list_status_pengerjaan_id;
+                }
+            }
+
+            if (!$listPengerjaan || $oldStatusId != $newStatusId) {
+                // Prepare active list_pengerjaan
+                if (!$listPengerjaan) {
+                    $listPengerjaan = new ListPengerjaan();
+                }
+                $listPengerjaan->list_status_pengerjaan_id = $newStatusId;
+                $listPengerjaan->save();
+
+                $transaksi->list_pengerjaan_id = $listPengerjaan->id;
+
+                // Store status change details to log in saved/created event
+                $transaksi->status_changed_from = $oldStatusId;
+                $transaksi->status_changed_to = $newStatusId;
+                $transaksi->pending_status_id = null;
             }
         });
 
-        static::updated(function ($transaksi) {
+        static::saved(function ($transaksi) {
+            if ($transaksi->status_changed_to !== null) {
+                $oldStatusId = $transaksi->status_changed_from;
+                $newStatusId = $transaksi->status_changed_to;
+
+                // Create history log
+                $history = new ListHistoryPengerjaan();
+                $history->transaksi_id = $transaksi->id;
+                $history->status_sebelumnya = $oldStatusId;
+                $history->status_sesudahnya = $newStatusId;
+                $history->operator_id = auth()->id();
+                $history->keterangan = "Status diubah dari " . ($oldStatusId ? ($transaksi->getStatusName($oldStatusId)) : 'N/A') . " ke " . $transaksi->getStatusName($newStatusId);
+                $history->save();
+
+                // Link active list_pengerjaan to this history
+                if ($transaksi->list_pengerjaan_id) {
+                    $listPengerjaan = ListPengerjaan::find($transaksi->list_pengerjaan_id);
+                    if ($listPengerjaan) {
+                        $listPengerjaan->list_history_pengerjaan_id = $history->id;
+                        $listPengerjaan->saveQuietly();
+                    }
+                }
+
+                // Reset variables
+                $transaksi->status_changed_from = null;
+                $transaksi->status_changed_to = null;
+            }
+
             // 1. Kirim email jika pembayaran di-update menjadi paid (Lunas)
             if ($transaksi->wasChanged('payment_status') && $transaksi->payment_status === 'paid') {
                 $email = $transaksi->pelanggan->user->email ?? null;
@@ -88,7 +154,8 @@ class Transaksi extends Model
             }
 
             // 2. Kirim email jika status laundry di-update menjadi 'Selesai'
-            if ($transaksi->wasChanged('status') && $transaksi->status === 'Selesai') {
+            $statusChanged = $transaksi->wasChanged('list_pengerjaan_id') || $transaksi->wasChanged('status');
+            if ($statusChanged && $transaksi->status === 'Selesai') {
                 $email = $transaksi->pelanggan->user->email ?? null;
                 if ($email) {
                     try {
@@ -168,57 +235,81 @@ class Transaksi extends Model
         return $this->hasOne(Timbangan::class, 'transaksi_id');
     }
 
-    public function statusPengerjaan()
+    public function listPengerjaan()
     {
-        return $this->belongsTo(ListStatusPengerjaan::class, 'list_status_pengerjaan_id');
+        return $this->belongsTo(ListPengerjaan::class, 'list_pengerjaan_id');
     }
 
-    public function setStatusAttribute($value)
+    public function statusPengerjaan()
     {
-        $this->attributes['status'] = $value;
-        
-        $mapping = [
-            'baru' => 1,
-            'created' => 1,
-            'proses' => ($this->payment_status === 'paid' ? 3 : 2),
-            'siap ambil' => 4,
-            'siap_ambil' => 4,
-            'antar' => 4,
-            'pengantaran' => 4,
-            'selesai' => 5,
-            'completed' => 5,
-            'kendala' => 6,
-            'batal' => 7,
-            'dibatalkan' => 7,
-            'cancelled' => 7,
-            'jemput' => 8,
-            'penjemputan' => 8,
-            'picked_up' => 8,
-        ];
-        
-        $normalized = strtolower(trim($value ?? ''));
-        if (isset($mapping[$normalized])) {
-            $this->attributes['list_status_pengerjaan_id'] = $mapping[$normalized];
+        return $this->belongsTo(ListStatusPengerjaan::class, 'list_pengerjaan_id'); // Just dummy mapping or fallback
+    }
+
+    public function getListStatusPengerjaanIdAttribute()
+    {
+        if ($this->list_pengerjaan_id) {
+            return $this->listPengerjaan?->list_status_pengerjaan_id;
         }
+        return $this->pending_status_id ?? null;
     }
 
     public function setListStatusPengerjaanIdAttribute($value)
     {
-        $this->attributes['list_status_pengerjaan_id'] = $value;
-        
-        $mapping = [
-            1 => 'Baru',
-            2 => 'Proses',
-            3 => 'Proses',
-            4 => 'Siap Ambil',
-            5 => 'Selesai',
-            6 => 'Kendala',
-            7 => 'Batal',
-            8 => 'Jemput',
-        ];
-        
-        if (isset($mapping[$value])) {
-            $this->attributes['status'] = $mapping[$value];
+        $id = (int)$value;
+        if ($id === 5) {
+            $paymentStatus = strtolower(trim($this->payment_status ?? ''));
+            if ($paymentStatus !== 'paid') {
+                $id = 2;
+            }
         }
+        $this->pending_status_id = $id;
+        $this->attributes['status'] = $this->getStatusName($id);
+    }
+
+    public function getStatusName($id)
+    {
+        $statusNames = [
+            1 => 'Perlu Diproses',
+            2 => 'Menunggu Pembayaran',
+            3 => 'Perlu Dikerjakan',
+            4 => 'Proses Pengerjaan',
+            5 => 'Pesanan Selesai',
+            6 => 'Kendala Pesanan',
+            7 => 'Sedang Dibatalkan',
+            8 => 'Sedang Dijemput',
+        ];
+        return $statusNames[$id] ?? 'Perlu Diproses';
+    }
+
+    public function setStatusAttribute($value)
+    {
+        $normalized = strtolower(trim($value ?? ''));
+        $statusId = 1; // Default
+        
+        if (in_array($normalized, ['baru', 'created', 'perlu diproses', 'perlu_diproses'])) {
+            $statusId = 1;
+        } elseif (in_array($normalized, ['menunggu pembayaran', 'menunggu_pembayaran'])) {
+            $statusId = 2;
+        } elseif (in_array($normalized, ['proses', 'perlu dikerjakan', 'perlu_dikerjakan'])) {
+            $statusId = 3;
+        } elseif (in_array($normalized, ['proses pengerjaan', 'proses_pengerjaan', 'siap ambil', 'siap_ambil', 'antar', 'pengantaran', 'in_progress', 'ready_for_delivery'])) {
+            $statusId = 4;
+        } elseif (in_array($normalized, ['selesai', 'completed', 'pesanan selesai', 'pesanan_selesai'])) {
+            $paymentStatus = strtolower(trim($this->payment_status ?? ''));
+            if ($paymentStatus === 'paid') {
+                $statusId = 5;
+            } else {
+                $statusId = 2;
+            }
+        } elseif (in_array($normalized, ['kendala', 'kendala pesanan', 'kendala_pesanan'])) {
+            $statusId = 6;
+        } elseif (in_array($normalized, ['batal', 'dibatalkan', 'cancelled', 'sedang dibatalkan', 'sedang_dibatalkan'])) {
+            $statusId = 7;
+        } elseif (in_array($normalized, ['jemput', 'penjemputan', 'picked_up', 'sedang dijemput', 'sedang_dijemput'])) {
+            $statusId = 8;
+        }
+
+        $this->pending_status_id = $statusId;
+        $this->attributes['status'] = $this->getStatusName($statusId);
     }
 }

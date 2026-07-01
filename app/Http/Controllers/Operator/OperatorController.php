@@ -81,28 +81,28 @@ class OperatorController extends Controller
         // Tab filter
         switch ($tab) {
             case 'perlu-diproses':
-                $query->where('list_status_pengerjaan_id', 1);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 1));
                 break;
             case 'menunggu-pembayaran':
-                $query->where('list_status_pengerjaan_id', 2);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 2));
                 break;
             case 'perlu-dikerjakan':
-                $query->where('list_status_pengerjaan_id', 3);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 3));
                 break;
             case 'proses-pengerjaan':
-                $query->where('list_status_pengerjaan_id', 4);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 4));
                 break;
             case 'selesai':
-                $query->where('list_status_pengerjaan_id', 5);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 5));
                 break;
             case 'kendala':
-                $query->where('list_status_pengerjaan_id', 6);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 6));
                 break;
             case 'dibatalkan':
-                $query->where('list_status_pengerjaan_id', 7);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7));
                 break;
             case 'sedang-dijemput':
-                $query->where('list_status_pengerjaan_id', 8);
+                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 8));
                 break;
             case 'semua':
             default:
@@ -228,5 +228,36 @@ class OperatorController extends Controller
         $transaksi->save();
 
         return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.');
+    }
+
+    /**
+     * Start working on transaction (update status to 'Proses Pengerjaan').
+     */
+    public function kerjakanTransaksi(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->status = 'proses pengerjaan';
+        $transaksi->save();
+
+        return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan.');
+    }
+
+    /**
+     * Complete transaction pengerjaan (update status to 'selesai').
+     */
+    public function selesaikanPengerjaan(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->status = 'selesai';
+        $transaksi->save();
+
+        $message = 'Pengerjaan pesanan #' . $transaksi->nota . ' telah selesai.';
+        if ($transaksi->list_status_pengerjaan_id == 2) {
+            $message .= ' Menunggu pelunasan pembayaran dari pelanggan.';
+        } else {
+            $message .= ' Pembayaran sudah lunas, status menjadi Selesai.';
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 }

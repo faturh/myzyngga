@@ -11,7 +11,7 @@ class Operator extends Model
      */
     public static function getPerluDiprosesCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 1)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 1))->count();
     }
 
     /**
@@ -19,7 +19,7 @@ class Operator extends Model
      */
     public static function getMenungguPembayaranCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 2)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 2))->count();
     }
 
     /**
@@ -27,7 +27,7 @@ class Operator extends Model
      */
     public static function getPerluDikerjakanCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 3)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 3))->count();
     }
 
     /**
@@ -35,7 +35,7 @@ class Operator extends Model
      */
     public static function getPesananSelesaiCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 5)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 5))->count();
     }
 
     /**
@@ -43,7 +43,7 @@ class Operator extends Model
      */
     public static function getProsesPengerjaanCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 4)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 4))->count();
     }
 
     /**
@@ -51,7 +51,7 @@ class Operator extends Model
      */
     public static function getKendalaPesananCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 6)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 6))->count();
     }
 
     /**
@@ -59,7 +59,7 @@ class Operator extends Model
      */
     public static function getSedangDibatalkanCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 7)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7))->count();
     }
 
     /**
@@ -67,6 +67,6 @@ class Operator extends Model
      */
     public static function getSedangDijemputCount(): int
     {
-        return Transaksi::where('list_status_pengerjaan_id', 8)->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 8))->count();
     }
 }

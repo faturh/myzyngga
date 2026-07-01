@@ -419,6 +419,10 @@ class OrderWebService
 
     private function getSnapToken(Transaksi $order): ?string
     {
+        if ($this->isUnweighed($order)) {
+            return null;
+        }
+
         $unpaidAmount = max(0, (float) $order->total_bayar_akhir - (float) $order->bayar);
         
         if ($unpaidAmount <= 0) {
@@ -454,6 +458,10 @@ class OrderWebService
         $order = $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Order tidak ditemukan.');
+        }
+
+        if ($this->isUnweighed($order)) {
+            throw new \Exception('Pesanan Anda belum ditimbang oleh operator.');
         }
 
         $existingMeta = json_decode($order->payment_metadata, true) ?? [];
@@ -991,6 +999,11 @@ class OrderWebService
         return $order->list_status_pengerjaan_id == 5 || $order->status === 'Selesai' || $order->status === 'Pesanan Selesai';
     }
 
+    private function isUnweighed(Transaksi $order): bool
+    {
+        return in_array($order->status, ['Baru', 'created', 'Perlu Diproses']);
+    }
+
     private function canBeUpgraded(Transaksi $order): bool
     {
         if ($this->isFinished($order)) {
@@ -1212,6 +1225,10 @@ class OrderWebService
 
         if ($this->isFinished($order) || $this->isPaid($order)) {
             throw new \Exception('Metode pembayaran tidak dapat diubah karena pesanan sudah lunas atau selesai.');
+        }
+
+        if ($this->isUnweighed($order)) {
+            throw new \Exception('Pesanan Anda belum ditimbang oleh operator.');
         }
 
         return [

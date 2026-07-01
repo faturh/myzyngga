@@ -26,10 +26,11 @@ class LaporanController extends Controller
             }])
             ->with(['pelanggan:id,nama', 'layananPrioritas'])
             ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
+            ->join('list_pengerjaan as lpen', 'lpen.id', '=', 'transaksi.list_pengerjaan_id')
             ->select('transaksi.nota', DB::raw("DATE(transaksi.waktu) as tanggal"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'transaksi.total_bayar_akhir as pendapatan_laundry', 'c.nama as nama_cabang', 'c.id as cabang_id')
             ->where(DB::raw("DATE(transaksi.waktu)"), '>=', $tanggalAwal)
             ->where(DB::raw("DATE(transaksi.waktu)"), '<=', $tanggalAkhir)
-            ->where('transaksi.list_status_pengerjaan_id', 5)
+            ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.nota', DB::raw("DATE(transaksi.waktu)"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'c.nama', 'c.id')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
@@ -68,10 +69,11 @@ class LaporanController extends Controller
             }])
             ->with(['pelanggan:id,nama', 'layananPrioritas'])
             ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
+            ->join('list_pengerjaan as lpen', 'lpen.id', '=', 'transaksi.list_pengerjaan_id')
             ->select('transaksi.nota', DB::raw("DATE(transaksi.waktu) as tanggal"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'transaksi.total_bayar_akhir as pendapatan_laundry', 'c.nama as nama_cabang', 'c.id as cabang_id')
             ->where(DB::raw("DATE(transaksi.waktu)"), '>=', $tanggalAwal)
             ->where(DB::raw("DATE(transaksi.waktu)"), '<=', $tanggalAkhir)
-            ->where('transaksi.list_status_pengerjaan_id', 5)
+            ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.nota', DB::raw("DATE(transaksi.waktu)"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'c.nama', 'c.id')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
@@ -122,6 +124,7 @@ class LaporanController extends Controller
             }])
             ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
             ->join('pelanggan as p', 'p.id', '=', 'transaksi.pelanggan_id')
+            ->join('list_pengerjaan as lpen', 'lpen.id', '=', 'transaksi.list_pengerjaan_id')
             ->select('transaksi.pelanggan_id', 'p.nama as nama_pelanggan', DB::raw("COUNT(transaksi.id) as total_transaksi"), DB::raw("SUM(transaksi.total_bayar_akhir) as total_pengeluaran"), DB::raw("MONTH(transaksi.waktu) as bulan"), DB::raw("YEAR(transaksi.waktu) as tahun"), 'c.id as cabang_id', 'c.nama as nama_cabang')
             ->where(function ($query) use ($tanggalAwal, $tanggalAkhir) {
                 $query->where(function ($subQuery) use ($tanggalAwal) {
@@ -138,7 +141,7 @@ class LaporanController extends Controller
                         });
                 });
             })
-            ->where('transaksi.list_status_pengerjaan_id', 5)
+            ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw("MONTH(transaksi.waktu)"), DB::raw("YEAR(transaksi.waktu)"), 'c.id', 'c.nama')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
@@ -176,6 +179,7 @@ class LaporanController extends Controller
             }])
             ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
             ->join('pelanggan as p', 'p.id', '=', 'transaksi.pelanggan_id')
+            ->join('list_pengerjaan as lpen', 'lpen.id', '=', 'transaksi.list_pengerjaan_id')
             ->select('transaksi.pelanggan_id', 'p.nama as nama_pelanggan', DB::raw("COUNT(transaksi.id) as total_transaksi"), DB::raw("SUM(transaksi.total_bayar_akhir) as total_pengeluaran"), DB::raw("MONTH(transaksi.waktu) as bulan"), DB::raw("YEAR(transaksi.waktu) as tahun"), 'c.id as cabang_id', 'c.nama as nama_cabang')
             ->where(function ($query) use ($tanggalAwal, $tanggalAkhir) {
                 $query->where(function ($subQuery) use ($tanggalAwal) {
@@ -192,7 +196,7 @@ class LaporanController extends Controller
                         });
                 });
             })
-            ->where('transaksi.list_status_pengerjaan_id', 5)
+            ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw("MONTH(transaksi.waktu)"), DB::raw("YEAR(transaksi.waktu)"), 'c.id', 'c.nama')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();

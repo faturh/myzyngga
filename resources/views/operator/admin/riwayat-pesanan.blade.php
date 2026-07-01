@@ -360,14 +360,6 @@
                             </span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Menunggu Pembayaran
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $menungguPembayaranCount }}
-                            </span>
-                        </a>
-
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Perlu Dikerjakan
@@ -381,6 +373,14 @@
                             Proses Pengerjaan
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'proses-pengerjaan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $prosesPengerjaanCount }}
+                            </span>
+                        </a>
+
+                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search, 'sort' => $sort]) }}" 
+                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                            Menunggu Pembayaran
+                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                                {{ $menungguPembayaranCount }}
                             </span>
                         </a>
 
@@ -480,18 +480,22 @@
                                 <div class="flex flex-wrap justify-between items-center border-b border-slate-50 pb-4 gap-2">
                                     <div class="flex items-center gap-3">
                                         <!-- Status Badge -->
-                                        @if(in_array($item->status, ['Baru', 'created']))
+                                        @if(in_array($item->status, ['Baru', 'created', 'Perlu Diproses']))
                                             <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">Butuh diproses</span>
-                                        @elseif($item->status === 'Proses')
-                                            @if($item->payment_status === 'pending')
-                                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">Menunggu Pembayaran</span>
-                                            @else
-                                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Perlu Dikerjakan</span>
-                                            @endif
-                                        @elseif($item->status === 'Selesai')
-                                            <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">Selesai</span>
-                                        @elseif($item->status === 'Batal')
-                                            <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Dibatalkan</span>
+                                        @elseif($item->status === 'Menunggu Pembayaran')
+                                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">Menunggu Pembayaran</span>
+                                        @elseif($item->status === 'Perlu Dikerjakan')
+                                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">Perlu Dikerjakan</span>
+                                        @elseif($item->status === 'Proses Pengerjaan')
+                                            <span class="text-xs font-bold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">Proses Pengerjaan</span>
+                                        @elseif($item->status === 'Pesanan Selesai' || $item->status === 'Selesai')
+                                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Pesanan Selesai</span>
+                                        @elseif($item->status === 'Sedang Dibatalkan' || $item->status === 'Batal')
+                                            <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Sedang Dibatalkan</span>
+                                        @elseif($item->status === 'Sedang Dijemput')
+                                            <span class="text-xs font-bold text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-lg">Sedang Dijemput</span>
+                                        @elseif($item->status === 'Kendala Pesanan')
+                                            <span class="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg">Kendala Pesanan</span>
                                         @else
                                             <span class="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">{{ $item->status }}</span>
                                         @endif
@@ -550,7 +554,7 @@
                                     </div>
 
                                     <!-- Actions for "Perlu Diproses" (status 'Baru' / 'created') -->
-                                    @if(in_array($item->status, ['Baru', 'created']))
+                                    @if(in_array($item->status, ['Baru', 'created', 'Perlu Diproses']))
                                         <div class="flex items-center gap-3 w-full sm:w-auto">
                                             <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="flex-1 sm:flex-none">
                                                 @csrf
@@ -562,6 +566,103 @@
                                             <a href="{{ route('admin.riwayat-pesanan.proses-form', $item->id) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all block text-center">
                                                  Proses Pesanan
                                              </a>
+                                        </div>
+                                    @elseif($item->status === 'Perlu Dikerjakan')
+                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                            @php
+                                                $phone = $item->pelanggan->telepon ?? '';
+                                                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                                                if (str_starts_with($cleanPhone, '0')) {
+                                                    $cleanPhone = '62' . substr($cleanPhone, 1);
+                                                }
+                                                $waText = "*Zyngga Laundry - Konfirmasi Pengerjaan #{$item->nota}*\n\n"
+                                                        . "Halo *{$item->pelanggan->nama}*,\n"
+                                                        . "Pesanan Anda akan mulai dikerjakan. Berikut rinciannya:\n\n"
+                                                        . "• *Nota*: #{$item->nota}\n"
+                                                        . "• *Layanan*: " . ($item->layananPrioritas->nama ?? 'Reguler') . "\n"
+                                                        . "• *Total*: Rp " . number_format($item->total_bayar_akhir, 0, ',', '.') . "\n"
+                                                        . "• *Status*: Mulai Dikerjakan\n\n"
+                                                        . "Lihat detail pesanan Anda di sini:\n"
+                                                        . url('/order/detail/' . $item->id) . "\n\n"
+                                                        . "Terima kasih!";
+                                            @endphp
+                                            <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
+                                               target="_blank" 
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               translate="no">
+                                                <i data-feather="message-circle" class="w-4 h-4"></i>
+                                                Chat Pelanggan
+                                            </a>
+
+                                            <form action="{{ route('admin.riwayat-pesanan.kerjakan', $item->id) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
+                                                @csrf
+                                                <button type="submit" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                    <i data-feather="play" class="w-4 h-4"></i>
+                                                    Proses Pekerjaan
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($item->status === 'Proses Pengerjaan')
+                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                            @php
+                                                $phone = $item->pelanggan->telepon ?? '';
+                                                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                                                if (str_starts_with($cleanPhone, '0')) {
+                                                    $cleanPhone = '62' . substr($cleanPhone, 1);
+                                                }
+                                                $waText = "*Zyngga Laundry - Progres Pengerjaan #{$item->nota}*\n\n"
+                                                        . "Halo *{$item->pelanggan->nama}*,\n"
+                                                        . "Pesanan Anda sedang diproses. Berikut rinciannya:\n\n"
+                                                        . "• *Nota*: #{$item->nota}\n"
+                                                        . "• *Layanan*: " . ($item->layananPrioritas->nama ?? 'Reguler') . "\n"
+                                                        . "• *Total*: Rp " . number_format($item->total_bayar_akhir, 0, ',', '.') . "\n"
+                                                        . "• *Status*: Sedang Diproses\n\n"
+                                                        . "Lihat detail pesanan Anda di sini:\n"
+                                                        . url('/order/detail/' . $item->id) . "\n\n"
+                                                        . "Terima kasih!";
+                                            @endphp
+                                            <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
+                                               target="_blank" 
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               translate="no">
+                                                <i data-feather="message-circle" class="w-4 h-4"></i>
+                                                Chat Pelanggan
+                                            </a>
+
+                                            <form action="{{ route('admin.riwayat-pesanan.selesaikan', $item->id) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
+                                                @csrf
+                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                    <i data-feather="check" class="w-4 h-4"></i>
+                                                    Selesaikan Pekerjaan
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @elseif($item->status === 'Menunggu Pembayaran')
+                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                            @php
+                                                $phone = $item->pelanggan->telepon ?? '';
+                                                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                                                if (str_starts_with($cleanPhone, '0')) {
+                                                    $cleanPhone = '62' . substr($cleanPhone, 1);
+                                                }
+                                                $waText = "*Zyngga Laundry - Pengerjaan Selesai & Tagihan #{$item->nota}*\n\n"
+                                                        . "Halo *{$item->pelanggan->nama}*,\n"
+                                                        . "Cucian Anda telah selesai dikerjakan! Silakan lakukan pembayaran.\n\n"
+                                                        . "• *Nota*: #{$item->nota}\n"
+                                                        . "• *Layanan*: " . ($item->layananPrioritas->nama ?? 'Reguler') . "\n"
+                                                        . "• *Total Tagihan*: Rp " . number_format($item->total_bayar_akhir, 0, ',', '.') . "\n"
+                                                        . "• *Status*: Menunggu Pembayaran\n\n"
+                                                        . "Silakan lakukan pembayaran langsung di link berikut:\n"
+                                                        . url('/order/detail/' . $item->id) . "\n\n"
+                                                        . "Terima kasih!";
+                                            @endphp
+                                            <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
+                                               target="_blank" 
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               translate="no">
+                                                <i data-feather="message-circle" class="w-4 h-4"></i>
+                                                Chat Pelanggan
+                                            </a>
                                         </div>
                                     @endif
                                 </div>
