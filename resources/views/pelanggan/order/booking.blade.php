@@ -420,7 +420,7 @@
 
         {{-- ── TAMBAHAN ───────────────────────────────────────── --}}
         <x-zyngga-card>
-            <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="window.dispatchEvent(new CustomEvent('open-parfum-modal'))">
+            <div id="parfum-option-container" class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="window.dispatchEvent(new CustomEvent('open-parfum-modal'))">
                 <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Pilihan parfum</x-zyngga-text>
                 <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
                     <x-zyngga-text id="selected-parfum" variant="sm" class="m-0 truncate text-right">Fresh</x-zyngga-text>
@@ -428,7 +428,7 @@
                 </div>
             </div>
 
-            <x-zyngga-divider class=" my-2" />
+            <x-zyngga-divider id="parfum-divider" class=" my-2" />
             <div class="addon-row flex items-center justify-between gap-2 overflow-hidden" onclick="openCatatan()">
                 <x-zyngga-text variant="sm" weight="regular" class="m-0 shrink-0">Catatan</x-zyngga-text>
                 <div class="flex items-center gap-1 min-w-0 flex-1 justify-end max-w-[50%]">
@@ -652,6 +652,10 @@
 
         // 1. Hidden input
         document.getElementById('selected_service_id').value = id;
+        const serviceInput = document.querySelector('input[name="service"]');
+        if (serviceInput) {
+            serviceInput.value = id;
+        }
 
         // 2. Footer label & ETA
         updateFooterServiceLabel(id);

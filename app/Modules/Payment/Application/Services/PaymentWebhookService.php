@@ -117,6 +117,7 @@ class PaymentWebhookService
                 'layanan_asal_id' => $order->layanan_prioritas_id,
                 'layanan_tujuan_id' => $meta['pending_upgrade']['new_service_id'],
                 'biaya_upgrade' => (float) $meta['pending_upgrade']['price_diff'],
+                'metode_bayar' => 'Cashless',
             ]);
 
             unset($meta['pending_upgrade']);
@@ -140,6 +141,29 @@ class PaymentWebhookService
         if ($newBayar >= (float)$finalTotal) {
             $payload['payment_status'] = 'paid';
             $payload['paid_at'] = now();
+
+            $currentStatusId = \Illuminate\Support\Facades\DB::table('list_pengerjaan')
+                ->where('id', $order->list_pengerjaan_id)
+                ->value('list_status_pengerjaan_id');
+
+            if ($currentStatusId == 2) {
+                $listPengerjaan = new \App\Models\ListPengerjaan();
+                $listPengerjaan->list_status_pengerjaan_id = 5;
+                $listPengerjaan->save();
+
+                $payload['list_pengerjaan_id'] = $listPengerjaan->id;
+                $payload['status'] = 'Pesanan Selesai';
+
+                $history = new \App\Models\ListHistoryPengerjaan();
+                $history->transaksi_id = $order->id;
+                $history->status_sebelumnya = 2;
+                $history->status_sesudahnya = 5;
+                $history->keterangan = "Pembayaran lunas via Online. Status otomatis menjadi Selesai.";
+                $history->save();
+
+                $listPengerjaan->list_history_pengerjaan_id = $history->id;
+                $listPengerjaan->saveQuietly();
+            }
         }
 
         $this->orderRepository->updatePaymentInformation($orderId, $payload);

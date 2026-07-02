@@ -18,32 +18,18 @@ class TransaksiSeeder extends Seeder
     {
         // 12 unique combinations to ensure coverage, plus 8 random ones = 20 total
         $conditions = [
-            // Baru
+            // Baru (Butuh diproses)
             ['status' => 'Baru', 'payment_status' => 'pending', 'is_roundtrip' => false],
-            ['status' => 'Baru', 'payment_status' => 'pending', 'is_roundtrip' => true],
-            ['status' => 'Baru', 'payment_status' => 'paid', 'is_roundtrip' => false],
-            ['status' => 'Baru', 'payment_status' => 'paid', 'is_roundtrip' => true],
             
             // Proses
             ['status' => 'Proses', 'payment_status' => 'pending', 'is_roundtrip' => false],
-            ['status' => 'Proses', 'payment_status' => 'pending', 'is_roundtrip' => true],
-            ['status' => 'Proses', 'payment_status' => 'paid', 'is_roundtrip' => false],
-            ['status' => 'Proses', 'payment_status' => 'paid', 'is_roundtrip' => true],
             
-            // Selesai
-            ['status' => 'Selesai', 'payment_status' => 'pending', 'is_roundtrip' => false],
-            ['status' => 'Selesai', 'payment_status' => 'pending', 'is_roundtrip' => true],
+            // Selesai (Paid)
             ['status' => 'Selesai', 'payment_status' => 'paid', 'is_roundtrip' => false],
-            ['status' => 'Selesai', 'payment_status' => 'paid', 'is_roundtrip' => true],
+            
+            // Selesai (Pending)
+            ['status' => 'Selesai', 'payment_status' => 'pending', 'is_roundtrip' => false],
         ];
-
-        // Pad to 20
-        for ($i = count($conditions); $i < 20; $i++) {
-            $conditions[] = $conditions[array_rand($conditions)];
-        }
-
-        // Shuffle to distribute them randomly in time
-        shuffle($conditions);
 
         $pelangganIds = \App\Models\Pelanggan::pluck('id')->toArray();
         if (empty($pelangganIds)) {

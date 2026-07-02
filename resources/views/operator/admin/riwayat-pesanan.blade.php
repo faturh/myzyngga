@@ -49,221 +49,8 @@
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
         
-        <!-- SIDEBAR LEFT (DESKTOP) -->
-        <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-slate-100/90 h-full shrink-0">
-            <!-- Store Profile Head -->
-            <div class="p-6 border-b border-slate-100 flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-10 h-10 rounded-full border border-slate-100 object-cover shadow-sm">
-                    <div>
-                        <h2 class="font-bold text-[#0f172a] text-sm leading-tight">MyZyngga</h2>
-                        <span class="text-[11px] text-slate-400 font-medium">Laundry Operator</span>
-                    </div>
-                </div>
-                
-                <!-- Buka Dropdown -->
-                <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Buka
-                        <i data-feather="chevron-down" class="w-3 h-3 stroke-[2.5]"></i>
-                    </button>
-                    <!-- Dropdown Options -->
-                    <div x-show="open" @click.away="open = false" x-transition x-cloak class="absolute right-0 mt-1.5 w-36 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-50">
-                        <a href="#" class="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Buka (Aktif)
-                        </a>
-                        <a href="#" class="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Istirahat
-                        </a>
-                        <a href="#" class="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-rose-500"></span> Tutup Toko
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Navigation Links -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar px-4 py-6 space-y-7">
-                <!-- Group 1: Tokoku -->
-                <div>
-                    <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        <i data-feather="home" class="w-3.5 h-3.5"></i>
-                        <span>Tokoku</span>
-                    </div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                Beranda
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                Profil Toko
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Group 2: Transaksi -->
-                <div>
-                    <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        <i data-feather="shopping-cart" class="w-3.5 h-3.5"></i>
-                        <span>Pesanan</span>
-                    </div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-50/70 text-blue-600 border border-blue-100/20 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                Riwayat Pesanan
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Group 3: Karyawan -->
-                <div>
-                    <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        <i data-feather="users" class="w-3.5 h-3.5"></i>
-                        <span>Karyawan</span>
-                    </div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                Gaji Karyawan
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('user.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                Tambah Karyawan
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- Sidebar Footer Info -->
-            <div class="p-6 border-t border-slate-100 bg-slate-50/50">
-                <div class="text-[11px] text-slate-400 text-center font-medium">
-                    &copy; 2026 Zyngga Laundry.
-                </div>
-            </div>
-        </aside>
-
-        <!-- SIDEBAR LEFT (MOBILE SLIDE-OVER) -->
-        <div x-show="sidebarOpen" x-cloak class="relative z-50 lg:hidden" role="dialog" aria-modal="true">
-            <!-- Backdrop -->
-            <div x-show="sidebarOpen" 
-                 x-transition:enter="transition-opacity ease-linear duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition-opacity ease-linear duration-300"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-
-            <div class="fixed inset-0 flex">
-                <!-- Sidebar container -->
-                <div x-show="sidebarOpen" 
-                     x-transition:enter="transition ease-in-out duration-300 transform"
-                     x-transition:enter-start="-translate-x-full"
-                     x-transition:enter-end="translate-x-0"
-                     x-transition:leave="transition ease-in-out duration-300 transform"
-                     x-transition:leave-start="translate-x-0"
-                     x-transition:leave-end="-translate-x-full"
-                     @click.away="sidebarOpen = false" 
-                     class="relative mr-16 flex w-full max-w-xs flex-1 flex-col bg-white">
-                    
-                    <!-- Close Button -->
-                    <div class="absolute right-[-48px] top-3">
-                        <button @click="sidebarOpen = false" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 focus:outline-none">
-                            <i data-feather="x" class="w-6 h-6"></i>
-                        </button>
-                    </div>
-
-                    <!-- Store Profile Head -->
-                    <div class="p-6 border-b border-slate-100 flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3">
-                            <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-10 h-10 rounded-full border border-slate-100 object-cover shadow-sm">
-                            <div>
-                                <h2 class="font-bold text-[#0f172a] text-sm leading-tight">MyZyngga</h2>
-                                <span class="text-[11px] text-slate-400 font-medium">Laundry Operator</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Buka Badge -->
-                        <span class="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Buka
-                        </span>
-                    </div>
-
-                    <!-- Navigation Links -->
-                    <div class="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-                        <div>
-                            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                <i data-feather="home" class="w-3.5 h-3.5"></i>
-                                <span>Tokoku</span>
-                            </div>
-                            <ul class="space-y-1">
-                                <li>
-                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                        Beranda
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                        Profil Toko
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                <i data-feather="shopping-cart" class="w-3.5 h-3.5"></i>
-                                <span>Pesanan</span>
-                            </div>
-                            <ul class="space-y-1">
-                                <li>
-                                    <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-50/70 text-blue-600 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                        Riwayat Pesanan
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                <i data-feather="users" class="w-3.5 h-3.5"></i>
-                                <span>Karyawan</span>
-                            </div>
-                            <ul class="space-y-1">
-                                <li>
-                                    <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                        Gaji Karyawan
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('user.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                        Tambah Karyawan
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- SIDEBAR (Desktop + Mobile) -->
+        @include('operator.partials.sidebar')
 
         <!-- MAIN WINDOW WRAPPER -->
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
@@ -344,17 +131,23 @@
                             <h1 class="text-2xl font-extrabold text-[#0f172a] tracking-tight">Riwayat Pesanan</h1>
                             <p class="text-xs font-semibold text-slate-400 mt-1">Kelola dan pantau status transaksi laundry tokomu.</p>
                         </div>
-                        <button class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all">
-                            <i data-feather="download" class="w-3.5 h-3.5"></i>
-                            Unduh Riwayat Pesanan
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('admin.riwayat-pesanan.tambah-form') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                                <i data-feather="plus" class="w-4 h-4"></i>
+                                Tambah Pesanan Manual
+                            </a>
+                            <button class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all">
+                                <i data-feather="download" class="w-3.5 h-3.5"></i>
+                                Unduh Riwayat Pesanan
+                            </button>
+                        </div>
                     </div>
 
                     <!-- TABS NAVIGATION -->
                     <div class="flex border-b border-slate-100 overflow-x-auto scrollbar-none gap-8 text-xs font-bold">
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-diproses' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Perlu Diproses
+                            Menunggu Diproses
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-diproses' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $perluDiprosesCount }}
                             </span>
@@ -362,7 +155,7 @@
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Perlu Dikerjakan
+                            Sedang Diproses
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-dikerjakan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $perluDikerjakanCount }}
                             </span>
@@ -392,14 +185,6 @@
                             </span>
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'kendala' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Kendala Pesanan
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'kendala' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $kendalaPesananCount }}
-                            </span>
-                        </a>
-
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Sedang Dibatalkan
@@ -414,11 +199,6 @@
                             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'sedang-dijemput' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $sedangDijemputCount }}
                             </span>
-                        </a>
-
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'semua', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            Semua Pesanan
                         </a>
                     </div>
 
@@ -477,18 +257,22 @@
                             <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-5">
                                 
                                 <!-- Header Card -->
+                                @php
+                                    $meta = json_decode($item->payment_metadata, true) ?? [];
+                                    $hasPendingUpgrade = isset($meta['pending_upgrade']);
+                                @endphp
                                 <div class="flex flex-wrap justify-between items-center border-b border-slate-50 pb-4 gap-2">
                                     <div class="flex items-center gap-3">
                                         <!-- Status Badge -->
                                         @if(in_array($item->status, ['Baru', 'created', 'Perlu Diproses']))
                                             <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">Butuh diproses</span>
-                                        @elseif($item->status === 'Menunggu Pembayaran')
+                                        @elseif($item->status === 'Menunggu Pembayaran' || (in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status !== 'paid'))
                                             <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">Menunggu Pembayaran</span>
                                         @elseif($item->status === 'Perlu Dikerjakan')
                                             <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">Perlu Dikerjakan</span>
                                         @elseif($item->status === 'Proses Pengerjaan')
                                             <span class="text-xs font-bold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">Proses Pengerjaan</span>
-                                        @elseif($item->status === 'Pesanan Selesai' || $item->status === 'Selesai')
+                                        @elseif(in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status === 'paid')
                                             <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Pesanan Selesai</span>
                                         @elseif($item->status === 'Sedang Dibatalkan' || $item->status === 'Batal')
                                             <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Sedang Dibatalkan</span>
@@ -500,7 +284,17 @@
                                             <span class="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">{{ $item->status }}</span>
                                         @endif
 
+                                        @if($hasPendingUpgrade)
+                                            <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 animate-pulse flex items-center gap-1">
+                                                <i data-feather="bell" class="w-3.5 h-3.5"></i>
+                                                Pending Upgrade
+                                            </span>
+                                        @endif
+
                                         <span class="text-xs font-bold text-blue-600 font-mono">{{ $item->nota }}</span>
+                                        @if(strtolower($item->layananPrioritas->nama ?? '') === 'satuan' || $item->fk_tambahan !== null)
+                                            <span class="text-[10px] font-black tracking-wider text-pink-700 bg-pink-100 border border-pink-200 px-2 py-0.5 rounded-md animate-pulse">SATUAN</span>
+                                        @endif
                                     </div>
                                     <div class="text-[11px] font-semibold text-slate-400">
                                         Tanggal Transaksi: <span class="text-slate-600">{{ $item->waktu->format('d M Y H:i:s') }}</span>
@@ -594,13 +388,17 @@
                                                 Chat Pelanggan
                                             </a>
 
-                                            <form action="{{ route('admin.riwayat-pesanan.kerjakan', $item->id) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
-                                                @csrf
-                                                <button type="submit" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
-                                                    <i data-feather="play" class="w-4 h-4"></i>
-                                                    Proses Pekerjaan
-                                                </button>
-                                            </form>
+                                            @if($item->canBeUpgraded() || $hasPendingUpgrade)
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', $item->id) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                                    <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
+                                                    Detail & Upgrade
+                                                </a>
+                                            @endif
+
+                                            <a href="{{ route('admin.riwayat-pesanan.kerjakan-form', $item->id) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <i data-feather="play" class="w-4 h-4"></i>
+                                                Proses Pekerjaan
+                                            </a>
                                         </div>
                                     @elseif($item->status === 'Proses Pengerjaan')
                                         <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -629,6 +427,13 @@
                                                 Chat Pelanggan
                                             </a>
 
+                                            @if($item->canBeUpgraded() || $hasPendingUpgrade)
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', $item->id) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                                    <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
+                                                    Detail & Upgrade
+                                                </a>
+                                            @endif
+
                                             <form action="{{ route('admin.riwayat-pesanan.selesaikan', $item->id) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
                                                 @csrf
                                                 <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
@@ -637,7 +442,7 @@
                                                 </button>
                                             </form>
                                         </div>
-                                    @elseif($item->status === 'Menunggu Pembayaran')
+                                    @elseif($item->status === 'Menunggu Pembayaran' || (in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status !== 'paid'))
                                         <div class="flex items-center gap-3 w-full sm:w-auto">
                                             @php
                                                 $phone = $item->pelanggan->telepon ?? '';
@@ -663,6 +468,13 @@
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
+
+                                            @if($item->canBeUpgraded() || $hasPendingUpgrade)
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', $item->id) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                                    <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
+                                                    Detail & Upgrade
+                                                </a>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>

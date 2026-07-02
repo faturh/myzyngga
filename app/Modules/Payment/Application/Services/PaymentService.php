@@ -45,13 +45,40 @@ class PaymentService
                 'notes' => $payload['notes'] ?? null,
             ]);
 
-            $updatedOrder = $this->orderRepository->updatePaymentInformation($orderId, [
+            $orderPayload = [
                 'jenis_pembayaran' => $payload['method'],
                 'payment_status' => 'paid',
                 'paid_at' => $verifiedAt,
                 'bayar' => $amount,
                 'kembalian' => max(0, $amount - (float) $order->total_bayar_akhir),
-            ]);
+            ];
+
+            // If the transaction is currently in "Menunggu Pembayaran" (list_status_pengerjaan_id = 2)
+            $currentStatusId = DB::table('list_pengerjaan')
+                ->where('id', $order->list_pengerjaan_id)
+                ->value('list_status_pengerjaan_id');
+
+            if ($currentStatusId == 2) {
+                $listPengerjaan = new \App\Models\ListPengerjaan();
+                $listPengerjaan->list_status_pengerjaan_id = 5;
+                $listPengerjaan->save();
+
+                $orderPayload['list_pengerjaan_id'] = $listPengerjaan->id;
+                $orderPayload['status'] = 'Pesanan Selesai';
+
+                $history = new \App\Models\ListHistoryPengerjaan();
+                $history->transaksi_id = $order->id;
+                $history->status_sebelumnya = 2;
+                $history->status_sesudahnya = 5;
+                $history->operator_id = $verifier->id;
+                $history->keterangan = "Pembayaran diverifikasi oleh operator. Status menjadi Selesai.";
+                $history->save();
+
+                $listPengerjaan->list_history_pengerjaan_id = $history->id;
+                $listPengerjaan->saveQuietly();
+            }
+
+            $updatedOrder = $this->orderRepository->updatePaymentInformation($orderId, $orderPayload);
 
             if (! $updatedOrder) {
                 throw new DomainException('Order tidak ditemukan.', 404);
