@@ -20,13 +20,8 @@ class PermissionSeeder extends Seeder
         $roles = [
             'admin',
             'customer',
-            'lurah',
-            'pic',
-            'rw',
-            'manajer_laundry',
-            'pegawai_laundry',
-            'gamis',
-            'guest'
+            'operator',
+            'pegawai_laundry'
         ];
 
         foreach ($roles as $role) {

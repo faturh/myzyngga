@@ -39,22 +39,67 @@ class TimbanganService
             throw new DomainException('Hanya pesanan berstatus baru yang dapat diproses.', 422);
         }
 
+        $tipeLayanan = $data['tipe_layanan'] ?? 'kiloan';
+
+        $priorityCharge = (double) ($transaksi->layananPrioritas->harga ?? 0);
+        $totalSatuanPrice = 0;
+        $satuanItemsData = [];
+
+        if (!empty($data['satuan_items']) && is_array($data['satuan_items'])) {
+            foreach ($data['satuan_items'] as $item) {
+                if (!empty($item['kategori_pakaian_satuan_id']) && isset($item['jumlah']) && $item['jumlah'] > 0) {
+                    $kat = \App\Models\KategoriPakaianSatuan::find($item['kategori_pakaian_satuan_id']);
+                    if ($kat) {
+                        $basePrice = (double) $kat->harga;
+                        $hargaAkhir = ($basePrice + $priorityCharge) * (int) $item['jumlah'];
+                        $totalSatuanPrice += $hargaAkhir;
+                        $satuanItemsData[] = [
+                            'kategori_pakaian_satuan_id' => $kat->id,
+                            'jumlah' => (int) $item['jumlah'],
+                            'harga_akhir' => $hargaAkhir
+                        ];
+                    }
+                }
+            }
+        }
+
         $actualWeight = (double) ($data['actual_weight'] ?? 0);
         $minimumWeight = (double) ($data['minimum_weight'] ?? 3.0);
         $pricePerKg = (double) ($data['price_per_kg'] ?? 0);
-
-        // Validation
-        if ($actualWeight <= 0) {
-            throw new DomainException('Berat timbangan harus lebih besar dari 0 kg.', 422);
-        }
 
         if ($pricePerKg < 0) {
             throw new DomainException('Harga per kg tidak boleh bernilai negatif.', 422);
         }
 
-        // Formula calculations
-        $chargedWeight = max($minimumWeight, $actualWeight);
-        $totalPrice = $chargedWeight * $pricePerKg;
+        if ($actualWeight > 0) {
+            $chargedWeight = max($minimumWeight, $actualWeight);
+            $totalKiloanPrice = $chargedWeight * $pricePerKg;
+        } else {
+            $chargedWeight = 0;
+            $totalKiloanPrice = 0;
+        }
+
+        $totalPrice = $totalKiloanPrice + $totalSatuanPrice;
+
+        // Save Satuan items in tambahan table if any
+        if (!empty($satuanItemsData)) {
+            $nextTambahanId = (\Illuminate\Support\Facades\DB::table('tambahan')->max('tambahan_id') ?? 0) + 1;
+            
+            foreach ($satuanItemsData as $itemData) {
+                \Illuminate\Support\Facades\DB::table('tambahan')->insert([
+                    'tambahan_id' => $nextTambahanId,
+                    'kategori_pakaian_satuan_id' => $itemData['kategori_pakaian_satuan_id'],
+                    'jumlah' => $itemData['jumlah'],
+                    'harga_akhir' => $itemData['harga_akhir'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+            
+            // Set transaction fk_tambahan
+            $transaksi->fk_tambahan = $nextTambahanId;
+            $transaksi->save();
+        }
 
         $prosesData = [
             'transaksi_id' => $transaksi->id,
@@ -66,25 +111,8 @@ class TimbanganService
             'total_price' => $totalPrice,
         ];
 
-        $itemsData = [];
-        if (!empty($data['items']) && is_array($data['items'])) {
-            foreach ($data['items'] as $item) {
-                if (!empty($item['nama_item']) && isset($item['qty'])) {
-                    // Resolve nama_item to jenis_pakaian_id
-                    $jenisPakaian = JenisPakaian::firstOrCreate([
-                        'nama' => trim($item['nama_item'])
-                    ]);
-
-                    $itemsData[] = [
-                        'jenis_pakaian_id' => $jenisPakaian->id,
-                        'qty' => (int) $item['qty'],
-                    ];
-                }
-            }
-        }
-
-        // Store timbangan records
-        $proses = $this->repository->storeTimbangan($prosesData, $itemsData);
+        // Store timbangan records (list_pakaian_timbangan is empty for now as it will be filled in pekerjaan stage)
+        $proses = $this->repository->storeTimbangan($prosesData, []);
 
         // Update transaction status and total bayar akhir
         $this->repository->updateTransaksiStatusAndTotal($transaksi->id, 'Proses', $totalPrice);

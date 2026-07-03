@@ -15,6 +15,8 @@ use App\Modules\Transaksi\Domain\Repositories\TransaksiDashboardRepositoryInterf
 use App\Modules\Transaksi\Infrastructure\Persistence\EloquentTransaksiDashboardRepository;
 use App\Modules\Transaksi\Domain\Repositories\TimbanganRepositoryInterface;
 use App\Modules\Transaksi\Infrastructure\Persistence\EloquentTimbanganRepository;
+use App\Modules\Transaksi\Domain\Repositories\KeuanganRepositoryInterface;
+use App\Modules\Transaksi\Infrastructure\Persistence\EloquentKeuanganRepository;
 use App\Models\Transaksi;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AdminRepositoryInterface::class, EloquentAdminRepository::class);
         $this->app->bind(TransaksiDashboardRepositoryInterface::class, EloquentTransaksiDashboardRepository::class);
         $this->app->bind(TimbanganRepositoryInterface::class, EloquentTimbanganRepository::class);
+        $this->app->bind(KeuanganRepositoryInterface::class, EloquentKeuanganRepository::class);
     }
 
     /**

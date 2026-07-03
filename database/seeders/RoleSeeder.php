@@ -47,10 +47,10 @@ class RoleSeeder extends Seeder
                 'slug' => 'budi-gunawan',
                 'email' => 'budi@zyngga.com',
                 'password' => Hash::make('password'),
-                'role' => 'manajer_laundry',
+                'role' => 'operator',
                 'phone' => '08123456780',
                 'cabang_id' => 1,
-                'gaji' => 5000000,
+                'gaji' => 0,
             ],
             [
                 'username' => 'siti',
@@ -61,29 +61,7 @@ class RoleSeeder extends Seeder
                 'role' => 'pegawai_laundry',
                 'phone' => '08123456781',
                 'cabang_id' => 1,
-                'gaji' => 3500000,
-            ],
-            [
-                'username' => 'andi',
-                'name' => 'Andi Wijaya',
-                'slug' => 'andi-wijaya',
-                'email' => 'andi@zyngga.com',
-                'password' => Hash::make('password'),
-                'role' => 'pegawai_laundry',
-                'phone' => '08123456782',
-                'cabang_id' => 1,
-                'gaji' => 3200000,
-            ],
-            [
-                'username' => 'joko',
-                'name' => 'Joko Widodo',
-                'slug' => 'joko-widodo',
-                'email' => 'joko@zyngga.com',
-                'password' => Hash::make('password'),
-                'role' => 'gamis',
-                'phone' => '08123456783',
-                'cabang_id' => 1,
-                'gaji' => 2500000,
+                'gaji' => 3500, // Rp 3.500 per kg
             ],
         ];
 
