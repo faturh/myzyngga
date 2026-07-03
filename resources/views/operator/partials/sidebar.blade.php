@@ -47,6 +47,12 @@
                         Beranda
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('admin.keuangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('admin.keuangan') ? 'font-bold bg-blue-50/70 text-blue-600' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('admin.keuangan') ? 'bg-blue-500' : 'bg-transparent' }}"></span>
+                        Keuangan Toko
+                    </a>
+                </li>
             </ul>
         </div>
 
@@ -170,6 +176,12 @@
                             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('admin.dashboard') ? 'font-bold bg-blue-50/70 text-blue-600' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
                                 <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500' : 'bg-transparent' }}"></span>
                                 Beranda
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.keuangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('admin.keuangan') ? 'font-bold bg-blue-50/70 text-blue-600' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('admin.keuangan') ? 'bg-blue-500' : 'bg-transparent' }}"></span>
+                                Keuangan Toko
                             </a>
                         </li>
                     </ul>

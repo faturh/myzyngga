@@ -29,6 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/riwayat-pesanan/{id}/selesaikan', [OperatorController::class, 'selesaikanPengerjaan'])->name('admin.riwayat-pesanan.selesaikan');
         Route::get('/admin/gaji-karyawan', [OperatorController::class, 'gajiKaryawan'])->name('admin.gaji-karyawan');
         Route::get('/admin/gaji-karyawan/download', [OperatorController::class, 'downloadGajiKaryawan'])->name('admin.gaji-karyawan.download');
+        
+        Route::get('/admin/keuangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'index'])->name('admin.keuangan');
+        Route::post('/admin/keuangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'store'])->name('admin.keuangan.store');
+        Route::delete('/admin/keuangan/{id}', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
     });
 
     Route::prefix('user')->group(function () {

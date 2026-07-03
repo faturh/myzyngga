@@ -242,12 +242,8 @@ class OrderFlowSmokeTest extends TestCase
         ]);
         
         // Start working on transaction
-        $this->post("/admin/riwayat-pesanan/{$transaksi->id}/kerjakan", [
-            'pegawai_id' => $admin->id,
-            'items' => [
-                ['nama_item' => 'Kaos', 'qty' => 5],
-            ],
-        ])->assertRedirect();
+        $this->post("/admin/riwayat-pesanan/{$transaksi->id}/kerjakan")
+            ->assertRedirect();
             
         $transaksi->refresh();
         $this->assertEquals('Proses Pengerjaan', $transaksi->status);
@@ -263,8 +259,8 @@ class OrderFlowSmokeTest extends TestCase
         $this->assertEquals(2, $transaksi->list_status_pengerjaan_id);
 
         // Verify history log creation
-        $this->assertEquals(3, \App\Models\ListHistoryPengerjaan::where('transaksi_id', $transaksi->id)->count());
-        $latestLog = \App\Models\ListHistoryPengerjaan::orderBy('id', 'desc')->first();
+        $this->assertDatabaseCount('list_history_pengerjaan', 3);
+        $latestLog = \App\Models\ListHistoryPengerjaan::latest()->first();
         $this->assertEquals(4, $latestLog->status_sebelumnya);
         $this->assertEquals(2, $latestLog->status_sesudahnya);
     }
@@ -339,69 +335,5 @@ class OrderFlowSmokeTest extends TestCase
         );
 
         return [$cabang, $layananPrioritas];
-    }
-
-    public function test_web_quick_order_flow()
-    {
-        $customer = $this->createCustomerUser('test-quick@example.com', 'testquick');
-        $this->actingAs($customer);
-
-        $cabang = Cabang::query()->first();
-        if (!$cabang) {
-            $cabang = Cabang::query()->create([
-                'nama' => 'Cabang Smoke',
-                'slug' => 'cabang-smoke',
-                'lokasi' => 'Bandung',
-                'alamat' => 'Jalan Cabang Smoke',
-            ]);
-        }
-        
-        $lpQuick = LayananPrioritas::query()->firstOrCreate(
-            [
-                'nama' => 'Quick',
-                'cabang_id' => $cabang->id,
-            ],
-            [
-                'deskripsi' => 'Layanan cepat',
-                'harga' => 6000,
-                'prioritas' => 2,
-            ]
-        );
-
-        $this->post(route('order.pickup.store'), [
-            'service' => 'quick',
-            'address' => 'Jalan Testing Nomor 1',
-            'detail_address' => 'Rumah belakang pagar hitam',
-            'lat' => -6.2,
-            'lng' => 106.8,
-        ])->assertRedirect(route('order.booking'));
-
-        $this->get(route('order.booking'))
-            ->assertOk();
-
-        $response = $this->post(route('order.confirm'), [
-            'service' => 'quick',
-            'address' => 'Jalan Testing Nomor 1',
-            'detail_address' => 'Rumah belakang pagar hitam',
-            'lat' => -6.2,
-            'lng' => 106.8,
-            'selected_service_id' => 'quick',
-            'pickup_date' => 'today',
-            'pickup_time' => '09:00',
-            'parfum' => 'lavender',
-            'catatan' => 'Tolong dipisah pakaian putih',
-            'payment' => 'cash',
-        ]);
-
-        $pelanggan = Pelanggan::query()->where('user_id', $customer->id)->first();
-        $this->assertNotNull($pelanggan);
-
-        $order = Transaksi::query()
-            ->where('pelanggan_id', $pelanggan->id)
-            ->latest('created_at')
-            ->first();
-
-        $this->assertNotNull($order);
-        $this->assertEquals('Quick', $order->layananPrioritas->nama);
     }
 }

@@ -212,31 +212,25 @@
                                 <h1 class="text-xl font-extrabold text-[#0f172a] leading-none">Keuangan Toko</h1>
                             </div>
                             
-                            <!-- 2 Columns Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 1 Column Grid -->
+                            <div class="grid grid-cols-1 gap-4">
                                 
-                                <!-- Card 1: Transaksi Berjalan -->
-                                <div class="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                                        <i data-feather="trending-up" class="w-6 h-6"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <span class="text-xs font-bold text-slate-400 block">Transaksi Berjalan</span>
-                                        <h3 class="text-3xl font-black text-[#0f172a] mt-1">Rp 126.280</h3>
-                                    </div>
-                                </div>
-
-                                <!-- Card 2: Saldo Toko -->
-                                <div class="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                        <i data-feather="credit-card" class="w-6 h-6"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <span class="text-xs font-bold text-slate-400 block">Saldo Toko</span>
-                                        <h3 class="text-3xl font-black text-[#0f172a] mt-1">Rp 654.456</h3>
+                                <!-- Card: Saldo Toko -->
+                                <div class="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                            <i data-feather="credit-card" class="w-6 h-6"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <span class="text-xs font-bold text-slate-400 block">Saldo Toko</span>
+                                            <h3 class="text-3xl font-black text-[#0f172a] mt-1">Rp {{ number_format($saldoToko, 0, ',', '.') }}</h3>
+                                        </div>
                                     </div>
                                     <div class="shrink-0">
-                                        <a href="#" class="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">Lihat Detail</a>
+                                        <a href="{{ route('admin.keuangan') }}" class="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 bg-blue-50 px-3 py-2 rounded-xl transition-all">
+                                            <span>Lihat Detail</span>
+                                            <i data-feather="arrow-right" class="w-3.5 h-3.5"></i>
+                                        </a>
                                     </div>
                                 </div>
 

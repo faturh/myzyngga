@@ -8,11 +8,13 @@ use App\Models\Transaksi;
 use Illuminate\Http\Request;
 
 use App\Modules\Transaksi\Application\Services\TimbanganService;
+use App\Modules\Transaksi\Application\Services\KeuanganService;
 
 class OperatorController extends Controller
 {
     public function __construct(
-        private readonly TimbanganService $prosesService
+        private readonly TimbanganService $prosesService,
+        private readonly KeuanganService $keuanganService
     ) {}
 
     /**
@@ -25,11 +27,17 @@ class OperatorController extends Controller
         $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
         $pesananSelesaiCount = Operator::getPesananSelesaiCount();
 
+        $user = auth()->user();
+        $cabangId = $user->hasRole('manajer_laundry') ? $user->cabang_id : null;
+
+        $saldoToko = $this->keuanganService->getStoreBalance($cabangId);
+
         return view('operator.admin.dashboard', compact(
             'perluDiprosesCount',
             'menungguPembayaranCount',
             'perluDikerjakanCount',
-            'pesananSelesaiCount'
+            'pesananSelesaiCount',
+            'saldoToko'
         ));
     }
 

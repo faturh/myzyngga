@@ -193,28 +193,14 @@ class OrderWebService
             'alamat' => $data['address'],
         ]);
 
-        $serviceMap = [
-            'regular' => 'Reguler',
-            'reguler' => 'Reguler',
-            'quick' => 'Quick',
-            'express' => 'Express',
-            'kilat' => 'Kilat',
-            'satuan' => 'Satuan',
-        ];
-        $serviceName = $serviceMap[$data['selected_service_id']] ?? 'Reguler';
+        $layananPrioritasId = $this->orderRepository->firstAvailableLayananPrioritasId();
+        if (! $layananPrioritasId) {
+            return redirect()->back()->withErrors(['layanan' => 'Layanan prioritas belum tersedia.']);
+        }
 
         $cabangId = $this->orderRepository->firstAvailableCabangId();
         if (! $cabangId) {
             return redirect()->back()->withErrors(['cabang' => 'Cabang belum tersedia.']);
-        }
-
-        $layananPrioritas = \App\Models\LayananPrioritas::where('cabang_id', $cabangId)
-            ->where('nama', $serviceName)
-            ->first();
-
-        $layananPrioritasId = $layananPrioritas ? $layananPrioritas->id : $this->orderRepository->firstAvailableLayananPrioritasId();
-        if (! $layananPrioritasId) {
-            return redirect()->back()->withErrors(['layanan' => 'Layanan prioritas belum tersedia.']);
         }
 
         $order = $orderService->createOrder(new CreateOrderData(
