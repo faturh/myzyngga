@@ -15,6 +15,7 @@ class UpgradeLayanan extends Model
         'layanan_asal_id',
         'layanan_tujuan_id',
         'biaya_upgrade',
+        'metode_bayar',
     ];
 
     public function transaksi()

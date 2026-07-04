@@ -40,58 +40,8 @@
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
         
-        <!-- SIDEBAR LEFT (DESKTOP) -->
-        <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-slate-100/90 h-full shrink-0">
-            <!-- Store Profile Head -->
-            <div class="p-6 border-b border-slate-100 flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-10 h-10 rounded-full border border-slate-100 object-cover shadow-sm">
-                    <div>
-                        <h2 class="font-bold text-[#0f172a] text-sm leading-tight">MyZyngga</h2>
-                        <span class="text-[11px] text-slate-400 font-medium">Laundry Operator</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Navigation Links -->
-            <div class="flex-1 overflow-y-auto px-4 py-6 space-y-7">
-                <div>
-                    <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        <i data-feather="home" class="w-3.5 h-3.5"></i>
-                        <span>Tokoku</span>
-                    </div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                                Beranda
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div>
-                    <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        <i data-feather="shopping-cart" class="w-3.5 h-3.5"></i>
-                        <span>Pesanan</span>
-                    </div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-50/70 text-blue-600 border border-blue-100/20 transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                Riwayat Pesanan
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="p-6 border-t border-slate-100 bg-slate-50/50">
-                <div class="text-[11px] text-slate-400 text-center font-medium">
-                    &copy; 2026 Zyngga Laundry.
-                </div>
-            </div>
-        </aside>
+        <!-- SIDEBAR (Desktop + Mobile) -->
+        @include('operator.partials.sidebar')
 
         <!-- MAIN WINDOW WRAPPER -->
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
@@ -156,39 +106,12 @@
                             default => 4850,
                         };
 
-                        $oldItems = old('items');
-                        $initialItems = [];
-                        if (!empty($oldItems) && is_array($oldItems)) {
-                            foreach ($oldItems as $oldItem) {
-                                if (empty($oldItem['nama_item'])) continue;
-                                $isPredefined = $itemsAvailable->contains('nama', $oldItem['nama_item']);
-                                $initialItems[] = [
-                                    'nama_item' => $oldItem['nama_item'],
-                                    'qty' => (int) ($oldItem['qty'] ?? 1),
-                                    'checked' => true,
-                                    'predefined' => $isPredefined,
-                                ];
-                            }
-                            foreach ($itemsAvailable as $item) {
-                                $alreadyIncluded = collect($initialItems)->contains('nama_item', $item->nama);
-                                if (!$alreadyIncluded) {
-                                    $initialItems[] = [
-                                        'nama_item' => $item->nama,
-                                        'qty' => 1,
-                                        'checked' => false,
-                                        'predefined' => true,
-                                    ];
-                                }
-                            }
-                        } else {
-                            foreach ($itemsAvailable as $item) {
-                                $initialItems[] = [
-                                    'nama_item' => $item->nama,
-                                    'qty' => 1,
-                                    'checked' => false,
-                                    'predefined' => true,
-                                ];
-                            }
+                        $existingTimbangan = $transaksi->timbangan;
+                        $existingItems = collect();
+                        if ($transaksi->fk_tambahan) {
+                            $existingItems = \Illuminate\Support\Facades\DB::table('tambahan')
+                                ->where('tambahan_id', $transaksi->fk_tambahan)
+                                ->get();
                         }
                     @endphp
 
@@ -230,93 +153,197 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- UPGRADE LAYANAN SECTIONS -->
+                            
+                            {{-- 1. Pending Upgrade dari Pelanggan --}}
+                            @if(isset($pendingUpgrade) && $pendingUpgrade)
+                            <div class="bg-amber-50/50 border border-amber-200/60 rounded-2xl shadow-sm p-6 space-y-4">
+                                <h3 class="font-bold text-amber-800 text-sm flex items-center gap-2">
+                                    <i data-feather="bell" class="w-4 h-4 animate-bounce text-amber-600"></i>
+                                    Permintaan Upgrade Layanan
+                                </h3>
+                                <div class="text-xs space-y-3 font-semibold text-amber-700">
+                                    <div>
+                                        <p class="text-[10px] text-amber-600/70 uppercase">Layanan Baru</p>
+                                        <p class="text-amber-900 text-sm mt-0.5 capitalize">{{ $pendingUpgrade['target_service_name'] }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-amber-600/70 uppercase">Biaya Selisih (Tunai)</p>
+                                        <p class="text-amber-900 text-base font-extrabold mt-0.5">Rp {{ number_format($pendingUpgrade['price_diff'], 0, ',', '.') }}</p>
+                                    </div>
+                                </div>
+                                <form action="{{ route('admin.riwayat-pesanan.konfirmasi-upgrade', $transaksi->id) }}" method="POST" class="pt-2">
+                                    @csrf
+                                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                        <i data-feather="check-circle" class="w-4 h-4"></i>
+                                        Konfirmasi Upgrade & Terima Cash
+                                    </button>
+                                </form>
+                            </div>
+                            @endif
+
+                            {{-- 2. Inisiasi Upgrade Langsung oleh Operator --}}
+                            @if($transaksi->canBeUpgraded() && $availableUpgrades->isNotEmpty())
+                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
+                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
+                                    <i data-feather="arrow-up-circle" class="w-4 h-4 text-emerald-500"></i>
+                                    Upgrade Layanan Langsung
+                                </h3>
+                                <form action="{{ route('admin.riwayat-pesanan.inisiasi-upgrade', $transaksi->id) }}" method="POST" class="space-y-4">
+                                    @csrf
+                                    <div>
+                                        <label for="new_service_id" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Pilih Layanan Lebih Tinggi</label>
+                                        <select name="new_service_id" id="new_service_id" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                            <option value="">-- Pilih Layanan --</option>
+                                            @foreach($availableUpgrades as $upgrade)
+                                                <option value="{{ $upgrade->id }}">
+                                                    {{ $upgrade->nama }} (+Rp {{ number_format($upgrade->harga - ($transaksi->layananPrioritas->harga ?? 0), 0, ',', '.') }}/kg)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                        <i data-feather="zap" class="w-4 h-4"></i>
+                                        Proses Upgrade Tunai
+                                    </button>
+                                </form>
+                            </div>
+                            @endif
+
+                            {{-- 3. Riwayat Upgrade Layanan --}}
+                            @if(isset($upgradeHistory) && $upgradeHistory->isNotEmpty())
+                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
+                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
+                                    <i data-feather="clock" class="w-4 h-4 text-slate-500"></i>
+                                    Riwayat Upgrade Layanan
+                                </h3>
+                                <div class="space-y-3">
+                                    @foreach($upgradeHistory as $history)
+                                    <div class="flex items-start justify-between text-xs border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                                        <div>
+                                            <p class="font-bold text-[#0f172a] capitalize">
+                                                {{ $history->layananAsal->nama ?? 'Reguler' }} <span class="text-slate-400 font-normal">→</span> {{ $history->layananTujuan->nama ?? 'Express' }}
+                                            </p>
+                                            <p class="text-slate-400 font-normal mt-0.5 text-[10px]">{{ $history->created_at->format('d M Y | H:i') }}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-bold text-slate-800">Rp {{ number_format($history->biaya_upgrade, 0, ',', '.') }}</p>
+                                            <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider {{ $history->metode_bayar === 'Tunai' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-blue-50 text-blue-600 border border-blue-100' }}">
+                                                {{ $history->metode_bayar ?? 'Cashless' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
                         </div>
 
                         <!-- Right Side: Items and Weights Form -->
                         <div class="md:col-span-2 space-y-6">
                             <form action="{{ route('admin.riwayat-pesanan.proses', $transaksi->id) }}" method="POST" @submit.prevent="submitForm($event)" class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-6">
                                 @csrf
+                                @php
+                                    $isNewOrder = in_array($transaksi->status, ['Baru', 'created', 'Perlu Diproses']);
+                                @endphp
+                                
+                                @if(!$isNewOrder)
+                                    <!-- Read-only Info Badge -->
+                                    <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-500 font-medium leading-relaxed flex items-start gap-2">
+                                        <i data-feather="info" class="w-4 h-4 text-blue-500 shrink-0 mt-0.5"></i>
+                                        <div>
+                                            Pesanan ini sudah diproses timbangannya dan saat ini dalam tahap <strong>{{ $transaksi->status }}</strong>. Anda dapat melihat rincian di bawah atau mengelola upgrade layanan di kolom kiri.
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <fieldset @disabled(!$isNewOrder) class="space-y-6">
 
-                                <!-- Items List Container -->
-                                <div class="space-y-4">
-                                    <div class="flex justify-between items-center border-b border-slate-50 pb-2">
+                                <!-- Service Type Selection Tabs -->
+                                @if($layananNama !== 'satuan')
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Tipe Layanan Proses</label>
+                                    <div class="flex p-1 bg-slate-50 border border-slate-100 rounded-xl">
+                                        <button type="button" 
+                                                @click="tipeLayanan = 'kiloan'"
+                                                :class="tipeLayanan === 'kiloan' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-700'"
+                                                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all">
+                                            Kiloan (Timbangan)
+                                        </button>
+                                        <button type="button" 
+                                                @click="tipeLayanan = 'satuan'"
+                                                :class="tipeLayanan === 'satuan' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-700'"
+                                                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all">
+                                            Satuan (Eceran)
+                                        </button>
+                                    </div>
+                                </div>
+                                @endif
+                                <input type="hidden" name="tipe_layanan" :value="tipeLayanan">
+
+                                <!-- Satuan Items Section -->
+                                <div class="space-y-4 border-t border-slate-50 pt-4">
+                                    <div class="flex justify-between items-center pb-2">
                                         <h3 class="font-bold text-[#0f172a] text-sm flex items-center gap-2">
-                                            <i data-feather="list" class="w-4 h-4 text-blue-500"></i>
-                                            Daftar Item Laundry
+                                            <i data-feather="grid" class="w-4 h-4 text-blue-500"></i>
+                                            Item Satuan Tambahan
                                         </h3>
-                                        <button type="button" @click="addCustomItem()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all">
+                                        <button type="button" @click="addSatuanItem()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all">
                                             <i data-feather="plus" class="w-3.5 h-3.5"></i>
-                                            Tambah Item Kustom
+                                            Tambah Item Satuan
                                         </button>
                                     </div>
 
-                                    <!-- Alpine Loop for Items -->
-                                    <div class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                                        <template x-for="(item, index) in items" :key="index">
-                                            <div>
-                                                <!-- If predefined item (shows checkbox) -->
-                                                <template x-if="item.predefined">
-                                                    <div class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/75 rounded-xl border border-slate-100 transition-all">
-                                                        <div class="flex items-center gap-3">
-                                                            <input type="checkbox"
-                                                                   x-model="item.checked"
-                                                                   class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4.5 h-4.5 cursor-pointer">
-                                                            <span class="text-xs font-bold text-slate-700" x-text="item.nama_item"></span>
-                                                        </div>
-                                                        
-                                                        <div class="flex items-center gap-2" x-show="item.checked" x-transition>
-                                                            <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">-</button>
-                                                            <input type="number"
-                                                                   :name="item.checked ? `items[${index}][qty]` : ''"
-                                                                   x-model.number="item.qty"
-                                                                   min="1"
-                                                                   class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-bold text-slate-700 outline-none">
-                                                            <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">+</button>
-                                                            
-                                                            <input type="hidden" :name="item.checked ? `items[${index}][nama_item]` : ''" :value="item.nama_item">
-                                                        </div>
-                                                    </div>
-                                                </template>
+                                    <!-- Alpine Loop for Satuan Items -->
+                                    <div class="space-y-3">
+                                        <template x-for="(item, index) in satuanItems" :key="index">
+                                            <div class="flex items-center gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-100 relative group transition-all">
+                                                <div class="flex-1">
+                                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Kategori Pakaian Satuan</label>
+                                                    <select :name="'satuan_items[' + index + '][kategori_pakaian_satuan_id]'"
+                                                            x-model="item.kategori_pakaian_satuan_id"
+                                                            @change="updateItemPrice(item)"
+                                                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 transition-all"
+                                                            required>
+                                                        <option value="">-- Pilih Item Satuan --</option>
+                                                        <template x-for="cat in satuanCategories" :key="cat.id">
+                                                            <option :value="cat.id" x-text="cat.nama_pakaian + ' (' + formatRupiah(cat.harga) + ')'"></option>
+                                                        </template>
+                                                    </select>
+                                                </div>
 
-                                                <!-- If custom item (shows text input) -->
-                                                <template x-if="!item.predefined">
-                                                    <div class="flex items-center gap-3 bg-blue-50/30 p-3 rounded-xl border border-blue-100/50 relative group transition-all">
-                                                        <div class="flex-1">
-                                                            <label class="text-[9px] font-bold text-blue-500 uppercase tracking-wider block mb-1">Item Kustom</label>
-                                                            <input type="text"
-                                                                   :name="`items[${index}][nama_item]`"
-                                                                   x-model="item.nama_item"
-                                                                   placeholder="Nama pakaian/laundry..."
-                                                                   class="w-full bg-white border border-blue-200/60 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 transition-all"
-                                                                   required>
-                                                        </div>
-                                                        <div class="w-24">
-                                                            <label class="text-[9px] font-bold text-blue-500 uppercase tracking-wider block mb-1 text-center">Qty</label>
-                                                            <div class="flex items-center gap-1 justify-center">
-                                                                <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">-</button>
-                                                                <input type="number"
-                                                                       :name="`items[${index}][qty]`"
-                                                                       x-model.number="item.qty"
-                                                                       min="1"
-                                                                       class="w-10 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-bold text-slate-700 outline-none">
-                                                                <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">+</button>
-                                                            </div>
-                                                        </div>
-                                                        <div class="self-end pb-0.5">
-                                                            <button type="button" @click="removeItem(index)"
-                                                                    class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
-                                                                <i data-feather="trash-2" class="w-4 h-4"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </template>
+                                                <div class="w-20">
+                                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1 text-center">Jumlah</label>
+                                                    <input type="number"
+                                                           :name="'satuan_items[' + index + '][jumlah]'"
+                                                           x-model.number="item.jumlah"
+                                                           min="1"
+                                                           class="w-full bg-white border border-slate-200 rounded-lg py-1.5 text-center text-xs font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
+                                                           required>
+                                                </div>
+
+                                                <div class="w-28 text-right pr-2">
+                                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Harga Akhir</span>
+                                                    <span class="text-xs font-extrabold text-slate-700 block mt-1.5" x-text="formatRupiah(calculateItemTotal(item))">Rp0</span>
+                                                </div>
+
+                                                <div class="self-end pb-0.5">
+                                                    <button type="button" @click="removeSatuanItem(index)"
+                                                            class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
+                                                        <i data-feather="trash-2" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
                                             </div>
+                                        </template>
+                                        <template x-if="satuanItems.length === 0">
+                                            <p class="text-xs font-medium text-slate-400 italic text-center py-2">Belum ada item satuan yang ditambahkan.</p>
                                         </template>
                                     </div>
                                 </div>
 
                                 <!-- Weight Scale and Price calculations -->
-                                <div class="space-y-4 border-t border-slate-50 pt-4">
+                                <div class="space-y-4 border-t border-slate-50 pt-4" x-show="tipeLayanan === 'kiloan'" x-transition>
                                     <h3 class="font-bold text-[#0f172a] text-sm flex items-center gap-2">
                                         <i data-feather="activity" class="w-4 h-4 text-blue-500"></i>
                                         Timbangan & Tarif
@@ -328,13 +355,12 @@
                                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Berat Timbangan (Kg)</label>
                                             <div class="relative">
                                                 <input type="number"
-                                                       name="actual_weight"
-                                                       x-model.number="actualWeight"
-                                                       step="0.01"
-                                                       min="0.01"
-                                                       placeholder="0.00"
-                                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all"
-                                                       required>
+                                                        name="actual_weight"
+                                                        x-model.number="actualWeight"
+                                                        step="0.01"
+                                                        min="0"
+                                                        placeholder="0.00"
+                                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
                                                 <span class="absolute right-3 inset-y-0 flex items-center text-xs font-bold text-slate-400">kg</span>
                                             </div>
                                         </div>
@@ -348,8 +374,7 @@
                                                        x-model.number="minimumWeight"
                                                        step="0.1"
                                                        min="0"
-                                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all"
-                                                       required>
+                                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
                                                 <span class="absolute right-3 inset-y-0 flex items-center text-xs font-bold text-slate-400">kg</span>
                                             </div>
                                         </div>
@@ -363,42 +388,62 @@
                                                        name="price_per_kg"
                                                        x-model.number="pricePerKg"
                                                        min="0"
-                                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all"
-                                                       required>
+                                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- Hidden fields for Satuan mode validation -->
+                                <template x-if="tipeLayanan === 'satuan'">
+                                    <div>
+                                        <input type="hidden" name="actual_weight" value="0">
+                                        <input type="hidden" name="minimum_weight" value="0">
+                                        <input type="hidden" name="price_per_kg" value="0">
+                                    </div>
+                                </template>
+
                                 <!-- Dynamic calculations results card -->
                                 <div class="bg-blue-50/50 rounded-2xl border border-blue-100/30 p-5 space-y-3 font-semibold text-xs">
-                                    <div class="flex justify-between items-center text-slate-500">
+                                    <div class="flex justify-between items-center text-slate-500" x-show="tipeLayanan === 'kiloan'">
                                         <span>Formula Berat Ditagih:</span>
                                         <span class="font-normal">max(Minimal, Timbangan)</span>
                                     </div>
-                                    <div class="flex justify-between items-center text-slate-500">
+                                    <div class="flex justify-between items-center text-slate-500" x-show="tipeLayanan === 'kiloan'">
                                         <span>Berat yang Ditagih:</span>
                                         <span class="text-slate-800 font-bold"><span x-text="chargedWeight.toFixed(2)">0.00</span> kg</span>
                                     </div>
+                                    <div class="flex justify-between items-center text-slate-500" x-show="tipeLayanan === 'kiloan'">
+                                        <span>Biaya Kiloan:</span>
+                                        <span class="text-slate-800 font-bold" x-text="formatRupiah(chargedWeight * pricePerKg)">Rp0</span>
+                                    </div>
                                     <div class="flex justify-between items-center text-slate-500">
-                                        <span>Tarif per Kg:</span>
-                                        <span class="text-slate-800 font-bold" x-text="formatRupiah(pricePerKg)">Rp0</span>
+                                        <span>Selisih Harga Layanan Prioritas:</span>
+                                        <span class="text-blue-600 font-bold">+ <span x-text="formatRupiah(priorityCharge)">Rp0</span> per item satuan</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-slate-500">
+                                        <span>Total Biaya Satuan:</span>
+                                        <span class="text-slate-800 font-bold" x-text="formatRupiah(totalSatuanPrice)">Rp0</span>
                                     </div>
                                     <div class="flex justify-between items-center border-t border-blue-100/50 pt-3 text-sm">
-                                        <span class="text-slate-800 font-bold">Total Biaya Layanan:</span>
+                                        <span class="text-slate-800 font-bold">Total Biaya Layanan Akhir:</span>
                                         <span class="text-blue-600 font-extrabold text-lg" x-text="formatRupiah(totalPrice)">Rp0</span>
                                     </div>
                                 </div>
 
+                                </fieldset>
+ 
                                 <!-- Submission Buttons -->
                                 <div class="flex justify-end gap-3 pt-2">
                                     <a href="{{ route('admin.riwayat-pesanan') }}" class="text-center border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition-all">
-                                        Batal
+                                        {{ $isNewOrder ? 'Batal' : 'Kembali' }}
                                     </a>
-                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
-                                        <i data-feather="check" class="w-4 h-4"></i>
-                                        Selesai & Proses Pesanan
-                                    </button>
+                                    @if($isNewOrder)
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
+                                            <i data-feather="check" class="w-4 h-4"></i>
+                                            Selesai & Proses Pesanan
+                                        </button>
+                                    @endif
                                 </div>
                             </form>
                         </div>
@@ -422,35 +467,61 @@
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('prosesTransaksiForm', () => ({
-                items: @json($initialItems),
-                actualWeight: {{ old('actual_weight', '') !== '' ? old('actual_weight') : '0' }},
-                minimumWeight: {{ old('minimum_weight', '3.0') }},
-                pricePerKg: {{ old('price_per_kg', $defaultPrice) }},
+                tipeLayanan: '{{ $layananNama === 'satuan' || $transaksi->fk_tambahan !== null ? 'satuan' : 'kiloan' }}',
+                satuanCategories: @json($satuanItemsAvailable),
+                priorityCharge: {{ $transaksi->layananPrioritas->harga ?? 0 }},
+                satuanItems: @json($existingItems->map(function($item) {
+                    $cat = \App\Models\KategoriPakaianSatuan::find($item->kategori_pakaian_satuan_id);
+                    return [
+                        'kategori_pakaian_satuan_id' => $item->kategori_pakaian_satuan_id,
+                        'jumlah' => $item->jumlah,
+                        'basePrice' => $cat ? $cat->harga : 0
+                    ];
+                })),
+                actualWeight: {{ $existingTimbangan ? $existingTimbangan->actual_weight : (old('actual_weight', '') !== '' ? old('actual_weight') : '0') }},
+                minimumWeight: {{ $existingTimbangan ? $existingTimbangan->minimum_weight : old('minimum_weight', '3.0') }},
+                pricePerKg: {{ $existingTimbangan ? $existingTimbangan->price_per_kg : old('price_per_kg', $defaultPrice) }},
                 originalTotal: {{ $transaksi->total_bayar_akhir }},
                 
-                addCustomItem() {
-                    this.items.push({ nama_item: '', qty: 1, checked: true, predefined: false });
+                addSatuanItem() {
+                    this.satuanItems.push({ kategori_pakaian_satuan_id: '', jumlah: 1, basePrice: 0 });
                     setTimeout(() => {
                         if (typeof feather !== 'undefined') feather.replace();
                     }, 50);
                 },
-                removeItem(index) {
-                    this.items.splice(index, 1);
+                removeSatuanItem(index) {
+                    this.satuanItems.splice(index, 1);
+                },
+                updateItemPrice(item) {
+                    const cat = this.satuanCategories.find(c => c.id == item.kategori_pakaian_satuan_id);
+                    item.basePrice = cat ? parseFloat(cat.harga) : 0;
+                },
+                calculateItemTotal(item) {
+                    return (item.basePrice + this.priorityCharge) * (item.jumlah || 1);
+                },
+                get totalSatuanPrice() {
+                    return this.satuanItems.reduce((sum, item) => sum + this.calculateItemTotal(item), 0);
                 },
                 get chargedWeight() {
                     if (!this.actualWeight || this.actualWeight <= 0) return 0;
                     return Math.max(this.minimumWeight, this.actualWeight);
                 },
                 get totalPrice() {
-                    return Math.round(this.chargedWeight * this.pricePerKg);
+                    let price = this.totalSatuanPrice;
+                    if (this.tipeLayanan === 'kiloan') {
+                        price += Math.round(this.chargedWeight * this.pricePerKg);
+                    }
+                    return price;
                 },
                 formatRupiah(value) {
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
                 },
                 submitForm(e) {
-                    const hasActiveItem = this.items.some(i => i.checked || !i.predefined);
-                    if (!hasActiveItem) {
-                        alert('Silakan pilih minimal satu item laundry.');
+                    const hasWeight = this.actualWeight && parseFloat(this.actualWeight) > 0;
+                    const hasSatuan = this.satuanItems.length > 0 && this.satuanItems.some(item => item.kategori_pakaian_satuan_id !== '');
+                    
+                    if (!hasWeight && !hasSatuan) {
+                        alert('Silakan isi berat timbangan kiloan ATAU masukkan minimal satu item satuan tambahan.');
                         return;
                     }
                     e.target.submit();

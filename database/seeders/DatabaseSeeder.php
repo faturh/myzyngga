@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             JenisParfumSeeder::class,
             HargaJenisLayananSeeder::class,
             LayananPrioritasSeeder::class,
+            \Database\Seeders\layanan\KategoriPakaianSatuanSeeder::class,
 
             //? Data Transaksi
             TransaksiSeeder::class,
