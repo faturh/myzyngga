@@ -21,7 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile & Notifications
     Route::view('profile', 'pelanggan.profile.index')->name('profile');
     Route::view('profile/account', 'pelanggan.profile.account')->name('profile.account');
-    Route::get('notifications', CustomerNotificationController::class)->name('notifications');
+    Route::get('notifications', [CustomerNotificationController::class, 'index'])->name('notifications');
+    Route::post('notifications/{notifikasi}/read', [CustomerNotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('profile/complaints', [OrderPageController::class, 'complaintsHistory'])->name('profile.complaints');
     Route::get('profile/complaints/{id}', [OrderPageController::class, 'complaintDetail'])->name('profile.complaint.detail');
 
