@@ -69,7 +69,7 @@
         >
             <x-slot:extra>
                 <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
-                    @foreach (['Semua', 'Transaksi', 'Status', 'Promo'] as $tab)
+                    @foreach (['Semua', 'Transaksi', 'Status', 'Info', 'Promo'] as $tab)
                         <button 
                             @click="activeTab = '{{ $tab }}'"
                             :class="activeTab === '{{ $tab }}' ? 'filter-chip active' : 'filter-chip inactive'"

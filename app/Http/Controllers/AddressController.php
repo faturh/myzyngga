@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AddressController extends Controller
 {
@@ -201,11 +202,10 @@ class AddressController extends Controller
             abort(403);
         }
 
-        // Set all others to false
-        Auth::user()->addresses()->update(['is_primary' => false]);
-        
-        // Set this one to true
-        $address->update(['is_primary' => true]);
+        DB::transaction(function () use ($address) {
+            Auth::user()->addresses()->update(['is_primary' => false]);
+            $address->update(['is_primary' => true]);
+        });
 
         return redirect()->route('profile')->with('success', 'Alamat utama berhasil diatur.');
     }

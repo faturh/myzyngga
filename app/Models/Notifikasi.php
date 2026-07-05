@@ -47,7 +47,9 @@ class Notifikasi extends Model
     public function isReadBy(int $pelangganId): bool
     {
         if ($this->pelanggan_id !== null) {
-            return (bool) $this->is_read;
+            // Notifikasi personal: hanya relevan untuk pemiliknya.
+            // Pelanggan lain dianggap belum/tidak membaca.
+            return (int) $this->pelanggan_id === $pelangganId && (bool) $this->is_read;
         }
 
         return $this->reads()->where('pelanggan_id', $pelangganId)->exists();
