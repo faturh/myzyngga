@@ -55,6 +55,16 @@ class LayananPrioritasSeeder extends Seeder
             ]
         );
 
+        LayananPrioritas::updateOrCreate(
+            ['id' => 7],
+            [
+                'nama' => 'Satuan',
+                'harga' => 3000,
+                'prioritas' => 5,
+                'cabang_id' => $cabang->id,
+            ]
+        );
+
         //? Cabang 2
         LayananPrioritas::updateOrCreate(
             ['id' => 5],
@@ -71,6 +81,15 @@ class LayananPrioritasSeeder extends Seeder
                 'nama' => 'Kilat',
                 'harga' => 3000,
                 'prioritas' => 99,
+                'cabang_id' => $cabang2->id,
+            ]
+        );
+        LayananPrioritas::updateOrCreate(
+            ['id' => 8],
+            [
+                'nama' => 'Satuan',
+                'harga' => 3000,
+                'prioritas' => 5,
                 'cabang_id' => $cabang2->id,
             ]
         );

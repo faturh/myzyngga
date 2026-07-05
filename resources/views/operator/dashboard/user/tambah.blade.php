@@ -271,6 +271,19 @@
                         <label class="form-control w-full">
                             <div class="label">
                                 <span class="label-text font-semibold dark:text-slate-100">
+                                    <x-label-input-required :value="'Tarif Gaji per Kg (Rp)'" />
+                                </span>
+                            </div>
+                            <input type="number" name="gaji" placeholder="Tarif Gaji per Kg" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" value="{{ old("gaji") }}" />
+                            @error("gaji")
+                                <div class="label">
+                                    <span class="label-text-alt text-sm text-error">{{ $message }}</span>
+                                </div>
+                            @enderror
+                        </label>
+                        <label class="form-control w-full">
+                            <div class="label">
+                                <span class="label-text font-semibold dark:text-slate-100">
                                     <x-label-input-required :value="'Alamat'" />
                                 </span>
                             </div>

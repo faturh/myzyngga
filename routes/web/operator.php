@@ -17,12 +17,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['admin'])->group(function () {
         Route::get('/admin/dashboard', [OperatorController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/admin/riwayat-pesanan', [OperatorController::class, 'riwayatPesanan'])->name('admin.riwayat-pesanan');
+        Route::get('/admin/riwayat-pesanan/tambah', [OperatorController::class, 'tambahPesananForm'])->name('admin.riwayat-pesanan.tambah-form');
+        Route::post('/admin/riwayat-pesanan/tambah', [OperatorController::class, 'storePesananForm'])->name('admin.riwayat-pesanan.store');
         Route::get('/admin/riwayat-pesanan/{id}/proses', [OperatorController::class, 'prosesForm'])->name('admin.riwayat-pesanan.proses-form');
         Route::post('/admin/riwayat-pesanan/{id}/proses', [OperatorController::class, 'prosesTransaksi'])->name('admin.riwayat-pesanan.proses');
         Route::post('/admin/riwayat-pesanan/{id}/batal', [OperatorController::class, 'batalkanTransaksi'])->name('admin.riwayat-pesanan.batal');
+        Route::get('/admin/riwayat-pesanan/{id}/kerjakan', [OperatorController::class, 'kerjakanForm'])->name('admin.riwayat-pesanan.kerjakan-form');
         Route::post('/admin/riwayat-pesanan/{id}/kerjakan', [OperatorController::class, 'kerjakanTransaksi'])->name('admin.riwayat-pesanan.kerjakan');
+        Route::post('/admin/riwayat-pesanan/{id}/konfirmasi-upgrade', [OperatorController::class, 'konfirmasiUpgrade'])->name('admin.riwayat-pesanan.konfirmasi-upgrade');
+        Route::post('/admin/riwayat-pesanan/{id}/inisiasi-upgrade', [OperatorController::class, 'inisiasiUpgrade'])->name('admin.riwayat-pesanan.inisiasi-upgrade');
         Route::post('/admin/riwayat-pesanan/{id}/selesaikan', [OperatorController::class, 'selesaikanPengerjaan'])->name('admin.riwayat-pesanan.selesaikan');
         Route::get('/admin/gaji-karyawan', [OperatorController::class, 'gajiKaryawan'])->name('admin.gaji-karyawan');
+        Route::get('/admin/gaji-karyawan/download', [OperatorController::class, 'downloadGajiKaryawan'])->name('admin.gaji-karyawan.download');
+        
+        Route::get('/admin/keuangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'index'])->name('admin.keuangan');
+        Route::post('/admin/keuangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'store'])->name('admin.keuangan.store');
+        Route::delete('/admin/keuangan/{id}', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'destroy'])->name('admin.keuangan.destroy');
     });
 
     Route::prefix('user')->group(function () {

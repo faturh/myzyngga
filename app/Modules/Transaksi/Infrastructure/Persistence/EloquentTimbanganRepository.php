@@ -37,6 +37,7 @@ class EloquentTimbanganRepository implements TimbanganRepositoryInterface
                 $timbangan->items()->create([
                     'jenis_pakaian_id' => $item['jenis_pakaian_id'],
                     'qty' => $item['qty'],
+                    'harga' => $item['harga'] ?? 0,
                 ]);
             }
 

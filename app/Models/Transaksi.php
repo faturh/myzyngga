@@ -44,6 +44,7 @@ class Transaksi extends Model
         'midtrans_order_id',
         'payment_metadata',
         'list_pengerjaan_id',
+        'fk_tambahan',
     ];
 
     protected $casts = [
@@ -73,12 +74,13 @@ class Transaksi extends Model
                 $newStatusId = 1;
             }
 
-            if (isset($transaksi->attributes['payment_status']) && $transaksi->attributes['payment_status'] === 'paid') {
+            if (strtolower(trim($transaksi->payment_status ?? '')) === 'paid') {
                 if ($newStatusId == 2) {
                     $newStatusId = 5;
-                    $transaksi->attributes['status'] = 'Pesanan Selesai';
                 }
             }
+
+            $transaksi->attributes['status'] = $transaksi->getStatusName($newStatusId);
 
             // Generate UUID if not set
             if (!$transaksi->id) {
@@ -235,6 +237,11 @@ class Transaksi extends Model
         return $this->hasOne(Timbangan::class, 'transaksi_id');
     }
 
+    public function tambahanSatuan()
+    {
+        return $this->hasMany(Tambahan::class, 'tambahan_id', 'fk_tambahan');
+    }
+
     public function listPengerjaan()
     {
         return $this->belongsTo(ListPengerjaan::class, 'list_pengerjaan_id');
@@ -311,5 +318,43 @@ class Transaksi extends Model
 
         $this->pending_status_id = $statusId;
         $this->attributes['status'] = $this->getStatusName($statusId);
+    }
+
+    public function canBeUpgraded(): bool
+    {
+        $statusId = $this->listPengerjaan?->list_status_pengerjaan_id;
+        // Finished status is 5
+        if ($statusId == 5 || strtolower($this->status) === 'selesai' || strtolower($this->status) === 'pesanan selesai') {
+            return false;
+        }
+
+        $currentPriority = $this->layananPrioritas;
+        if (!$currentPriority) {
+            return false;
+        }
+
+        $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
+            ->where('prioritas', '>', $currentPriority->prioritas)
+            ->get();
+
+        if ($availableUpgrades->isEmpty()) {
+            return false;
+        }
+
+        $baseDate = \Carbon\Carbon::parse($this->waktu ?? now());
+        foreach ($availableUpgrades as $upgrade) {
+            $maxElapsedHours = match(strtolower($upgrade->nama)) {
+                'kilat' => 3,
+                'express' => 12,
+                'quick' => 24,
+                default => 24,
+            };
+            
+            if (now()->lte($baseDate->copy()->addHours($maxElapsedHours))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

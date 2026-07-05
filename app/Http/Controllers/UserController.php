@@ -18,6 +18,17 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = auth()->user();
+            if (!$user || !$user->isAdmin()) {
+                abort(403, 'Hanya Admin Utama yang dapat mengelola pengguna.');
+            }
+            return $next($request);
+        });
+    }
+
     private function mapUserCollection($users)
     {
         return $users->map(function ($u) {
@@ -148,6 +159,7 @@ class UserController extends Controller
             'cabang_id' => 'nullable|integer',
             'nama' => 'required|string|max:255',
             'telepon' => 'required|string|max:20',
+            'gaji' => 'nullable|numeric|min:0',
         ], [
             'required' => ':attribute harus diisi.',
             'unique' => ':attribute sudah ada, silakan isi yang lain.',
@@ -164,6 +176,7 @@ class UserController extends Controller
             'name' => $validatedUser['nama'],
             'phone' => $validatedUser['telepon'],
             'slug' => str()->slug($validatedUser['username']),
+            'gaji' => (int) ($validatedUser['gaji'] ?? 0),
         ]);
 
         $user->assignRole($request->role);
@@ -228,6 +241,7 @@ class UserController extends Controller
             'cabang_id' => 'nullable|integer',
             'nama' => 'required|string|max:255',
             'telepon' => 'required|string|max:20',
+            'gaji' => 'nullable|numeric|min:0',
         ], [
             'required' => ':attribute harus diisi.',
             'unique' => ':attribute sudah ada, silakan isi yang lain.',
@@ -242,6 +256,7 @@ class UserController extends Controller
             'name' => $validated['nama'],
             'phone' => $validated['telepon'],
             'slug' => str()->slug($validated['username']),
+            'gaji' => (int) ($validated['gaji'] ?? 0),
         ]);
 
         $user->syncRoles([$request->role]);

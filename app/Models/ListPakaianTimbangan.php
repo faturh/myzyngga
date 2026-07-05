@@ -15,6 +15,7 @@ class ListPakaianTimbangan extends Model
         'timbangan_id',
         'jenis_pakaian_id',
         'qty',
+        'harga',
     ];
 
     public function timbangan()
