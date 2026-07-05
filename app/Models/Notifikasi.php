@@ -38,4 +38,18 @@ class Notifikasi extends Model
     {
         return $this->belongsTo(Transaksi::class, 'transaksi_id');
     }
+
+    public function reads()
+    {
+        return $this->hasMany(NotifikasiRead::class, 'notifikasi_id');
+    }
+
+    public function isReadBy(int $pelangganId): bool
+    {
+        if ($this->pelanggan_id !== null) {
+            return (bool) $this->is_read;
+        }
+
+        return $this->reads()->where('pelanggan_id', $pelangganId)->exists();
+    }
 }
