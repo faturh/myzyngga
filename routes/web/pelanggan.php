@@ -33,6 +33,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
      Route::get('/order/history', [OrderPageController::class, 'history'])
         ->name('order.history');
+
+    // Auth-protected order actions (BUG-UNAUTH-03..07 + BUG-OWNERSHIP-08)
+    Route::get('/order/{id}/repeat', [OrderPageController::class, 'repeat'])->name('order.repeat');
+    Route::post('/order/{id}/request-delivery', [OrderPageController::class, 'storeRequestDelivery'])->name('order.delivery.store');
+    Route::post('/order/{id}/complaint', [OrderPageController::class, 'storeComplaint'])->name('order.complaint.store');
+    Route::post('/order/{id}/upgrade', [OrderPageController::class, 'processUpgrade'])->name('order.upgrade.process');
+    Route::post('/order/{id}/process-payment', [OrderPageController::class, 'processPayment'])->name('order.process-payment');
+    Route::post('/order/{id}/payment-cancel', [OrderPageController::class, 'paymentCancel'])->name('order.payment-cancel');
 });
 
 // Public Order Routes (Enabled for Guests)
@@ -63,9 +71,6 @@ Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
  Route::get('/order/detail/{id?}', [OrderPageController::class, 'detail'])
     ->name('order.detail');
 
- Route::get('/order/{id}/repeat', [OrderPageController::class, 'repeat'])
-    ->name('order.repeat');
-
  Route::get('/order/{id}/download-receipt', [OrderPageController::class, 'downloadReceipt'])
     ->name('order.download-receipt');
 
@@ -73,21 +78,15 @@ Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
     ->name('order.request.delivery');
  Route::get('/order/{id}/request-delivery-confirm', [OrderPageController::class, 'requestDeliveryConfirm'])
     ->name('order.request.delivery.confirm');
- Route::post('/order/{id}/request-delivery', [OrderPageController::class, 'storeRequestDelivery'])
-    ->name('order.delivery.store');
  Route::post('/order/{id}/request-delivery/rollback', [OrderPageController::class, 'rollbackDelivery'])
     ->name('order.delivery.rollback');
 
  Route::get('/order/{id}/complaint', [OrderPageController::class, 'complaint'])
     ->name('order.complaint');
- Route::post('/order/{id}/complaint', [OrderPageController::class, 'storeComplaint'])
-    ->name('order.complaint.store');
 
  Route::get('/order/{id}/upgrade', [OrderPageController::class, 'upgrade'])
     ->name('order.upgrade');
 
- Route::post('/order/{id}/upgrade', [OrderPageController::class, 'processUpgrade'])
-    ->name('order.upgrade.process');
  Route::post('/order/{id}/upgrade/rollback', [OrderPageController::class, 'rollbackUpgrade'])
     ->name('order.upgrade.rollback');
 
@@ -101,14 +100,10 @@ Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
     ->name('order.payment-method');
  Route::get('/order/{id}/payment-waiting', [OrderPageController::class, 'paymentWaiting'])
     ->name('order.payment.waiting');
- Route::post('/order/{id}/process-payment', [OrderPageController::class, 'processPayment'])
-    ->name('order.process-payment');
  Route::get('/order/{id}/payment-instruction', [OrderPageController::class, 'paymentInstruction'])
     ->name('order.payment-instruction');
  Route::get('/order/{id}/payment-status', [OrderPageController::class, 'paymentStatus'])
     ->name('order.payment-status');
- Route::post('/order/{id}/payment-cancel', [OrderPageController::class, 'paymentCancel'])
-    ->name('order.payment-cancel');
 
 // Proxy route to download external QR images securely
 Route::get('/download-image', function (\Illuminate\Http\Request $request) {
