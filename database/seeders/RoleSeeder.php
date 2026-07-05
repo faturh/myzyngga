@@ -40,6 +40,7 @@ class RoleSeeder extends Seeder
         $customer->assignRole('customer');
 
         // Seed mock employees with different roles and salaries
+        $cabangId = \App\Models\Cabang::where('nama', 'Cabang Pusat Pertama')->value('id') ?? 1;
         $employees = [
             [
                 'username' => 'budi',
@@ -49,7 +50,7 @@ class RoleSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role' => 'operator',
                 'phone' => '08123456780',
-                'cabang_id' => 1,
+                'cabang_id' => $cabangId,
                 'gaji' => 0,
             ],
             [
@@ -60,7 +61,7 @@ class RoleSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role' => 'pegawai_laundry',
                 'phone' => '08123456781',
-                'cabang_id' => 1,
+                'cabang_id' => $cabangId,
                 'gaji' => 3500, // Rp 3.500 per kg
             ],
         ];
