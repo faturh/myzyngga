@@ -117,6 +117,10 @@ class OrderPageController
             return redirect()->route('dashboard');
         }
 
+        if (!$order->pelanggan || $order->pelanggan->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         // Determine service from order properties
         $service = $order->total_biaya_prioritas > 0 ? 'kilat' : 'reguler';
 

@@ -309,11 +309,15 @@ class OrderWebService
             throw new \Exception('Pesanan tidak ditemukan.');
         }
 
+        // Biaya pengantaran ditetapkan server-side — tidak dari input client.
+        $deliveryFee = (float) config('laundry.delivery_fee', 0);
+
         $existingMeta = json_decode($order->payment_metadata, true) ?? [];
         $existingMeta['pending_delivery'] = [
-            'address' => $request->address,
+            'address'        => $request->address,
             'detail_address' => $request->detail_address,
-            'is_roundtrip' => true
+            'is_roundtrip'   => true,
+            'delivery_fee'   => $deliveryFee,
         ];
 
         $order->payment_metadata = json_encode($existingMeta);
@@ -489,7 +493,7 @@ class OrderWebService
             'payment_type' => $this->mapPaymentMethod($method),
             'transaction_details' => [
                 'order_id' => $midtransOrderId,
-                'gross_amount' => $unpaidAmount,
+                'gross_amount' => (int) round($unpaidAmount),
             ],
             'customer_details' => [
                 'first_name' => $order->pelanggan->nama ?? 'Pelanggan Zyngga',

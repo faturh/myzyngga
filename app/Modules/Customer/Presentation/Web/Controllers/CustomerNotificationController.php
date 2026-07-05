@@ -21,16 +21,16 @@ class CustomerNotificationController
 
         $pelanggan = Pelanggan::where('user_id', $request->user()->id)->first();
 
-        $broadcasts = Notifikasi::query()
+        // Bug fix: jika tidak ada profil pelanggan, tidak tampilkan broadcast karena
+        // tidak bisa mark-as-read (akan abort 403), sehingga muncul terus selamanya.
+        $broadcasts = $pelanggan ? Notifikasi::query()
             ->where('jenis', Notifikasi::JENIS_JAM_OPERASIONAL)
             ->whereNull('pelanggan_id')
-            ->when($pelanggan, function ($query) use ($pelanggan) {
-                $query->whereNotExists(function ($sub) use ($pelanggan) {
-                    $sub->selectRaw(1)
-                        ->from('notifikasi_reads')
-                        ->whereColumn('notifikasi_reads.notifikasi_id', 'notifikasi.id')
-                        ->where('notifikasi_reads.pelanggan_id', $pelanggan->id);
-                });
+            ->whereNotExists(function ($sub) use ($pelanggan) {
+                $sub->selectRaw(1)
+                    ->from('notifikasi_reads')
+                    ->whereColumn('notifikasi_reads.notifikasi_id', 'notifikasi.id')
+                    ->where('notifikasi_reads.pelanggan_id', $pelanggan->id);
             })
             ->latest()
             ->get()
@@ -44,7 +44,7 @@ class CustomerNotificationController
                 'icon' => 'clock',
                 'box_class' => 'bg-[#FEF4E9]',
                 'icon_class' => 'text-zyngga-status-warning',
-            ]);
+            ]) : collect();
 
         // Notifikasi personal jam_operasional (ditujukan ke pelanggan tertentu, belum dibaca)
         $personal = $pelanggan ? Notifikasi::query()
