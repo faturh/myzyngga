@@ -199,6 +199,31 @@ new #[Layout('layouts.auth')] class extends Component
                 </x-zyngga-button>
             </form>
 
+            <!-- Google Sign-In Button -->
+            <div class="relative flex py-3 items-center">
+                <div class="flex-grow border-t border-zyngga-neutral-200"></div>
+                <span class="flex-shrink mx-4 text-zyngga-neutral-400 text-xs uppercase">Atau</span>
+                <div class="flex-grow border-t border-zyngga-neutral-200"></div>
+            </div>
+
+            <x-zyngga-button 
+                type="a"
+                href="/api/v1/auth/google"
+                variant="secondary"
+                size="l"
+                class="w-full flex items-center justify-center gap-2 hover:!bg-zyngga-neutral-100 !text-zyngga-neutral-800 border border-zyngga-neutral-300"
+            >
+                <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="matrix(1, 0, 0, 1, 0, 0)">
+                        <path d="M21.35,11.1H12v2.7h5.38C17.15,14.8 16,15.7 14.5,16.5l2.3,1.8c2.9-2.7 4.6-6.6 4.6-11.2C21.35,11.7 21.35,11.4 21.35,11.1Z" fill="#4285F4" />
+                        <path d="M12,20.7c2.4,0 4.5-0.8 6-2.2L15.7,16.7c-0.8,0.5-1.9,0.9-3.7,0.9-2.8,0-5.2-1.9-6-4.5L3.6,15C5.4,18.4 8.5,20.7 12,20.7Z" fill="#34A853" />
+                        <path d="M6,13.1c-0.2-0.6-0.3-1.3-0.3-2s0.1-1.4 0.3-2L3.6,7C2.9,8.4 2.5,9.9 2.5,11.5s0.4,3.1 1.1,4.5L6,13.1Z" fill="#FBBC05" />
+                        <path d="M12,5.3c1.3,0 2.5,0.5 3.4,1.3l2.6-2.6C16.4,2.5 14.4,1.8 12,1.8c-3.5,0-6.6,2.3-8.4,5.7L6,9.6c0.8-2.6 3.2-4.5 6-4.5Z" fill="#EA4335" />
+                    </g>
+                </svg>
+                Daftar dengan Google
+            </x-zyngga-button>
+
             <div class="mt-4 text-center">
                 <x-zyngga-text variant="sm" weight="regular" color="neutral-500">
                     Sudah punya akun? 
