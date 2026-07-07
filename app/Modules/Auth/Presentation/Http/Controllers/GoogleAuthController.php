@@ -67,16 +67,24 @@ class GoogleAuthController extends Controller
                 ]);
             }
             
-            // Generate token via Sanctum
-            $token = $user->createToken('auth_token')->plainTextToken;
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Login via Google berhasil',
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'data' => $user
-            ], 200);
+            // Log in the user in the Web session guard
+            auth()->login($user);
+            request()->session()->regenerate();
+
+            if (request()->expectsJson() || request()->is('api/*')) {
+                // Generate token via Sanctum
+                $token = $user->createToken('auth_token')->plainTextToken;
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login via Google berhasil',
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                    'data' => $user
+                ], 200);
+            }
+
+            return redirect()->route('dashboard')->with('success', 'Selamat Datang! Login via Google berhasil.');
             
         } catch (Exception $e) {
             return response()->json([
