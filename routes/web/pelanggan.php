@@ -126,3 +126,7 @@ Route::match(['get', 'post'], '/order/check', [OrderPageController::class, 'chec
 Route::get('/public-struk/{idOrNota}', PublicStrukController::class)
     ->name('public.cetak-struk');
 
+// Google OAuth 2.0 routes under web middleware (to support session-based web login)
+Route::get('/api/v1/auth/google', [App\Modules\Auth\Presentation\Http\Controllers\GoogleAuthController::class, 'redirectToGoogle'])->name('api.google.login');
+Route::get('/api/v1/auth/google/callback', [App\Modules\Auth\Presentation\Http\Controllers\GoogleAuthController::class, 'handleGoogleCallback'])->name('api.google.callback');
+
