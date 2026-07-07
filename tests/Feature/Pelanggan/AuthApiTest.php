@@ -80,4 +80,19 @@ class AuthApiTest extends TestCase
         $response->assertStatus(302);
         $this->assertStringContainsString('accounts.google.com', $response->headers->get('Location'));
     }
+
+    /**
+     * Test guest track order API.
+     */
+    public function test_track_order_api(): void
+    {
+        $response = $this->postJson('/api/v1/orders/track', [
+            'query' => 'NOT-EXIST',
+            'phone_last_4' => '9999',
+        ]);
+
+        // It should return 404 since order doesn't exist
+        $response->assertStatus(404)
+            ->assertJsonPath('success', false);
+    }
 }

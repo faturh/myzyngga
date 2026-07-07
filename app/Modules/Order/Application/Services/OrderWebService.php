@@ -340,9 +340,22 @@ class OrderWebService
             ->map(fn (Transaksi $order) => $this->mapOrderCard($order));
 
         if ($orders->isEmpty()) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pesanan tidak ditemukan atau nomor WhatsApp tidak cocok.'
+                ], 404);
+            }
             return back()->withErrors([
                 'query' => 'Pesanan tidak ditemukan atau nomor WhatsApp tidak cocok.'
             ])->withInput();
+        }
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'data' => $orders->all()
+            ], 200);
         }
 
         return back()->with('orders', $orders->all())->withInput();
