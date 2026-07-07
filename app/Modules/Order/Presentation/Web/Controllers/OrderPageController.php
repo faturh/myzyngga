@@ -198,9 +198,21 @@ class OrderPageController
 
         try {
             $this->webService->storeComplaint($id, $request, $request->user());
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Komplain berhasil dikirim'
+                ], 200);
+            }
             return redirect()->route('order.detail', ['id' => $id])
                 ->with('success', 'Komplain berhasil dikirim');
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 400);
+            }
             return redirect()->route('order.detail', ['id' => $id])
                 ->withErrors(['complaint' => $e->getMessage()]);
         }
