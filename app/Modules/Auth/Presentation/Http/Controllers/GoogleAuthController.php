@@ -67,11 +67,13 @@ class GoogleAuthController extends Controller
                 ]);
             }
             
-            // Log in the user in the Web session guard
-            auth()->login($user);
-            request()->session()->regenerate();
+            // Log in the user in the Web session guard if session is available
+            if (request()->hasSession()) {
+                auth()->login($user);
+                request()->session()->regenerate();
+            }
 
-            if (request()->expectsJson() || request()->is('api/*')) {
+            if (request()->expectsJson()) {
                 // Generate token via Sanctum
                 $token = $user->createToken('auth_token')->plainTextToken;
 
