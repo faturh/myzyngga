@@ -64,7 +64,7 @@
                 <div class="flex items-center gap-4">
                     <button @click="modalOpen = true" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition-all duration-300 flex items-center gap-2">
                         <i data-feather="plus" class="w-4 h-4"></i>
-                        <span>Catat Transaksi Manual</span>
+                        <span>Catat Pencairan Dana</span>
                     </button>
                 </div>
             </header>
@@ -241,7 +241,7 @@
                 
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-                    <h3 class="font-extrabold text-[#0f172a] text-sm">Catat Pemasukan / Pengeluaran Manual</h3>
+                    <h3 class="font-extrabold text-[#0f172a] text-sm">Catat Pencairan Dana</h3>
                     <button @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
                         <i data-feather="x" class="w-5 h-5"></i>
                     </button>
@@ -250,31 +250,12 @@
                 <!-- Modal Body (Form) -->
                 <form method="POST" action="{{ route('admin.keuangan.store') }}" class="p-6 space-y-4">
                     @csrf
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Tipe Catatan</label>
-                            <select name="tipe" required class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all">
-                                <option value="pemasukan">Pemasukan (+)</option>
-                                <option value="pengeluaran">Pengeluaran (-)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Tanggal</label>
-                            <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all">
-                        </div>
-                    </div>
+                    <input type="hidden" name="tipe" value="pengeluaran">
+                    <input type="hidden" name="kategori" value="Pencairan Dana">
 
                     <div>
-                        <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Kategori</label>
-                        <select name="kategori" required class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all">
-                            <option value="Petty Cash">Kas Kecil (Petty Cash)</option>
-                            <option value="Pembelian Deterjen">Pembelian Deterjen/Pewangi</option>
-                            <option value="Plastik Packing">Plastik Packing & Isolasi</option>
-                            <option value="Operasional">Biaya Operasional (Listrik/Air)</option>
-                            <option value="Gaji">Pembayaran Gaji Karyawan</option>
-                            <option value="Lain-lain">Lain-lain</option>
-                        </select>
+                        <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Tanggal</label>
+                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all">
                     </div>
 
                     <div>
@@ -284,7 +265,7 @@
 
                     <div>
                         <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Keterangan Tambahan</label>
-                        <textarea name="keterangan" rows="3" placeholder="Tulis rincian catatan di sini..." class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all"></textarea>
+                        <textarea name="keterangan" rows="3" placeholder="Tulis rincian pencairan dana di sini..." class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all"></textarea>
                     </div>
 
                     <!-- Modal Actions -->
