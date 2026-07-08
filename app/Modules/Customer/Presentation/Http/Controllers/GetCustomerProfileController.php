@@ -18,6 +18,8 @@ class GetCustomerProfileController
     {
         $profile = $this->service->getProfile($request->user());
 
+        $profile->load(['addresses', 'preference', 'user']);
+
         return ApiResponse::success([
             'profile' => new CustomerProfileResource($profile),
         ]);

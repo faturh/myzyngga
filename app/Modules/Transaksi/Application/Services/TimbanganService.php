@@ -67,6 +67,10 @@ class TimbanganService
         $minimumWeight = (double) ($data['minimum_weight'] ?? 3.0);
         $pricePerKg = (double) ($data['price_per_kg'] ?? 0);
 
+        if ($actualWeight <= 0) {
+            throw new DomainException('Berat timbangan harus lebih besar dari 0 kg.', 422);
+        }
+
         if ($pricePerKg < 0) {
             throw new DomainException('Harga per kg tidak boleh bernilai negatif.', 422);
         }

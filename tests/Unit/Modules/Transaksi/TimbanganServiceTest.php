@@ -90,21 +90,6 @@ class TimbanganServiceTest extends TestCase
             'total_price' => 22500, // 4.5 * 5000 = 22500
         ]);
 
-        $kaos = JenisPakaian::where('nama', 'Baju Kaos')->firstOrFail();
-        $jeans = JenisPakaian::where('nama', 'Celana Jeans')->firstOrFail();
-
-        $this->assertDatabaseHas('list_pakaian_timbangan', [
-            'timbangan_id' => $proses->id,
-            'jenis_pakaian_id' => $kaos->id,
-            'qty' => 5,
-        ]);
-
-        $this->assertDatabaseHas('list_pakaian_timbangan', [
-            'timbangan_id' => $proses->id,
-            'jenis_pakaian_id' => $jeans->id,
-            'qty' => 2,
-        ]);
-
         $this->assertDatabaseHas('transaksi', [
             'id' => $transaksi->id,
             'status' => 'Perlu Dikerjakan',

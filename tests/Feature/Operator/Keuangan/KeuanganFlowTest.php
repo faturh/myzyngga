@@ -103,13 +103,22 @@ class KeuanganFlowTest extends TestCase
             'jenis_kelamin' => 'L',
         ]);
 
+        $lp = \App\Models\LayananPrioritas::query()->firstOrCreate(
+            ['nama' => 'Regular Smoke', 'cabang_id' => $cabang->id],
+            ['deskripsi' => 'Regular service', 'harga' => 5000, 'prioritas' => 1]
+        );
+
+        $listPengerjaan = \App\Models\ListPengerjaan::create([
+            'list_status_pengerjaan_id' => 1,
+        ]);
+
         Transaksi::query()->create([
             'nota' => 'TX-TEST-KEUANGAN',
             'pelanggan_id' => $pelanggan->id,
             'pegawai_id' => $admin->id,
             'cabang_id' => $cabang->id,
-            'layanan_prioritas_id' => 1, // regular
-            'list_pengerjaan_id' => 1,
+            'layanan_prioritas_id' => $lp->id,
+            'list_pengerjaan_id' => $listPengerjaan->id,
             'waktu' => now()->toDateTimeString(),
             'pickup_address' => 'Test Address',
             'pickup_lat' => -6.2,

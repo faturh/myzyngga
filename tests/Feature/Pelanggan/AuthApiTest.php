@@ -15,6 +15,11 @@ class AuthApiTest extends TestCase
      */
     public function test_register_api(): void
     {
+        \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'customer',
+            'guard_name' => 'web',
+        ]);
+
         $response = $this->postJson('/api/v1/auth/register', [
             'name' => 'Test User API',
             'username' => 'testuserapi',

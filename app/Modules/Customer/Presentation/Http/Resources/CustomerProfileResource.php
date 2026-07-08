@@ -28,6 +28,17 @@ class CustomerProfileResource extends JsonResource
                 'default_note' => $this->preference->default_note,
                 'default_payment_method' => $this->preference->default_payment_method,
             ] : null,
+
+            // Detail fields for skripsi
+            'user_id' => $this->user_id,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'slug' => $this->slug,
+
+            // Relations
+            'user' => $this->user,
+            'addresses' => $this->addresses,
+            'preference' => $this->preference,
         ];
     }
 }

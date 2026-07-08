@@ -1,0 +1,613 @@
+{
+	"info": {
+		"name": "Zyngga Skripsi Pelanggan API",
+		"_postman_id": "zyngga-pelanggan-2026",
+		"description": "Koleksi REST API Pelanggan Zyngga – Pengujian Skripsi. Hanya memuat endpoint kebutuhan fungsional (FR) pelanggan. Jalankan endpoint 2 (Login) terlebih dahulu agar token tersimpan otomatis.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://myzyngga.vercel.app",
+			"type": "string"
+		},
+		{
+			"key": "customer_token",
+			"value": "PASTE_TOKEN_DARI_RESPONSE_LOGIN",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "GANTI_DENGAN_ID_TRANSAKSI",
+			"type": "string"
+		},
+		{
+			"key": "pelanggan_id",
+			"value": "GANTI_DENGAN_PELANGGAN_ID",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Register (Customer)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Simpan token DAN pelanggan_id dari response Register",
+							"var jsonData = pm.response.json();",
+							"if (jsonData && jsonData.access_token) {",
+							"    pm.collectionVariables.set('customer_token', jsonData.access_token);",
+							"    console.log('Token Register disimpan: ' + jsonData.access_token.substring(0, 20) + '...');",
+							"}",
+							"if (jsonData && jsonData.data && jsonData.data.pelanggan_id) {",
+							"    pm.collectionVariables.set('pelanggan_id', jsonData.data.pelanggan_id);",
+							"    console.log('pelanggan_id disimpan: ' + jsonData.data.pelanggan_id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Fatur Rahman Al-Fath\",\n    \"username\": \"faturrahman99\",\n    \"email\": \"fatur.rahman.laundry@example.com\",\n    \"phone\": \"081234567890\",\n    \"password\": \"password12345\",\n    \"password_confirmation\": \"password12345\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/auth/register",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "auth", "register"]
+				},
+				"description": "REQ-PEL-01.01 – Registrasi akun baru pelanggan. Field yang diperlukan: name, username (unik), email (unik), phone, password, password_confirmation. Jika berhasil, server mengembalikan access_token yang bisa langsung digunakan."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Login (Customer)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Simpan access_token ke variabel koleksi secara otomatis setelah login berhasil",
+							"var jsonData = pm.response.json();",
+							"if (jsonData && jsonData.access_token) {",
+							"    pm.collectionVariables.set('customer_token', jsonData.access_token);",
+							"    console.log('Token berhasil disimpan: ' + jsonData.access_token.substring(0, 20) + '...');",
+							"} else {",
+							"    console.log('Login gagal atau token tidak ditemukan di response.');",
+							"}",
+							"// Simpan juga pelanggan_id agar Create Order bisa berjalan",
+							"if (jsonData && jsonData.data && jsonData.data.pelanggan_id) {",
+							"    pm.collectionVariables.set('pelanggan_id', jsonData.data.pelanggan_id);",
+							"    console.log('pelanggan_id disimpan: ' + jsonData.data.pelanggan_id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"fatur.rahman.laundry@example.com\",\n    \"password\": \"password12345\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/auth/login",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "auth", "login"]
+				},
+				"description": "REQ-PEL-01.02 – Autentikasi pelanggan. Mengembalikan access_token (Bearer Token) yang digunakan pada seluruh request berikutnya. Skrip test otomatis menyimpan token ke variabel {{customer_token}}."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Lihat Profil Pelanggan",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/customer/profile",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "customer", "profile"]
+				},
+				"description": "REQ-PEL-02.01 – Menampilkan ringkasan profil dan data akun pelanggan yang sedang login, termasuk relasi nested: daftar alamat tersimpan (addresses) dan preferensi default laundry (preference)."
+			},
+			"response": []
+		},
+		{
+			"name": "4. Tambah / Perbarui Alamat Pelanggan",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"label\": \"Apartemen Gandaria Heights - Unit Utama\",\n    \"address\": \"Jalan Sultan Iskandar Muda No. 10, Kelurahan Pondok Pinang, Kecamatan Kebayoran Lama, Jakarta Selatan, DKI Jakarta 12310\",\n    \"detail_address\": \"Tower B, Lantai 12, Unit 1205. Masuk melalui lobi utama Tower B. Akses lift memerlukan kartu tamu – titipkan laundry kepada petugas resepsionis jika penghuni tidak ada di tempat.\",\n    \"lat\": -6.2443872,\n    \"lng\": 106.7835241,\n    \"jenis_kelamin\": \"L\",\n    \"telepon\": \"081234567890\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/customer/address",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "customer", "address"]
+				},
+				"description": "REQ-PEL-02.02 & REQ-PEL-02.03 – Menambahkan atau memperbarui alamat tersimpan pelanggan beserta koordinat peta (lat/lng). Field label, detail_address, lat, lng, jenis_kelamin, dan telepon bersifat opsional (nullable). Field address wajib diisi."
+			},
+			"response": []
+		},
+		{
+			"name": "5. Simpan Preferensi Default Laundry",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"default_parfum\": \"Lavender Premium & Softener\",\n    \"default_note\": \"Mohon pisahkan pakaian rajut atau wol agar dicuci secara manual (handwash) dan tidak disatukan dengan celana jins berbahan berat agar tidak terjadi kelunturan warna. Setrika dan lipat dengan rapi menggunakan plastik pembungkus tebal sebagai pelindung pakaian.\",\n    \"default_payment_method\": \"qris\",\n    \"jenis_kelamin\": \"L\",\n    \"telepon\": \"081234567890\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/customer/preferences",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "customer", "preferences"]
+				},
+				"description": "REQ-PEL-02.04 – Menyimpan atau memperbarui preferensi laundry default milik pelanggan (parfum pilihan, catatan khusus, metode pembayaran default). Nilai yang valid untuk default_payment_method: cash | qris | transfer."
+			},
+			"response": []
+		},
+		{
+			"name": "6. Buat Pesanan Laundry (Create Order)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Simpan order_id dari response Create Order secara otomatis",
+							"var jsonData = pm.response.json();",
+							"if (jsonData && jsonData.data && jsonData.data.order && jsonData.data.order.id) {",
+							"    pm.collectionVariables.set('order_id', jsonData.data.order.id);",
+							"    console.log('order_id berhasil disimpan: ' + jsonData.data.order.id);",
+							"} else {",
+							"    console.log('Gagal menyimpan order_id. Cek response body!');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"pelanggan_id\": {{pelanggan_id}},\n    \"cabang_id\": 1,\n    \"layanan_prioritas_id\": 1,\n    \"pickup_address\": \"Jalan Sultan Iskandar Muda No. 10, Kelurahan Pondok Pinang, Kecamatan Kebayoran Lama, Jakarta Selatan, DKI Jakarta 12310\",\n    \"pickup_detail_address\": \"Tower B, Lantai 12, Unit 1205. Masuk melalui lobi utama Tower B. Akses lift memerlukan kartu tamu – harap hubungi penghuni terlebih dahulu sebelum menjemput laundry.\",\n    \"pickup_date\": \"2026-07-10\",\n    \"pickup_time\": \"10:00 - 12:00\",\n    \"parfum\": \"Lavender Premium & Softener\",\n    \"catatan\": \"Tolong pisahkan kemeja kerja berbahan wol putih dari celana panjang denim gelap agar tidak terjadi kelunturan warna selama proses pencucian. Pakaian dengan bahan halus harap dicuci menggunakan air dingin dan deterjen lembut.\",\n    \"payment_method\": \"qris\",\n    \"estimated_total\": 28000\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/orders",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "orders"]
+				},
+				"description": "REQ-PEL-03.01, 03.02, 03.03 – Membuat pesanan laundry baru. Field wajib: pelanggan_id, cabang_id, layanan_prioritas_id, pickup_address, pickup_date, pickup_time, payment_method (cash|qris|transfer), estimated_total. Skrip test otomatis menyimpan order_id ke variabel koleksi."
+			},
+			"response": []
+		},
+		{
+			"name": "7. Riwayat Pesanan Pelanggan",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/orders/history",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "orders", "history"]
+				},
+				"description": "REQ-PEL-05.03 & REQ-PEL-06.01 – Menampilkan daftar seluruh riwayat pesanan laundry milik pelanggan yang sedang login, diurutkan dari yang terbaru. Setiap item mencakup status pesanan, tanggal pemesanan, total biaya, dan nama layanan."
+			},
+			"response": []
+		},
+		{
+			"name": "8. Detail Pesanan (Get Order Details)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/orders/{{order_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "orders", "{{order_id}}"]
+				},
+				"description": "REQ-PEL-06.01 & REQ-PEL-04.03 – Menampilkan detail lengkap satu pesanan berdasarkan ID transaksi. Mengembalikan data: status, nota layanan, informasi timbangan, daftar pakaian, pegawai yang menangani, dan rincian pengerjaan."
+			},
+			"response": []
+		},
+		{
+			"name": "9. Cek Nota Pesanan (Non-Login)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query\": \"pelanggan-103000-08072026-148\",\n    \"phone_last_4\": \"7890\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/orders/track",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "orders", "track"]
+				},
+				"description": "REQ-PEL-06.02 – Pelacakan status pesanan oleh pengguna tanpa akun (non-login) menggunakan nomor nota dan 4 digit terakhir nomor WhatsApp/telepon yang terdaftar. Tidak memerlukan Bearer Token."
+			},
+			"response": []
+		},
+		{
+			"name": "10. Ajukan Layanan Antar ke Pelanggan",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"lat\": -6.2443872,\n    \"lng\": 106.7835241,\n    \"address\": \"Jalan Sultan Iskandar Muda No. 10, Kelurahan Pondok Pinang, Kecamatan Kebayoran Lama, Jakarta Selatan, DKI Jakarta 12310\",\n    \"detail_address\": \"Tower B, Lantai 12, Unit 1205. Harap hubungi penghuni melalui intercom lobi terlebih dahulu sebelum mengantarkan pakaian. Jangan dititipkan ke satpam.\",\n    \"note\": \"Mohon diantar pada rentang waktu sore hari antara pukul 15:00 – 18:00 WIB karena penghuni baru pulang kerja pada jam tersebut.\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/orders/{{order_id}}/delivery-request",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "orders", "{{order_id}}", "delivery-request"]
+				},
+				"description": "REQ-PEL-04.01 & REQ-PEL-04.02 – Pelanggan mengajukan permintaan pengantaran pakaian yang sudah selesai dicuci ke alamat tujuan. Memerlukan koordinat (lat/lng), alamat lengkap, dan catatan pengantaran."
+			},
+			"response": []
+		},
+		{
+			"name": "11. Daftar Metode Pembayaran",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/payment/methods",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "payment", "methods"]
+				},
+				"description": "REQ-PEL-05.01 – Menampilkan daftar saluran pembayaran digital yang tersedia pada sistem Zyngga (QRIS, transfer bank, GoPay, ShopeePay, dll.)."
+			},
+			"response": []
+		},
+		{
+			"name": "12. Notifikasi Webhook Midtrans (Konfirmasi Pembayaran)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"transaction_time\": \"2026-07-08 10:30:00\",\n    \"transaction_status\": \"settlement\",\n    \"transaction_id\": \"abc123-midtrans-uuid-def456\",\n    \"status_message\": \"midtrans payment notification\",\n    \"status_code\": \"200\",\n    \"signature_key\": \"dummy_signature_key_for_testing_purposes_only\",\n    \"settlement_time\": \"2026-07-08 10:35:00\",\n    \"payment_type\": \"qris\",\n    \"order_id\": \"{{order_id}}-TXN20260708\",\n    \"merchant_id\": \"G123456789\",\n    \"gross_amount\": \"28000.00\",\n    \"fraud_status\": \"accept\",\n    \"currency\": \"IDR\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/payment/notification",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "payment", "notification"]
+				},
+				"description": "REQ-PEL-05.02 – Menerima callback notifikasi sukses dari payment gateway Midtrans. Endpoint ini secara otomatis memperbarui status pembayaran transaksi menjadi 'paid' dan memicu pengiriman email konfirmasi kepada pelanggan."
+			},
+			"response": []
+		},
+		{
+			"name": "13. Ajukan Upgrade Jenis Layanan",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"new_service_id\": 2,\n    \"payment_method\": \"qris\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/orders/{{order_id}}/upgrade",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "orders", "{{order_id}}", "upgrade"]
+				},
+				"description": "REQ-PEL-08.01 & REQ-PEL-08.02 – Pelanggan mengajukan peningkatan jenis layanan laundry pada transaksi yang masih aktif (contoh: dari Reguler ke Kilat). Field new_service_id wajib diisi sesuai ID layanan tujuan. Field payment_method opsional (cash|qris|transfer)."
+			},
+			"response": []
+		},
+		{
+			"name": "14. Ajukan Komplain Pesanan",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{customer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"issue_description\": \"Kemeja putih kerja berbahan Oxford saya mengalami noda lunturan biru gelap yang berasal dari pakaian lain setelah proses pencucian selesai. Padahal sudah ada catatan untuk memisahkan pakaian berwarna dan putih. Kondisi pakaian sebelum diserahkan dalam keadaan bersih dan tanpa noda apapun.\",\n    \"issue_types\": [\n        \"pakaian_rusak\",\n        \"lainnya\"\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/orders/{{order_id}}/complaint",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "orders", "{{order_id}}", "complaint"]
+				},
+				"description": "REQ-PEL-09.01 & REQ-PEL-09.02 – Pelanggan mengajukan komplain terkait permasalahan yang terjadi pada pakaian cucian. Nilai valid untuk issue_types: pakaian_rusak | masalah_pengantaran | status_pesanan | kendala_pembayaran | lainnya."
+			},
+			"response": []
+		}
+	]
+}

@@ -33,6 +33,8 @@ class CreateOrderController
             estimatedTotal: (float) $validated['estimated_total'],
         ));
 
+        $order->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai', 'pelanggan', 'listPengerjaan']);
+
         return ApiResponse::success([
             'order' => new OrderResource($order),
         ], 201);
