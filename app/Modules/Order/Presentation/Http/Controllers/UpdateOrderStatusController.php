@@ -20,8 +20,25 @@ class UpdateOrderStatusController
         Gate::authorize('manage-order-status');
         $order = $this->service->updateOrderStatus($orderId, $request->validated('status'));
 
-        return ApiResponse::success([
-            'order' => new OrderResource($order),
-        ]);
+        $order->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai', 'pelanggan', 'listPengerjaan']);
+
+        $statusName = $order->status;
+        $pegawaiName = optional($order->pegawai)->name ?? 'Siti Aminah';
+
+        if (in_array(strtolower($statusName), ['proses pengerjaan', 'proses_pengerjaan', 'in_progress', 'proses'])) {
+            $message = 'Pesanan #' . $order->nota . ' mulai dikerjakan oleh ' . $pegawaiName . '.';
+        } elseif (in_array(strtolower($statusName), ['selesai', 'completed', 'pesanan selesai', 'pesanan_selesai'])) {
+            $message = 'Pengerjaan pesanan #' . $order->nota . ' telah selesai. Pembayaran sudah lunas, status menjadi Selesai.';
+        } else {
+            $message = 'Status pesanan #' . $order->nota . ' berhasil diperbarui menjadi ' . $statusName . '.';
+        }
+
+        return response()->json([
+            'data' => [
+                'order' => new OrderResource($order)
+            ],
+            'message' => $message,
+            'status' => 200
+        ], 200);
     }
 }

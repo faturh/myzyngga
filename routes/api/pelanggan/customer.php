@@ -5,7 +5,7 @@ use App\Modules\Customer\Presentation\Http\Controllers\UpsertCustomerAddressCont
 use App\Modules\Customer\Presentation\Http\Controllers\UpsertCustomerPreferenceController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/customer/profile', GetCustomerProfileController::class);
     Route::put('/customer/address', UpsertCustomerAddressController::class);
     Route::put('/customer/preferences', UpsertCustomerPreferenceController::class);

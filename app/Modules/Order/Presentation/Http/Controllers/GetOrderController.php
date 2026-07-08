@@ -20,6 +20,8 @@ class GetOrderController
         $order = $this->service->getOrder($orderId);
         Gate::authorize('view-order', $order);
 
+        $order->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai', 'pelanggan', 'listPengerjaan']);
+
         return ApiResponse::success([
             'order' => new OrderResource($order),
         ]);
