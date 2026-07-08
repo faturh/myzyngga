@@ -42,6 +42,22 @@ class KeuanganController extends Controller
 
         $cabangs = Cabang::all();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => [
+                    'records' => $filtered['records'],
+                    'totalPemasukan' => $filtered['totalPemasukan'],
+                    'totalPengeluaran' => $filtered['totalPengeluaran'],
+                    'saldoToko' => $saldoToko,
+                    'startDate' => $filtered['startDate'],
+                    'endDate' => $filtered['endDate'],
+                    'dateValue' => $filtered['dateValue'],
+                    'filterType' => $filtered['filterType'],
+                ],
+                'status' => 200
+            ], 200);
+        }
+
         return view('operator.admin.keuangan', [
             'records' => $filtered['records'],
             'totalPemasukan' => $filtered['totalPemasukan'],
@@ -69,7 +85,15 @@ class KeuanganController extends Controller
             $validated['cabang_id'] = $user->cabang_id;
         }
 
-        $this->keuanganService->addRecord($validated);
+        $record = $this->keuanganService->addRecord($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => $record,
+                'message' => 'Catatan keuangan berhasil disimpan.',
+                'status' => 200
+            ], 200);
+        }
 
         return redirect()->back()->with('success', 'Catatan keuangan berhasil disimpan.');
     }
@@ -82,7 +106,21 @@ class KeuanganController extends Controller
         $deleted = $this->keuanganService->deleteRecord($id);
 
         if ($deleted) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'data' => ['id' => $id],
+                    'message' => 'Catatan keuangan berhasil dihapus.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->back()->with('success', 'Catatan keuangan berhasil dihapus.');
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message' => 'Catatan keuangan tidak ditemukan atau tidak dapat dihapus.',
+                'status' => 400
+            ], 400);
         }
 
         return redirect()->back()->withErrors(['error' => 'Catatan keuangan tidak ditemukan atau tidak dapat dihapus.']);

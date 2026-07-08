@@ -16,17 +16,22 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Maatwebsite\Excel\Facades\Excel;
 
-class UserController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class UserController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(function ($request, $next) {
-            $user = auth()->user();
-            if (!$user || !$user->isAdmin()) {
-                abort(403, 'Hanya Admin Utama yang dapat mengelola pengguna.');
-            }
-            return $next($request);
-        });
+        return [
+            new Middleware(function ($request, $next) {
+                $user = auth()->user();
+                if (!$user || !$user->isAdmin()) {
+                    abort(403, 'Hanya Admin Utama yang dapat mengelola pengguna.');
+                }
+                return $next($request);
+            }),
+        ];
     }
 
     private function mapUserCollection($users)
@@ -64,6 +69,16 @@ class UserController extends Controller
             $pegawaiTrash = User::whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->onlyTrashed()->with('cabang')->get();
             $gamisTrash = collect();
 
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'data' => [
+                        'manajer' => $this->mapUserCollection($manajer),
+                        'pegawai' => $this->mapUserCollection($pegawai),
+                    ],
+                    'status' => 200
+                ], 200);
+            }
+
             return view('operator.dashboard.user.index', [
                 'title' => $title,
                 'cabang' => $cabang,
@@ -83,6 +98,15 @@ class UserController extends Controller
 
             $pegawaiTrash = User::where('cabang_id', $cabangId)->whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->onlyTrashed()->with('cabang')->get();
             $gamisTrash = collect();
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'data' => [
+                        'pegawai' => $this->mapUserCollection($pegawai),
+                    ],
+                    'status' => 200
+                ], 200);
+            }
 
             return view('operator.dashboard.user.index', [
                 'title' => $title,
@@ -182,8 +206,21 @@ class UserController extends Controller
         $user->assignRole($request->role);
 
         if ($user) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $user,
+                    'message' => 'User Berhasil Ditambahkan',
+                    'status' => 200
+                ], 200);
+            }
             return to_route('user')->with('success', 'User Berhasil Ditambahkan');
         } else {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'User Gagal Ditambahkan',
+                    'status' => 400
+                ], 400);
+            }
             return to_route('user')->with('error', 'User Gagal Ditambahkan');
         }
     }
@@ -262,8 +299,21 @@ class UserController extends Controller
         $user->syncRoles([$request->role]);
 
         if ($userUpdate) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $user,
+                    'message' => 'User Berhasil Diperbarui',
+                    'status' => 200
+                ], 200);
+            }
             return to_route('user')->with('success', 'User Berhasil Diperbarui');
         } else {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'User Gagal Diperbarui',
+                    'status' => 400
+                ], 400);
+            }
             return to_route('user')->with('error', 'User Gagal Diperbarui');
         }
     }
@@ -306,8 +356,20 @@ class UserController extends Controller
         ]);
 
         if ($updatePassword) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Password User Berhasil Diganti',
+                    'status' => 200
+                ], 200);
+            }
             return to_route('user')->with('success', 'Password User Berhasil Diganti');
         } else {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Password User Gagal Diganti',
+                    'status' => 400
+                ], 400);
+            }
             return to_route('user')->with('error', 'Password User Gagal Diganti');
         }
     }
@@ -321,8 +383,20 @@ class UserController extends Controller
 
         $hapus = User::where('slug', $request->slug)->delete();
         if ($hapus) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'User Berhasil Dihapus',
+                    'status' => 200
+                ], 200);
+            }
             abort(200, 'User Berhasil Dihapus');
         } else {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'User Gagal Dihapus',
+                    'status' => 400
+                ], 400);
+            }
             abort(400, 'User Gagal Dihapus');
         }
     }

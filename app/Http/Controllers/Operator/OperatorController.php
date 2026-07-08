@@ -77,6 +77,13 @@ class OperatorController extends Controller
             ];
         });
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => $karyawanData,
+                'status' => 200
+            ], 200);
+        }
+
         return view('operator.admin.gaji-karyawan', [
             'karyawan' => $karyawanData,
             'startDate' => $startDate,
@@ -236,6 +243,13 @@ class OperatorController extends Controller
 
         $transaksi = $query->paginate(10)->withQueryString();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => $transaksi,
+                'status' => 200
+            ], 200);
+        }
+
         return view('operator.admin.riwayat-pesanan', compact(
             'transaksi',
             'tab',
@@ -305,6 +319,10 @@ class OperatorController extends Controller
      */
     public function prosesTransaksi(Request $request, string $id)
     {
+        if ($request->has('berat') && !$request->has('actual_weight')) {
+            $request->merge(['actual_weight' => $request->input('berat')]);
+        }
+
         try {
             $validated = $request->validate([
                 'tipe_layanan' => 'nullable|string',
@@ -332,14 +350,34 @@ class OperatorController extends Controller
             }
 
             if (!$hasWeight && !$hasSatuan) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Silakan isi berat timbangan kiloan ATAU masukkan minimal satu item satuan tambahan.',
+                        'status' => 400
+                    ], 400);
+                }
                 return redirect()->back()->withInput()->with('error', 'Silakan isi berat timbangan kiloan ATAU masukkan minimal satu item satuan tambahan.');
             }
 
             $this->prosesService->prosesTransaksi($id, $validated);
 
             $transaksi = Transaksi::findOrFail($id);
+            $transaksi->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai']);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Pesanan #' . $transaksi->nota . ' berhasil diproses.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal memproses pesanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -430,9 +468,23 @@ class OperatorController extends Controller
 
             $transaksi->status = 'proses pengerjaan';
             $transaksi->save();
+            $transaksi->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai']);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal mulai mengerjakan pesanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -446,6 +498,13 @@ class OperatorController extends Controller
         $transaksi->status = 'Batal';
         $transaksi->save();
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'data' => $transaksi,
+                'message' => 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.',
+                'status' => 200
+            ], 200);
+        }
         return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.');
     }
 
@@ -465,6 +524,13 @@ class OperatorController extends Controller
             $message .= ' Pembayaran sudah lunas, status menjadi Selesai.';
         }
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'data' => $transaksi,
+                'message' => $message,
+                'status' => 200
+            ], 200);
+        }
         return redirect()->back()->with('success', $message);
     }
 
@@ -570,11 +636,25 @@ class OperatorController extends Controller
                 'layanan_prioritas_id' => $layanan->id,
                 'pelanggan_id' => $pelanggan->id,
                 'pegawai_id' => $validated['pegawai_id'],
-                'cabang_id' => $pelanggan->cabang_id ?? 1,
+                'cabang_id' => auth()->user()->cabang_id ?? \App\Models\Cabang::value('id') ?? 1,
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Pesanan Manual #' . $transaksi->nota . ' berhasil dibuat.',
+                    'status' => 200
+                ], 200);
+            }
 
             return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan Manual #' . $transaksi->nota . ' berhasil dibuat.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal membuat pesanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->withInput()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage());
         }
     }
@@ -588,6 +668,12 @@ class OperatorController extends Controller
         $meta = json_decode($transaksi->payment_metadata, true) ?? [];
 
         if (!isset($meta['pending_upgrade'])) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Tidak ada permintaan upgrade tertunda untuk pesanan ini.',
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Tidak ada permintaan upgrade tertunda untuk pesanan ini.');
         }
 
@@ -650,8 +736,21 @@ class OperatorController extends Controller
                 $history->save();
             });
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Upgrade layanan berhasil dikonfirmasi dan pembayaran tunai dicatat.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->back()->with('success', 'Upgrade layanan berhasil dikonfirmasi dan pembayaran tunai dicatat.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal konfirmasi upgrade: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Gagal konfirmasi upgrade: ' . $e->getMessage());
         }
     }
@@ -669,6 +768,12 @@ class OperatorController extends Controller
         $newService = \App\Models\LayananPrioritas::findOrFail($request->new_service_id);
 
         if ($newService->prioritas <= ($transaksi->layananPrioritas->prioritas ?? 0)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Layanan tujuan harus memiliki prioritas lebih tinggi.',
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Layanan tujuan harus memiliki prioritas lebih tinggi.');
         }
 
@@ -720,8 +825,21 @@ class OperatorController extends Controller
                 $history->save();
             });
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Layanan berhasil di-upgrade ke ' . $newService->nama . ' secara langsung.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->back()->with('success', 'Layanan berhasil di-upgrade ke ' . $newService->nama . ' secara langsung.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal upgrade layanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Gagal upgrade layanan: ' . $e->getMessage());
         }
     }

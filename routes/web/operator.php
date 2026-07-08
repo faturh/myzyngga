@@ -100,6 +100,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pendapatan-laundry', [\App\Http\Controllers\LaporanController::class, 'laporanPendapatanLaundry'])->name('laporan.pendapatan.laundry');
         Route::post('/pendapatan-laundry/pdf', [\App\Http\Controllers\LaporanController::class, 'pdfLaporanPendapatanLaundry'])->name('laporan.pendapatan.laundry.pdf');
         Route::get('/pelanggan', [\App\Http\Controllers\LaporanController::class, 'laporanPelanggan'])->name('laporan.pelanggan');
+        Route::get('/pelanggan-list', [\App\Http\Controllers\LaporanController::class, 'laporanPelanggan'])->name('pelanggan');
         Route::post('/pelanggan/pdf', [\App\Http\Controllers\LaporanController::class, 'pdfLaporanPelanggan'])->name('laporan.pelanggan.pdf');
     });
 
