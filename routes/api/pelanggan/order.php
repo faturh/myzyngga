@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/orders/track', [OrderPageController::class, 'check']);
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/orders', CreateOrderController::class);
     Route::get('/orders/history', ListOrderHistoryController::class);
     Route::get('/orders/{orderId}', GetOrderController::class);
