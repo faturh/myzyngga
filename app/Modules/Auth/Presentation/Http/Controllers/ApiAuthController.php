@@ -90,12 +90,17 @@ class ApiAuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Load relasi pelanggan agar pelanggan_id tersedia di response untuk Postman
+        $pelanggan = Pelanggan::where('user_id', $user->id)->first();
+
         return response()->json([
-            'success' => true,
-            'message' => 'Login berhasil',
+            'success'      => true,
+            'message'      => 'Login berhasil',
             'access_token' => $token,
-            'token_type' => 'Bearer',
-            'data' => $user
+            'token_type'   => 'Bearer',
+            'data'         => array_merge($user->toArray(), [
+                'pelanggan_id' => $pelanggan?->id,
+            ]),
         ], 200);
     }
 

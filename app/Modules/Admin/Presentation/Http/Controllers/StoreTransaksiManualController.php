@@ -12,18 +12,18 @@ class StoreTransaksiManualController
         private readonly AdminService $service,
     ) {
     }
-
     public function __invoke(StoreTransaksiManualRequest $request)
     {
         $transaksi = $this->service->createManualTransaksi($request->validated());
 
-        return ApiResponse::success([
-            'transaksi' => [
-                'id' => $transaksi->id,
-                'nota' => $transaksi->nota,
-                'status' => $transaksi->status,
-                'payment_status' => $transaksi->payment_status,
+        $transaksi->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai', 'pelanggan', 'listPengerjaan']);
+
+        return response()->json([
+            'data' => [
+                'transaksi' => $transaksi
             ],
-        ], 201);
+            'message' => 'Pesanan Manual #' . $transaksi->nota . ' berhasil dibuat.',
+            'status' => 200
+        ], 200);
     }
 }
