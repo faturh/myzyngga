@@ -17,8 +17,9 @@ class EloquentKeuanganRepository implements KeuanganRepositoryInterface
     {
         $cabangId = null; // Unify all branches, ignore cabang filter.
         
-        // 1. Fetch manual inputs
-        $manualQuery = KeuanganToko::with('cabang');
+        // 1. Fetch manual inputs (restricted to Pencairan Dana category)
+        $manualQuery = KeuanganToko::with('cabang')
+            ->where('kategori', 'Pencairan Dana');
         if ($cabangId !== null) {
             $manualQuery->where('cabang_id', $cabangId);
         }
@@ -98,20 +99,14 @@ class EloquentKeuanganRepository implements KeuanganRepositoryInterface
         }
         $transactionsSum = (double) $queryTx->sum('total_bayar_akhir');
 
-        // Sum of manual pemasukan
-        $queryIn = KeuanganToko::query()->where('tipe', 'pemasukan');
-        if ($cabangId !== null) {
-            $queryIn->where('cabang_id', $cabangId);
-        }
-        $pemasukanSum = (double) $queryIn->sum('nominal');
-
-        // Sum of manual pengeluaran
-        $queryOut = KeuanganToko::query()->where('tipe', 'pengeluaran');
+        // Sum of manual Pencairan Dana (which is an expense)
+        $queryOut = KeuanganToko::query()
+            ->where('kategori', 'Pencairan Dana');
         if ($cabangId !== null) {
             $queryOut->where('cabang_id', $cabangId);
         }
         $pengeluaranSum = (double) $queryOut->sum('nominal');
 
-        return $transactionsSum + $pemasukanSum - $pengeluaranSum;
+        return $transactionsSum - $pengeluaranSum;
     }
 }

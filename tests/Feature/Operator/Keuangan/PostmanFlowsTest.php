@@ -154,10 +154,10 @@ class PostmanFlowsTest extends TestCase
         // 1. Store manual cash record
         $responseStore = $this->postJson(route('admin.keuangan.store'), [
             'tanggal' => date('Y-m-d'),
-            'tipe' => 'pemasukan',
-            'kategori' => 'Petty Cash',
+            'tipe' => 'pengeluaran',
+            'kategori' => 'Pencairan Dana',
             'nominal' => 200000,
-            'keterangan' => 'Suntikan dana kasir',
+            'keterangan' => 'Pencairan dana owner',
             'cabang_id' => $this->cabang->id,
         ]);
 
@@ -225,5 +225,39 @@ class PostmanFlowsTest extends TestCase
         ]);
         $responseHapus->assertStatus(200);
         $responseHapus->assertJsonPath('status', 200);
+    }
+
+    public function test_employee_salary_actions_flow_as_json(): void
+    {
+        $this->actingAs($this->admin);
+
+        // 1. Update Tarif Gaji
+        $responseRate = $this->postJson(route('admin.gaji-karyawan.update-tarif'), [
+            'pegawai_id' => $this->pegawai->id,
+            'gaji' => 4500,
+        ]);
+        $responseRate->assertStatus(200);
+        $responseRate->assertJsonPath('status', 200);
+        
+        $this->assertEquals(4500, $this->pegawai->refresh()->gaji);
+
+        // 2. Bayar Gaji (Record Keuangan)
+        $responsePay = $this->postJson(route('admin.gaji-karyawan.bayar'), [
+            'pegawai_id' => $this->pegawai->id,
+            'nominal' => 150000,
+            'tanggal' => now()->toDateString(),
+            'keterangan' => 'Pembayaran Gaji Test',
+        ]);
+        $responsePay->assertStatus(200);
+        $responsePay->assertJsonPath('status', 200);
+
+        // Verify KeuanganToko entry exists
+        $this->assertDatabaseHas('keuangan_toko', [
+            'tipe' => 'pengeluaran',
+            'kategori' => 'Gaji',
+            'nominal' => 150000.0,
+            'keterangan' => 'Pembayaran Gaji Test',
+            'cabang_id' => $this->cabang->id,
+        ]);
     }
 }

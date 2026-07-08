@@ -55,39 +55,26 @@ class KeuanganFlowTest extends TestCase
         $response->assertOk();
         $response->assertSee('Rp ' . $initialFormatted);
 
-        // 2. Add manual pemasukan
+        // 2. Add manual pengeluaran (Pencairan Dana)
         $this->post(route('admin.keuangan.store'), [
             'tanggal' => date('Y-m-d'),
-            'tipe' => 'pemasukan',
-            'kategori' => 'Petty Cash',
-            'nominal' => 150000,
-            'keterangan' => 'Suntikan modal awal kasir',
+            'tipe' => 'pengeluaran',
+            'kategori' => 'Pencairan Dana',
+            'nominal' => 50000,
+            'keterangan' => 'Tarik dana oleh owner',
         ])->assertRedirect();
 
         // Verify manual record is created
         $this->assertDatabaseHas('keuangan_toko', [
-            'tipe' => 'pemasukan',
-            'nominal' => 150000,
+            'tipe' => 'pengeluaran',
+            'kategori' => 'Pencairan Dana',
+            'nominal' => 50000,
         ]);
 
-        // Balance should be initial + 150,000
-        $expected1 = number_format($initialBalance + 150000, 0, ',', '.');
+        // Balance should be initial - 50,000
+        $expected1 = number_format($initialBalance - 50000, 0, ',', '.');
         $response = $this->get(route('admin.keuangan'));
         $response->assertSee('Rp ' . $expected1);
-
-        // 4. Add manual pengeluaran
-        $this->post(route('admin.keuangan.store'), [
-            'tanggal' => date('Y-m-d'),
-            'tipe' => 'pengeluaran',
-            'kategori' => 'Pembelian Deterjen',
-            'nominal' => 30000,
-            'keterangan' => 'Beli Deterjen Sakura 1 Liter',
-        ])->assertRedirect();
-
-        // Balance should now be initial + 150,000 - 30,000 = initial + 120,000
-        $expected2 = number_format($initialBalance + 120000, 0, ',', '.');
-        $response = $this->get(route('admin.keuangan'));
-        $response->assertSee('Rp ' . $expected2);
 
         // 5. Simulate paid transaction
         $customerUser = User::factory()->create([
@@ -133,23 +120,23 @@ class KeuanganFlowTest extends TestCase
             'kembalian' => 0,
         ]);
 
-        // Balance should now be initial + 120,000 + 10,000 = initial + 130,000
-        $expected3 = number_format($initialBalance + 130000, 0, ',', '.');
+        // Balance should now be initial - 50,000 + 10,000 = initial - 40,000
+        $expected3 = number_format($initialBalance - 40000, 0, ',', '.');
         $response = $this->get(route('admin.keuangan'));
         $response->assertSee('Rp ' . $expected3);
 
         // 6. Test delete manual record
         $record = KeuanganToko::query()
-            ->where('tipe', 'pengeluaran')
-            ->where('nominal', 30000)
+            ->where('kategori', 'Pencairan Dana')
+            ->where('nominal', 50000)
             ->first();
         $this->assertNotNull($record);
 
         $this->delete(route('admin.keuangan.destroy', $record->id))
             ->assertRedirect();
 
-        // Since the 30,000 expense is deleted, balance should be initial + 150,000 + 10,000 = initial + 160,000
-        $expected4 = number_format($initialBalance + 160000, 0, ',', '.');
+        // Since the 50,000 expense is deleted, balance should be initial + 10,000
+        $expected4 = number_format($initialBalance + 10000, 0, ',', '.');
         $response = $this->get(route('admin.keuangan'));
         $response->assertSee('Rp ' . $expected4);
     }

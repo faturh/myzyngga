@@ -1,13 +1,15 @@
-@extends("operator.dashboard.layouts.main")
+@extends("operator.partials.layout")
 
 @section("js")
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         @if (session()->has("success"))
             Swal.fire({
                 title: 'Berhasil',
                 text: '{{ session("success") }}',
                 icon: 'success',
-                confirmButtonColor: '#6419E6',
+                confirmButtonColor: '#2563eb',
                 confirmButtonText: 'OK',
             });
         @endif
@@ -17,7 +19,7 @@
                 title: 'Gagal',
                 text: '{{ session("error") }}',
                 icon: 'error',
-                confirmButtonColor: '#6419E6',
+                confirmButtonColor: '#ef4444',
                 confirmButtonText: 'OK',
             });
         @endif
@@ -25,59 +27,68 @@
         @if ($errors->any())
             Swal.fire({
                 title: 'Gagal',
-                text: '{{ $title }} Gagal Dibuat',
+                text: '{{ $title }} Gagal Diubah',
                 icon: 'error',
-                confirmButtonColor: '#6419E6',
+                confirmButtonColor: '#ef4444',
                 confirmButtonText: 'OK',
             })
         @endif
     </script>
 @endsection
 
-@section("container")
-    <div class="-mx-3 flex flex-wrap">
-        <div class="w-full max-w-full flex-none px-3">
-            {{-- Awal Form Ganti Password --}}
-            <div class="dark:bg-slate-850 dark:shadow-dark-xl relative mb-6 flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid border-transparent bg-white bg-clip-border shadow-xl">
-                <div class="border-b-solid mb-0 flex items-center justify-between rounded-t-2xl border-b-0 border-b-transparent p-6 pb-3">
-                    <h6 class="font-bold dark:text-white">{{ $title }} | <span class="text-blue-500">{{ $user->email }}</span></h6>
-                </div>
-                <div class="flex-auto px-6 pb-6 pt-0">
-                    <form action="{{ route("user.update.password", $user->slug) }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <input type="text" name="slug" value="{{ $user->slug }}" hidden >
-                        {{-- <label class="form-control w-full">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Password Lama</span>
-                            </div>
-                            <input type="password" name="current_password" placeholder="Password Lama" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" required />
-                            <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
-                        </label> --}}
-                        <label class="form-control w-full">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Password Baru</span>
-                            </div>
-                            <input type="password" name="password" placeholder="Password Baru" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" required />
-                            <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
-                        </label>
-                        <label class="form-control w-full">
-                            <div class="label">
-                                <span class="label-text font-semibold dark:text-slate-100">Konfirmasi Password baru</span>
-                            </div>
-                            <input type="password" name="password_confirmation" placeholder="Konfirmasi Password baru" class="input input-bordered w-full text-blue-700 dark:bg-slate-100" required />
-                        </label>
+@section("content")
+    <div class="max-w-xl mx-auto space-y-6">
+        
+        <div class="flex items-center justify-between">
+            <a href="{{ route('user') }}" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-all">
+                <i data-feather="arrow-left" class="w-4 h-4"></i>
+                Kembali ke Daftar Karyawan
+            </a>
+        </div>
 
-                        <div id="form_gamis"></div>
-
-                        <div class="mt-5 flex flex-wrap justify-center gap-2">
-                            <button type="submit" class="btn btn-warning w-full max-w-md text-slate-700">Ganti Password</button>
-                            <a href="{{ url()->previous() }}" class="btn btn-ghost w-full max-w-md bg-slate-500 text-white dark:bg-slate-500 dark:hover:opacity-80">Kembali</a>
-                        </div>
-                    </form>
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100/90 flex justify-between items-center bg-slate-50/50">
+                <div>
+                    <h2 class="font-bold text-[#0f172a] text-lg">{{ $title }}</h2>
+                    <p class="text-xs text-slate-400 font-medium mt-0.5">Email Karyawan: <span class="text-blue-600 font-semibold">{{ $user->email }}</span></p>
                 </div>
             </div>
-            {{-- Akhir Form Ganti Password --}}
+
+            <div class="p-6">
+                <form action="{{ route('user.update.password', $user->slug) }}" method="POST" class="space-y-5">
+                    @csrf
+                    <input type="text" name="slug" value="{{ $user->slug }}" hidden>
+
+                    <!-- Password Baru -->
+                    <div class="space-y-1">
+                        <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="text-red-500">*</span> Password Baru
+                        </span>
+                        <input type="password" name="password" placeholder="Masukkan password baru" class="w-full bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" required />
+                        @error("password")
+                            <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <!-- Konfirmasi Password Baru -->
+                    <div class="space-y-1">
+                        <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="text-red-500">*</span> Konfirmasi Password Baru
+                        </span>
+                        <input type="password" name="password_confirmation" placeholder="Ulangi password baru" class="w-full bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" required />
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-4 flex flex-col sm:flex-row gap-3">
+                        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors text-center shadow-sm">
+                            Ganti Password
+                        </button>
+                        <a href="{{ route('user') }}" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 px-6 rounded-xl text-sm transition-colors text-center">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 @endsection
-
