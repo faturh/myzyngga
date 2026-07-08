@@ -29,6 +29,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/riwayat-pesanan/{id}/selesaikan', [OperatorController::class, 'selesaikanPengerjaan'])->name('admin.riwayat-pesanan.selesaikan');
         Route::get('/admin/gaji-karyawan', [OperatorController::class, 'gajiKaryawan'])->name('admin.gaji-karyawan');
         Route::get('/admin/gaji-karyawan/download', [OperatorController::class, 'downloadGajiKaryawan'])->name('admin.gaji-karyawan.download');
+        Route::post('/admin/gaji-karyawan/bayar', [OperatorController::class, 'bayarGaji'])->name('admin.gaji-karyawan.bayar');
+        Route::post('/admin/gaji-karyawan/update-tarif', [OperatorController::class, 'updateTarifGaji'])->name('admin.gaji-karyawan.update-tarif');
         
         Route::get('/admin/keuangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'index'])->name('admin.keuangan');
         Route::post('/admin/keuangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\KeuanganController::class, 'store'])->name('admin.keuangan.store');
