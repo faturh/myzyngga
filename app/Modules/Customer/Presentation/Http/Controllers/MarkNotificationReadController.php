@@ -10,8 +10,9 @@ use Illuminate\Http\Request;
 
 class MarkNotificationReadController
 {
-    public function __invoke(Request $request, int $id)
+    public function __invoke(Request $request, $id)
     {
+        $id = (int) $id;
         $pelanggan = Pelanggan::where('user_id', $request->user()->id)->first();
 
         if (! $pelanggan) {

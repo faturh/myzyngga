@@ -14,8 +14,9 @@ class DeleteAddressController
     ) {
     }
 
-    public function __invoke(Request $request, int $id)
+    public function __invoke(Request $request, $id)
     {
+        $id = (int) $id;
         try {
             $this->service->deleteAddressForUser($request->user(), $id);
         } catch (DomainException $e) {

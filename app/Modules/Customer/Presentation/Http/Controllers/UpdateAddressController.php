@@ -14,8 +14,9 @@ class UpdateAddressController
     ) {
     }
 
-    public function __invoke(UpdateAddressRequest $request, int $id)
+    public function __invoke(UpdateAddressRequest $request, $id)
     {
+        $id = (int) $id;
         try {
             $address = $this->service->updateAddressForUser(
                 $request->user(),
