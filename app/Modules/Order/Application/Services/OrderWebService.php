@@ -1114,7 +1114,7 @@ class OrderWebService
         return $date;
     }
 
-    private function formatEstimatedFinished(Transaksi $order): string
+    public function formatEstimatedFinished(Transaksi $order): string
     {
         $baseDate = $order->pickup_date ?? $order->waktu;
 
