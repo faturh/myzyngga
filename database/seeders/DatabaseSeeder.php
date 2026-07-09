@@ -40,5 +40,28 @@ class DatabaseSeeder extends Seeder
             //? Data Transaksi
             TransaksiSeeder::class,
         ]);
+
+        // Buat Akun Pelanggan Skripsi Default untuk Postman
+        $userPelanggan = \App\Models\User::updateOrCreate(
+            ['email' => 'fatur.rahman.laundry@example.com'],
+            [
+                'name' => 'Fatur Rahman Al-Fath',
+                'username' => 'faturrahman99',
+                'password' => \Illuminate\Support\Facades\Hash::make('password12345'),
+                'role' => 'customer',
+                'slug' => 'fatur-rahman',
+            ]
+        );
+        $userPelanggan->assignRole('customer');
+
+        \App\Models\Pelanggan::updateOrCreate(
+            ['user_id' => $userPelanggan->id],
+            [
+                'nama' => 'Fatur Rahman Al-Fath',
+                'telepon' => '081234567890',
+                'alamat' => 'Jalan Sultan Iskandar Muda No. 10, Jakarta Selatan',
+                'jenis_kelamin' => 'L',
+            ]
+        );
     }
 }
