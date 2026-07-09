@@ -28,3 +28,7 @@ config.bat
 
 .vercel
 .env
+
+# Postman collections (tidak perlu di-push ke repo)
+*.postman_collection.json
+*.postman_environment.json
