@@ -14,9 +14,18 @@ class OrderApiTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+    }
+
     private function setupOrderData(): array
     {
         $user = User::factory()->create(['role' => 'customer']);
+        $user->assignRole('customer');
+        
         $pelanggan = Pelanggan::create([
             'user_id' => $user->id,
             'nama' => 'Test Customer',
@@ -30,6 +39,7 @@ class OrderApiTest extends TestCase
             'email' => 'admin-test-order@example.com',
             'role' => 'admin',
         ]);
+        $admin->assignRole('admin');
 
         $cabang = Cabang::create([
             'nama' => 'Cabang Test Order',

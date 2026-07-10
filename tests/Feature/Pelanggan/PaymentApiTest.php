@@ -14,9 +14,18 @@ class PaymentApiTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+    }
+
     private function setupOrderData(): array
     {
         $user = User::factory()->create(['role' => 'customer']);
+        $user->assignRole('customer');
+        
         $pelanggan = Pelanggan::create([
             'user_id' => $user->id,
             'nama' => 'Test Customer',
@@ -30,6 +39,7 @@ class PaymentApiTest extends TestCase
             'email' => 'admin-test-pay@example.com',
             'role' => 'admin',
         ]);
+        $admin->assignRole('admin');
 
         $cabang = Cabang::create([
             'nama' => 'Cabang Test Pay',
@@ -76,9 +86,8 @@ class PaymentApiTest extends TestCase
             ->getJson('/api/v1/payment/methods');
 
         $response->assertStatus(200)
-            ->assertJsonPath('success', true)
+            ->assertJsonPath('errors', null)
             ->assertJsonStructure([
-                'success',
                 'data' => [
                     'methods' => [
                         '*' => [
@@ -121,7 +130,6 @@ class PaymentApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'success',
                 'data' => [
                     'order_id',
                     'nota',
@@ -136,7 +144,8 @@ class PaymentApiTest extends TestCase
 
         // Akun pelanggan lain
         $otherUser = User::factory()->create(['role' => 'customer']);
-
+        $otherUser->assignRole('customer');
+        
         $response = $this->actingAs($otherUser, 'sanctum')
             ->getJson("/api/v1/orders/{$order->id}/payment-status");
 

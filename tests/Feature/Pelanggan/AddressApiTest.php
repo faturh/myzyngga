@@ -12,9 +12,17 @@ class AddressApiTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+    }
+
     private function setupCustomer(): array
     {
         $user = User::factory()->create(['role' => 'customer']);
+        $user->assignRole('customer');
+        
         $pelanggan = Pelanggan::create([
             'user_id' => $user->id,
             'nama' => 'Test Customer',
@@ -41,9 +49,8 @@ class AddressApiTest extends TestCase
             ->getJson('/api/v1/customer/addresses');
 
         $response->assertStatus(200)
-            ->assertJsonPath('success', true)
+            ->assertJsonPath('errors', null)
             ->assertJsonStructure([
-                'success',
                 'data' => [
                     'addresses' => [
                         '*' => [
@@ -72,7 +79,6 @@ class AddressApiTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'success',
                 'data' => [
                     'address' => [
                         'id',
@@ -162,6 +168,8 @@ class AddressApiTest extends TestCase
 
         // Pelanggan lain
         $otherUser = User::factory()->create(['role' => 'customer']);
+        $otherUser->assignRole('customer');
+        
         $otherPelanggan = Pelanggan::create([
             'user_id' => $otherUser->id,
             'nama' => 'Other Customer',

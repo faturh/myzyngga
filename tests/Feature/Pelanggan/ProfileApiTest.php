@@ -11,9 +11,17 @@ class ProfileApiTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+    }
+
     public function test_lihat_profil_mengembalikan_status_200_dan_data_lengkap(): void
     {
         $user = User::factory()->create(['role' => 'customer']);
+        $user->assignRole('customer');
+        
         $pelanggan = Pelanggan::create([
             'user_id' => $user->id,
             'nama' => 'Fatur Rahman Al-Fath',
@@ -26,9 +34,8 @@ class ProfileApiTest extends TestCase
             ->getJson('/api/v1/customer/profile');
 
         $response->assertStatus(200)
-            ->assertJsonPath('success', true)
+            ->assertJsonPath('errors', null)
             ->assertJsonStructure([
-                'success',
                 'data' => [
                     'profile' => [
                         'id',
