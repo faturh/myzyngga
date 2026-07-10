@@ -91,8 +91,8 @@ class PaymentApiTest extends TestCase
                 'data' => [
                     'methods' => [
                         '*' => [
-                            'code',
-                            'name',
+                            'id',
+                            'label',
                         ]
                     ]
                 ]

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Pelanggan;
 
-use App\Models\Address;
+use App\Models\CustomerAddress;
 use App\Models\Pelanggan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -38,7 +38,7 @@ class AddressApiTest extends TestCase
     {
         [$user, $pelanggan] = $this->setupCustomer();
 
-        $address = Address::create([
+        $address = CustomerAddress::create([
             'pelanggan_id' => $pelanggan->id,
             'label' => 'Rumah',
             'address' => 'Jl. Merdeka No. 1',
@@ -96,7 +96,7 @@ class AddressApiTest extends TestCase
 
         // Buat 3 alamat
         for ($i = 0; $i < 3; $i++) {
-            Address::create([
+            CustomerAddress::create([
                 'pelanggan_id' => $pelanggan->id,
                 'label' => 'Alamat ' . ($i + 1),
                 'address' => 'Jalan Test ' . ($i + 1),
@@ -118,14 +118,14 @@ class AddressApiTest extends TestCase
     {
         [$user, $pelanggan] = $this->setupCustomer();
 
-        $addr1 = Address::create([
+        $addr1 = CustomerAddress::create([
             'pelanggan_id' => $pelanggan->id,
             'label' => 'Rumah',
             'address' => 'Jl. Rumah',
             'is_default' => true,
         ]);
 
-        $addr2 = Address::create([
+        $addr2 = CustomerAddress::create([
             'pelanggan_id' => $pelanggan->id,
             'label' => 'Kantor',
             'address' => 'Jl. Kantor',
@@ -145,7 +145,7 @@ class AddressApiTest extends TestCase
     {
         [$user, $pelanggan] = $this->setupCustomer();
 
-        $address = Address::create([
+        $address = CustomerAddress::create([
             'pelanggan_id' => $pelanggan->id,
             'label' => 'Rumah',
             'address' => 'Jl. Rumah',
@@ -178,7 +178,7 @@ class AddressApiTest extends TestCase
             'jenis_kelamin' => 'P',
         ]);
 
-        $otherAddress = Address::create([
+        $otherAddress = CustomerAddress::create([
             'pelanggan_id' => $otherPelanggan->id,
             'label' => 'Alamat Orang Lain',
             'address' => 'Jl. Orang Lain',
@@ -198,14 +198,14 @@ class AddressApiTest extends TestCase
     {
         [$user, $pelanggan] = $this->setupCustomer();
 
-        $address1 = Address::create([
+        $address1 = CustomerAddress::create([
             'pelanggan_id' => $pelanggan->id,
             'label' => 'Rumah',
             'address' => 'Jl. Rumah',
             'is_default' => true,
         ]);
 
-        $address2 = Address::create([
+        $address2 = CustomerAddress::create([
             'pelanggan_id' => $pelanggan->id,
             'label' => 'Kantor',
             'address' => 'Jl. Kantor',
@@ -216,14 +216,14 @@ class AddressApiTest extends TestCase
             ->deleteJson("/api/v1/customer/addresses/{$address2->id}");
 
         $response->assertStatus(200);
-        $this->assertDatabaseMissing('addresses', ['id' => $address2->id]);
+        $this->assertDatabaseMissing('customer_addresses', ['id' => $address2->id]);
     }
 
     public function test_hapus_alamat_ditolak_jika_berstatus_utama(): void
     {
         [$user, $pelanggan] = $this->setupCustomer();
 
-        $address = Address::create([
+        $address = CustomerAddress::create([
             'pelanggan_id' => $pelanggan->id,
             'label' => 'Rumah Utama',
             'address' => 'Jl. Rumah',
