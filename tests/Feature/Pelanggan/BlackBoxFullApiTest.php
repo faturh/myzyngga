@@ -330,7 +330,7 @@ class BlackBoxFullApiTest extends TestCase
     public function test_l_midtrans_webhook()
     {
         $resSettlement = $this->postJson('/api/v1/payment/notification', [
-            'order_id' => 'ZYG-PAY-1',
+            'order_id' => '11111111-1111-1111-1111-111111111111',
             'transaction_status' => 'settlement',
             'gross_amount' => '10000.00',
             'signature_key' => 'fake_signature'
@@ -338,7 +338,7 @@ class BlackBoxFullApiTest extends TestCase
         dump('--- L. Midtrans Webhook (Settlement) ---', $resSettlement->status(), json_encode($resSettlement->json()));
 
         $resExpire = $this->postJson('/api/v1/payment/notification', [
-            'order_id' => 'ZYG-PAY-2',
+            'order_id' => '22222222-2222-2222-2222-222222222222',
             'transaction_status' => 'expire',
             'gross_amount' => '10000.00',
             'signature_key' => 'fake_signature'
@@ -346,7 +346,7 @@ class BlackBoxFullApiTest extends TestCase
         dump('--- L. Midtrans Webhook (Expire) ---', $resExpire->status(), json_encode($resExpire->json()));
 
         $resInvalid = $this->postJson('/api/v1/payment/notification', [
-            'order_id' => 'ZYG-PAY-3',
+            'order_id' => '33333333-3333-3333-3333-333333333333',
             'transaction_status' => 'settlement' // no signature
         ]);
         dump('--- L. Midtrans Webhook (Signature Invalid) ---', $resInvalid->status(), json_encode($resInvalid->json()));
