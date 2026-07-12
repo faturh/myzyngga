@@ -417,7 +417,8 @@ class BlackBoxFullApiTest extends TestCase
         $p1 = Pelanggan::where('user_id', $user->id)->first()->id;
         $order = $this->createOrder($p1, $user->id, 'ZYG-UPG');
         $orderDone = $this->createOrder($p1, $user->id, 'ZYG-UPGDONE');
-        $orderDone->update(['status' => 'completed']);
+        $orderDone->pending_status_id = 5;
+        $orderDone->save();
 
         $cabang = Cabang::first();
         $prioNew = LayananPrioritas::create(['nama' => 'Kilat', 'cabang_id' => $cabang->id, 'harga' => 10000, 'prioritas' => 2]);
@@ -432,7 +433,7 @@ class BlackBoxFullApiTest extends TestCase
         dump('--- P. Upgrade Layanan (Tidak Ada di DB) ---', $resNotExist->status(), json_encode($resNotExist->json()));
 
         $resDone = $this->actingAs($user, 'sanctum')->postJson("/api/v1/orders/{$orderDone->id}/upgrade", ['new_service_id' => $prioNew->id]);
-        dump('--- P. Upgrade Layanan (Order Selesai) ---', $resDone->status(), json_encode($resDone->json()));
+        dump('--- P. Upgrade Layanan (Order Selesai) ---', $resDone->status(), json_encode($resDone->json()), $orderDone->fresh()->status);
 
         $this->assertTrue(true);
     }
