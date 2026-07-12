@@ -34,10 +34,10 @@ class UserController extends Controller implements HasMiddleware
         ];
     }
 
-    private function mapUserCollection($users)
+    private function mapUserCollection($users, $hideCabang = false)
     {
-        return $users->map(function ($u) {
-            return (object) [
+        return $users->map(function ($u) use ($hideCabang) {
+            $data = [
                 'id' => $u->id,
                 'nama' => $u->name ?? $u->username,
                 'username' => $u->username,
@@ -46,16 +46,38 @@ class UserController extends Controller implements HasMiddleware
                 'telepon' => $u->phone ?? '-',
                 'gaji' => $u->gaji ?? 0,
                 'role' => $u->roles->pluck('name')->first() ?? $u->role ?? '-',
-                'cabang_id' => $u->cabang_id,
                 'created_at' => $u->created_at,
                 'deleted_at' => $u->deleted_at,
-                'nama_cabang' => $u->cabang?->nama ?? '-',
                 'user' => (object) [
                     'email' => $u->email,
                     'roles' => $u->roles,
                 ]
             ];
+
+            if (!$hideCabang) {
+                $data['cabang_id'] = $u->cabang_id;
+                $data['nama_cabang'] = $u->cabang?->nama ?? '-';
+            }
+
+            return (object) $data;
         });
+    }
+
+    private function findUser(Request $request, bool $withTrashed = false)
+    {
+        $identifier = $request->user ?? $request->slug ?? $request->id;
+        
+        $query = User::query();
+        if ($withTrashed) {
+            $query->withTrashed();
+        }
+
+        return $query->where(function ($q) use ($identifier) {
+            $q->where('slug', $identifier);
+            if (is_numeric($identifier)) {
+                $q->orWhere('id', (int)$identifier);
+            }
+        })->first();
     }
 
     public function index()
@@ -85,14 +107,14 @@ class UserController extends Controller implements HasMiddleware
             if (request()->expectsJson()) {
                 return response()->json([
                     'data' => [
-                        'manajer' => $this->mapUserCollection($manajer),
-                        'pegawai' => $this->mapUserCollection($pegawai),
+                        'manajer' => $this->mapUserCollection($manajer, true),
+                        'pegawai' => $this->mapUserCollection($pegawai, true),
                     ],
                     'status' => 200
                 ], 200);
             }
 
-            return view('operator.dashboard.user.index', [
+            return view('operator.admin.user.index', [
                 'title' => $title,
                 'cabang' => $cabang,
                 'role' => $role,
@@ -115,13 +137,13 @@ class UserController extends Controller implements HasMiddleware
             if (request()->expectsJson()) {
                 return response()->json([
                     'data' => [
-                        'pegawai' => $this->mapUserCollection($pegawai),
+                        'pegawai' => $this->mapUserCollection($pegawai, true),
                     ],
                     'status' => 200
                 ], 200);
             }
 
-            return view('operator.dashboard.user.index', [
+            return view('operator.admin.user.index', [
                 'title' => $title,
                 'cabang' => $cabang,
                 'role' => $role,
@@ -138,11 +160,15 @@ class UserController extends Controller implements HasMiddleware
         $title = "Detail User";
         $trash = false;
         $userRole = auth()->user()->roles[0]->name;
-        $user = User::where('slug', $request->user)->first();
+        
+        $user = $this->findUser($request);
 
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic' && $userRole != 'admin') {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'User tidak ditemukan', 'status' => 404], 404);
+            }
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
 
@@ -157,7 +183,16 @@ class UserController extends Controller implements HasMiddleware
             'selesai_kerja' => '-',
         ];
 
-        return view('operator.dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => [
+                    'user' => $this->mapUserCollection(collect([$user]), true)->first(),
+                ],
+                'status' => 200
+            ], 200);
+        }
+
+        return view('operator.admin.user.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function create()
@@ -167,6 +202,14 @@ class UserController extends Controller implements HasMiddleware
 
     public function store(Request $request)
     {
+        // Normalize name and phone inputs for convenience
+        if ($request->has('name') && !$request->has('nama')) {
+            $request->merge(['nama' => $request->name]);
+        }
+        if ($request->has('phone') && !$request->has('telepon')) {
+            $request->merge(['telepon' => $request->phone]);
+        }
+
         $validatedUser = $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|email|unique:users,email',
@@ -188,6 +231,8 @@ class UserController extends Controller implements HasMiddleware
             $cabangId = auth()->user()->cabang_id ?? \App\Models\Cabang::first()->id ?? 1;
         }
 
+        $roleSelected = $request->role ?? 'pegawai_laundry';
+
         $user = User::create([
             'username' => $validatedUser['username'],
             'email' => $validatedUser['email'],
@@ -197,15 +242,15 @@ class UserController extends Controller implements HasMiddleware
             'phone' => $validatedUser['telepon'],
             'slug' => str()->slug($validatedUser['username']),
             'gaji' => (int) ($validatedUser['gaji'] ?? 0),
-            'role' => $request->role,
+            'role' => $roleSelected,
         ]);
 
-        $user->assignRole($request->role);
+        $user->assignRole($roleSelected);
 
         if ($user) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'data' => $user,
+                    'data' => $this->mapUserCollection(collect([$user]), true)->first(),
                     'message' => 'User Berhasil Ditambahkan',
                     'status' => 200
                 ], 200);
@@ -245,10 +290,10 @@ class UserController extends Controller implements HasMiddleware
             $cabang = Cabang::where('deleted_at', null)->where('id', auth()->user()->cabang_id)->get();
         }
 
-        $user = User::where('slug', $request->user)->first();
+        $user = $this->findUser($request);
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
 
@@ -263,12 +308,27 @@ class UserController extends Controller implements HasMiddleware
             'selesai_kerja' => '-',
         ];
 
-        return view('operator.dashboard.user.ubah', compact('title', 'cabang', 'role', 'kkGamis', 'user', 'profile'));
+        return view('operator.admin.user.ubah', compact('title', 'cabang', 'role', 'kkGamis', 'user', 'profile'));
     }
 
     public function update(Request $request)
     {
-        $user = User::where('slug', $request->user)->firstOrFail();
+        // Normalize name and phone inputs for convenience
+        if ($request->has('name') && !$request->has('nama')) {
+            $request->merge(['nama' => $request->name]);
+        }
+        if ($request->has('phone') && !$request->has('telepon')) {
+            $request->merge(['telepon' => $request->phone]);
+        }
+
+        $user = $this->findUser($request);
+        if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'User tidak ditemukan', 'status' => 404], 404);
+            }
+            abort(404, 'User tidak ditemukan');
+        }
+
         $validated = $request->validate([
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user)],
             'email' => ['required', 'email', Rule::unique('users')->ignore($user)],
@@ -288,6 +348,8 @@ class UserController extends Controller implements HasMiddleware
             $cabangId = $user->cabang_id ?? auth()->user()->cabang_id ?? \App\Models\Cabang::first()->id ?? 1;
         }
 
+        $roleSelected = $request->role ?? $user->roles->pluck('name')->first() ?? $user->role ?? 'pegawai_laundry';
+
         $userUpdate = $user->update([
             'username' => $validated['username'],
             'email' => $validated['email'],
@@ -296,15 +358,15 @@ class UserController extends Controller implements HasMiddleware
             'phone' => $validated['telepon'],
             'slug' => str()->slug($validated['username']),
             'gaji' => (int) ($validated['gaji'] ?? 0),
-            'role' => $request->role,
+            'role' => $roleSelected,
         ]);
 
-        $user->syncRoles([$request->role]);
+        $user->syncRoles([$roleSelected]);
 
         if ($userUpdate) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'data' => $user,
+                    'data' => $this->mapUserCollection(collect([$user]), true)->first(),
                     'message' => 'User Berhasil Diperbarui',
                     'status' => 200
                 ], 200);
@@ -335,13 +397,13 @@ class UserController extends Controller implements HasMiddleware
             abort(403, 'USER DOES NOT HAVE PERMISSION.');
         }
 
-        $user = User::where('slug', $request->user)->first();
+        $user = $this->findUser($request);
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
-        return view('operator.dashboard.user.ubahPassword', compact('title', 'user'));
+        return view('operator.admin.user.ubahPassword', compact('title', 'user'));
     }
 
     public function updatePassword(Request $request)
@@ -354,7 +416,15 @@ class UserController extends Controller implements HasMiddleware
             'min' => 'minimal :min karakter.',
         ]);
 
-        $updatePassword = User::where('slug', $request->slug)->update([
+        $user = $this->findUser($request);
+        if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'User tidak ditemukan', 'status' => 404], 404);
+            }
+            abort(404, 'User tidak ditemukan');
+        }
+
+        $updatePassword = $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 
@@ -387,7 +457,15 @@ class UserController extends Controller implements HasMiddleware
             ], 403);
         }
 
-        $hapus = User::where('slug', $request->slug)->delete();
+        $user = $this->findUser($request);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan',
+                'status' => 404
+            ], 404);
+        }
+
+        $hapus = $user->delete();
         if ($hapus) {
             return response()->json([
                 'message' => 'User Berhasil Dihapus',
@@ -406,11 +484,12 @@ class UserController extends Controller implements HasMiddleware
         $title = "Detail User Trash";
         $trash = true;
         $userRole = auth()->user()->roles[0]->name;
-        $user = User::where('slug', $request->user)->onlyTrashed()->first();
+        
+        $user = $this->findUser($request, true);
 
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
 
@@ -425,7 +504,7 @@ class UserController extends Controller implements HasMiddleware
             'selesai_kerja' => '-',
         ];
 
-        return view('operator.dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
+        return view('operator.admin.user.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function restore(Request $request)
@@ -438,7 +517,15 @@ class UserController extends Controller implements HasMiddleware
             ], 403);
         }
 
-        $pulih = User::where('slug', $request->slug)->restore();
+        $user = $this->findUser($request, true);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan',
+                'status' => 404
+            ], 404);
+        }
+
+        $pulih = $user->restore();
         if ($pulih) {
             return response()->json([
                 'message' => 'User Berhasil Dipulihkan',
@@ -462,14 +549,14 @@ class UserController extends Controller implements HasMiddleware
             ], 403);
         }
 
-        $user = User::where('slug', $request->slug)->onlyTrashed()->first();
+        $user = $this->findUser($request, true);
         if (!$user) {
             return response()->json([
                 'message' => 'User tidak ditemukan',
                 'status' => 404
             ], 404);
         }
-        $userRole = $user->roles[0]->name;
+        $userRole = $user->roles[0]->name ?? $user->role ?? 'pegawai_laundry';
 
         $user->removeRole($userRole);
         $hapusPermanen = $user->forceDelete();
@@ -511,7 +598,7 @@ class UserController extends Controller implements HasMiddleware
         $pegawaiTrash = User::where('cabang_id', $cabang->id)->whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->onlyTrashed()->get();
         $gamisTrash = collect();
 
-        return view('operator.dashboard.user.cabang.index-cabang', [
+        return view('operator.admin.user.cabang.index-cabang', [
             'title' => $title,
             'cabang' => $cabang,
             'role' => $role,
@@ -541,7 +628,7 @@ class UserController extends Controller implements HasMiddleware
         $title = "Tambah User";
         $isCabang = [true, $cabang[0]->nama, $cabang[0]->id];
 
-        return view('operator.dashboard.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
+        return view('operator.admin.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
     }
 
     public function import(Request $request)
@@ -560,4 +647,3 @@ class UserController extends Controller implements HasMiddleware
         return Excel::download(new UserExport($request->cabang), 'Data Pegawai '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
-

@@ -52,7 +52,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        return view('operator.dashboard.laporan.pendapatan-laundry', compact('title', 'transaksi', 'cabang', 'nama_cabang', 'transaksiTidakGamis'));
+        return view('operator.admin.laporan.pendapatan-laundry', compact('title', 'transaksi', 'cabang', 'nama_cabang', 'transaksiTidakGamis'));
     }
 
     public function pdfLaporanPendapatanLaundry(Request $request)
@@ -95,7 +95,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        $pdf = Pdf::loadView('operator.dashboard.laporan.pdf.pendapatan-laundry', [
+        $pdf = Pdf::loadView('operator.admin.laporan.pdf.pendapatan-laundry', [
             'judul' => $title,
             'judulTabel' => $title,
             'transaksi' => $transaksi,
@@ -161,7 +161,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        return view('operator.dashboard.laporan.pelanggan', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
+        return view('operator.admin.laporan.pelanggan', compact('title', 'transaksi', 'cabang', 'nama_cabang'));
     }
 
     public function pdfLaporanPelanggan(Request $request)
@@ -216,7 +216,7 @@ class LaporanController extends Controller
             abort(403, 'USER DOES NOT HAVE THE RIGHT ROLES.');
         }
 
-        $pdf = Pdf::loadView('operator.dashboard.laporan.pdf.pelanggan', [
+        $pdf = Pdf::loadView('operator.admin.laporan.pdf.pelanggan', [
             'judul' => $title,
             'judulTabel' => $title,
             'transaksi' => $transaksi,

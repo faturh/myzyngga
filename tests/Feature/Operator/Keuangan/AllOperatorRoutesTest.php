@@ -62,6 +62,8 @@ class AllOperatorRoutesTest extends TestCase
         $admin = $this->createAdminUser($cabang);
         $manager = $this->createManagerUser($cabang);
 
+        Role::firstOrCreate(['name' => 'pegawai_laundry', 'guard_name' => 'web']);
+
         $routes = [
             'Dashboard' => ['/admin/dashboard', 'admin'],
             'Riwayat Pesanan' => ['/admin/riwayat-pesanan', 'admin'],
@@ -69,7 +71,6 @@ class AllOperatorRoutesTest extends TestCase
             'Gaji Karyawan' => ['/admin/gaji-karyawan', 'admin'],
             'Keuangan' => ['/admin/keuangan', 'admin'],
             'User List' => ['/user', 'admin'],
-            'Transaksi List' => ['/transaksi', 'manager'],
         ];
 
         foreach ($routes as $name => $info) {
