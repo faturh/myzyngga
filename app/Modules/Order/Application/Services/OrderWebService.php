@@ -181,8 +181,10 @@ class OrderWebService
             'parfum' => ['nullable', 'string'],
             'catatan' => ['nullable', 'string'],
             'payment' => ['nullable', 'string', Rule::in(['cash', 'qris', 'transfer'])],
-
             'is_roundtrip' => ['nullable', 'boolean'],
+            'customer_name' => ['nullable', 'string', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:20'],
+            'customer_email' => ['nullable', 'email', 'max:255'],
         ]);
 
         $user = $request->user();
@@ -221,6 +223,10 @@ class OrderWebService
         ));
 
         session()->forget('order');
+
+        $orders = session('orders', []);
+        $orders[] = $order->id;
+        session(['orders' => $orders]);
 
         return redirect()->route('order.detail', ['id' => $order->id])->with('success', 'Pesanan Anda berhasil dibuat!');
     }
@@ -1109,6 +1115,10 @@ class OrderWebService
             if ($minutesToAdd <= $minutesLeftToday) {
                 $date->addMinutes($minutesToAdd);
                 $hoursToAdd = 0;
+                
+                if ($date->hour >= 18) {
+                    $date->addDay()->setTime(8, 0, 0);
+                }
             } else {
                 $date->addDay()->setTime(8, 0, 0);
                 $hoursToAdd -= ($minutesLeftToday / 60);

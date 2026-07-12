@@ -7,6 +7,7 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/*.key
 /database/database.sqlite
+/database/testing.sqlite
 .env.backup
 .env.production
 storage/logs/*.log
