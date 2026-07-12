@@ -46,19 +46,17 @@ class GoogleAuthController extends Controller
                         'google_token' => $googleUser->token,
                     ]);
                 } else {
-                    // Create a new user
-                    $user = User::create([
-                        'name' => $googleUser->name ?? $googleUser->nickname ?? 'Google User',
-                        'username' => 'google_' . Str::random(10),
-                        'slug' => Str::slug('google_' . Str::random(10)),
-                        'email' => $googleUser->email,
-                        'google_id' => $googleUser->id,
-                        'google_token' => $googleUser->token,
-                        'password' => Hash::make(Str::random(24)), // Random dummy password
-                        'role' => 'customer',
+                    // Redirect to phone input page with Google data in session
+                    session([
+                        'pending_google_registration' => [
+                            'name' => $googleUser->name ?? $googleUser->nickname ?? 'Google User',
+                            'email' => $googleUser->email,
+                            'google_id' => $googleUser->id,
+                            'google_token' => $googleUser->token,
+                        ]
                     ]);
                     
-                    $user->assignRole('customer');
+                    return redirect()->route('auth.google.phone');
                 }
             } else {
                 // Update Google token
@@ -95,5 +93,55 @@ class GoogleAuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function showPhoneForm()
+    {
+        if (!session()->has('pending_google_registration')) {
+            return redirect()->route('login');
+        }
+        
+        return view('pelanggan.auth.google-phone');
+    }
+
+    public function submitPhone(Request $request)
+    {
+        if (!session()->has('pending_google_registration')) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'phone' => 'required|string|max:20',
+        ]);
+
+        $pendingData = session('pending_google_registration');
+        $phone = $request->input('phone');
+
+        $user = User::create([
+            'name' => $pendingData['name'],
+            'username' => 'google_' . Str::random(10),
+            'slug' => Str::slug('google_' . Str::random(10)),
+            'email' => $pendingData['email'],
+            'google_id' => $pendingData['google_id'],
+            'google_token' => $pendingData['google_token'],
+            'password' => Hash::make(Str::random(24)),
+            'role' => 'customer',
+        ]);
+        
+        $user->assignRole('customer');
+
+        \App\Models\Pelanggan::create([
+            'user_id' => $user->id,
+            'nama' => $user->name,
+            'jenis_kelamin' => 'L',
+            'telepon' => $phone,
+        ]);
+
+        session()->forget('pending_google_registration');
+
+        auth()->login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard')->with('success', 'Selamat Datang! Akun Anda berhasil dibuat.');
     }
 }

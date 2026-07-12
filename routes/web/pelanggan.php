@@ -130,3 +130,6 @@ Route::get('/public-struk/{idOrNota}', PublicStrukController::class)
 Route::get('/api/v1/auth/google', [App\Modules\Auth\Presentation\Http\Controllers\GoogleAuthController::class, 'redirectToGoogle'])->name('api.google.login');
 Route::get('/api/v1/auth/google/callback', [App\Modules\Auth\Presentation\Http\Controllers\GoogleAuthController::class, 'handleGoogleCallback'])->name('api.google.callback');
 
+// Google Phone Registration
+Route::get('/auth/google/phone', [App\Modules\Auth\Presentation\Http\Controllers\GoogleAuthController::class, 'showPhoneForm'])->name('auth.google.phone');
+Route::post('/auth/google/phone', [App\Modules\Auth\Presentation\Http\Controllers\GoogleAuthController::class, 'submitPhone'])->name('auth.google.phone.submit');
