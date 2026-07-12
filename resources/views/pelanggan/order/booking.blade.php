@@ -214,7 +214,7 @@
                     variant="secondary"
                     size="s"
                     label="Ubah"
-                    onclick="isDirty = false"
+                    onclick="isDirty = false; flushPendingFieldUpdates()"
                 />
             </x-slot:headerAction>
             
@@ -233,6 +233,7 @@
                 class="absolute inset-0 z-10 block cursor-pointer"
                 aria-label="Edit lokasi pickup"
                 title="Edit lokasi pickup"
+                onclick="isDirty = false; flushPendingFieldUpdates()"
                 ></a>
             </div>
             
@@ -593,6 +594,11 @@
             if (minutesToAdd <= minutesLeftToday) {
                 date.setMinutes(date.getMinutes() + minutesToAdd);
                 hoursToAdd = 0;
+
+                if (date.getHours() >= 18) {
+                    date.setDate(date.getDate() + 1);
+                    date.setHours(8, 0, 0, 0);
+                }
             } else {
                 date.setDate(date.getDate() + 1);
                 date.setHours(8, 0, 0, 0);
@@ -805,7 +811,26 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            // keepalive lets this request survive the page navigation triggered
+            // right after (e.g. clicking "Ubah"), so a pending autosave isn't lost.
+            keepalive: true
+        });
+    }
+
+    // ── Flush pending debounced field autosaves before navigating away ──
+    // (e.g. clicking "Ubah" on Lokasi Pickup right after typing detail_address)
+    const pendingFieldTimers = {};
+    function flushPendingFieldUpdates() {
+        Object.keys(pendingFieldTimers).forEach(id => {
+            const timer = pendingFieldTimers[id];
+            if (!timer) return;
+            clearTimeout(timer);
+            pendingFieldTimers[id] = null;
+            const el = document.getElementById(id);
+            if (el) {
+                updateOrderSession({ [id]: el.value.trim() });
+            }
         });
     }
 
@@ -889,14 +914,14 @@
     let isDirty = false;
 
     // Monitor guest inputs for changes
-    ['customer_name', 'customer_phone', 'customer_email'].forEach(id => {
+    ['customer_name', 'customer_phone', 'customer_email', 'detail_address'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            let debounceTimer;
             el.addEventListener('input', () => {
                 isDirty = true;
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
+                clearTimeout(pendingFieldTimers[id]);
+                pendingFieldTimers[id] = setTimeout(() => {
+                    pendingFieldTimers[id] = null;
                     updateOrderSession({ [id]: el.value.trim() });
                 }, 500);
             });

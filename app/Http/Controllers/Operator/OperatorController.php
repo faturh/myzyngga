@@ -645,14 +645,16 @@ class OperatorController extends Controller
                  $pelanggan = \App\Models\Pelanggan::findOrFail($validated['pelanggan_id']);
              } else {
                 // Create new user profile for customer
-                $uniqueStr = time() . '_' . rand(100, 999);
+                $uniqueStr = time() . '_' . \Illuminate\Support\Str::random(8);
                 $newUser = \App\Models\User::create([
                     'username' => 'pelanggan_' . $uniqueStr,
                     'email' => 'pelanggan_' . $uniqueStr . '@zyngga.com',
                     'name' => $validated['customer_name'],
                     'phone' => $validated['customer_phone'],
                     'slug' => 'pelanggan-' . $uniqueStr,
-                    'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                    // Akun walk-in tidak diberi kredensial login — password acak kuat yang
+                    // tidak pernah diketahui pelanggan, bukan password seragam yang bisa ditebak.
+                    'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(40)),
                     'role' => 'customer',
                 ]);
                 $newUser->assignRole('customer');

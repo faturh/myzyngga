@@ -340,10 +340,13 @@
                                 Tanggal:
                                 <span class="text-blue-600 font-semibold"> `+ tanggal +`</span>
                             </p>
+                            {{-- Cabang disembunyikan dari tampilan pelanggan --}}
+                            {{--
                             <p class="text-slate-800 mb-4 mt-1 leading-relaxed">
                                 Cabang:
                                 <span class="text-blue-600 font-semibold"> `+ data[0].cabang_nama +`</span>
                             </p>
+                            --}}
                             <p class="text-slate-800 mb-4 mt-1 leading-relaxed">
                                 Pelanggan:
                                 <span class="text-blue-600 font-semibold"> `+ data[0].pelanggan_nama +`</span>
