@@ -302,6 +302,8 @@ class OrderWebService
         $request->validate([
             'address'        => 'required|string',
             'detail_address' => 'nullable|string',
+            'lat'            => 'required|numeric',
+            'lng'            => 'required|numeric',
         ]);
 
         $order = $this->orderRepository->findById($id);
@@ -316,6 +318,8 @@ class OrderWebService
         $existingMeta['pending_delivery'] = [
             'address'        => $request->address,
             'detail_address' => $request->detail_address,
+            'lat'            => $request->lat,
+            'lng'            => $request->lng,
             'is_roundtrip'   => true,
             'delivery_fee'   => $deliveryFee,
         ];
