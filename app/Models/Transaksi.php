@@ -40,6 +40,7 @@ class Transaksi extends Model
         'layanan_prioritas_id',
         'pelanggan_id',
         'pegawai_id',
+        'gaji_dibayar',
         'cabang_id',
         'midtrans_order_id',
         'payment_metadata',
@@ -52,6 +53,7 @@ class Transaksi extends Model
         'pickup_date' => 'date',
         'paid_at' => 'datetime',
         'is_roundtrip' => 'boolean',
+        'gaji_dibayar' => 'boolean',
     ];
 
     public $pending_status_id = null;
@@ -356,5 +358,52 @@ class Transaksi extends Model
         }
 
         return false;
+    }
+
+    public function getEstimasiPengerjaanJam(): int
+    {
+        $priority = (int) ($this->layananPrioritas->prioritas ?? 1);
+        return match (true) {
+            $priority >= 99 => 5,  // Kilat
+            $priority >= 3 => 10,  // Express
+            $priority >= 2 => 20,  // Quick
+            default => 30,         // Reguler
+        };
+    }
+
+    public function getDeadlineWaktu(): \Carbon\Carbon
+    {
+        $baseDate = $this->pickup_date ?? $this->waktu ?? now();
+        $hoursToAdd = $this->getEstimasiPengerjaanJam();
+
+        $date = \Carbon\Carbon::parse($baseDate);
+
+        if ($date->hour < 8) {
+            $date->setTime(8, 0, 0);
+        } elseif ($date->hour >= 18) {
+            $date->addDay()->setTime(8, 0, 0);
+        }
+
+        while ($hoursToAdd > 0) {
+            $endOfDay = $date->copy()->setTime(18, 0, 0);
+            $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
+            
+            if ($minutesLeftToday <= 0) {
+                $date->addDay()->setTime(8, 0, 0);
+                continue;
+            }
+
+            $minutesToAdd = $hoursToAdd * 60;
+
+            if ($minutesToAdd <= $minutesLeftToday) {
+                $date->addMinutes($minutesToAdd);
+                $hoursToAdd = 0;
+            } else {
+                $date->addDay()->setTime(8, 0, 0);
+                $hoursToAdd -= ($minutesLeftToday / 60);
+            }
+        }
+
+        return $date;
     }
 }

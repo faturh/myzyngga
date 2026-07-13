@@ -29,6 +29,8 @@ class User extends Authenticatable
         'role',
         'cabang_id',
         'gaji',
+        'nomor_rekening',
+        'bank',
         'google_id',
         'google_token',
     ];

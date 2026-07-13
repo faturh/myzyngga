@@ -65,6 +65,7 @@ class OperatorController extends Controller
                           ->orWhere('pegawai_id', 'like', '%_' . $emp->id);
                 })
                 ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
+                ->where('gaji_dibayar', 0)
                 ->whereBetween('waktu', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->with('timbangan')
                 ->get();
@@ -84,12 +85,19 @@ class OperatorController extends Controller
                 'total_kg' => $totalKg,
                 'total_gaji' => $totalGaji,
                 'initial' => strtoupper(substr($emp->name ?? $emp->username, 0, 2)),
+                'bank' => $emp->bank ?? '-',
+                'nomor_rekening' => $emp->nomor_rekening ?? '-',
             ];
         });
+
+        $historyGaji = \App\Models\HistoryGaji::with('pegawai')
+            ->orderBy('tanggal', 'desc')
+            ->get();
 
         if ($request->expectsJson()) {
             return response()->json([
                 'data' => $karyawanData,
+                'history' => $historyGaji,
                 'status' => 200
             ], 200);
         }
@@ -100,6 +108,7 @@ class OperatorController extends Controller
             'selectedEmployeeId' => $selectedEmployeeId,
             'startDate' => $startDate,
             'endDate' => $endDate,
+            'historyGaji' => $historyGaji,
         ]);
     }
 
@@ -916,20 +925,50 @@ class OperatorController extends Controller
             'nominal' => 'required|numeric|min:0',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string|max:500',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
         ]);
 
         $employee = \App\Models\User::findOrFail($request->pegawai_id);
         $cabangId = $employee->cabang_id ?? auth()->user()->cabang_id ?? \App\Models\Cabang::first()->id ?? null;
 
         try {
-            \App\Models\KeuanganToko::create([
-                'tanggal' => $request->tanggal,
-                'tipe' => 'pengeluaran',
-                'kategori' => 'Gaji',
-                'nominal' => (double) $request->nominal,
-                'keterangan' => $request->keterangan,
-                'cabang_id' => $cabangId,
-            ]);
+            \Illuminate\Support\Facades\DB::transaction(function () use ($request, $employee, $cabangId) {
+                // 1. Record KeuanganToko
+                \App\Models\KeuanganToko::create([
+                    'tanggal' => $request->tanggal,
+                    'tipe' => 'pengeluaran',
+                    'kategori' => 'Gaji',
+                    'nominal' => (double) $request->nominal,
+                    'keterangan' => $request->keterangan,
+                    'cabang_id' => $cabangId,
+                ]);
+
+                // 2. Record HistoryGaji
+                \App\Models\HistoryGaji::create([
+                    'pegawai_id' => $employee->id,
+                    'nominal' => (double) $request->nominal,
+                    'tanggal' => $request->tanggal,
+                    'bank' => $employee->bank,
+                    'nomor_rekening' => $employee->nomor_rekening,
+                    'keterangan' => $request->keterangan,
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                ]);
+
+                // 3. Set matching completed transactions' salary status to paid (gaji_dibayar = 1)
+                if ($request->filled('start_date') && $request->filled('end_date')) {
+                    \App\Models\Transaksi::query()
+                        ->where(function($query) use ($employee) {
+                            $query->where('pegawai_id', (string) $employee->id)
+                                  ->orWhere('pegawai_id', 'like', '%_' . $employee->id);
+                        })
+                        ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
+                        ->where('gaji_dibayar', 0)
+                        ->whereBetween('waktu', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59'])
+                        ->update(['gaji_dibayar' => 1]);
+                }
+            });
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -938,7 +977,7 @@ class OperatorController extends Controller
                 ], 200);
             }
 
-            return redirect()->back()->with('success', 'Pembayaran gaji berhasil dicatat sebagai pengeluaran toko.');
+            return redirect()->back()->with('success', 'Pembayaran gaji berhasil dicatat sebagai pengeluaran toko dan riwayat disimpan.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([

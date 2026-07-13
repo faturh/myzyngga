@@ -12,6 +12,8 @@ Route::get('/', function () {
 
 Route::match(['get', 'post'], '/cek-nota', PublicNotaLookupController::class)->name('landing-page.nota');
 
+
+
 require __DIR__.'/web/pelanggan.php';
 require __DIR__.'/web/operator.php';
 require __DIR__.'/auth.php';

@@ -20,6 +20,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
         'cabang',
         'detailTransaksi.detailLayananTransaksi.hargaJenisLayanan.jenisLayanan',
         'detailTransaksi.detailLayananTransaksi.hargaJenisLayanan.jenisPakaian',
+        'timbangan.items.jenisPakaian',
     ];
 
     public function create(array $payload): Transaksi

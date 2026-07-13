@@ -156,6 +156,8 @@ class AddressApiTest extends TestCase
             ->putJson("/api/v1/customer/addresses/{$address->id}", [
                 'label' => 'Apartemen',
                 'address' => 'Jl. Apartemen',
+                'lat' => -6.123456,
+                'lng' => 106.123456,
             ]);
 
         $response->assertStatus(200)
@@ -189,6 +191,8 @@ class AddressApiTest extends TestCase
             ->putJson("/api/v1/customer/addresses/{$otherAddress->id}", [
                 'label' => 'Mencoba Edit',
                 'address' => 'Jl. Mencoba Edit',
+                'lat' => -6.123456,
+                'lng' => 106.123456,
             ]);
 
         $response->assertStatus(403);
