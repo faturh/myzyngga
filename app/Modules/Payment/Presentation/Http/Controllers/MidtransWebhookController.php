@@ -22,7 +22,8 @@ class MidtransWebhookController extends Controller
         \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
 
-        $this->webhookService->handleMidtransNotification();
+        $payload = app()->environment('testing') ? $request->all() : null;
+        $this->webhookService->handleMidtransNotification($payload);
 
         return response()->json(['status' => 'success']);
     }

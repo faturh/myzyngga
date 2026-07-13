@@ -181,8 +181,10 @@ class OrderWebService
             'parfum' => ['nullable', 'string'],
             'catatan' => ['nullable', 'string'],
             'payment' => ['nullable', 'string', Rule::in(['cash', 'qris', 'transfer'])],
-
             'is_roundtrip' => ['nullable', 'boolean'],
+            'customer_name' => ['nullable', 'string', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:20'],
+            'customer_email' => ['nullable', 'email', 'max:255'],
         ]);
 
         $user = $request->user();
@@ -221,6 +223,10 @@ class OrderWebService
         ));
 
         session()->forget('order');
+
+        $orders = session('orders', []);
+        $orders[] = $order->id;
+        session(['orders' => $orders]);
 
         return redirect()->route('order.detail', ['id' => $order->id])->with('success', 'Pesanan Anda berhasil dibuat!');
     }
@@ -302,6 +308,8 @@ class OrderWebService
         $request->validate([
             'address'        => 'required|string',
             'detail_address' => 'nullable|string',
+            'lat'            => 'required|numeric',
+            'lng'            => 'required|numeric',
         ]);
 
         $order = $this->orderRepository->findById($id);
@@ -316,6 +324,8 @@ class OrderWebService
         $existingMeta['pending_delivery'] = [
             'address'        => $request->address,
             'detail_address' => $request->detail_address,
+            'lat'            => $request->lat,
+            'lng'            => $request->lng,
             'is_roundtrip'   => true,
             'delivery_fee'   => $deliveryFee,
         ];
@@ -1111,6 +1121,10 @@ class OrderWebService
             if ($minutesToAdd <= $minutesLeftToday) {
                 $date->addMinutes($minutesToAdd);
                 $hoursToAdd = 0;
+                
+                if ($date->hour >= 18) {
+                    $date->addDay()->setTime(8, 0, 0);
+                }
             } else {
                 $date->addDay()->setTime(8, 0, 0);
                 $hoursToAdd -= ($minutesLeftToday / 60);
@@ -1120,7 +1134,7 @@ class OrderWebService
         return $date;
     }
 
-    private function formatEstimatedFinished(Transaksi $order): string
+    public function formatEstimatedFinished(Transaksi $order): string
     {
         $baseDate = $order->pickup_date ?? $order->waktu;
 

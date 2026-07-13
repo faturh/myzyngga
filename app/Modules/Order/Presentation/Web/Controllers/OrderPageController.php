@@ -281,10 +281,14 @@ class OrderPageController
             $this->webService->storeRequestDelivery($request, $id);
             if ($request->ajax() || $request->wantsJson()) {
                 $updatedOrder = $this->webService->detailData($id, $request->user());
+                $orderModel = \App\Models\Transaksi::find($id);
+                $estimatedFinished = $orderModel ? $this->webService->formatEstimatedFinished($orderModel) : '-';
+                
                 return response()->json([
                     'success' => true,
                     'snap_token' => $updatedOrder['snap_token'] ?? null,
-                    'redirect' => route('order.detail', ['id' => $id])
+                    'redirect' => route('order.detail', ['id' => $id]),
+                    'estimated_finished' => $estimatedFinished,
                 ]);
             }
             return redirect()->route('order.detail', ['id' => $id])

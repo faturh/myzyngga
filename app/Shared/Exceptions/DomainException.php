@@ -11,7 +11,7 @@ class DomainException extends Exception
         private readonly int $status = 422,
         private readonly array $context = [],
     ) {
-        parent::__construct($message);
+        parent::__construct($message, $status);
     }
 
     public function status(): int

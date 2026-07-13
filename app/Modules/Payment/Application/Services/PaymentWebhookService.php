@@ -25,10 +25,10 @@ class PaymentWebhookService
             }
         }
 
-        $transaction = $notification->transaction_status;
-        $type = $notification->payment_type;
-        $orderIdRaw = $notification->order_id;
-        $fraud = $notification->fraud_status;
+        $transaction = $notification->transaction_status ?? null;
+        $type = $notification->payment_type ?? null;
+        $orderIdRaw = $notification->order_id ?? null;
+        $fraud = $notification->fraud_status ?? null;
 
         // Our order_id was sent as {$order->id}-{time()}
         // We need to extract the real order ID
@@ -92,8 +92,8 @@ class PaymentWebhookService
             return;
         }
 
-        $grossAmount = (float) $notification->gross_amount;
-        $paymentType = $notification->payment_type;
+        $grossAmount = (float) ($notification->gross_amount ?? 0);
+        $paymentType = $notification->payment_type ?? 'unknown';
 
         $newBayar = (float)$order->bayar + $grossAmount;
         
@@ -126,6 +126,8 @@ class PaymentWebhookService
         if (isset($meta['pending_delivery'])) {
             $payload['pickup_address'] = $meta['pending_delivery']['address'];
             $payload['pickup_detail_address'] = $meta['pending_delivery']['detail_address'];
+            $payload['pickup_lat'] = $meta['pending_delivery']['lat'] ?? null;
+            $payload['pickup_lng'] = $meta['pending_delivery']['lng'] ?? null;
             $payload['is_roundtrip'] = true;
             unset($meta['pending_delivery']);
             $metaChanged = true;

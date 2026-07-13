@@ -38,6 +38,7 @@ class OrderResource extends JsonResource
             ],
             'created_at' => optional($this->created_at)->toISOString(),
             'updated_at' => optional($this->updated_at)->toISOString(),
+            'estimated_finished' => app(\App\Modules\Order\Application\Services\OrderWebService::class)->formatEstimatedFinished($this->resource),
 
             // Raw fields for skripsi
             'waktu' => $this->waktu,
