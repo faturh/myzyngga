@@ -80,6 +80,8 @@ class OrderApiEstimatedFinishedTest extends TestCase
         $postResponse = $this->postJson("/api/v1/orders/{$order->id}/delivery-request", [
             'address' => 'Jalan Antar Baru',
             'detail_address' => 'Pagar Hijau',
+            'lat' => -6.123456,
+            'lng' => 106.123456,
         ]);
         $postResponse->assertOk();
         
