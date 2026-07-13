@@ -107,7 +107,8 @@ class ProfileController extends Controller
         $validatedProfile['user_id'] = $user->id;
 
         if ($request->file('foto')) {
-            $validatedProfile['foto'] = $request->file('foto')->storeOnCloudinary('photo-profile')->getSecurePath();
+            $path = $request->file('foto')->store('photo-profile', 'cloudinary');
+            $validatedProfile['foto'] = \Illuminate\Support\Facades\Storage::disk('cloudinary')->url($path);
         }
 
         switch (auth()->user()->roles[0]->name) {

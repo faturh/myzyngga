@@ -34,6 +34,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Volt::route('register/phone', 'pages.auth.register-phone')
+        ->name('register.phone');
+
     Volt::route('verify-email', 'pages.auth.verify-email')
         ->name('verification.notice');
 

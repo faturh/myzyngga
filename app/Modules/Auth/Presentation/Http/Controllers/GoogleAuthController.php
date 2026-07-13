@@ -85,6 +85,10 @@ class GoogleAuthController extends Controller
                     'data' => $user
                 ], 200);
             }
+            
+            if (empty($user->phone)) {
+                return redirect()->route('register.phone');
+            }
 
             return redirect()->route('dashboard')->with('success', 'Selamat Datang! Login via Google berhasil.');
             

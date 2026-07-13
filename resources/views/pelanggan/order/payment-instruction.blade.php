@@ -184,7 +184,7 @@
                 <div class="flex flex-col gap-3">
                     <x-zyngga-dropdown-item 
                     type="a" 
-                    href="{{ route('order.payment-method', $order['id']) }}" 
+                    href="{{ route('order.payment-method', $order['nota_layanan']) }}" 
                     icon="help-circle" 
                     size="M"
                     >Ubah Metode Pembayaran</x-zyngga-dropdown-item>
@@ -295,14 +295,17 @@
                 title="Pembayaran Berhasil!"
                 description="Terima kasih, pembayaran untuk pesanan Anda telah berhasil diverifikasi."
                 primaryLabel="Lihat Detail Pesanan"
-                primaryAction="window.location.href = '{{ route('order.detail', $order['id']) }}'"
+                primaryAction="window.location.href = '{{ route('order.detail', $order['nota_layanan']) }}'"
             />
             <div class="mt-4 text-center" 
                  x-data="{ count: 5 }" 
                  @open-payment-success-modal.window="
-                     setInterval(() => { 
+                     let intervalId = setInterval(() => { 
                          count--; 
-                         if (count <= 0) window.location.href = '{{ route('order.detail', $order['id']) }}'; 
+                         if (count <= 0) {
+                             clearInterval(intervalId);
+                             window.location.href = '{{ route('order.detail', $order['nota_layanan']) }}'; 
+                         }
                      }, 1000)
                  ">
                 <x-zyngga-text variant="sm" color="neutral-500">
@@ -322,7 +325,7 @@
                 title="Pembayaran Gagal"
                 description="Pembayaran Anda gagal diproses atau dibatalkan."
                 primaryLabel="Tutup"
-                primaryAction="window.location.href = '{{ route('order.detail', $order['id']) }}'"
+                primaryAction="window.location.href = '{{ route('order.detail', $order['nota_layanan']) }}'"
             />
         </x-zyngga-selection-modal>
 
@@ -337,7 +340,7 @@
                 title="Pembayaran Kadaluarsa"
                 description="Batas waktu pembayaran telah habis."
                 primaryLabel="Tutup"
-                primaryAction="window.location.href = '{{ route('order.detail', $order['id']) }}'"
+                primaryAction="window.location.href = '{{ route('order.detail', $order['nota_layanan']) }}'"
             />
         </x-zyngga-selection-modal>
         {{-- ── MODAL: CONFIRM BACK ───────────────────────────── --}}
@@ -401,7 +404,7 @@
                     this.countdown = `${h}:${m}:${s}`;
                 },
                 checkStatus() {
-                    fetch('{{ route('order.payment-status', $order['id']) }}')
+                    fetch('{{ route('order.payment-status', $order['nota_layanan']) }}')
                         .then(r => r.json())
                         .then(data => {
                             if (data.status === 'settlement' || data.status === 'capture' || data.status === 'paid') {
@@ -417,14 +420,14 @@
                         });
                 },
                 cancelPayment() {
-                    fetch('{{ route('order.payment-cancel', $order['id']) }}', {
+                    fetch('{{ route('order.payment-cancel', $order['nota_layanan']) }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                             'Accept': 'application/json',
                         }
                     }).then(() => {
-                        window.location.href = '{{ route('order.detail', $order['id']) }}';
+                        window.location.href = '{{ route('order.detail', $order['nota_layanan']) }}';
                     });
                 }
             }));

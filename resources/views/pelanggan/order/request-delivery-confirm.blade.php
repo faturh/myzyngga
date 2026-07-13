@@ -32,7 +32,7 @@
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
             title="Pengajuan Delivery" 
-            :backUrl="route('order.detail', ['id' => $order['id']])" 
+            :backUrl="route('order.detail', ['id' => $order['nota_layanan']])" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -42,7 +42,7 @@
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col relative">
             <div class="w-full max-w-5xl mx-auto px-5 pb-[88px]">
-                <form method="POST" action="{{ route('order.delivery.store', ['id' => $order['id']]) }}" id="page-content" class="flex-1 flex flex-col">
+                <form method="POST" action="{{ route('order.delivery.store', ['id' => $order['nota_layanan']]) }}" id="page-content" class="flex-1 flex flex-col">
                     @csrf
                     @if ($errors->any())
                         <div x-init="$dispatch('toast', { message: '{{ $errors->first() }}', type: 'error' })"></div>
@@ -56,7 +56,7 @@
                         <x-slot:headerAction>
                             <x-zyngga-button 
                                 type="a"
-                                href="{{ route('order.request.delivery', ['id' => $order['id'], 'change' => 1]) }}"
+                                href="{{ route('order.request.delivery', ['id' => $order['nota_layanan'], 'change' => 1]) }}"
                                 variant="secondary"
                                 size="s"
                                 label="Ubah"
@@ -74,7 +74,7 @@
                                     class="w-full h-full border-0 pointer-events-none"
                                 ></iframe>
                                 <a
-                                    href="{{ route('order.request.delivery', ['id' => $order['id'], 'change' => 1]) }}"
+                                    href="{{ route('order.request.delivery', ['id' => $order['nota_layanan'], 'change' => 1]) }}"
                                     class="absolute inset-0 z-10 block cursor-pointer"
                                     aria-label="Edit lokasi delivery"
                                     title="Edit lokasi delivery"
@@ -268,9 +268,9 @@
             .then(data => {
                 if (data.success) {
                     @if($order['payment_status'] === 'Lunas' || (isset($order['total']) && $order['total'] <= 0))
-                        window.location.href = data.redirect || '{{ route('order.detail', $order['id']) }}';
+                        window.location.href = data.redirect || '{{ route('order.detail', $order['nota_layanan']) }}';
                     @else
-                        window.location.href = '{{ route('order.payment-method', $order['id']) }}';
+                        window.location.href = '{{ route('order.payment-method', $order['nota_layanan']) }}';
                     @endif
                 } else {
                     window.dispatchEvent(new CustomEvent('toast', { detail: { message: data.message || 'Gagal mengajukan pengantaran.', type: 'error' } }));
@@ -283,7 +283,7 @@
         }
 
         function rollbackDelivery(reload = true) {
-            fetch('{{ route('order.delivery.rollback', $order['id']) }}', {
+            fetch('{{ route('order.delivery.rollback', $order['nota_layanan']) }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

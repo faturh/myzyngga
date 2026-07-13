@@ -137,7 +137,10 @@ class OrderWebService
 
     public function detailData(?string $id, ?User $user): ?array
     {
-        $order = $id ? $this->orderRepository->findById($id) : null;
+        $order = null;
+        if ($id) {
+            $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
+        }
 
         if (! $order && $user) {
             $pelanggan = $this->customerRepository->findByUser($user);
@@ -222,7 +225,7 @@ class OrderWebService
 
         session()->forget('order');
 
-        return redirect()->route('order.detail', ['id' => $order->id])->with('success', 'Pesanan Anda berhasil dibuat!');
+        return redirect()->route('order.detail', ['id' => $order->nota])->with('success', 'Pesanan Anda berhasil dibuat!');
     }
 
     public function pickupDetailsData(Request $request, string $service): array
@@ -304,7 +307,7 @@ class OrderWebService
             'detail_address' => 'nullable|string',
         ]);
 
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
@@ -368,7 +371,7 @@ class OrderWebService
 
         return [
             'id' => (string) $order->id,
-            'nota_layanan' => $order->nota_layanan,
+            'nota_layanan' => $order->nota,
             'customer_name' => $order->pelanggan->nama ?? '-',
             'phone_last_4' => substr((string) ($order->pelanggan->telepon ?? ''), -4),
             'service' => $this->serviceName($order),
@@ -399,9 +402,11 @@ class OrderWebService
             $upgradeFee += (float) ($meta['pending_upgrade']['price_diff'] ?? 0);
         }
 
+        $complaint = \App\Models\Complaint::where('transaksi_id', $order->id)->first();
+
         return [
             'id' => (string) $order->id,
-            'nota_layanan' => $order->nota_layanan,
+            'nota_layanan' => $order->nota,
             'service_type' => $this->serviceName($order),
             'status' => $isFinished ? 'finished' : 'ongoing',
             'status_label' => $isFinished ? 'Ambil di Outlet' : $this->statusLabel($order),
@@ -430,7 +435,8 @@ class OrderWebService
             'can_upgrade' => $this->canBeUpgraded($order),
             'upgrade_fee' => $upgradeFee,
             'snap_token' => $this->getSnapToken($order),
-            'has_complaint' => \App\Models\Complaint::where('transaksi_id', $order->id)->exists(),
+            'has_complaint' => $complaint !== null,
+            'complaint_id' => $complaint?->id,
         ];
     }
 
@@ -472,7 +478,7 @@ class OrderWebService
     }
     public function processCoreApiPayment(string $id, string $method)
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Order tidak ditemukan.');
         }
@@ -568,7 +574,7 @@ class OrderWebService
 
     public function getPaymentInstruction(string $id)
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order || !$order->midtrans_order_id || !$order->payment_metadata) {
             return null;
         }
@@ -756,7 +762,7 @@ class OrderWebService
 
     public function checkPaymentStatus(string $id): string
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order || !$order->midtrans_order_id) {
             return 'unknown';
         }
@@ -791,7 +797,7 @@ class OrderWebService
 
     public function cancelCoreApiPayment(string $id): void
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order || !$order->midtrans_order_id) {
             throw new \Exception('Transaksi pembayaran tidak ditemukan.');
         }
@@ -869,11 +875,27 @@ class OrderWebService
 
         $total = (float) $order->total_bayar_akhir;
         $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
+        $basePrice = $this->resolveEstimatedTotal(strtolower($originalService->nama ?? ''));
+        $estimatedQty = $basePrice > 0 
+            ? max(1, round($total / $basePrice, 2)) 
+            : 1;
+
+        $origPriority = (int) ($originalService->prioritas ?? 1);
+        $origDaysStr = match (true) {
+            $origPriority >= 99 => 'Hari ini',
+            $origPriority >= 3 => '1 hari',
+            $origPriority >= 2 => '2 hari',
+            default => '3 hari',
+        };
+        $serviceBase = $originalService->nama ?? 'Layanan Laundry';
+        $weight = $order->detailTransaksi->sum('total_pakaian');
+        $weightStr = $weight > 0 ? $this->formatQuantity($weight) : $this->formatQuantity($estimatedQty);
+        $name = "{$serviceBase} ({$origDaysStr}) - {$weightStr}Kg";
 
         return [[
-            'name' => $originalService->nama ?? 'Layanan Laundry',
-            'qty' => '1',
-            'price' => $total,
+            'name' => $name,
+            'qty' => (string) $estimatedQty,
+            'price' => $basePrice,
             'subtotal' => $total,
         ]];
     }
@@ -984,6 +1006,9 @@ class OrderWebService
         }
 
         if (! $this->isPaid($order)) {
+            if (in_array((string) $order->status, ['Baru', 'Perlu Diproses'])) {
+                return 'Menunggu';
+            }
             return 'Belum Bayar';
         }
 
@@ -1037,6 +1062,7 @@ class OrderWebService
 
         $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
             ->where('prioritas', '>', $currentPriority->prioritas)
+            ->whereRaw('LOWER(nama) != ?', ['satuan'])
             ->get();
 
         if ($availableUpgrades->isEmpty()) {
@@ -1162,7 +1188,7 @@ class OrderWebService
 
     public function upgradeData(string $id, ?User $user): array
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
 
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
@@ -1179,6 +1205,7 @@ class OrderWebService
 
         $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
             ->where('prioritas', '>', $currentPriority->prioritas)
+            ->whereRaw('LOWER(nama) != ?', ['satuan'])
             ->get();
 
         $upgrades = collect();
@@ -1237,7 +1264,7 @@ class OrderWebService
 
     public function paymentData(string $id, ?User $user): array
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
 
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
@@ -1258,7 +1285,7 @@ class OrderWebService
 
     public function updatePayment(string $id, string $method, ?User $user): void
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
 
         if (!$order || $this->isFinished($order) || $this->isPaid($order)) {
             throw new \Exception('Metode pembayaran tidak dapat diubah.');
@@ -1274,7 +1301,7 @@ class OrderWebService
 
     public function processUpgrade(string $id, int $newServiceId, ?User $user, ?string $paymentMethod = null): void
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order || $this->isFinished($order)) {
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
@@ -1296,7 +1323,13 @@ class OrderWebService
         }
 
         $priceDiff = max(0, (float) $newPriority->harga - (float) $currentPriority->harga);
-        $totalWeight = $order->detailTransaksi->sum('total_pakaian') ?: 1; // Fallback to 1 if empty or 0
+        $totalWeight = $order->detailTransaksi->sum('total_pakaian');
+        if (!$totalWeight) {
+            $basePrice = $this->resolveEstimatedTotal(strtolower($currentPriority->nama ?? ''));
+            $totalWeight = $basePrice > 0 
+                ? max(1, round((float) $order->total_bayar_akhir / $basePrice, 2)) 
+                : 1;
+        }
         $totalPriceDiff = $priceDiff * $totalWeight;
 
         $existingMeta = json_decode($order->payment_metadata, true) ?? [];
@@ -1319,9 +1352,9 @@ class OrderWebService
         };
     }
 
-    public function storeComplaint(string $id, Request $request, ?User $user): void
+    public function storeComplaint(string $id, Request $request, ?User $user): \App\Models\Complaint
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
@@ -1337,7 +1370,12 @@ class OrderWebService
 
         $imagePath = null;
         if ($request->hasFile('issue_image')) {
-            $imagePath = $request->file('issue_image')->storeOnCloudinary('complaints')->getSecurePath();
+            $paths = [];
+            foreach($request->file('issue_image') as $file) {
+                $path = $file->store('complaints', 'cloudinary');
+                $paths[] = \Illuminate\Support\Facades\Storage::disk('cloudinary')->url($path);
+            }
+            $imagePath = json_encode($paths);
         }
 
         $content = $request->input('issue_description') ?? $request->input('content');
@@ -1345,7 +1383,7 @@ class OrderWebService
             throw new \Exception('Deskripsi masalah harus diisi.');
         }
 
-        \App\Models\Complaint::create([
+        return \App\Models\Complaint::create([
             'transaksi_id' => $order->id,
             'pelanggan_id' => $pelanggan->id,
             'content' => $content,
@@ -1357,7 +1395,7 @@ class OrderWebService
 
     public function requestDeliveryConfirmData(string $id, Request $request): array
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
@@ -1388,7 +1426,7 @@ class OrderWebService
 
     public function storeDeliveryDetails(string $id, Request $request, ?User $user): void
     {
-        $order = $this->orderRepository->findById($id);
+        $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
