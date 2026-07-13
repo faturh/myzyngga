@@ -112,7 +112,7 @@
                         </div>
                         <x-zyngga-button 
                             type="a"
-                            href="https://wa.me/+6281297673318"
+                            href="https://wa.me/6282125322500"
                             target="_blank"
                             variant="secondary"
                             size="m"
@@ -127,7 +127,7 @@
                 @if(isset($orders) && count($orders) > 0)
                     @foreach($orders as $order)
                         <x-zyngga-card 
-                            onclick="window.location.href='{{ route('order.detail', ['id' => $order['id']]) }}'"
+                            onclick="window.location.href='{{ route('order.detail', ['id' => $order['nota_layanan']]) }}'"
                             class="cursor-pointer"
                         >
                             {{-- Top Part: User & Order Info (Extra Elements) --}}

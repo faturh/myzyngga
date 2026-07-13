@@ -112,7 +112,7 @@ class OrderPageController
 
     public function repeat(Request $request, string $id)
     {
-        $order = \App\Models\Transaksi::find($id);
+        $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
         if (!$order) {
             return redirect()->route('dashboard');
         }
@@ -193,15 +193,18 @@ class OrderPageController
             'issue_description' => 'nullable|string|max:1000',
             'issue_types' => 'nullable|array',
             'issue_types.*' => 'string|in:pakaian_rusak,masalah_pengantaran,status_pesanan,kendala_pembayaran,lainnya',
-            'issue_image' => 'nullable|image|max:5120',
+            'issue_image' => 'nullable|array|max:3',
+            'issue_image.*' => 'image|max:5120',
         ]);
 
         try {
-            $this->webService->storeComplaint($id, $request, $request->user());
-            if ($request->wantsJson() || $request->is('api/*')) {
+            $complaint = $this->webService->storeComplaint($id, $request, $request->user());
+            if ($request->wantsJson() || $request->is('api/*') || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Komplain berhasil dikirim'
+                    'message' => 'Komplain berhasil dikirim',
+                    'complaint_id' => $complaint->id,
+                    'redirect_url' => route('profile.complaint.detail', ['id' => $complaint->id])
                 ], 200);
             }
             return redirect()->route('order.detail', ['id' => $id])
@@ -264,7 +267,7 @@ class OrderPageController
 
     public function storeRequestDelivery(Request $request, string $id)
     {
-        $order = \App\Models\Transaksi::find($id);
+        $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
         if ($order) {
             $oldState = [
                 'pickup_address' => $order->pickup_address,
@@ -305,7 +308,7 @@ class OrderPageController
     {
         $oldState = session()->get('pending_rollback_delivery_' . $id);
         if ($oldState) {
-            $order = \App\Models\Transaksi::find($id);
+            $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
             if ($order) {
                 $order->pickup_address = $oldState['pickup_address'];
                 $order->pickup_detail_address = $oldState['pickup_detail_address'];
@@ -353,7 +356,7 @@ class OrderPageController
             'payment_method' => 'nullable|string|in:cash,qris,transfer'
         ]);
 
-        $order = \App\Models\Transaksi::find($id);
+        $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
         if ($order) {
             $oldState = [
                 'layanan_prioritas_id' => $order->layanan_prioritas_id,
@@ -387,7 +390,7 @@ class OrderPageController
     {
         $oldState = session()->get('pending_rollback_upgrade_' . $id);
         if ($oldState) {
-            $order = \App\Models\Transaksi::find($id);
+            $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
             if ($order) {
                 $order->layanan_prioritas_id = $oldState['layanan_prioritas_id'];
                 $order->total_biaya_prioritas = $oldState['total_biaya_prioritas'];

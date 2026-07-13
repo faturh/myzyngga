@@ -53,7 +53,7 @@
                     {{-- User Info --}}
                     <div class="flex-1 space-y-0.5">
                         <x-zyngga-text variant="lg" weight="medium" class="leading-tight">{{ Auth::user()->name }}</x-zyngga-text>
-                        <x-zyngga-text variant="sm" color="neutral-500" class="block">{{ Auth::user()->phone ?? '0812 3456 7890' }}</x-zyngga-text>
+                        <x-zyngga-text variant="sm" color="neutral-500" class="block">{{ Auth::user()->phone ?? '-' }}</x-zyngga-text>
                     </div>
 
                     <x-zyngga-button 
@@ -118,8 +118,11 @@
                                 <x-zyngga-divider class="my-3 opacity-50" />
                             @endif
                         @empty
-                            <div class="py-4 flex justify-center items-center">
-                                <x-zyngga-text variant="sm" color="neutral-400" weight="regular" class="text-center">Belum ada alamat tersimpan.</x-zyngga-text>
+                            <div class="flex flex-col items-center justify-center py-4 text-center">
+                                <div class="w-12 h-12 bg-[#F4F4F4] rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Alamat" width="24" height="24">
+                                </div>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-500" class="text-center">Belum ada alamat tersimpan.</x-zyngga-text>
                             </div>
                         @endforelse
                     </div>
@@ -164,17 +167,7 @@
 
                         <x-zyngga-divider class="my-2" />
 
-                        {{-- Hapus Akun --}}
-                        <button @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-user-deletion' }))" class="w-full flex items-center gap-4 h-14 group">
-                            <i data-feather="trash-2" class="w-6 h-6 text-zyngga-neutral-800"></i>
-                            <div class="flex-1 text-left">
-                                <x-zyngga-text variant="sm" weight="medium">Hapus Akun</x-zyngga-text>
-                                <x-zyngga-text variant="xs" color="neutral-500">Data akan dihapus permanen</x-zyngga-text>
-                            </div>
-                            <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
-                        </button>
 
-                        <x-zyngga-divider class="my-2" />
 
                         <button @click="window.dispatchEvent(new CustomEvent('open-logout-modal'))" class="w-full flex items-center gap-4 h-14 group">
                             <i data-feather="log-out" class="w-6 h-6 text-red-500"></i>

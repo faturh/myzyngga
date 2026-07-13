@@ -16,6 +16,12 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         [x-cloak] { display: none !important; }
+        .divider {
+            height: 1px;
+            background-color: #F4F4F4;
+            width: 100%;
+            margin: 12px 0;
+        }
     </style>
 </head>
 <body x-data="{ desktopCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' || (localStorage.getItem('sidebarCollapsed') === null && window.innerWidth >= 768 && window.innerWidth < 1024) }" class="bg-zyngga-blue-50 min-h-screen">
@@ -149,42 +155,43 @@
             </div>
 
             {{-- ─────────────────────────────────────────────────────────
-                 OUTLET KAMI CARD
+                 JENIS LAYANAN CARD
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
                 <div class="bg-white rounded-lg p-4 space-y-4">
                     <div class="h-8 flex items-center">
-                        <x-zyngga-text variant="base" weight="medium">Outlet Kami</x-zyngga-text>
+                        <x-zyngga-text variant="base" weight="medium">Jenis Layanan</x-zyngga-text>
                     </div>
 
-                    <div class="space-y-4">
+                    <div class="flex flex-col">
                         @php
-                            $outlets = [
-                                ['name' => 'Zyngga Laundry Sukabirus', 'address' => 'Jl. Sukabirus No. 99', 'map' => 'https://maps.app.goo.gl/uMGkcaDueS74pU3T7'],
-                                ['name' => 'Zyngga Laundry Sukapura', 'address' => 'Jl. Sukapura No. 97', 'map' => 'https://maps.app.goo.gl/1DKMzTAJ7FbG9YDa7'],
+                            $services = [
+                                ['name' => 'Regular', 'desc' => 'Layanan 3 hari (72 jam)', 'price' => 'Rp4.850/kg'],
+                                ['name' => 'Quick', 'desc' => 'Layanan 2 hari (48 jam)', 'price' => 'Rp6.000/kg'],
+                                ['name' => 'Express', 'desc' => 'Layanan 1 hari (24 jam)', 'price' => 'Rp6.250/kg'],
+                                ['name' => 'Kilat', 'desc' => 'Layanan 5 jam', 'price' => 'Rp7.850/kg'],
+                                ['name' => 'Satuan', 'desc' => 'Selimut, Bed Cover, dll.', 'price' => 'Mulai Rp10.000'],
                             ];
                         @endphp
-                        @foreach ($outlets as $outlet)
-                            <div class="flex items-center gap-4">
-                                <div class="w-[168px] h-[110px] rounded-lg overflow-hidden shrink-0">
-                                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060609/myzyngga_assets/dpk9dumi8qkyeiphpqxm.png" alt="Outlet" class="w-full h-full object-cover">
-                                </div>
-                                <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
-                                    <div class="space-y-1">
-                                        <x-zyngga-text variant="base" weight="regular" class="leading-snug">{{ $outlet['name'] }}</x-zyngga-text>
-                                        <x-zyngga-text variant="xs" color="neutral-500">{{ $outlet['address'] }}</x-zyngga-text>
+                        @foreach ($services as $service)
+                            <div class="flex items-center justify-between h-[56px]">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex flex-col">
+                                        <x-zyngga-text variant="sm" weight="medium" class="leading-snug text-neutral-900">
+                                            {{ $service['name'] }}
+                                        </x-zyngga-text>
+                                        <x-zyngga-text variant="xs" color="neutral-500" class="leading-snug mt-0.5">
+                                            {{ $service['desc'] }}
+                                        </x-zyngga-text>
                                     </div>
-                                    <x-zyngga-button 
-                                        type="a"
-                                        target="_blank"
-                                        variant="secondary"
-                                        size="s"
-                                        label="Cek Lokasi"
-                                        href="{{ $outlet['map'] }}"
-                                        class="w-fit !px-4"
-                                    />
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[14px] text-[#0F0F0F] font-normal">{{ $service['price'] }}</span>
                                 </div>
                             </div>
+                            @if(!$loop->last)
+                            <x-zyngga-divider class=" !my-[6px]" />
+                            @endif
                         @endforeach
                     </div>
                 </div>

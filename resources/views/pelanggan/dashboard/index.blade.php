@@ -16,6 +16,12 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         [x-cloak] { display: none !important; }
+        .divider {
+            height: 1px;
+            background-color: #F4F4F4;
+            width: 100%;
+            margin: 12px 0;
+        }
         .progress-container {
             width: 100%;
             height: 4px;
@@ -47,7 +53,7 @@
         />
 
         {{-- Main Section --}}
-        <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col">
+        <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col" style="min-height: calc(100vh - 200px);">
             {{-- ─────────────────────────────────────────────────────────
                  HERO BANNER
             ───────────────────────────────────────────────────────── --}}
@@ -97,7 +103,7 @@
                  PESANAN KAMU CARD (active order)
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
-                <div class="bg-white rounded-lg p-4 space-y-4 {{ $activeOrder ? 'cursor-pointer' : '' }}" @if($activeOrder) onclick="window.location.href='{{ route('order.detail', ['id' => $activeOrder['id']]) }}'" @endif>
+                <div class="bg-white rounded-lg p-4 space-y-4 {{ $activeOrder ? 'cursor-pointer' : '' }}" @if($activeOrder) onclick="window.location.href='{{ route('order.detail', ['id' => $activeOrder['nota_layanan']]) }}'" @endif>
                     {{-- Section heading --}}
                     <div class="flex items-center justify-between h-8">
                         <x-zyngga-text variant="base" weight="medium">Pesanan Kamu</x-zyngga-text>
@@ -141,7 +147,7 @@
                             </div>
                             <x-zyngga-button 
                                 type="a"
-                                href="https://wa.me/+6281297673318"
+                                href="https://wa.me/6282125322500"
                                 target="_blank"
                                 variant="secondary"
                                 size="m"
@@ -153,8 +159,11 @@
                         </div>
                     </div>
                     @else
-                    <div class="py-2">
-                        <x-zyngga-text variant="sm" color="neutral-500">Belum ada pesanan aktif.</x-zyngga-text>
+                    <div class="flex flex-col items-center justify-center py-4 text-center">
+                        <div class="w-12 h-12 bg-[#F4F4F4] rounded-full flex items-center justify-center mx-auto mb-3">
+                            <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum ada pesanan aktif" width="24" height="24">
+                        </div>
+                        <x-zyngga-text variant="sm" weight="medium" color="neutral-500" class="text-center">Belum ada pesanan aktif.</x-zyngga-text>
                     </div>
                     @endif
                 </div>
@@ -165,7 +174,7 @@
             ───────────────────────────────────────────────────────── --}}
             @if($latestOrder)
             <div class="px-5 py-[6px]">
-                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail', ['id' => $latestOrder['id']]) }}'">
+                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail', ['id' => $latestOrder['nota_layanan']]) }}'">
                     <x-zyngga-text variant="base" weight="medium" class="h-8 flex items-center">Pesanan Terakhir</x-zyngga-text>
 
                     <div class="flex items-start justify-between">
@@ -233,42 +242,43 @@
             </div>
 
             {{-- ─────────────────────────────────────────────────────────
-                 OUTLET KAMI CARD
+                 JENIS LAYANAN CARD
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
                 <div class="bg-white rounded-lg p-4 space-y-4">
                     <div class="h-8 flex items-center">
-                        <x-zyngga-text variant="base" weight="medium">Outlet Kami</x-zyngga-text>
+                        <x-zyngga-text variant="base" weight="medium">Jenis Layanan</x-zyngga-text>
                     </div>
 
-                    <div class="space-y-4">
+                    <div class="flex flex-col">
                         @php
-                            $outlets = [
-                                ['name' => 'Zyngga Laundry Sukabirus', 'address' => 'Jl. Sukabirus No. 99', 'map' => 'https://maps.app.goo.gl/uMGkcaDueS74pU3T7'],
-                                ['name' => 'Zyngga Laundry Sukapura', 'address' => 'Jl. Sukapura No. 97', 'map' => 'https://maps.app.goo.gl/1DKMzTAJ7FbG9YDa7'],
+                            $services = [
+                                ['name' => 'Regular', 'desc' => 'Layanan 3 hari (72 jam)', 'price' => 'Rp4.850/kg'],
+                                ['name' => 'Quick', 'desc' => 'Layanan 2 hari (48 jam)', 'price' => 'Rp6.000/kg'],
+                                ['name' => 'Express', 'desc' => 'Layanan 1 hari (24 jam)', 'price' => 'Rp6.250/kg'],
+                                ['name' => 'Kilat', 'desc' => 'Layanan 5 jam', 'price' => 'Rp7.850/kg'],
+                                ['name' => 'Satuan', 'desc' => 'Selimut, Bed Cover, dll.', 'price' => 'Mulai Rp10.000'],
                             ];
                         @endphp
-                        @foreach ($outlets as $outlet)
-                            <div class="flex items-center gap-4">
-                                <div class="w-[168px] h-[110px] rounded-lg overflow-hidden shrink-0">
-                                    <img src="https://res.cloudinary.com/dba18pvit/image/upload/v1782060609/myzyngga_assets/dpk9dumi8qkyeiphpqxm.png" alt="Outlet" class="w-full h-full object-cover">
-                                </div>
-                                <div class="flex-1 flex flex-col justify-between h-[110px] py-1">
-                                    <div class="space-y-1">
-                                        <x-zyngga-text variant="base" weight="regular" class="leading-snug">{{ $outlet['name'] }}</x-zyngga-text>
-                                        <x-zyngga-text variant="xs" color="neutral-500">{{ $outlet['address'] }}</x-zyngga-text>
+                        @foreach ($services as $service)
+                            <div class="flex items-center justify-between h-[56px]">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex flex-col">
+                                        <x-zyngga-text variant="sm" weight="medium" class="leading-snug text-neutral-900">
+                                            {{ $service['name'] }}
+                                        </x-zyngga-text>
+                                        <x-zyngga-text variant="xs" color="neutral-500" class="leading-snug mt-0.5">
+                                            {{ $service['desc'] }}
+                                        </x-zyngga-text>
                                     </div>
-                                    <x-zyngga-button 
-                                        type="a"
-                                        target="_blank"
-                                        variant="secondary"
-                                        size="s"
-                                        label="Cek Lokasi"
-                                        href="{{ $outlet['map'] }}"
-                                        class="w-fit !px-4"
-                                    />
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[14px] text-[#0F0F0F] font-normal">{{ $service['price'] }}</span>
                                 </div>
                             </div>
+                            @if(!$loop->last)
+                            <x-zyngga-divider class=" !my-[6px]" />
+                            @endif
                         @endforeach
                     </div>
                 </div>

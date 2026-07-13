@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    /* Base animation for all buttons and links that look like buttons */
+    button:not(:disabled), 
+    [role="button"]:not([aria-disabled="true"]), 
+    input[type="button"]:not(:disabled), 
+    input[type="submit"]:not(:disabled) {
+        @apply transition-transform duration-200 active:scale-[0.97];
+    }
+}
+
+@layer components {
+    /* Base transition for interactive cards */
+    a > div > .bg-white.rounded-lg,
+    a > .bg-white.rounded-lg,
+    .cursor-pointer > .bg-white.rounded-lg,
+    .interactive-card {
+        @apply transition-all duration-300;
+    }
+
+    /* Hover states */
+    a:hover > div > .bg-white.rounded-lg,
+    a:hover > .bg-white.rounded-lg,
+    .cursor-pointer:hover > .bg-white.rounded-lg,
+    .interactive-card:hover {
+        @apply shadow-md -translate-y-[2px];
+    }
+
+    /* Active states */
+    a:active > div > .bg-white.rounded-lg,
+    a:active > .bg-white.rounded-lg,
+    .cursor-pointer:active > .bg-white.rounded-lg,
+    .interactive-card:active {
+        @apply scale-[0.98] translate-y-0 shadow-sm;
+    }
+}
+
 [x-cloak] {
     display: none !important;
 }

@@ -47,19 +47,102 @@
     <div class="min-h-screen flex flex-col" x-data="{ 
         issueTypes: [], 
         issueDesc: '', 
-        hasFile: false,
+        files: [],
+        isSubmitting: false,
+        complaintRedirectUrl: '',
         toggleIssue(id) {
             if(this.issueTypes.includes(id)) {
                 this.issueTypes = this.issueTypes.filter(i => i !== id);
             } else if(this.issueTypes.length < 3) {
                 this.issueTypes.push(id);
             }
+        },
+        handleFile(event) {
+            const fileList = event.target.files;
+            const spaceLeft = 3 - this.files.length;
+            if (spaceLeft <= 0) return;
+            
+            const filesToProcess = Array.from(fileList).slice(0, spaceLeft);
+            
+            filesToProcess.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.files.push({
+                        file: file,
+                        name: file.name,
+                        size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
+                        preview: e.target.result
+                    });
+                    this.updateFileInput();
+                    setTimeout(() => { if (window.feather) feather.replace(); }, 50);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            event.target.value = '';
+        },
+        removeFile(index) {
+            this.files.splice(index, 1);
+            this.updateFileInput();
+        },
+        updateFileInput() {
+            const dt = new DataTransfer();
+            this.files.forEach(f => dt.items.add(f.file));
+            document.getElementById('hidden-file-input').files = dt.files;
+        },
+        async submitComplaint() {
+            if (this.issueTypes.length === 0 || this.issueDesc.length === 0 || this.files.length === 0 || this.isSubmitting) return;
+            
+            this.isSubmitting = true;
+            
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('issue_description', this.issueDesc);
+            
+            this.issueTypes.forEach(type => {
+                formData.append('issue_types[]', type);
+            });
+            
+            this.files.forEach(f => {
+                formData.append('issue_image[]', f.file);
+            });
+            
+            try {
+                const response = await fetch('{{ route('order.complaint.store', ['id' => $order['nota_layanan']], false) }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.error('Error Response:', errText);
+                    alert('Gagal mengirim komplain (HTTP ' + response.status + '): ' + errText.substring(0, 200));
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    this.complaintRedirectUrl = result.redirect_url;
+                    window.dispatchEvent(new CustomEvent('open-complaint-success-modal'));
+                } else {
+                    alert(result.message || 'Gagal mengirim komplain');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Terjadi kesalahan saat mengirim komplain: ' + error.message);
+            } finally {
+                this.isSubmitting = false;
+            }
         }
     }">
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
             title="Pengajuan Komplain" 
-            :backUrl="route('order.detail', ['id' => $order['id']])" 
+            :backUrl="route('order.detail', ['id' => $order['nota_layanan']])" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -69,7 +152,7 @@
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
         <main class="flex-1 flex flex-col relative">
             <div class="w-full max-w-5xl mx-auto px-5 pb-[88px]">
-                <form method="POST" action="{{ route('order.complaint.store', ['id' => $order['id']]) }}" id="complaint-form" class="flex-1 flex flex-col" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('order.complaint.store', ['id' => $order['nota_layanan']]) }}" id="complaint-form" class="flex-1 flex flex-col" enctype="multipart/form-data">
                     @csrf
                     
                     {{-- ── MASALAH YANG TERJADI ──────────────────────────────── --}}
@@ -127,24 +210,46 @@
                             {{-- Gambar Bukti --}}
                             <div>
                                 <x-zyngga-text variant="sm" weight="regular" class="mb-1.5 block">Gambar Bukti</x-zyngga-text>
-                                <div class="relative w-full rounded-xl border-2 border-dashed border-zyngga-neutral-200 bg-white p-6 flex flex-col items-center justify-center text-center">
-                                    <div class="w-12 h-12 bg-[#F4F4F4] rounded-full flex items-center justify-center mb-4">
-                                        <img src="{{ asset('assets/images/image.svg') }}" alt="Icon Gambar" width="24" height="24">
+                                <div class="w-full flex flex-col gap-3">
+                                    <div x-cloak x-show="files.length > 0" class="w-full space-y-3">
+                                        <template x-for="(f, index) in files" :key="index">
+                                            <div class="w-full bg-[#F4F4F4] rounded-xl p-3 flex items-center gap-4">
+                                                <div class="w-[60px] h-[60px] shrink-0 rounded-lg overflow-hidden bg-white">
+                                                    <img :src="f.preview" class="w-full h-full object-cover">
+                                                </div>
+                                                <div class="flex-1 text-left flex flex-col min-w-0">
+                                                    <x-zyngga-text variant="sm" class="text-neutral-900 truncate" x-text="f.name"></x-zyngga-text>
+                                                    <x-zyngga-text variant="xs" color="neutral-500" x-text="f.size"></x-zyngga-text>
+                                                </div>
+                                                <button type="button" @click="removeFile(index)" class="p-2 shrink-0 text-zyngga-status-danger hover:bg-red-50 rounded-lg transition-colors">
+                                                    <i data-feather="trash-2" class="w-5 h-5"></i>
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
-                                    <x-zyngga-text variant="xs" color="neutral-500" class="mb-4">Format foto .jpg atau .png, maksimal 5MB</x-zyngga-text>
-                                    
-                                    <x-zyngga-button 
-                                        type="button" 
-                                        variant="secondary" 
-                                        size="s" 
-                                        label="Unggah Gambar" 
-                                        icon="upload" 
-                                        iconPosition="right" 
-                                        onclick="document.getElementById('file-upload').click()"
-                                    />
-                                    <input type="file" name="issue_image" id="file-upload" class="hidden" accept=".jpg,.jpeg,.png" @change="hasFile = $event.target.files.length > 0">
-                                    <div x-show="hasFile" class="mt-3 text-sm text-[#1660C1] font-medium" x-text="$refs.fileInput ? $refs.fileInput.files[0].name : 'File terpilih'" x-ref="fileNameDisplay"></div>
+
+                                    <div x-show="files.length < 3" class="relative w-full rounded-xl border-2 border-dashed border-zyngga-neutral-200 bg-white p-4 flex flex-col items-center justify-center text-center">
+                                        <div x-show="files.length === 0">
+                                            <div class="w-12 h-12 bg-[#F4F4F4] rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <img src="{{ asset('assets/images/image.svg') }}" alt="Icon Gambar" width="24" height="24">
+                                            </div>
+                                            <x-zyngga-text variant="xs" color="neutral-500" class="mb-4 block">Format foto .jpg atau .png, maksimal 5MB</x-zyngga-text>
+                                        </div>
+                                        
+                                        <x-zyngga-button 
+                                            type="button" 
+                                            variant="secondary" 
+                                            size="s" 
+                                            label="Unggah Gambar" 
+                                            icon="upload" 
+                                            iconPosition="right" 
+                                            onclick="document.getElementById('file-upload').click()"
+                                        />
+                                    </div>
                                 </div>
+                                
+                                <input type="file" name="issue_image[]" id="hidden-file-input" class="hidden" multiple accept=".jpg,.jpeg,.png">
+                                <input type="file" id="file-upload" class="hidden" accept=".jpg,.jpeg,.png" multiple @change="handleFile($event)">
                             </div>
                         </div>
                     </x-zyngga-card>
@@ -154,33 +259,42 @@
                 {{-- ── STICKY FOOTER ──────────────────────────────────────── --}}
                 <div id="sticky-footer">
                     <div class="max-w-5xl mx-auto w-full px-5">
-                        <x-zyngga-button 
-                            type="button"
-                            variant="primary"
-                            size="l"
-                            label="Kirim Komplain"
-                            class="w-full"
-                            x-bind:disabled="issueTypes.length === 0 || issueDesc.length === 0 || !hasFile"
-                            onclick="document.getElementById('complaint-form').submit()"
-                        />
+                            <x-zyngga-button 
+                                type="button"
+                                variant="primary"
+                                size="l"
+                                label="Kirim Komplain"
+                                class="w-full"
+                                x-bind:disabled="issueTypes.length === 0 || issueDesc.length === 0 || files.length === 0 || isSubmitting"
+                                @click="submitComplaint()"
+                            />
                     </div>
                 </div>
 
             </div>
         </main>
+
+        {{-- ── MODAL: COMPLAINT SUCCESS ───────────────────────────── --}}
+        <x-zyngga-selection-modal 
+            id="complaint-success-modal" 
+            openEvent="open-complaint-success-modal"
+            closeEvent="close-complaint-success-modal"
+        >
+            <x-zyngga-confirm-view
+                :image="asset('images/illustrations/confirm_order.png')"
+                title="Pengajuan Komplain Berhasil"
+                description="Laporan komplain kamu telah kami terima. Mohon tunggu kami memeriksa kendala tersebut."
+                primaryLabel="Lihat Detail"
+                secondaryLabel="Kembali"
+                primaryAction="window.location.href = complaintRedirectUrl"
+                secondaryAction="window.location.href = '{{ route('order.detail', ['id' => $order['nota_layanan']]) }}'"
+            />
+        </x-zyngga-selection-modal>
     </div>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             feather.replace();
-            
-            // Sync file name display
-            const fileInput = document.getElementById('file-upload');
-            fileInput.addEventListener('change', function(e) {
-                if(e.target.files.length > 0) {
-                    document.querySelector('[x-ref="fileNameDisplay"]').textContent = e.target.files[0].name;
-                }
-            });
         });
     </script>
 </body>
