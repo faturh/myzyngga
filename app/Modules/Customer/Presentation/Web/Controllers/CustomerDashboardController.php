@@ -14,7 +14,7 @@ class CustomerDashboardController
 
     public function __invoke(Request $request)
     {
-        if ($request->user()->role === 'admin') {
+        if ($request->user()->isAdmin() || in_array($request->user()->role, ['admin', 'operator', 'manajer_laundry'])) {
             return redirect()->route('admin.dashboard');
         }
 

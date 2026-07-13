@@ -48,13 +48,24 @@ class OperatorController extends Controller
     {
         $startDate = $request->query('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->query('end_date', now()->toDateString());
+        $selectedEmployeeId = $request->query('pegawai_id');
 
-        $karyawanList = \App\Models\User::role('pegawai_laundry')->get();
+        $allKaryawan = \App\Models\User::role('pegawai_laundry')->get();
+
+        $karyawanList = \App\Models\User::role('pegawai_laundry')
+            ->when($selectedEmployeeId, function ($query, $id) {
+                return $query->where('id', $id);
+            })
+            ->get();
 
         $karyawanData = $karyawanList->map(function($emp) use ($startDate, $endDate) {
             $completedTransactions = \App\Models\Transaksi::query()
-                ->where('pegawai_id', $emp->id)
+                ->where(function($query) use ($emp) {
+                    $query->where('pegawai_id', (string) $emp->id)
+                          ->orWhere('pegawai_id', 'like', '%_' . $emp->id);
+                })
                 ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
+                ->where('gaji_dibayar', 0)
                 ->whereBetween('waktu', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->with('timbangan')
                 ->get();
@@ -74,13 +85,30 @@ class OperatorController extends Controller
                 'total_kg' => $totalKg,
                 'total_gaji' => $totalGaji,
                 'initial' => strtoupper(substr($emp->name ?? $emp->username, 0, 2)),
+                'bank' => $emp->bank ?? '-',
+                'nomor_rekening' => $emp->nomor_rekening ?? '-',
             ];
         });
 
+        $historyGaji = \App\Models\HistoryGaji::with('pegawai')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => $karyawanData,
+                'history' => $historyGaji,
+                'status' => 200
+            ], 200);
+        }
+
         return view('operator.admin.gaji-karyawan', [
             'karyawan' => $karyawanData,
+            'allKaryawan' => $allKaryawan,
+            'selectedEmployeeId' => $selectedEmployeeId,
             'startDate' => $startDate,
             'endDate' => $endDate,
+            'historyGaji' => $historyGaji,
         ]);
     }
 
@@ -91,12 +119,20 @@ class OperatorController extends Controller
     {
         $startDate = $request->query('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->query('end_date', now()->toDateString());
+        $selectedEmployeeId = $request->query('pegawai_id');
 
-        $karyawanList = \App\Models\User::role('pegawai_laundry')->get();
+        $karyawanList = \App\Models\User::role('pegawai_laundry')
+            ->when($selectedEmployeeId, function ($query, $id) {
+                return $query->where('id', $id);
+            })
+            ->get();
 
         $karyawanData = $karyawanList->map(function($emp) use ($startDate, $endDate) {
             $completedTransactions = \App\Models\Transaksi::query()
-                ->where('pegawai_id', $emp->id)
+                ->where(function($query) use ($emp) {
+                    $query->where('pegawai_id', (string) $emp->id)
+                          ->orWhere('pegawai_id', 'like', '%_' . $emp->id);
+                })
                 ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
                 ->whereBetween('waktu', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->with('timbangan')
@@ -236,6 +272,13 @@ class OperatorController extends Controller
 
         $transaksi = $query->paginate(10)->withQueryString();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => $transaksi,
+                'status' => 200
+            ], 200);
+        }
+
         return view('operator.admin.riwayat-pesanan', compact(
             'transaksi',
             'tab',
@@ -305,6 +348,10 @@ class OperatorController extends Controller
      */
     public function prosesTransaksi(Request $request, string $id)
     {
+        if ($request->has('berat') && !$request->has('actual_weight')) {
+            $request->merge(['actual_weight' => $request->input('berat')]);
+        }
+
         try {
             $validated = $request->validate([
                 'tipe_layanan' => 'nullable|string',
@@ -332,14 +379,34 @@ class OperatorController extends Controller
             }
 
             if (!$hasWeight && !$hasSatuan) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Silakan isi berat timbangan kiloan ATAU masukkan minimal satu item satuan tambahan.',
+                        'status' => 400
+                    ], 400);
+                }
                 return redirect()->back()->withInput()->with('error', 'Silakan isi berat timbangan kiloan ATAU masukkan minimal satu item satuan tambahan.');
             }
 
             $this->prosesService->prosesTransaksi($id, $validated);
 
             $transaksi = Transaksi::findOrFail($id);
+            $transaksi->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai']);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Pesanan #' . $transaksi->nota . ' berhasil diproses.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal memproses pesanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -430,9 +497,23 @@ class OperatorController extends Controller
 
             $transaksi->status = 'proses pengerjaan';
             $transaksi->save();
+            $transaksi->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai']);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal mulai mengerjakan pesanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -446,17 +527,63 @@ class OperatorController extends Controller
         $transaksi->status = 'Batal';
         $transaksi->save();
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'data' => $transaksi,
+                'message' => 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.',
+                'status' => 200
+            ], 200);
+        }
         return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.');
     }
 
     /**
      * Complete transaction pengerjaan (update status to 'selesai').
+     * Automatically records employee salary based on actual weight × tariff per kg.
      */
     public function selesaikanPengerjaan(string $id)
     {
-        $transaksi = Transaksi::findOrFail($id);
+        $transaksi = Transaksi::with(['timbangan', 'pegawai'])->findOrFail($id);
         $transaksi->status = 'selesai';
         $transaksi->save();
+
+        // ── Pencatatan Gaji Otomatis ──────────────────────────────────────────
+        // Hitung gaji karyawan berdasarkan berat aktual × tarif gaji per kg
+        $gajiCatatanMessage = '';
+        try {
+            $pegawai    = $transaksi->pegawai;
+            $timbangan  = $transaksi->timbangan;
+
+            if ($pegawai && $timbangan && (float) $timbangan->actual_weight > 0) {
+                $actualWeight = (float) $timbangan->actual_weight;
+                $tarifPerKg   = (int) ($pegawai->gaji ?? 0);
+
+                if ($tarifPerKg > 0) {
+                    $totalGaji = $actualWeight * $tarifPerKg;
+                    $cabangId  = $transaksi->cabang_id
+                        ?? $pegawai->cabang_id
+                        ?? \App\Models\Cabang::value('id');
+
+                    \App\Models\KeuanganToko::create([
+                        'tanggal'    => now()->toDateString(),
+                        'tipe'       => 'pengeluaran',
+                        'kategori'   => 'Gaji',
+                        'nominal'    => $totalGaji,
+                        'keterangan' => 'Gaji otomatis: ' . ($pegawai->name ?? $pegawai->username)
+                            . ' — Pesanan #' . $transaksi->nota
+                            . ' (' . $actualWeight . ' kg × Rp ' . number_format($tarifPerKg, 0, ',', '.') . '/kg)',
+                        'cabang_id'  => $cabangId,
+                    ]);
+
+                    $gajiCatatanMessage = ' Gaji Rp ' . number_format($totalGaji, 0, ',', '.')
+                        . ' untuk ' . ($pegawai->name ?? $pegawai->username) . ' telah dicatat.';
+                }
+            }
+        } catch (\Exception $e) {
+            // Pencatatan gaji gagal tidak boleh menggagalkan penyelesaian pesanan
+            \Illuminate\Support\Facades\Log::warning('Gagal mencatat gaji otomatis untuk transaksi #' . $transaksi->nota . ': ' . $e->getMessage());
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         $message = 'Pengerjaan pesanan #' . $transaksi->nota . ' telah selesai.';
         if ($transaksi->list_status_pengerjaan_id == 2) {
@@ -464,7 +591,15 @@ class OperatorController extends Controller
         } else {
             $message .= ' Pembayaran sudah lunas, status menjadi Selesai.';
         }
+        $message .= $gajiCatatanMessage;
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'data'    => $transaksi,
+                'message' => $message,
+                'status'  => 200
+            ], 200);
+        }
         return redirect()->back()->with('success', $message);
     }
 
@@ -519,14 +654,16 @@ class OperatorController extends Controller
                  $pelanggan = \App\Models\Pelanggan::findOrFail($validated['pelanggan_id']);
              } else {
                 // Create new user profile for customer
-                $uniqueStr = time() . '_' . rand(100, 999);
+                $uniqueStr = time() . '_' . \Illuminate\Support\Str::random(8);
                 $newUser = \App\Models\User::create([
                     'username' => 'pelanggan_' . $uniqueStr,
                     'email' => 'pelanggan_' . $uniqueStr . '@zyngga.com',
                     'name' => $validated['customer_name'],
                     'phone' => $validated['customer_phone'],
                     'slug' => 'pelanggan-' . $uniqueStr,
-                    'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                    // Akun walk-in tidak diberi kredensial login — password acak kuat yang
+                    // tidak pernah diketahui pelanggan, bukan password seragam yang bisa ditebak.
+                    'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(40)),
                     'role' => 'customer',
                 ]);
                 $newUser->assignRole('customer');
@@ -570,11 +707,25 @@ class OperatorController extends Controller
                 'layanan_prioritas_id' => $layanan->id,
                 'pelanggan_id' => $pelanggan->id,
                 'pegawai_id' => $validated['pegawai_id'],
-                'cabang_id' => $pelanggan->cabang_id ?? 1,
+                'cabang_id' => auth()->user()->cabang_id ?? \App\Models\Cabang::value('id') ?? 1,
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Pesanan Manual #' . $transaksi->nota . ' berhasil dibuat.',
+                    'status' => 200
+                ], 200);
+            }
 
             return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan Manual #' . $transaksi->nota . ' berhasil dibuat.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal membuat pesanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->withInput()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage());
         }
     }
@@ -588,6 +739,12 @@ class OperatorController extends Controller
         $meta = json_decode($transaksi->payment_metadata, true) ?? [];
 
         if (!isset($meta['pending_upgrade'])) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Tidak ada permintaan upgrade tertunda untuk pesanan ini.',
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Tidak ada permintaan upgrade tertunda untuk pesanan ini.');
         }
 
@@ -650,8 +807,21 @@ class OperatorController extends Controller
                 $history->save();
             });
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Upgrade layanan berhasil dikonfirmasi dan pembayaran tunai dicatat.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->back()->with('success', 'Upgrade layanan berhasil dikonfirmasi dan pembayaran tunai dicatat.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal konfirmasi upgrade: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Gagal konfirmasi upgrade: ' . $e->getMessage());
         }
     }
@@ -669,6 +839,12 @@ class OperatorController extends Controller
         $newService = \App\Models\LayananPrioritas::findOrFail($request->new_service_id);
 
         if ($newService->prioritas <= ($transaksi->layananPrioritas->prioritas ?? 0)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Layanan tujuan harus memiliki prioritas lebih tinggi.',
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Layanan tujuan harus memiliki prioritas lebih tinggi.');
         }
 
@@ -720,9 +896,130 @@ class OperatorController extends Controller
                 $history->save();
             });
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $transaksi,
+                    'message' => 'Layanan berhasil di-upgrade ke ' . $newService->nama . ' secara langsung.',
+                    'status' => 200
+                ], 200);
+            }
             return redirect()->back()->with('success', 'Layanan berhasil di-upgrade ke ' . $newService->nama . ' secara langsung.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal upgrade layanan: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
             return redirect()->back()->with('error', 'Gagal upgrade layanan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Record employee salary payment into KeuanganToko ledger.
+     */
+    public function bayarGaji(Request $request)
+    {
+        $request->validate([
+            'pegawai_id' => 'required|exists:users,id',
+            'nominal' => 'required|numeric|min:0',
+            'tanggal' => 'required|date',
+            'keterangan' => 'required|string|max:500',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $employee = \App\Models\User::findOrFail($request->pegawai_id);
+        $cabangId = $employee->cabang_id ?? auth()->user()->cabang_id ?? \App\Models\Cabang::first()->id ?? null;
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($request, $employee, $cabangId) {
+                // 1. Record KeuanganToko
+                \App\Models\KeuanganToko::create([
+                    'tanggal' => $request->tanggal,
+                    'tipe' => 'pengeluaran',
+                    'kategori' => 'Gaji',
+                    'nominal' => (double) $request->nominal,
+                    'keterangan' => $request->keterangan,
+                    'cabang_id' => $cabangId,
+                ]);
+
+                // 2. Record HistoryGaji
+                \App\Models\HistoryGaji::create([
+                    'pegawai_id' => $employee->id,
+                    'nominal' => (double) $request->nominal,
+                    'tanggal' => $request->tanggal,
+                    'bank' => $employee->bank,
+                    'nomor_rekening' => $employee->nomor_rekening,
+                    'keterangan' => $request->keterangan,
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                ]);
+
+                // 3. Set matching completed transactions' salary status to paid (gaji_dibayar = 1)
+                if ($request->filled('start_date') && $request->filled('end_date')) {
+                    \App\Models\Transaksi::query()
+                        ->where(function($query) use ($employee) {
+                            $query->where('pegawai_id', (string) $employee->id)
+                                  ->orWhere('pegawai_id', 'like', '%_' . $employee->id);
+                        })
+                        ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
+                        ->where('gaji_dibayar', 0)
+                        ->whereBetween('waktu', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59'])
+                        ->update(['gaji_dibayar' => 1]);
+                }
+            });
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Pembayaran gaji untuk ' . ($employee->name ?? $employee->username) . ' sebesar Rp ' . number_format($request->nominal, 0, ',', '.') . ' berhasil dicatat.',
+                    'status' => 200
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Pembayaran gaji berhasil dicatat sebagai pengeluaran toko dan riwayat disimpan.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal mencatat pembayaran: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'Gagal mencatat pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update employee salary rate per Kg.
+     */
+    public function updateTarifGaji(Request $request)
+    {
+        $request->validate([
+            'pegawai_id' => 'required|exists:users,id',
+            'gaji' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $employee = \App\Models\User::findOrFail($request->pegawai_id);
+            $employee->gaji = (int) $request->gaji;
+            $employee->save();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Tarif gaji untuk ' . ($employee->name ?? $employee->username) . ' berhasil diubah menjadi Rp ' . number_format($request->gaji, 0, ',', '.') . ' / kg.',
+                    'status' => 200
+                ], 200);
+            }
+
+            return redirect()->back()->with('success', 'Tarif gaji per kg berhasil diperbarui.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Gagal mengubah tarif gaji: ' . $e->getMessage(),
+                    'status' => 400
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'Gagal mengubah tarif gaji: ' . $e->getMessage());
         }
     }
 }

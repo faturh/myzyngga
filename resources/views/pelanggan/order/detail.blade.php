@@ -359,6 +359,22 @@
                 </x-zyngga-card>
                 @endif
 
+                @if(isset($order['clothing_details']) && count($order['clothing_details']) > 0)
+                {{-- CARD: RINCIAN PAKAIAN --}}
+                <x-zyngga-card title="Rincian Pakaian">
+                    <div class="space-y-4">
+                        <div class="space-y-3">
+                            @foreach($order['clothing_details'] as $item)
+                            <div class="flex justify-between items-center">
+                                <x-zyngga-text variant="sm" color="neutral-900">{{ $item['nama'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $item['qty'] }} pcs</x-zyngga-text>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </x-zyngga-card>
+                @endif
+
                 @if(!in_array($order['raw_status'], ['Baru', 'created', 'Perlu Diproses']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
                 {{-- CARD 4: BANTUAN/LAYANAN --}}
                 <x-zyngga-card title="Bantuan/Layanan">

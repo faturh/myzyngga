@@ -43,7 +43,7 @@ class PublicStrukController
 
         $title = 'Cetak Struk';
 
-        return view('operator.dashboard.transaksi.struk.index', compact(
+        return view('operator.admin.transaksi.struk.index', compact(
             'title',
             'transaksi',
             'detailTransaksi',

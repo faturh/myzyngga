@@ -78,6 +78,10 @@ class OrderFlowSmokeTest extends TestCase
         $this->get(route('order.detail', ['id' => $order->id]))
             ->assertOk();
 
+        // Verify public receipt page loads correctly
+        $this->get(route('public.cetak-struk', ['idOrNota' => $order->id]))
+            ->assertOk();
+
         $this->get(route('order.history'))
             ->assertOk();
 
@@ -242,12 +246,36 @@ class OrderFlowSmokeTest extends TestCase
         ]);
         
         // Start working on transaction
-        $this->post("/admin/riwayat-pesanan/{$transaksi->id}/kerjakan")
-            ->assertRedirect();
+        $this->post("/admin/riwayat-pesanan/{$transaksi->id}/kerjakan", [
+            'pegawai_id' => $admin->id,
+            'items' => [
+                [
+                    'nama_item' => 'Kaos',
+                    'qty' => 5,
+                ],
+                [
+                    'nama_item' => 'Celana Jeans',
+                    'qty' => 2,
+                ]
+            ]
+        ])->assertRedirect();
             
         $transaksi->refresh();
         $this->assertEquals('Proses Pengerjaan', $transaksi->status);
         $this->assertEquals(4, $transaksi->list_status_pengerjaan_id);
+
+        // Check if customer can see the clothing details on the detail page
+        $this->actingAs($customer);
+        $response = $this->get(route('order.detail', ['id' => $transaksi->id]));
+        $response->assertStatus(200);
+        $response->assertSee('Rincian Pakaian');
+        $response->assertSee('Kaos');
+        $response->assertSee('5 pcs');
+        $response->assertSee('Celana Jeans');
+        $response->assertSee('2 pcs');
+
+        // Restore admin auth for completing transaction
+        $this->actingAs($admin);
         
         // Complete transaction
         $this->post("/admin/riwayat-pesanan/{$transaksi->id}/selesaikan")
@@ -259,8 +287,8 @@ class OrderFlowSmokeTest extends TestCase
         $this->assertEquals(2, $transaksi->list_status_pengerjaan_id);
 
         // Verify history log creation
-        $this->assertDatabaseCount('list_history_pengerjaan', 3);
-        $latestLog = \App\Models\ListHistoryPengerjaan::latest()->first();
+        $this->assertEquals(3, \App\Models\ListHistoryPengerjaan::where('transaksi_id', $transaksi->id)->count());
+        $latestLog = \App\Models\ListHistoryPengerjaan::orderBy('id', 'desc')->first();
         $this->assertEquals(4, $latestLog->status_sebelumnya);
         $this->assertEquals(2, $latestLog->status_sesudahnya);
     }

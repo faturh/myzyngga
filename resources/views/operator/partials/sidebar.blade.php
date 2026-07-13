@@ -97,14 +97,26 @@
                         Gaji Karyawan
                     </a>
                 </li>
+            </ul>
+        </div>
+
+        @if(auth()->user()->isAdmin())
+        <!-- Group 4: Manajemen Admin -->
+        <div class="mt-4">
+            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <i data-feather="shield" class="w-3.5 h-3.5"></i>
+                <span>Manajemen Admin</span>
+            </div>
+            <ul class="space-y-1">
                 <li>
-                    <a href="{{ route('user.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('user.create') ? 'font-bold bg-blue-50/70 text-blue-600' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
-                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('user.create') ? 'bg-blue-500' : 'bg-transparent' }}"></span>
-                        Tambah Karyawan
+                    <a href="{{ route('user') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs(['user', 'user.create', 'user.edit', 'user.view', 'user.edit.password']) ? 'font-bold bg-blue-50/70 text-blue-600' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs(['user', 'user.create', 'user.edit', 'user.view', 'user.edit.password']) ? 'bg-blue-500' : 'bg-transparent' }}"></span>
+                        Kelola Akun
                     </a>
                 </li>
             </ul>
         </div>
+        @endif
     </div>
     
     <!-- Sidebar Footer Info -->
@@ -228,14 +240,26 @@
                                 Gaji Karyawan
                             </a>
                         </li>
+                    </ul>
+                </div>
+
+                @if(auth()->user()->isAdmin())
+                <!-- Group 4: Manajemen Admin -->
+                <div class="mt-4">
+                    <div class="flex items-center gap-2 px-3 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <i data-feather="shield" class="w-3.5 h-3.5"></i>
+                        <span>Manajemen Admin</span>
+                    </div>
+                    <ul class="space-y-1">
                         <li>
-                            <a href="{{ route('user.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('user.create') ? 'font-bold bg-blue-50/70 text-blue-600' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
-                                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('user.create') ? 'bg-blue-500' : 'bg-transparent' }}"></span>
-                                Tambah Karyawan
+                            <a href="{{ route('user') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs(['user', 'user.create', 'user.edit', 'user.view', 'user.edit.password']) ? 'font-bold bg-blue-50/70 text-blue-600' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs(['user', 'user.create', 'user.edit', 'user.view', 'user.edit.password']) ? 'bg-blue-500' : 'bg-transparent' }}"></span>
+                                Kelola Akun
                             </a>
                         </li>
                     </ul>
                 </div>
+                @endif
             </div>
             
             <!-- Sidebar Footer Info -->

@@ -25,7 +25,7 @@ class TransaksiDashboardService
 
         if ($userRole === 'lurah' || $userRole === 'pic') {
             return [
-                'view' => 'operator.dashboard.transaksi.lurah.index',
+                'view' => 'operator.admin.transaksi.lurah.index',
                 'data' => [
                     'title' => $title,
                     'cabang' => $this->repository->getAllCabangWithTrashed(),
@@ -52,7 +52,7 @@ class TransaksiDashboardService
         }
 
         return [
-            'view' => 'operator.dashboard.transaksi.index',
+            'view' => 'operator.admin.transaksi.index',
             'data' => compact('title', 'cabang', 'transaksi', 'monitoring', 'isJadwal', 'status'),
         ];
     }
@@ -80,7 +80,7 @@ class TransaksiDashboardService
         }
 
         return [
-            'view' => 'operator.dashboard.transaksi.jadwal',
+            'view' => 'operator.admin.transaksi.jadwal',
             'data' => compact('title', 'cabang', 'transaksi', 'isJadwal', 'status'),
         ];
     }
@@ -105,7 +105,7 @@ class TransaksiDashboardService
         $monitoring = $this->repository->getMonitoringByCabang((int) $cabang->id);
 
         return [
-            'view' => 'operator.dashboard.transaksi.lurah.cabang',
+            'view' => 'operator.admin.transaksi.lurah.cabang',
             'data' => compact('title', 'cabang', 'transaksi', 'monitoring', 'isJadwal', 'status'),
         ];
     }
@@ -129,7 +129,7 @@ class TransaksiDashboardService
         $transaksi = $this->repository->getJadwalByCabang((int) $cabang->id);
 
         return [
-            'view' => 'operator.dashboard.transaksi.lurah.jadwal',
+            'view' => 'operator.admin.transaksi.lurah.jadwal',
             'data' => compact('title', 'cabang', 'transaksi', 'isJadwal', 'status'),
         ];
     }
@@ -147,7 +147,7 @@ class TransaksiDashboardService
             $layananTambahanTransaksi = $this->repository->getLayananTambahanTransaksiItems((string) $transaksi->id);
 
             return [
-                'view' => 'operator.dashboard.transaksi.lurah.lihat',
+                'view' => 'operator.admin.transaksi.lurah.lihat',
                 'data' => compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'isJadwal', 'layananTambahanTransaksi'),
             ];
         }
@@ -158,7 +158,7 @@ class TransaksiDashboardService
         $layananTambahanTransaksi = $this->repository->getLayananTambahanTransaksiItems((string) $transaksi->id);
 
         return [
-            'view' => 'operator.dashboard.transaksi.lihat',
+            'view' => 'operator.admin.transaksi.lihat',
             'data' => compact('title', 'cabang', 'transaksi', 'detailTransaksi', 'isJadwal', 'layananTambahanTransaksi'),
         ];
     }
@@ -186,7 +186,7 @@ class TransaksiDashboardService
         $layananTambahan = $this->repository->getLayananTambahanOptionsByCabang((int) $cabang->id);
 
         return [
-            'view' => 'operator.dashboard.transaksi.tambah',
+            'view' => 'operator.admin.transaksi.tambah',
             'data' => compact('title', 'cabang', 'pelanggan', 'gamis', 'pakaian', 'layananPrioritas', 'isJadwal', 'jenisPembayaran', 'layananTambahan'),
         ];
     }
@@ -236,7 +236,7 @@ class TransaksiDashboardService
         }
 
         return [
-            'view' => 'operator.dashboard.transaksi.ubah',
+            'view' => 'operator.admin.transaksi.ubah',
             'data' => compact('title', 'cabang', 'status', 'pelanggan', 'gamis', 'pakaian', 'layananPrioritas', 'transaksi', 'layanan', 'hargaLayanan', 'isJadwal', 'jenisPembayaran', 'layananTambahan'),
         ];
     }

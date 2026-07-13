@@ -16,55 +16,107 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Maatwebsite\Excel\Facades\Excel;
 
-class UserController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class UserController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(function ($request, $next) {
-            $user = auth()->user();
-            if (!$user || !$user->isAdmin()) {
-                abort(403, 'Hanya Admin Utama yang dapat mengelola pengguna.');
-            }
-            return $next($request);
-        });
+        return [
+            new Middleware(function ($request, $next) {
+                $user = auth()->user();
+                if (!$user || !$user->isAdmin()) {
+                    abort(403, 'Hanya Admin Utama yang dapat mengelola pengguna.');
+                }
+                return $next($request);
+            }),
+        ];
     }
 
-    private function mapUserCollection($users)
+    private function mapUserCollection($users, $hideCabang = false)
     {
-        return $users->map(function ($u) {
-            return (object) [
+        return $users->map(function ($u) use ($hideCabang) {
+            $data = [
                 'id' => $u->id,
                 'nama' => $u->name ?? $u->username,
+                'username' => $u->username,
+                'email' => $u->email,
                 'slug' => $u->slug,
                 'telepon' => $u->phone ?? '-',
+                'gaji' => $u->gaji ?? 0,
+                'nomor_rekening' => $u->nomor_rekening ?? '-',
+                'bank' => $u->bank ?? '-',
+                'role' => $u->roles->pluck('name')->first() ?? $u->role ?? '-',
                 'created_at' => $u->created_at,
                 'deleted_at' => $u->deleted_at,
-                'nama_cabang' => $u->cabang?->nama ?? '-',
                 'user' => (object) [
                     'email' => $u->email,
                     'roles' => $u->roles,
                 ]
             ];
+
+            if (!$hideCabang) {
+                $data['cabang_id'] = $u->cabang_id;
+                $data['nama_cabang'] = $u->cabang?->nama ?? '-';
+            }
+
+            return (object) $data;
         });
+    }
+
+    private function findUser(Request $request, bool $withTrashed = false)
+    {
+        $identifier = $request->user ?? $request->slug ?? $request->id;
+        
+        $query = User::query();
+        if ($withTrashed) {
+            $query->withTrashed();
+        }
+
+        return $query->where(function ($q) use ($identifier) {
+            $q->where('slug', $identifier);
+            if (is_numeric($identifier)) {
+                $q->orWhere('id', (int)$identifier);
+            }
+        })->first();
     }
 
     public function index()
     {
         $title = "Users Management";
         $userRole = auth()->user()->roles[0]->name;
-        $cabang = Cabang::get();
-        $role = Role::get();
+
+        $cabang = Cabang::where('deleted_at', null)->get();
+        if ($userRole == 'admin' || $userRole == 'pic') {
+            $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
+        } else if ($userRole == 'operator') {
+            $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'operator')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
+            $cabang = Cabang::where('deleted_at', null)->where('id', auth()->user()->cabang_id)->get();
+        } else {
+            $role = Role::get();
+        }
 
         if ($userRole == 'lurah' || $userRole == 'pic' || $userRole == 'admin') {
-            $manajer = User::whereHas('roles', function($q) { $q->where('name', 'manajer_laundry'); })->with('cabang')->get();
+            $manajer = User::whereHas('roles', function($q) { $q->where('name', 'operator'); })->with('cabang')->get();
             $pegawai = User::whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->with('cabang')->get();
             $gamis = collect();
 
-            $manajerTrash = User::whereHas('roles', function($q) { $q->where('name', 'manajer_laundry'); })->onlyTrashed()->with('cabang')->get();
+            $manajerTrash = User::whereHas('roles', function($q) { $q->where('name', 'operator'); })->onlyTrashed()->with('cabang')->get();
             $pegawaiTrash = User::whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->onlyTrashed()->with('cabang')->get();
             $gamisTrash = collect();
 
-            return view('operator.dashboard.user.index', [
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'data' => [
+                        'manajer' => $this->mapUserCollection($manajer, true),
+                        'pegawai' => $this->mapUserCollection($pegawai, true),
+                    ],
+                    'status' => 200
+                ], 200);
+            }
+
+            return view('operator.admin.user.index', [
                 'title' => $title,
                 'cabang' => $cabang,
                 'role' => $role,
@@ -76,7 +128,7 @@ class UserController extends Controller
                 'gamisTrash' => $gamisTrash,
             ]);
 
-        } elseif ($userRole == 'manajer_laundry') {
+        } elseif ($userRole == 'operator') {
             $cabangId = auth()->user()->cabang_id;
             $pegawai = User::where('cabang_id', $cabangId)->whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->with('cabang')->get();
             $gamis = collect();
@@ -84,7 +136,16 @@ class UserController extends Controller
             $pegawaiTrash = User::where('cabang_id', $cabangId)->whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->onlyTrashed()->with('cabang')->get();
             $gamisTrash = collect();
 
-            return view('operator.dashboard.user.index', [
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'data' => [
+                        'pegawai' => $this->mapUserCollection($pegawai, true),
+                    ],
+                    'status' => 200
+                ], 200);
+            }
+
+            return view('operator.admin.user.index', [
                 'title' => $title,
                 'cabang' => $cabang,
                 'role' => $role,
@@ -101,11 +162,15 @@ class UserController extends Controller
         $title = "Detail User";
         $trash = false;
         $userRole = auth()->user()->roles[0]->name;
-        $user = User::where('slug', $request->user)->first();
+        
+        $user = $this->findUser($request);
 
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic' && $userRole != 'admin') {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'User tidak ditemukan', 'status' => 404], 404);
+            }
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
 
@@ -120,46 +185,43 @@ class UserController extends Controller
             'selesai_kerja' => '-',
         ];
 
-        return view('operator.dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => [
+                    'user' => $this->mapUserCollection(collect([$user]), true)->first(),
+                ],
+                'status' => 200
+            ], 200);
+        }
+
+        return view('operator.admin.user.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function create()
     {
-        $title = "Tambah User";
-        $userRole = auth()->user()->roles[0]->name;
-
-        if ($userRole == 'lurah') {
-            abort(403, 'USER DOES NOT HAVE PERMISSION.');
-        }
-
-        $cabang = Cabang::where('id', auth()->user()->cabang_id)->withTrashed()->first();
-        if ($cabang && $cabang->deleted_at) {
-            abort(403, 'USER DOES NOT HAVE PERMISSION.');
-        }
-
-        $kkGamis = collect();
-        $isCabang = [false];
-
-        if ($userRole == 'admin' || $userRole == 'pic') {
-            $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
-            $cabang = Cabang::where('deleted_at', null)->get();
-        } else if ($userRole == 'manajer_laundry') {
-            $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'manajer_laundry')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
-            $cabang = Cabang::where('deleted_at', null)->where('id', auth()->user()->cabang_id)->get();
-        }
-        return view('operator.dashboard.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
+        return redirect()->route('user');
     }
 
     public function store(Request $request)
     {
+        // Normalize name and phone inputs for convenience
+        if ($request->has('name') && !$request->has('nama')) {
+            $request->merge(['nama' => $request->name]);
+        }
+        if ($request->has('phone') && !$request->has('telepon')) {
+            $request->merge(['telepon' => $request->phone]);
+        }
+
         $validatedUser = $request->validate([
-            'username' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed',
             'cabang_id' => 'nullable|integer',
             'nama' => 'required|string|max:255',
             'telepon' => 'required|string|max:20',
             'gaji' => 'nullable|numeric|min:0',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'bank' => 'nullable|string|max:100',
         ], [
             'required' => ':attribute harus diisi.',
             'unique' => ':attribute sudah ada, silakan isi yang lain.',
@@ -168,22 +230,45 @@ class UserController extends Controller
             'confirmed' => 'Konfirmasi :attribute tidak sama.',
         ]);
 
+        $cabangId = $validatedUser['cabang_id'] ?? null;
+        if (empty($cabangId) || !\App\Models\Cabang::where('id', $cabangId)->exists()) {
+            $cabangId = auth()->user()->cabang_id ?? \App\Models\Cabang::first()->id ?? 1;
+        }
+
+        $roleSelected = $request->role ?? 'pegawai_laundry';
+
         $user = User::create([
             'username' => $validatedUser['username'],
             'email' => $validatedUser['email'],
             'password' => Hash::make($validatedUser['password']),
-            'cabang_id' => $validatedUser['cabang_id'],
+            'cabang_id' => $cabangId,
             'name' => $validatedUser['nama'],
             'phone' => $validatedUser['telepon'],
             'slug' => str()->slug($validatedUser['username']),
             'gaji' => (int) ($validatedUser['gaji'] ?? 0),
+            'nomor_rekening' => $validatedUser['nomor_rekening'] ?? null,
+            'bank' => $validatedUser['bank'] ?? null,
+            'role' => $roleSelected,
         ]);
 
-        $user->assignRole($request->role);
+        $user->assignRole($roleSelected);
 
         if ($user) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $this->mapUserCollection(collect([$user]), true)->first(),
+                    'message' => 'User Berhasil Ditambahkan',
+                    'status' => 200
+                ], 200);
+            }
             return to_route('user')->with('success', 'User Berhasil Ditambahkan');
         } else {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'User Gagal Ditambahkan',
+                    'status' => 400
+                ], 400);
+            }
             return to_route('user')->with('error', 'User Gagal Ditambahkan');
         }
     }
@@ -206,15 +291,15 @@ class UserController extends Controller
         if ($userRole == 'admin' || $userRole == 'pic') {
             $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
             $cabang = Cabang::where('deleted_at', null)->get();
-        } else if ($userRole == 'manajer_laundry') {
-            $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'manajer_laundry')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
+        } else if ($userRole == 'operator') {
+            $role = Role::where('name', '!=', 'lurah')->where('name', '!=', 'operator')->where('name', '!=', 'rw')->where('name', '!=', 'pic')->get();
             $cabang = Cabang::where('deleted_at', null)->where('id', auth()->user()->cabang_id)->get();
         }
 
-        $user = User::where('slug', $request->user)->first();
+        $user = $this->findUser($request);
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
 
@@ -227,14 +312,31 @@ class UserController extends Controller
             'tanggal_lahir' => '-',
             'mulai_kerja' => '-',
             'selesai_kerja' => '-',
+            'nomor_rekening' => $user->nomor_rekening ?? '-',
+            'bank' => $user->bank ?? '-',
         ];
 
-        return view('operator.dashboard.user.ubah', compact('title', 'cabang', 'role', 'kkGamis', 'user', 'profile'));
+        return view('operator.admin.user.ubah', compact('title', 'cabang', 'role', 'kkGamis', 'user', 'profile'));
     }
 
     public function update(Request $request)
     {
-        $user = User::where('slug', $request->user)->firstOrFail();
+        // Normalize name and phone inputs for convenience
+        if ($request->has('name') && !$request->has('nama')) {
+            $request->merge(['nama' => $request->name]);
+        }
+        if ($request->has('phone') && !$request->has('telepon')) {
+            $request->merge(['telepon' => $request->phone]);
+        }
+
+        $user = $this->findUser($request);
+        if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'User tidak ditemukan', 'status' => 404], 404);
+            }
+            abort(404, 'User tidak ditemukan');
+        }
+
         $validated = $request->validate([
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user)],
             'email' => ['required', 'email', Rule::unique('users')->ignore($user)],
@@ -242,6 +344,8 @@ class UserController extends Controller
             'nama' => 'required|string|max:255',
             'telepon' => 'required|string|max:20',
             'gaji' => 'nullable|numeric|min:0',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'bank' => 'nullable|string|max:100',
         ], [
             'required' => ':attribute harus diisi.',
             'unique' => ':attribute sudah ada, silakan isi yang lain.',
@@ -249,21 +353,44 @@ class UserController extends Controller
             'integer' => ':attribute harus berupa angka.',
         ]);
 
+        $cabangId = $validated['cabang_id'] ?? null;
+        if (empty($cabangId) || !\App\Models\Cabang::where('id', $cabangId)->exists()) {
+            $cabangId = $user->cabang_id ?? auth()->user()->cabang_id ?? \App\Models\Cabang::first()->id ?? 1;
+        }
+
+        $roleSelected = $request->role ?? $user->roles->pluck('name')->first() ?? $user->role ?? 'pegawai_laundry';
+
         $userUpdate = $user->update([
             'username' => $validated['username'],
             'email' => $validated['email'],
-            'cabang_id' => $validated['cabang_id'],
+            'cabang_id' => $cabangId,
             'name' => $validated['nama'],
             'phone' => $validated['telepon'],
             'slug' => str()->slug($validated['username']),
             'gaji' => (int) ($validated['gaji'] ?? 0),
+            'nomor_rekening' => $validated['nomor_rekening'] ?? null,
+            'bank' => $validated['bank'] ?? null,
+            'role' => $roleSelected,
         ]);
 
-        $user->syncRoles([$request->role]);
+        $user->syncRoles([$roleSelected]);
 
         if ($userUpdate) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'data' => $this->mapUserCollection(collect([$user]), true)->first(),
+                    'message' => 'User Berhasil Diperbarui',
+                    'status' => 200
+                ], 200);
+            }
             return to_route('user')->with('success', 'User Berhasil Diperbarui');
         } else {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'User Gagal Diperbarui',
+                    'status' => 400
+                ], 400);
+            }
             return to_route('user')->with('error', 'User Gagal Diperbarui');
         }
     }
@@ -282,13 +409,13 @@ class UserController extends Controller
             abort(403, 'USER DOES NOT HAVE PERMISSION.');
         }
 
-        $user = User::where('slug', $request->user)->first();
+        $user = $this->findUser($request);
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
-        return view('operator.dashboard.user.ubahPassword', compact('title', 'user'));
+        return view('operator.admin.user.ubahPassword', compact('title', 'user'));
     }
 
     public function updatePassword(Request $request)
@@ -301,13 +428,33 @@ class UserController extends Controller
             'min' => 'minimal :min karakter.',
         ]);
 
-        $updatePassword = User::where('slug', $request->slug)->update([
+        $user = $this->findUser($request);
+        if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'User tidak ditemukan', 'status' => 404], 404);
+            }
+            abort(404, 'User tidak ditemukan');
+        }
+
+        $updatePassword = $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 
         if ($updatePassword) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Password User Berhasil Diganti',
+                    'status' => 200
+                ], 200);
+            }
             return to_route('user')->with('success', 'Password User Berhasil Diganti');
         } else {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Password User Gagal Diganti',
+                    'status' => 400
+                ], 400);
+            }
             return to_route('user')->with('error', 'Password User Gagal Diganti');
         }
     }
@@ -316,14 +463,31 @@ class UserController extends Controller
     {
         $cabang = Cabang::where('id', auth()->user()->cabang_id)->withTrashed()->first();
         if ($cabang && $cabang->deleted_at) {
-            abort(403, 'USER DOES NOT HAVE PERMISSION.');
+            return response()->json([
+                'message' => 'USER DOES NOT HAVE PERMISSION.',
+                'status' => 403
+            ], 403);
         }
 
-        $hapus = User::where('slug', $request->slug)->delete();
+        $user = $this->findUser($request);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan',
+                'status' => 404
+            ], 404);
+        }
+
+        $hapus = $user->delete();
         if ($hapus) {
-            abort(200, 'User Berhasil Dihapus');
+            return response()->json([
+                'message' => 'User Berhasil Dihapus',
+                'status' => 200
+            ], 200);
         } else {
-            abort(400, 'User Gagal Dihapus');
+            return response()->json([
+                'message' => 'User Gagal Dihapus',
+                'status' => 400
+            ], 400);
         }
     }
 
@@ -332,11 +496,12 @@ class UserController extends Controller
         $title = "Detail User Trash";
         $trash = true;
         $userRole = auth()->user()->roles[0]->name;
-        $user = User::where('slug', $request->user)->onlyTrashed()->first();
+        
+        $user = $this->findUser($request, true);
 
         if ($user == null || $user->cabang_id != auth()->user()->cabang_id && $userRole != 'lurah' && $userRole != 'pic' && $userRole != 'admin') {
             abort(404, 'USER TIDAK DITEMUKAN.');
-        } else if ($user->slug == auth()->user()->slug ) {
+        } else if ($user->slug == auth()->user()->slug) {
             return to_route('profile', $user->slug);
         }
 
@@ -349,23 +514,42 @@ class UserController extends Controller
             'tanggal_lahir' => '-',
             'mulai_kerja' => '-',
             'selesai_kerja' => '-',
+            'nomor_rekening' => $user->nomor_rekening ?? '-',
+            'bank' => $user->bank ?? '-',
         ];
 
-        return view('operator.dashboard.user.lihat', compact('title', 'user', 'profile', 'trash'));
+        return view('operator.admin.user.lihat', compact('title', 'user', 'profile', 'trash'));
     }
 
     public function restore(Request $request)
     {
         $cabang = Cabang::where('id', auth()->user()->cabang_id)->withTrashed()->first();
         if ($cabang && $cabang->deleted_at) {
-            abort(403, 'USER DOES NOT HAVE PERMISSION.');
+            return response()->json([
+                'message' => 'USER DOES NOT HAVE PERMISSION.',
+                'status' => 403
+            ], 403);
         }
 
-        $pulih = User::where('slug', $request->slug)->restore();
+        $user = $this->findUser($request, true);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan',
+                'status' => 404
+            ], 404);
+        }
+
+        $pulih = $user->restore();
         if ($pulih) {
-            abort(200, 'User Berhasil Dihapus');
+            return response()->json([
+                'message' => 'User Berhasil Dipulihkan',
+                'status' => 200
+            ], 200);
         } else {
-            abort(400, 'User Gagal Dihapus');
+            return response()->json([
+                'message' => 'User Gagal Dipulihkan',
+                'status' => 400
+            ], 400);
         }
     }
 
@@ -373,19 +557,34 @@ class UserController extends Controller
     {
         $cabang = Cabang::where('id', auth()->user()->cabang_id)->withTrashed()->first();
         if ($cabang && $cabang->deleted_at) {
-            abort(403, 'USER DOES NOT HAVE PERMISSION.');
+            return response()->json([
+                'message' => 'USER DOES NOT HAVE PERMISSION.',
+                'status' => 403
+            ], 403);
         }
 
-        $user = User::where('slug', $request->slug)->onlyTrashed()->first();
-        $userRole = $user->roles[0]->name;
+        $user = $this->findUser($request, true);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan',
+                'status' => 404
+            ], 404);
+        }
+        $userRole = $user->roles[0]->name ?? $user->role ?? 'pegawai_laundry';
 
         $user->removeRole($userRole);
         $hapusPermanen = $user->forceDelete();
 
         if ($hapusPermanen) {
-            abort(200, 'User Berhasil Dihapus');
+            return response()->json([
+                'message' => 'User Berhasil Dihapus Permanen',
+                'status' => 200
+            ], 200);
         } else {
-            abort(400, 'User Gagal Dihapus');
+            return response()->json([
+                'message' => 'User Gagal Dihapus Permanen',
+                'status' => 400
+            ], 400);
         }
     }
 
@@ -405,15 +604,15 @@ class UserController extends Controller
 
         $role = Role::get();
 
-        $manajer = User::where('cabang_id', $cabang->id)->whereHas('roles', function($q) { $q->where('name', 'manajer_laundry'); })->get();
+        $manajer = User::where('cabang_id', $cabang->id)->whereHas('roles', function($q) { $q->where('name', 'operator'); })->get();
         $pegawai = User::where('cabang_id', $cabang->id)->whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->get();
         $gamis = collect();
 
-        $manajerTrash = User::where('cabang_id', $cabang->id)->whereHas('roles', function($q) { $q->where('name', 'manajer_laundry'); })->onlyTrashed()->get();
+        $manajerTrash = User::where('cabang_id', $cabang->id)->whereHas('roles', function($q) { $q->where('name', 'operator'); })->onlyTrashed()->get();
         $pegawaiTrash = User::where('cabang_id', $cabang->id)->whereHas('roles', function($q) { $q->where('name', 'pegawai_laundry'); })->onlyTrashed()->get();
         $gamisTrash = collect();
 
-        return view('operator.dashboard.user.cabang.index-cabang', [
+        return view('operator.admin.user.cabang.index-cabang', [
             'title' => $title,
             'cabang' => $cabang,
             'role' => $role,
@@ -443,7 +642,7 @@ class UserController extends Controller
         $title = "Tambah User";
         $isCabang = [true, $cabang[0]->nama, $cabang[0]->id];
 
-        return view('operator.dashboard.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
+        return view('operator.admin.user.tambah', compact('title', 'cabang', 'role', 'kkGamis', 'isCabang'));
     }
 
     public function import(Request $request)
@@ -462,4 +661,3 @@ class UserController extends Controller
         return Excel::download(new UserExport($request->cabang), 'Data Pegawai '.Carbon::now()->format('d-m-Y').'.xlsx');
     }
 }
-

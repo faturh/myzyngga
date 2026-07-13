@@ -73,6 +73,8 @@ class OrderWebServiceBugTest extends TestCase
         $request = Request::create('/', 'POST', [
             'address'        => 'Jl. Merdeka No. 1',
             'detail_address' => 'Lantai 2',
+            'lat'            => -6.914744,
+            'lng'            => 107.60981,
         ]);
 
         $service->storeRequestDelivery($request, $order->id);
@@ -97,6 +99,8 @@ class OrderWebServiceBugTest extends TestCase
         $request = Request::create('/', 'POST', [
             'address'      => 'Jl. Test No. 2',
             'delivery_fee' => 0,  // client manipulasi fee jadi 0
+            'lat'          => -6.914744,
+            'lng'          => 107.60981,
         ]);
 
         $service->storeRequestDelivery($request, $order->id);

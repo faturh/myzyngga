@@ -19,8 +19,21 @@ class ListOrderHistoryController
         $perPage = (int) $request->integer('per_page', 10);
         $paginator = $this->service->historyForUser($request->user(), $perPage);
 
-        return ApiResponse::paginated($paginator, [
-            'orders' => OrderResource::collection($paginator->items()),
-        ]);
+        $paginator->getCollection()->each(function ($order) {
+            $order->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai', 'pelanggan', 'listPengerjaan']);
+        });
+
+        return response()->json([
+            'data' => [
+                'orders' => OrderResource::collection($paginator->items())
+            ],
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+            'status' => 200
+        ], 200);
     }
 }

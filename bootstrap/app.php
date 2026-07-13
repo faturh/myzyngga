@@ -24,6 +24,14 @@ $app = Application::configure(basePath: dirname(__DIR__))
             guests: '/',
             users: '/home'
         );
+
+        $middleware->validateCsrfTokens(except: [
+            'login',
+            'logout',
+            'admin/*',
+            'user/*',
+            'transaksi/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (DomainException $exception, Request $request) {
@@ -41,7 +49,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         });
     })->create();
 
-if (isset($_ENV['VERCEL'])) {
+if (getenv('VERCEL') !== false || isset($_ENV['VERCEL'])) {
     $storagePath = '/tmp/storage';
     if (!is_dir($storagePath)) {
         mkdir($storagePath, 0755, true);

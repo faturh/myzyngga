@@ -134,21 +134,32 @@
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Pilih Karyawan</label>
+                                <select name="pegawai_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs h-10">
+                                    <option value="">Semua Karyawan</option>
+                                    @foreach ($allKaryawan as $emp)
+                                        <option value="{{ $emp->id }}" @if ($selectedEmployeeId == $emp->id) selected @endif>
+                                            {{ $emp->name ?? $emp->username }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tanggal Mulai</label>
-                                <input type="date" name="start_date" id="start_date" value="{{ $startDate }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs" />
+                                <input type="date" name="start_date" id="start_date" value="{{ $startDate }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs h-10" />
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tanggal Selesai</label>
-                                <input type="date" name="end_date" id="end_date" value="{{ $endDate }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs" />
+                                <input type="date" name="end_date" id="end_date" value="{{ $endDate }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs h-10" />
                             </div>
                             <div class="flex items-center gap-2">
                                 <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 h-10">
                                     <i data-feather="filter" class="w-4 h-4"></i>
                                     Filter
                                 </button>
-                                <a href="{{ route('admin.gaji-karyawan.download', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 h-10">
+                                <a href="{{ route('admin.gaji-karyawan.download', ['start_date' => $startDate, 'end_date' => $endDate, 'pegawai_id' => $selectedEmployeeId]) }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 h-10">
                                     <i data-feather="download" class="w-4 h-4"></i>
                                     Unduh Excel
                                 </a>
@@ -193,6 +204,26 @@
                                      return [...this.employees].sort((a, b) => b.total_gaji - a.total_gaji);
                                  }
                                  return this.employees;
+                             },
+                             // MODAL STATE
+                             showBayarModal: false,
+                             showTarifModal: false,
+                             selectedEmp: null,
+                             payoutAmount: 0,
+                             payoutDate: '{{ now()->toDateString() }}',
+                             payoutNote: '',
+                             tarifAmount: 0,
+
+                             openBayar(emp) {
+                                 this.selectedEmp = emp;
+                                 this.payoutAmount = emp.total_gaji;
+                                 this.payoutNote = 'Pembayaran Gaji Karyawan ' + emp.name + ' Periode {{ $startDate }} s/d {{ $endDate }}';
+                                 this.showBayarModal = true;
+                             },
+                             openTarif(emp) {
+                                 this.selectedEmp = emp;
+                                 this.tarifAmount = emp.gaji_per_kg;
+                                 this.showTarifModal = true;
                              }
                          }">
                         
@@ -215,10 +246,6 @@
                                         <option value="desc">Tertinggi -> Terendah</option>
                                     </select>
                                 </div>
-                                <a href="{{ route('user.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
-                                    <i data-feather="plus" class="w-4 h-4"></i>
-                                    Tambah Karyawan
-                                </a>
                             </div>
                         </div>
 
@@ -231,6 +258,7 @@
                                         <th class="pb-3 text-center">Tarif Gaji/Kg</th>
                                         <th class="pb-3 text-center">Total Kg Dikerjakan</th>
                                         <th class="pb-3 text-right pr-2">Total Gaji Diterima</th>
+                                        <th class="pb-3 text-right pr-2">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-50 text-xs">
@@ -241,15 +269,176 @@
                                                     <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shadow-sm" x-text="emp.initial"></div>
                                                     <div>
                                                         <p class="font-extrabold text-[#0f172a] text-sm" x-text="emp.name"></p>
-                                                        <span class="text-[10px] text-slate-400 font-medium">ID Karyawan: #<span x-text="emp.id"></span></span>
+                                                        <div class="text-[10px] text-slate-400 font-semibold space-y-0.5 mt-0.5">
+                                                            <p>ID Karyawan: #<span x-text="emp.id"></span></p>
+                                                            <p>Rekening: <span class="text-blue-600 font-bold" x-text="emp.bank"></span> (<span class="font-mono text-slate-500" x-text="emp.nomor_rekening"></span>)</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="py-4 text-center font-semibold text-slate-700" x-text="'Rp ' + emp.gaji_per_kg.toLocaleString('id-ID') + ' / kg'"></td>
                                             <td class="py-4 text-center font-extrabold text-blue-600 text-sm" x-text="emp.total_kg + ' kg'"></td>
                                             <td class="py-4 text-right pr-2 font-black text-emerald-600 text-sm" x-text="'Rp ' + emp.total_gaji.toLocaleString('id-ID')"></td>
+                                            <td class="py-4 text-right pr-2 whitespace-nowrap">
+                                                <div class="flex items-center justify-end gap-1.5">
+                                                    <button @click="openTarif(emp)" type="button" class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-extrabold text-[10px] px-2.5 py-1.5 rounded-xl transition-all border border-amber-200">
+                                                        Atur Tarif
+                                                    </button>
+                                                    <button @click="openBayar(emp)" type="button" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[10px] px-2.5 py-1.5 rounded-xl transition-all border border-blue-200">
+                                                        Bayar Gaji
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     </template>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Modal Bayar Gaji -->
+                        <div x-show="showBayarModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-sm" @click="showBayarModal = false"></div>
+                                
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                                
+                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
+                                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                                        <h3 class="text-sm font-extrabold text-[#0f172a] uppercase tracking-wider">Bayar Gaji Karyawan</h3>
+                                        <button @click="showBayarModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <form action="{{ route('admin.gaji-karyawan.bayar') }}" method="POST" class="p-6 space-y-4">
+                                        @csrf
+                                        <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
+                                        <input type="hidden" name="start_date" value="{{ $startDate }}">
+                                        <input type="hidden" name="end_date" value="{{ $endDate }}">
+                                        
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
+                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.name" readonly>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Bank</label>
+                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.bank" readonly>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">No. Rekening</label>
+                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.nomor_rekening" readonly>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tanggal Pembayaran</label>
+                                            <input type="date" name="tanggal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-bold focus:outline-none focus:border-blue-500" x-model="payoutDate" required>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Nominal Payout (Rp)</label>
+                                            <input type="number" name="nominal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-bold focus:outline-none focus:border-blue-500" x-model="payoutAmount" required>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Catatan / Keterangan</label>
+                                            <textarea name="keterangan" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-blue-500" x-model="payoutNote" required></textarea>
+                                        </div>
+                                        
+                                        <div class="pt-2 flex gap-3">
+                                            <button type="button" @click="showBayarModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-all">Batal</button>
+                                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm">Konfirmasi</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Atur Tarif -->
+                        <div x-show="showTarifModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-sm" @click="showTarifModal = false"></div>
+                                
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                                
+                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
+                                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                                        <h3 class="text-sm font-extrabold text-[#0f172a] uppercase tracking-wider">Atur Tarif Gaji per Kg</h3>
+                                        <button @click="showTarifModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <form action="{{ route('admin.gaji-karyawan.update-tarif') }}" method="POST" class="p-6 space-y-4">
+                                        @csrf
+                                        <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
+                                        
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
+                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.name" readonly>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tarif Gaji Baru (Rp / kg)</label>
+                                            <input type="number" name="gaji" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-bold focus:outline-none focus:border-blue-500" x-model="tarifAmount" required>
+                                        </div>
+                                        
+                                        <div class="pt-2 flex gap-3">
+                                            <button type="button" @click="showTarifModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-all">Batal</button>
+                                            <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm">Simpan Tarif</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat Pengiriman Gaji Card -->
+                    <div class="w-full space-y-6 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm">
+                        <div class="border-b border-slate-100 pb-5">
+                            <h2 class="text-lg font-extrabold text-[#0f172a] leading-none">Riwayat Pengiriman Gaji</h2>
+                            <p class="text-xs font-semibold text-slate-400 mt-1.5">
+                                Riwayat pembayaran gaji yang telah diselesaikan sebelumnya.
+                            </p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="pb-3 pl-2">Karyawan</th>
+                                        <th class="pb-3">Tanggal Bayar</th>
+                                        <th class="pb-3">Periode Kerja</th>
+                                        <th class="pb-3">Bank & No. Rekening</th>
+                                        <th class="pb-3 text-right pr-2">Total Gaji Dibayar</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 text-xs">
+                                    @forelse($historyGaji as $history)
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-4 pl-2 font-extrabold text-[#0f172a]">
+                                                {{ $history->pegawai->name ?? $history->pegawai->username ?? 'N/A' }}
+                                            </td>
+                                            <td class="py-4 font-semibold text-slate-600">
+                                                {{ $history->tanggal->format('d M Y') }}
+                                            </td>
+                                            <td class="py-4 font-semibold text-slate-500">
+                                                {{ $history->start_date ? $history->start_date->format('d M Y') : '-' }} s/d {{ $history->end_date ? $history->end_date->format('d M Y') : '-' }}
+                                            </td>
+                                            <td class="py-4 font-bold text-blue-600">
+                                                {{ $history->bank ?? '-' }} (<span class="font-mono text-slate-500 font-semibold">{{ $history->nomor_rekening ?? '-' }}</span>)
+                                            </td>
+                                            <td class="py-4 text-right pr-2 font-black text-emerald-600 text-sm">
+                                                Rp {{ number_format($history->nominal, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="py-6 text-center text-slate-400 font-medium italic">
+                                                Belum ada riwayat pengiriman gaji.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>

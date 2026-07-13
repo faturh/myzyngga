@@ -19,14 +19,14 @@ class VerifyPaymentController
         Gate::authorize('verify-payment');
         $payment = $this->service->verifyPayment($orderId, $request->user(), $request->validated());
 
-        return ApiResponse::success([
-            'payment' => [
-                'id' => $payment->id,
-                'status' => $payment->status,
-                'method' => $payment->method,
-                'amount' => $payment->amount,
-                'verified_at' => optional($payment->verified_at)->toISOString(),
+        $payment->load(['verifier', 'transaksi.layananPrioritas', 'transaksi.timbangan.items.jenisPakaian', 'transaksi.pegawai', 'transaksi.pelanggan', 'transaksi.listPengerjaan']);
+
+        return response()->json([
+            'data' => [
+                'payment' => $payment
             ],
-        ]);
+            'message' => 'Pembayaran untuk transaksi ' . optional($payment->transaksi)->nota . ' berhasil diverifikasi oleh ' . optional($payment->verifier)->name . '.',
+            'status' => 200
+        ], 200);
     }
 }

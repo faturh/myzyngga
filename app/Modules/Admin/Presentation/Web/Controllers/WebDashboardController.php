@@ -6,7 +6,7 @@ class WebDashboardController
 {
     public function __invoke()
     {
-        if (auth()->user()->role === 'admin') {
+        if (auth()->user()->isAdmin() || in_array(auth()->user()->role, ['admin', 'operator', 'manajer_laundry'])) {
             return redirect()->route('admin.dashboard');
         }
 

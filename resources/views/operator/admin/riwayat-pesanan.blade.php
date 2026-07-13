@@ -317,6 +317,12 @@
                                         <p class="text-slate-400">
                                             Metode Pembayaran: <span class="text-slate-700 font-medium uppercase">{{ $item->jenis_pembayaran }}</span>
                                         </p>
+                                        <p class="text-slate-400">
+                                            Estimasi Durasi: <span class="text-indigo-600 font-extrabold">{{ $item->getEstimasiPengerjaanJam() }} Jam</span>
+                                        </p>
+                                        <p class="text-slate-400">
+                                            Deadline: <span class="text-rose-600 font-extrabold">{{ $item->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</span>
+                                        </p>
                                     </div>
 
                                     <!-- Customer Details -->
