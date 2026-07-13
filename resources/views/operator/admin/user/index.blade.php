@@ -61,6 +61,8 @@
                 var telepon = $(this).data('telepon');
                 var gaji = $(this).data('gaji');
                 var role = $(this).data('role');
+                var bank = $(this).data('bank');
+                var rekening = $(this).data('rekening');
 
                 $('#edit_nama').val(nama);
                 $('#edit_username').val(username);
@@ -68,6 +70,8 @@
                 $('#edit_telepon').val(telepon);
                 $('#edit_gaji').val(gaji);
                 $('#edit_role').val(role);
+                $('#edit_bank').val(bank);
+                $('#edit_nomor_rekening').val(rekening);
 
                 var actionUrl = "{{ route('user.update', ':user') }}".replace(':user', slug);
                 $('#edit_user_form').attr('action', actionUrl);
@@ -382,6 +386,8 @@
                                                                      data-email="{{ $item->user->email ?? '' }}"
                                                                      data-telepon="{{ $item->telepon }}"
                                                                      data-gaji="{{ $item->gaji ?? 0 }}"
+                                                                     data-bank="{{ $item->bank ?? '' }}"
+                                                                     data-rekening="{{ $item->nomor_rekening ?? '' }}"
                                                                      data-role="{{ $item->user->roles->pluck('name')->first() ?? '' }}"
                                                                      data-cabang="{{ $item->cabang_id ?? '' }}">
                                                                  <i class="ri-pencil-line text-lg"></i>
@@ -441,6 +447,8 @@
                                                                      data-email="{{ $item->user->email ?? '' }}"
                                                                      data-telepon="{{ $item->telepon }}"
                                                                      data-gaji="{{ $item->gaji ?? 0 }}"
+                                                                     data-bank="{{ $item->bank ?? '' }}"
+                                                                     data-rekening="{{ $item->nomor_rekening ?? '' }}"
                                                                      data-role="{{ $item->user->roles->pluck('name')->first() ?? '' }}"
                                                                      data-cabang="{{ $item->cabang_id ?? '' }}">
                                                                  <i class="ri-pencil-line text-lg"></i>
@@ -499,6 +507,8 @@
                                                                      data-email="{{ $item->user->email ?? '' }}"
                                                                      data-telepon="{{ $item->telepon }}"
                                                                      data-gaji="{{ $item->gaji ?? 0 }}"
+                                                                     data-bank="{{ $item->bank ?? '' }}"
+                                                                     data-rekening="{{ $item->nomor_rekening ?? '' }}"
                                                                      data-role="{{ $item->user->roles->pluck('name')->first() ?? '' }}"
                                                                      data-cabang="{{ $item->cabang_id ?? '' }}">
                                                                  <i class="ri-pencil-line text-lg"></i>
@@ -777,6 +787,24 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Bank -->
+                            <div class="space-y-1">
+                                <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Tipe Bank
+                                </span>
+                                <input type="text" name="bank" placeholder="Contoh: BCA, Mandiri, BNI" class="w-full bg-[#f8fafc] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
+                            </div>
+
+                            <!-- Nomor Rekening -->
+                            <div class="space-y-1">
+                                <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Nomor Rekening
+                                </span>
+                                <input type="text" name="nomor_rekening" placeholder="Nomor Rekening" class="w-full bg-[#f8fafc] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Password -->
                             <div class="space-y-1">
                                 <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -871,6 +899,24 @@
                                     Tarif Gaji per Kg (Rp)
                                 </span>
                                 <input type="number" id="edit_gaji" name="gaji" placeholder="Masukkan tarif gaji per kg" class="w-full bg-[#f8fafc] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Bank -->
+                            <div class="space-y-1">
+                                <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Tipe Bank
+                                </span>
+                                <input type="text" id="edit_bank" name="bank" placeholder="Contoh: BCA, Mandiri, BNI" class="w-full bg-[#f8fafc] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
+                            </div>
+
+                            <!-- Nomor Rekening -->
+                            <div class="space-y-1">
+                                <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Nomor Rekening
+                                </span>
+                                <input type="text" id="edit_nomor_rekening" name="nomor_rekening" placeholder="Nomor Rekening" class="w-full bg-[#f8fafc] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
                             </div>
                         </div>
 

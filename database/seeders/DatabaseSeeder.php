@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
 
             //? Data Transaksi
             TransaksiSeeder::class,
+            KeuanganTokoSeeder::class,
         ]);
     }
 }

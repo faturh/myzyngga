@@ -64,7 +64,7 @@
                 <div class="flex items-center gap-4">
                     <button @click="modalOpen = true" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition-all duration-300 flex items-center gap-2">
                         <i data-feather="plus" class="w-4 h-4"></i>
-                        <span>Catat Pencairan Dana</span>
+                        <span>Catat Kas Manual</span>
                     </button>
                 </div>
             </header>
@@ -241,7 +241,7 @@
                 
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-                    <h3 class="font-extrabold text-[#0f172a] text-sm">Catat Pencairan Dana</h3>
+                    <h3 class="font-extrabold text-[#0f172a] text-sm">Catat Kas Manual</h3>
                     <button @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
                         <i data-feather="x" class="w-5 h-5"></i>
                     </button>
@@ -250,8 +250,19 @@
                 <!-- Modal Body (Form) -->
                 <form method="POST" action="{{ route('admin.keuangan.store') }}" class="p-6 space-y-4">
                     @csrf
-                    <input type="hidden" name="tipe" value="pengeluaran">
-                    <input type="hidden" name="kategori" value="Pencairan Dana">
+
+                    <div>
+                        <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Tipe Transaksi</label>
+                        <select name="tipe" required class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all">
+                            <option value="pengeluaran">Pengeluaran (Kas Keluar)</option>
+                            <option value="pemasukan">Pemasukan (Kas Masuk)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Kategori</label>
+                        <input type="text" name="kategori" placeholder="Contoh: Pencairan Dana, Operasional, Kas Masuk" required class="w-full text-xs font-semibold bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all">
+                    </div>
 
                     <div>
                         <label class="text-xs font-bold text-[#0f172a] block mb-1.5">Tanggal</label>

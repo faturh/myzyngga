@@ -228,6 +228,30 @@
                         @enderror
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Tipe Bank -->
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Tipe Bank
+                            </span>
+                            <input type="text" name="bank" placeholder="Contoh: BCA, Mandiri, BNI" class="w-full bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" value="{{ old("bank") }}" />
+                            @error("bank")
+                                <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <!-- Nomor Rekening -->
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Nomor Rekening
+                            </span>
+                            <input type="text" name="nomor_rekening" placeholder="Masukkan nomor rekening" class="w-full bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors" value="{{ old("nomor_rekening") }}" />
+                            @error("nomor_rekening")
+                                <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
                     <!-- Alamat -->
                     <div class="space-y-1">
                         <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">

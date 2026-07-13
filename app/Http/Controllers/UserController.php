@@ -45,6 +45,8 @@ class UserController extends Controller implements HasMiddleware
                 'slug' => $u->slug,
                 'telepon' => $u->phone ?? '-',
                 'gaji' => $u->gaji ?? 0,
+                'nomor_rekening' => $u->nomor_rekening ?? '-',
+                'bank' => $u->bank ?? '-',
                 'role' => $u->roles->pluck('name')->first() ?? $u->role ?? '-',
                 'created_at' => $u->created_at,
                 'deleted_at' => $u->deleted_at,
@@ -218,6 +220,8 @@ class UserController extends Controller implements HasMiddleware
             'nama' => 'required|string|max:255',
             'telepon' => 'required|string|max:20',
             'gaji' => 'nullable|numeric|min:0',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'bank' => 'nullable|string|max:100',
         ], [
             'required' => ':attribute harus diisi.',
             'unique' => ':attribute sudah ada, silakan isi yang lain.',
@@ -242,6 +246,8 @@ class UserController extends Controller implements HasMiddleware
             'phone' => $validatedUser['telepon'],
             'slug' => str()->slug($validatedUser['username']),
             'gaji' => (int) ($validatedUser['gaji'] ?? 0),
+            'nomor_rekening' => $validatedUser['nomor_rekening'] ?? null,
+            'bank' => $validatedUser['bank'] ?? null,
             'role' => $roleSelected,
         ]);
 
@@ -306,6 +312,8 @@ class UserController extends Controller implements HasMiddleware
             'tanggal_lahir' => '-',
             'mulai_kerja' => '-',
             'selesai_kerja' => '-',
+            'nomor_rekening' => $user->nomor_rekening ?? '-',
+            'bank' => $user->bank ?? '-',
         ];
 
         return view('operator.admin.user.ubah', compact('title', 'cabang', 'role', 'kkGamis', 'user', 'profile'));
@@ -336,6 +344,8 @@ class UserController extends Controller implements HasMiddleware
             'nama' => 'required|string|max:255',
             'telepon' => 'required|string|max:20',
             'gaji' => 'nullable|numeric|min:0',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'bank' => 'nullable|string|max:100',
         ], [
             'required' => ':attribute harus diisi.',
             'unique' => ':attribute sudah ada, silakan isi yang lain.',
@@ -358,6 +368,8 @@ class UserController extends Controller implements HasMiddleware
             'phone' => $validated['telepon'],
             'slug' => str()->slug($validated['username']),
             'gaji' => (int) ($validated['gaji'] ?? 0),
+            'nomor_rekening' => $validated['nomor_rekening'] ?? null,
+            'bank' => $validated['bank'] ?? null,
             'role' => $roleSelected,
         ]);
 
@@ -502,6 +514,8 @@ class UserController extends Controller implements HasMiddleware
             'tanggal_lahir' => '-',
             'mulai_kerja' => '-',
             'selesai_kerja' => '-',
+            'nomor_rekening' => $user->nomor_rekening ?? '-',
+            'bank' => $user->bank ?? '-',
         ];
 
         return view('operator.admin.user.lihat', compact('title', 'user', 'profile', 'trash'));

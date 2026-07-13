@@ -269,7 +269,10 @@
                                                     <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shadow-sm" x-text="emp.initial"></div>
                                                     <div>
                                                         <p class="font-extrabold text-[#0f172a] text-sm" x-text="emp.name"></p>
-                                                        <span class="text-[10px] text-slate-400 font-medium">ID Karyawan: #<span x-text="emp.id"></span></span>
+                                                        <div class="text-[10px] text-slate-400 font-semibold space-y-0.5 mt-0.5">
+                                                            <p>ID Karyawan: #<span x-text="emp.id"></span></p>
+                                                            <p>Rekening: <span class="text-blue-600 font-bold" x-text="emp.bank"></span> (<span class="font-mono text-slate-500" x-text="emp.nomor_rekening"></span>)</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -309,10 +312,23 @@
                                     <form action="{{ route('admin.gaji-karyawan.bayar') }}" method="POST" class="p-6 space-y-4">
                                         @csrf
                                         <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
+                                        <input type="hidden" name="start_date" value="{{ $startDate }}">
+                                        <input type="hidden" name="end_date" value="{{ $endDate }}">
                                         
                                         <div>
                                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
                                             <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.name" readonly>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Bank</label>
+                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.bank" readonly>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">No. Rekening</label>
+                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.nomor_rekening" readonly>
+                                            </div>
                                         </div>
                                         
                                         <div>
@@ -374,6 +390,57 @@
                                     </form>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat Pengiriman Gaji Card -->
+                    <div class="w-full space-y-6 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm">
+                        <div class="border-b border-slate-100 pb-5">
+                            <h2 class="text-lg font-extrabold text-[#0f172a] leading-none">Riwayat Pengiriman Gaji</h2>
+                            <p class="text-xs font-semibold text-slate-400 mt-1.5">
+                                Riwayat pembayaran gaji yang telah diselesaikan sebelumnya.
+                            </p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="pb-3 pl-2">Karyawan</th>
+                                        <th class="pb-3">Tanggal Bayar</th>
+                                        <th class="pb-3">Periode Kerja</th>
+                                        <th class="pb-3">Bank & No. Rekening</th>
+                                        <th class="pb-3 text-right pr-2">Total Gaji Dibayar</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 text-xs">
+                                    @forelse($historyGaji as $history)
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-4 pl-2 font-extrabold text-[#0f172a]">
+                                                {{ $history->pegawai->name ?? $history->pegawai->username ?? 'N/A' }}
+                                            </td>
+                                            <td class="py-4 font-semibold text-slate-600">
+                                                {{ $history->tanggal->format('d M Y') }}
+                                            </td>
+                                            <td class="py-4 font-semibold text-slate-500">
+                                                {{ $history->start_date ? $history->start_date->format('d M Y') : '-' }} s/d {{ $history->end_date ? $history->end_date->format('d M Y') : '-' }}
+                                            </td>
+                                            <td class="py-4 font-bold text-blue-600">
+                                                {{ $history->bank ?? '-' }} (<span class="font-mono text-slate-500 font-semibold">{{ $history->nomor_rekening ?? '-' }}</span>)
+                                            </td>
+                                            <td class="py-4 text-right pr-2 font-black text-emerald-600 text-sm">
+                                                Rp {{ number_format($history->nominal, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="py-6 text-center text-slate-400 font-medium italic">
+                                                Belum ada riwayat pengiriman gaji.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
