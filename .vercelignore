@@ -1,2 +1,12 @@
 /vendor
 /node_modules
+/tests
+/load_tests
+/k6_bin
+/database/*.sqlite*
+/*.postman_collection.json
+/loadtest.js
+/load_test.js
+/.git
+/.phpunit.result.cache
+/storage/logs/*.log
