@@ -60,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
             return $user->isAdmin();
         });
 
-        if ($this->app->environment('production') || env('VERCEL') == '1') {
+        if ($this->app->environment('production') || getenv('VERCEL') == '1') {
             \URL::forceScheme('https');
         }
     }
