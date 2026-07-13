@@ -10,7 +10,8 @@ class UploadBuktiTimbanganService
     public function uploadBuktiTimbangan(Transaksi $transaksi, UploadedFile $file): Transaksi
     {
         // Upload to Cloudinary and get the secure URL
-        $url = $file->storeOnCloudinary('bukti-timbangan')->getSecurePath();
+        $path = $file->store('bukti-timbangan', 'cloudinary');
+        $url = \Illuminate\Support\Facades\Storage::disk('cloudinary')->url($path);
 
         // Save URL to database
         $transaksi->update([

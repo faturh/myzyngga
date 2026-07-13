@@ -145,7 +145,7 @@
     }">
         <x-dashboard-header 
             title="Upgrade Layanan" 
-            backUrl="{{ route('order.detail', $order['id']) }}" 
+            backUrl="{{ route('order.detail', $order['nota_layanan']) }}" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -159,7 +159,7 @@
                     <div x-init="$dispatch('toast', { message: '{{ $errors->first('order') }}', type: 'error' })"></div>
                 @endif
                 
-                <form id="page-content" action="{{ route('order.upgrade.process', $order['id']) }}" method="POST" class="flex-1 flex flex-col">
+                <form id="page-content" action="{{ route('order.upgrade.process', $order['nota_layanan']) }}" method="POST" class="flex-1 flex flex-col">
                     @csrf
                     
                     {{-- CARD 1: PILIHAN UPGRADE --}}
@@ -376,7 +376,7 @@
             .then(data => {
                 if (data.success) {
                     // Redirect to native payment method selection
-                    window.location.href = '{{ route('order.payment-method', $order['id']) }}';
+                    window.location.href = '{{ route('order.payment-method', $order['nota_layanan']) }}';
                 } else {
                     window.dispatchEvent(new CustomEvent('toast', { detail: { message: data.message || 'Gagal memproses upgrade.', type: 'error' } }));
                 }
@@ -388,7 +388,7 @@
         }
 
         function rollbackUpgrade(reload = true) {
-            fetch('{{ route('order.upgrade.rollback', $order['id']) }}', {
+            fetch('{{ route('order.upgrade.rollback', $order['nota_layanan']) }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

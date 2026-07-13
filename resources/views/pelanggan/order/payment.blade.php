@@ -67,7 +67,7 @@
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
         <x-dashboard-header 
             title="Ubah Metode Pembayaran" 
-            :backUrl="route('order.detail', ['id' => $order['id']])" 
+            :backUrl="route('order.detail', ['id' => $order['nota_layanan']])" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -78,7 +78,7 @@
         <main class="flex-1 flex flex-col relative">
             <div class="w-full max-w-5xl mx-auto px-5">
                 
-                <form method="POST" action="{{ route('order.payment.update', ['id' => $order['id']]) }}" id="page-content" class="flex-1 flex flex-col">
+                <form method="POST" action="{{ route('order.payment.update', ['id' => $order['nota_layanan']]) }}" id="page-content" class="flex-1 flex flex-col">
                     @csrf
                     
                     {{-- CARD: METODE PEMBAYARAN --}}

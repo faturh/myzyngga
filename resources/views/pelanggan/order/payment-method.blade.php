@@ -42,7 +42,7 @@
     <div class="min-h-screen flex flex-col" x-data="{ selectedMethod: 'qris', isSubmitting: false }">
         <x-dashboard-header 
             title="Metode Pembayaran" 
-            :backUrl="url()->previous() !== url()->current() ? url()->previous() : route('order.detail', $order['id'])" 
+            :backUrl="url()->previous() !== url()->current() ? url()->previous() : route('order.detail', $order['nota_layanan'])" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -51,7 +51,7 @@
 
         <main class="flex-1 flex flex-col relative w-full max-w-5xl mx-auto px-5 pb-[88px]">
             <x-zyngga-card padding="p-4">
-                <form id="payment-form" action="{{ route('order.process-payment', $order['id']) }}">
+                <form id="payment-form" action="{{ route('order.process-payment', $order['nota_layanan']) }}">
                     @csrf
                     
                     <div class="flex flex-col space-y-2">

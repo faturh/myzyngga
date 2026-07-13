@@ -55,8 +55,16 @@
             flex-shrink: 0;
         }
     </style>
-</head>
-<body x-data="{ activeTab: 'Semua' }" class="bg-zyngga-blue-50 min-h-screen">
+@php
+    $counts = [
+        'Semua' => count($notifications),
+        'Transaksi' => collect($notifications)->where('category', 'Transaksi')->count(),
+        'Status' => collect($notifications)->where('category', 'Status')->count(),
+        'Info' => collect($notifications)->where('category', 'Info')->count(),
+        'Promo' => collect($notifications)->where('category', 'Promo')->count(),
+    ];
+@endphp
+<body x-data="{ activeTab: 'Semua', counts: {{ json_encode($counts) }} }" class="bg-zyngga-blue-50 min-h-screen">
     
     <div class="min-h-screen flex flex-col">
         {{-- ── HEADER ─────────────────────────────────────────────── --}}
@@ -81,7 +89,7 @@
             </x-slot:extra>
         </x-dashboard-header>
 
-        <main class="flex-1 flex flex-col">
+        <main class="flex-1 flex flex-col" style="min-height: calc(100vh - 200px);">
             <div class="w-full max-w-5xl mx-auto px-5 py-[6px] flex flex-col gap-3">
                 
                 @forelse($notifications as $notification)
@@ -100,18 +108,24 @@
                     </div>
                 </div>
                 @empty
-                <div class="notif-card">
-                    <div class="notif-icon-box bg-[#E8EFF9]">
-                        <i data-feather="bell" class="w-5 h-5 text-zyngga-blue-300"></i>
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                        <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Notifikasi" width="24" height="24">
                     </div>
-                    <div class="flex-1 space-y-1 min-w-0">
-                        <x-zyngga-text variant="sm" weight="semibold" class="truncate">Belum ada notifikasi</x-zyngga-text>
-                        <x-zyngga-text variant="xs" color="neutral-500" class="truncate leading-relaxed">
-                            Notifikasi pesanan akan muncul setelah kamu membuat transaksi.
-                        </x-zyngga-text>
-                    </div>
+                    <x-zyngga-text variant="lg" weight="medium" class="mb-2 text-neutral-900 tracking-tight">Belum Ada Notifikasi</x-zyngga-text>
+                    <x-zyngga-text variant="sm" color="neutral-500" class="px-6 leading-[1.6]">Notifikasi pesanan akan muncul setelah kamu membuat transaksi.</x-zyngga-text>
                 </div>
                 @endforelse
+
+                @if(count($notifications) > 0)
+                <div x-cloak x-show="counts[activeTab] === 0" class="flex flex-col items-center justify-center py-20 text-center">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                        <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Kategori Kosong" width="24" height="24">
+                    </div>
+                    <x-zyngga-text variant="lg" weight="medium" class="mb-2 text-neutral-900 tracking-tight">Kategori Kosong</x-zyngga-text>
+                    <x-zyngga-text variant="sm" color="neutral-500" class="px-6 leading-[1.6]">Belum ada notifikasi yang sesuai dengan kategori ini.</x-zyngga-text>
+                </div>
+                @endif
 
             </div>
         </main>

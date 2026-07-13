@@ -49,19 +49,11 @@
             background: #1660C1;
             border-radius: 100px;
         }
-        .history-container-height {
-            min-height: calc(100vh - 255px);
-        }
-        @media (min-width: 768px) {
-            .history-container-height {
-                min-height: calc(100vh - 216px);
-            }
-        }
     </style>
     @php
         $tabCounts = [
             'Semua' => count($orders),
-            'Belum Bayar' => collect($orders)->where('status', 'Belum Bayar')->count(),
+            'Menunggu' => collect($orders)->whereIn('status', ['Menunggu', 'Belum Bayar'])->count(),
             'Diproses' => collect($orders)->where('status', 'Diproses')->count(),
             'Selesai' => collect($orders)->where('status', 'Selesai')->count(),
         ];
@@ -86,7 +78,7 @@
         >
             <x-slot:extra>
                 <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                    @foreach (['Semua', 'Belum Bayar', 'Diproses', 'Selesai'] as $tab)
+                    @foreach (['Semua', 'Menunggu', 'Diproses', 'Selesai'] as $tab)
                         <button 
                             @click="activeTab = '{{ $tab }}'"
                             :class="activeTab === '{{ $tab }}' ? 'filter-chip active' : 'filter-chip inactive'"
@@ -99,13 +91,13 @@
         </x-dashboard-header>
 
         {{-- ── MAIN CONTENT ────────────────────────────────────────── --}}
-        <main class="flex-1 flex flex-col">
+        <main class="flex-1 flex flex-col" style="min-height: calc(100vh - 240px);">
             <div class="w-full max-w-5xl mx-auto px-5">
-                <div class="flex flex-col history-container-height">
+                <div class="flex flex-col">
                     
                     @forelse($orders as $order)
-                    <x-zyngga-card x-show="activeTab === 'Semua' || activeTab === '{{ $order['status'] }}'"
-                        onclick="window.location.href='{{ route('order.detail', ['id' => $order['id']]) }}'"
+                    <x-zyngga-card x-show="activeTab === 'Semua' || (activeTab === 'Menunggu' && ['Menunggu', 'Belum Bayar'].includes('{{ $order['status'] }}')) || activeTab === '{{ $order['status'] }}'"
+                        onclick="window.location.href='{{ route('order.detail', ['id' => $order['nota_layanan']]) }}'"
                         class="cursor-pointer"
                     >
                         <div class="flex items-start justify-between mb-5">
@@ -122,69 +114,56 @@
                         </div>
 
                         @if($order['status'] !== 'Selesai')
-                        <div class="flex items-center gap-4 mb-5">
+                        <div class="flex items-center gap-4 mb-4">
                             <div class="progress-container flex-1">
                                 <div class="progress-bar" style="width: {{ $order['progress'] }}%"></div>
                             </div>
                             <x-zyngga-text variant="base" weight="medium">{{ $order['progress'] }}%</x-zyngga-text>
                         </div>
-                        @else
-                        <div class="space-y-1 mb-4">
+                        <div class="space-y-2 mt-4">
                             <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Jumlah</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">{{ $order['items_count'] }} items</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Estimasi Selesai</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">{{ $order['estimated_completion'] ?? '-' }}</x-zyngga-text>
                             </div>
                             <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Berat timbangan</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium">{{ $order['weight'] }} kg</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total Bayar</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium">
+                                    {{ isset($order['total']) && $order['total'] > 0 && $order['progress'] > 20 ? 'Rp' . number_format($order['total'], 0, ',', '.') : '-' }}
+                                </x-zyngga-text>
                             </div>
                         </div>
-                        @endif
-
-                        <div class="flex items-center justify-between">
+                        @else
+                        <div class="flex items-center justify-between mt-4">
                             <div>
                                 <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
-                                <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($order['total'], 0, ',', '.') }}</x-zyngga-text>
+                                <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($order['total'] ?? 0, 0, ',', '.') }}</x-zyngga-text>
                             </div>
-                            @if($order['status'] === 'Selesai')
-                                @php
-                                    $repeatService = 'reguler';
-                                    $serviceLower = strtolower($order['service'] ?? 'reguler');
-                                    if (str_contains($serviceLower, 'kilat')) {
-                                        $repeatService = 'kilat';
-                                    } elseif (str_contains($serviceLower, 'express') || str_contains($serviceLower, 'quick')) {
-                                        $repeatService = 'express';
-                                    } elseif (str_contains($serviceLower, 'satuan')) {
-                                        $repeatService = 'satuan';
-                                    }
-                                @endphp
-                                <x-zyngga-button
-                                    type="a"
-                                    href="{{ route('order.repeat', $order['id']) }}"
-                                    variant="primary"
-                                    size="m"
-                                    label="Ulangi Pesanan"
-                                    @click.stop=""
-                                />
-                            @else
-                                <x-zyngga-button
-                                    type="a"
-                                    href="https://wa.me/+6281297673318"
-                                    target="_blank"
-                                    variant="secondary"
-                                    size="m"
-                                    icon="message-circle"
-                                    label="Chat"
-                                    iconPosition="left"
-                                    @click.stop=""
-                                />
-                            @endif
+                            @php
+                                $repeatService = 'reguler';
+                                $serviceLower = strtolower($order['service'] ?? 'reguler');
+                                if (str_contains($serviceLower, 'kilat')) {
+                                    $repeatService = 'kilat';
+                                } elseif (str_contains($serviceLower, 'express') || str_contains($serviceLower, 'quick')) {
+                                    $repeatService = 'express';
+                                } elseif (str_contains($serviceLower, 'satuan')) {
+                                    $repeatService = 'satuan';
+                                }
+                            @endphp
+                            <x-zyngga-button
+                                type="a"
+                                href="{{ route('order.repeat', $order['nota_layanan']) }}"
+                                variant="primary"
+                                size="m"
+                                label="Ulangi Pesanan"
+                                @click.stop=""
+                            />
                         </div>
+                        @endif
                     </x-zyngga-card>
                     @empty
-                    <div class="flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center history-container-height">
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-5 shadow-sm">
-                            <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Pesanan" width="36" height="36">
+                    <div class="flex flex-col items-center justify-center py-20 w-full max-w-sm mx-auto text-center">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                            <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Pesanan" width="24" height="24">
                         </div>
                         <x-zyngga-text variant="lg" weight="medium" class="mb-2 text-neutral-900 tracking-tight">Kamu Belum Memiliki Pesanan</x-zyngga-text>
                         <x-zyngga-text variant="sm" color="neutral-500" class="mb-6 px-6 leading-[1.6]">Semua riwayat transaksi dan pengerjaan laundry kamu akan muncul di sini.</x-zyngga-text>
@@ -199,9 +178,9 @@
                     @endforelse
 
                     @if(count($orders) > 0)
-                    <div x-cloak x-show="counts[activeTab] === 0" class="flex flex-col items-center justify-center w-full max-w-sm mx-auto text-center history-container-height">
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-5 shadow-sm">
-                            <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Pesanan" width="36" height="36">
+                    <div x-cloak x-show="counts[activeTab] === 0" class="flex flex-col items-center justify-center py-20 w-full max-w-sm mx-auto text-center">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                            <img src="{{ asset('assets/images/empty-order-icon.svg') }}" alt="Belum Ada Pesanan" width="24" height="24">
                         </div>
                         <x-zyngga-text variant="lg" weight="medium" class="mb-2 text-neutral-900 tracking-tight">Kategori Kosong</x-zyngga-text>
                         <x-zyngga-text variant="sm" color="neutral-500" class="mb-6 px-6 leading-[1.6]">Belum ada riwayat pesanan yang sesuai dengan kategori ini.</x-zyngga-text>

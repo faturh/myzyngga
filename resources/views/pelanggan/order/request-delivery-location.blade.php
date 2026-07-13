@@ -163,7 +163,7 @@
             <div style="display:flex; align-items:center; height:40px; gap:8px;">
                 <x-zyngga-button 
                     type="a"
-                    href="{{ route('order.detail', ['id' => $order['id']]) }}"
+                    href="{{ route('order.detail', ['id' => $order['nota_layanan']]) }}"
                     variant="neutral"
                     size="l"
                     icon="arrow-left"
@@ -334,7 +334,7 @@
                     const lng = document.getElementById('hidden-lng').value;
                     
                     if (lat && lng && address) {
-                        let url = `{{ route('order.request.delivery.confirm', ['id' => $order['id']]) }}?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}&note=${encodeURIComponent(currentNote)}`;
+                        let url = `{{ route('order.request.delivery.confirm', ['id' => $order['nota_layanan']]) }}?lat=${lat}&lng=${lng}&address=${encodeURIComponent(address)}&note=${encodeURIComponent(currentNote)}`;
                         window.location.href = url;
                     }
                 }
