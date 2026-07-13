@@ -71,6 +71,8 @@ class AllOperatorRoutesTest extends TestCase
             'Gaji Karyawan' => ['/admin/gaji-karyawan', 'admin'],
             'Keuangan' => ['/admin/keuangan', 'admin'],
             'User List' => ['/user', 'admin'],
+            'Laporan Pendapatan Laundry' => ['/laporan/pendapatan-laundry', 'admin'],
+            'Laporan Pelanggan' => ['/laporan/pelanggan', 'admin'],
         ];
 
         foreach ($routes as $name => $info) {

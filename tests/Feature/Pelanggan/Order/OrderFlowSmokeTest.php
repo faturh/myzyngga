@@ -78,6 +78,10 @@ class OrderFlowSmokeTest extends TestCase
         $this->get(route('order.detail', ['id' => $order->id]))
             ->assertOk();
 
+        // Verify public receipt page loads correctly
+        $this->get(route('public.cetak-struk', ['idOrNota' => $order->id]))
+            ->assertOk();
+
         $this->get(route('order.history'))
             ->assertOk();
 

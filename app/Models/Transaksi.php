@@ -40,6 +40,7 @@ class Transaksi extends Model
         'layanan_prioritas_id',
         'pelanggan_id',
         'pegawai_id',
+        'gaji_dibayar',
         'cabang_id',
         'midtrans_order_id',
         'payment_metadata',
@@ -52,6 +53,7 @@ class Transaksi extends Model
         'pickup_date' => 'date',
         'paid_at' => 'datetime',
         'is_roundtrip' => 'boolean',
+        'gaji_dibayar' => 'boolean',
     ];
 
     public $pending_status_id = null;

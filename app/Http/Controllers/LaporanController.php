@@ -118,6 +118,18 @@ class LaporanController extends Controller
         $tanggalAwal = $request->tanggalAwal ? $request->tanggalAwal : Carbon::now()->format('Y-') . Carbon::now()->format('m');
         $tanggalAkhir = $request->tanggalAkhir ? $request->tanggalAkhir : Carbon::now()->format('Y-m');
 
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            $monthFunc = "CAST(EXTRACT(MONTH FROM transaksi.waktu) AS INTEGER)";
+            $yearFunc = "CAST(EXTRACT(YEAR FROM transaksi.waktu) AS INTEGER)";
+        } elseif ($driver === 'sqlite') {
+            $monthFunc = "CAST(strftime('%m', transaksi.waktu) AS INTEGER)";
+            $yearFunc = "CAST(strftime('%Y', transaksi.waktu) AS INTEGER)";
+        } else {
+            $monthFunc = "MONTH(transaksi.waktu)";
+            $yearFunc = "YEAR(transaksi.waktu)";
+        }
+
         $transaksi = Transaksi::query()
             ->with(['cabang' => function($query) {
                 $query->withTrashed();
@@ -125,24 +137,24 @@ class LaporanController extends Controller
             ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
             ->join('pelanggan as p', 'p.id', '=', 'transaksi.pelanggan_id')
             ->join('list_pengerjaan as lpen', 'lpen.id', '=', 'transaksi.list_pengerjaan_id')
-            ->select('transaksi.pelanggan_id', 'p.nama as nama_pelanggan', DB::raw("COUNT(transaksi.id) as total_transaksi"), DB::raw("SUM(transaksi.total_bayar_akhir) as total_pengeluaran"), DB::raw("MONTH(transaksi.waktu) as bulan"), DB::raw("YEAR(transaksi.waktu) as tahun"), 'c.id as cabang_id', 'c.nama as nama_cabang')
-            ->where(function ($query) use ($tanggalAwal, $tanggalAkhir) {
-                $query->where(function ($subQuery) use ($tanggalAwal) {
-                    $subQuery->where(DB::raw("YEAR(transaksi.waktu)"), '>', Carbon::parse($tanggalAwal)->format('Y'))
-                        ->orWhere(function ($nestedQuery) use ($tanggalAwal) {
-                            $nestedQuery->where(DB::raw("YEAR(transaksi.waktu)"), '=', Carbon::parse($tanggalAwal)->format('Y'))
-                                ->where(DB::raw("MONTH(transaksi.waktu)"), '>=', Carbon::parse($tanggalAwal)->format('m'));
+            ->select('transaksi.pelanggan_id', 'p.nama as nama_pelanggan', DB::raw("COUNT(transaksi.id) as total_transaksi"), DB::raw("SUM(transaksi.total_bayar_akhir) as total_pengeluaran"), DB::raw("$monthFunc as bulan"), DB::raw("$yearFunc as tahun"), 'c.id as cabang_id', 'c.nama as nama_cabang')
+            ->where(function ($query) use ($tanggalAwal, $tanggalAkhir, $monthFunc, $yearFunc) {
+                $query->where(function ($subQuery) use ($tanggalAwal, $monthFunc, $yearFunc) {
+                    $subQuery->where(DB::raw($yearFunc), '>', Carbon::parse($tanggalAwal)->format('Y'))
+                        ->orWhere(function ($nestedQuery) use ($tanggalAwal, $monthFunc, $yearFunc) {
+                            $nestedQuery->where(DB::raw($yearFunc), '=', Carbon::parse($tanggalAwal)->format('Y'))
+                                ->where(DB::raw($monthFunc), '>=', Carbon::parse($tanggalAwal)->format('m'));
                         });
-                })->where(function ($subQuery) use ($tanggalAkhir) {
-                    $subQuery->where(DB::raw("YEAR(transaksi.waktu)"), '<', Carbon::parse($tanggalAkhir)->format('Y'))
-                        ->orWhere(function ($nestedQuery) use ($tanggalAkhir) {
-                            $nestedQuery->where(DB::raw("YEAR(transaksi.waktu)"), '=', Carbon::parse($tanggalAkhir)->format('Y'))
-                                ->where(DB::raw("MONTH(transaksi.waktu)"), '<=', Carbon::parse($tanggalAkhir)->format('m'));
+                })->where(function ($subQuery) use ($tanggalAkhir, $monthFunc, $yearFunc) {
+                    $subQuery->where(DB::raw($yearFunc), '<', Carbon::parse($tanggalAkhir)->format('Y'))
+                        ->orWhere(function ($nestedQuery) use ($tanggalAkhir, $monthFunc, $yearFunc) {
+                            $nestedQuery->where(DB::raw($yearFunc), '=', Carbon::parse($tanggalAkhir)->format('Y'))
+                                ->where(DB::raw($monthFunc), '<=', Carbon::parse($tanggalAkhir)->format('m'));
                         });
                 });
             })
             ->where('lpen.list_status_pengerjaan_id', 5)
-            ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw("MONTH(transaksi.waktu)"), DB::raw("YEAR(transaksi.waktu)"), 'c.id', 'c.nama')
+            ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw($monthFunc), DB::raw($yearFunc), 'c.id', 'c.nama')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
 
@@ -173,6 +185,18 @@ class LaporanController extends Controller
         $tanggalAwal = $request->tanggalAwal ? $request->tanggalAwal : Carbon::now()->format('Y-') . Carbon::now()->format('m');
         $tanggalAkhir = $request->tanggalAkhir ? $request->tanggalAkhir : Carbon::now()->format('Y-m');
 
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            $monthFunc = "CAST(EXTRACT(MONTH FROM transaksi.waktu) AS INTEGER)";
+            $yearFunc = "CAST(EXTRACT(YEAR FROM transaksi.waktu) AS INTEGER)";
+        } elseif ($driver === 'sqlite') {
+            $monthFunc = "CAST(strftime('%m', transaksi.waktu) AS INTEGER)";
+            $yearFunc = "CAST(strftime('%Y', transaksi.waktu) AS INTEGER)";
+        } else {
+            $monthFunc = "MONTH(transaksi.waktu)";
+            $yearFunc = "YEAR(transaksi.waktu)";
+        }
+
         $transaksi = Transaksi::query()
             ->with(['cabang' => function($query) {
                 $query->withTrashed();
@@ -180,24 +204,24 @@ class LaporanController extends Controller
             ->join('cabang as c', 'c.id', '=', 'transaksi.cabang_id')
             ->join('pelanggan as p', 'p.id', '=', 'transaksi.pelanggan_id')
             ->join('list_pengerjaan as lpen', 'lpen.id', '=', 'transaksi.list_pengerjaan_id')
-            ->select('transaksi.pelanggan_id', 'p.nama as nama_pelanggan', DB::raw("COUNT(transaksi.id) as total_transaksi"), DB::raw("SUM(transaksi.total_bayar_akhir) as total_pengeluaran"), DB::raw("MONTH(transaksi.waktu) as bulan"), DB::raw("YEAR(transaksi.waktu) as tahun"), 'c.id as cabang_id', 'c.nama as nama_cabang')
-            ->where(function ($query) use ($tanggalAwal, $tanggalAkhir) {
-                $query->where(function ($subQuery) use ($tanggalAwal) {
-                    $subQuery->where(DB::raw("YEAR(transaksi.waktu)"), '>', Carbon::parse($tanggalAwal)->format('Y'))
-                        ->orWhere(function ($nestedQuery) use ($tanggalAwal) {
-                            $nestedQuery->where(DB::raw("YEAR(transaksi.waktu)"), '=', Carbon::parse($tanggalAwal)->format('Y'))
-                                ->where(DB::raw("MONTH(transaksi.waktu)"), '>=', Carbon::parse($tanggalAwal)->format('m'));
+            ->select('transaksi.pelanggan_id', 'p.nama as nama_pelanggan', DB::raw("COUNT(transaksi.id) as total_transaksi"), DB::raw("SUM(transaksi.total_bayar_akhir) as total_pengeluaran"), DB::raw("$monthFunc as bulan"), DB::raw("$yearFunc as tahun"), 'c.id as cabang_id', 'c.nama as nama_cabang')
+            ->where(function ($query) use ($tanggalAwal, $tanggalAkhir, $monthFunc, $yearFunc) {
+                $query->where(function ($subQuery) use ($tanggalAwal, $monthFunc, $yearFunc) {
+                    $subQuery->where(DB::raw($yearFunc), '>', Carbon::parse($tanggalAwal)->format('Y'))
+                        ->orWhere(function ($nestedQuery) use ($tanggalAwal, $monthFunc, $yearFunc) {
+                            $nestedQuery->where(DB::raw($yearFunc), '=', Carbon::parse($tanggalAwal)->format('Y'))
+                                ->where(DB::raw($monthFunc), '>=', Carbon::parse($tanggalAwal)->format('m'));
                         });
-                })->where(function ($subQuery) use ($tanggalAkhir) {
-                    $subQuery->where(DB::raw("YEAR(transaksi.waktu)"), '<', Carbon::parse($tanggalAkhir)->format('Y'))
-                        ->orWhere(function ($nestedQuery) use ($tanggalAkhir) {
-                            $nestedQuery->where(DB::raw("YEAR(transaksi.waktu)"), '=', Carbon::parse($tanggalAkhir)->format('Y'))
-                                ->where(DB::raw("MONTH(transaksi.waktu)"), '<=', Carbon::parse($tanggalAkhir)->format('m'));
+                })->where(function ($subQuery) use ($tanggalAkhir, $monthFunc, $yearFunc) {
+                    $subQuery->where(DB::raw($yearFunc), '<', Carbon::parse($tanggalAkhir)->format('Y'))
+                        ->orWhere(function ($nestedQuery) use ($tanggalAkhir, $monthFunc, $yearFunc) {
+                            $nestedQuery->where(DB::raw($yearFunc), '=', Carbon::parse($tanggalAkhir)->format('Y'))
+                                ->where(DB::raw($monthFunc), '<=', Carbon::parse($tanggalAkhir)->format('m'));
                         });
                 });
             })
             ->where('lpen.list_status_pengerjaan_id', 5)
-            ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw("MONTH(transaksi.waktu)"), DB::raw("YEAR(transaksi.waktu)"), 'c.id', 'c.nama')
+            ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw($monthFunc), DB::raw($yearFunc), 'c.id', 'c.nama')
             ->orderBy('transaksi.waktu', 'asc')
             ->get();
 
