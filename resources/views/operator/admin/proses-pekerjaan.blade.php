@@ -33,6 +33,15 @@
             ring-color: #3b82f6;
             border-color: #3b82f6;
         }
+        /* Hide number input spinners */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body class="font-outfit antialiased bg-[#f8fafc] text-[#1e293b] h-full" x-data="{ sidebarOpen: false }">
@@ -105,6 +114,7 @@
                                 if (empty($oldItem['nama_item'])) continue;
                                 $isPredefined = $itemsAvailable->contains('nama', $oldItem['nama_item']);
                                 $initialItems[] = [
+                                    'id' => 'item_' . str()->slug($oldItem['nama_item']) . '_' . uniqid(),
                                     'nama_item' => $oldItem['nama_item'],
                                     'qty' => (int) ($oldItem['qty'] ?? 1),
                                     'checked' => true,
@@ -115,6 +125,7 @@
                                 $alreadyIncluded = collect($initialItems)->contains('nama_item', $item->nama);
                                 if (!$alreadyIncluded) {
                                     $initialItems[] = [
+                                        'id' => 'item_' . str()->slug($item->nama) . '_' . uniqid(),
                                         'nama_item' => $item->nama,
                                         'qty' => 1,
                                         'checked' => false,
@@ -125,6 +136,7 @@
                         } else {
                             foreach ($itemsAvailable as $item) {
                                 $initialItems[] = [
+                                    'id' => 'item_' . str()->slug($item->nama) . '_' . uniqid(),
                                     'nama_item' => $item->nama,
                                     'qty' => 1,
                                     'checked' => false,
@@ -164,6 +176,14 @@
                                         <p class="text-[#0f172a] mt-0.5">{{ number_format($transaksi->timbangan->charged_weight, 2) }} kg</p>
                                     </div>
                                     @endif
+                                    <div>
+                                        <p class="text-[10px] text-slate-400 uppercase">Estimasi Durasi</p>
+                                        <p class="text-indigo-600 font-extrabold text-sm mt-0.5">{{ $transaksi->getEstimasiPengerjaanJam() }} Jam</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-slate-400 uppercase">Deadline Pengerjaan</p>
+                                        <p class="text-rose-600 font-extrabold text-sm mt-0.5">{{ $transaksi->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</p>
+                                    </div>
                                     <div>
                                         <p class="text-[10px] text-slate-400 uppercase">Total Bayar</p>
                                         <p class="text-blue-600 font-extrabold text-sm mt-0.5">Rp {{ number_format($transaksi->total_bayar_akhir, 0, ',', '.') }}</p>
@@ -254,7 +274,7 @@
 
                                     <!-- Alpine Loop for Items -->
                                     <div class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                                        <template x-for="(item, index) in items" :key="index">
+                                        <template x-for="(item, index) in items" :key="item.id || index">
                                             <div>
                                                 <!-- If predefined item (shows checkbox) -->
                                                 <template x-if="item.predefined">
@@ -292,7 +312,7 @@
                                                                    class="w-full bg-white border border-blue-200/60 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 transition-all"
                                                                    required>
                                                         </div>
-                                                        <div class="w-24">
+                                                        <div class="w-28 shrink-0">
                                                             <label class="text-[9px] font-bold text-blue-500 uppercase tracking-wider block mb-1 text-center">Qty</label>
                                                             <div class="flex items-center gap-1 justify-center">
                                                                 <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">-</button>
@@ -300,7 +320,7 @@
                                                                        :name="`items[${index}][qty]`"
                                                                        x-model.number="item.qty"
                                                                        min="1"
-                                                                       class="w-10 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-bold text-slate-700 outline-none">
+                                                                       class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-bold text-slate-700 outline-none">
                                                                 <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">+</button>
                                                             </div>
                                                         </div>
@@ -353,7 +373,7 @@
                 items: @json($initialItems),
                 
                 addCustomItem() {
-                    this.items.push({ nama_item: '', qty: 1, checked: true, predefined: false });
+                    this.items.push({ id: 'custom_' + Date.now() + '_' + Math.random(), nama_item: '', qty: 1, checked: true, predefined: false });
                     setTimeout(() => {
                         if (typeof feather !== 'undefined') feather.replace();
                     }, 50);

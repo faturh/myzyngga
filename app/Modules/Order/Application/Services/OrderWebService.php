@@ -441,6 +441,12 @@ class OrderWebService
             'upgrade_fee' => $upgradeFee,
             'snap_token' => $this->getSnapToken($order),
             'has_complaint' => \App\Models\Complaint::where('transaksi_id', $order->id)->exists(),
+            'clothing_details' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
+                return [
+                    'nama' => $item->jenisPakaian->nama ?? '-',
+                    'qty' => $item->qty,
+                ];
+            })->all() : [],
         ];
     }
 

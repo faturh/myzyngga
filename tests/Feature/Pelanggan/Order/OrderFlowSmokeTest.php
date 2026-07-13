@@ -78,6 +78,10 @@ class OrderFlowSmokeTest extends TestCase
         $this->get(route('order.detail', ['id' => $order->id]))
             ->assertOk();
 
+        // Verify public receipt page loads correctly
+        $this->get(route('public.cetak-struk', ['idOrNota' => $order->id]))
+            ->assertOk();
+
         $this->get(route('order.history'))
             ->assertOk();
 
@@ -259,6 +263,19 @@ class OrderFlowSmokeTest extends TestCase
         $transaksi->refresh();
         $this->assertEquals('Proses Pengerjaan', $transaksi->status);
         $this->assertEquals(4, $transaksi->list_status_pengerjaan_id);
+
+        // Check if customer can see the clothing details on the detail page
+        $this->actingAs($customer);
+        $response = $this->get(route('order.detail', ['id' => $transaksi->id]));
+        $response->assertStatus(200);
+        $response->assertSee('Rincian Pakaian');
+        $response->assertSee('Kaos');
+        $response->assertSee('5 pcs');
+        $response->assertSee('Celana Jeans');
+        $response->assertSee('2 pcs');
+
+        // Restore admin auth for completing transaction
+        $this->actingAs($admin);
         
         // Complete transaction
         $this->post("/admin/riwayat-pesanan/{$transaksi->id}/selesaikan")

@@ -36,6 +36,7 @@ class PostmanFlowsTest extends TestCase
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'manajer_laundry', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'pegawai_laundry', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
         $this->admin = User::factory()->create([
             'username' => 'admin-test-flow',
