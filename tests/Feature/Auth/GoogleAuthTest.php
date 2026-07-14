@@ -105,7 +105,10 @@ class GoogleAuthTest extends TestCase
     /** @test */
     public function google_callback_dengan_email_yang_sudah_terdaftar_langsung_login_tanpa_form_telepon(): void
     {
-        $existingUser = User::factory()->create(['email' => 'sudah.ada@example.com']);
+        $existingUser = User::factory()->create([
+            'email' => 'sudah.ada@example.com',
+            'phone' => '081234567890',
+        ]);
 
         $this->mockSocialiteUser('google-existing-1', 'sudah.ada@example.com');
 

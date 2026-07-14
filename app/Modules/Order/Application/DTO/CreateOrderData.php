@@ -50,11 +50,9 @@ class CreateOrderData
             'bayar' => 0,
             'kembalian' => 0,
             'status' => 'created',
-            'konfirmasi_upah_gamis' => false,
             'layanan_prioritas_id' => $this->layananPrioritasId,
             'pelanggan_id' => $this->pelangganId,
             'pegawai_id' => $this->pegawaiId ?? $pegawaiId,
-            'gamis_id' => null,
             'cabang_id' => $this->cabangId,
         ];
     }

@@ -68,7 +68,7 @@ class OrderFlowSmokeTest extends TestCase
             ->first();
 
         $this->assertNotNull($order);
-        $response->assertRedirect(route('order.detail', ['id' => $order->id]));
+        $response->assertRedirect(route('order.detail', ['id' => $order->nota]));
         $this->assertSame('cash', $order->jenis_pembayaran);
         $this->assertSame('pending', $order->payment_status);
         $this->assertSame('Jalan Testing Nomor 1', $order->pickup_address);
@@ -160,6 +160,14 @@ class OrderFlowSmokeTest extends TestCase
             'default_payment_method' => 'qris',
         ])->assertOk()
             ->assertJsonPath('data.preferences.default_payment_method', 'qris');
+
+        $preferenceOwner = Pelanggan::query()->where('user_id', $customer->id)->first();
+        $this->assertDatabaseHas('customer_preferences', [
+            'pelanggan_id' => $preferenceOwner->id,
+            'default_parfum' => 'ocean',
+            'default_note' => 'Jangan pakai pemutih',
+            'default_payment_method' => 'qris',
+        ]);
 
         $profileResponse = $this->getJson('/api/v1/customer/profile')
             ->assertOk()

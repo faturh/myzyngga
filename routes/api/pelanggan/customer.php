@@ -4,7 +4,7 @@ use App\Modules\Customer\Presentation\Http\Controllers\DeleteAddressController;
 use App\Modules\Customer\Presentation\Http\Controllers\GetCustomerProfileController;
 use App\Modules\Customer\Presentation\Http\Controllers\ListAddressesController;
 use App\Modules\Customer\Presentation\Http\Controllers\ListNotificationsController;
-use App\Modules\Customer\Presentation\Http\Controllers\MarkNotificationReadController;
+use App\Modules\Customer\Presentation\Http\Controllers\MarkNotificationReadNewController;
 use App\Modules\Customer\Presentation\Http\Controllers\SetPrimaryAddressController;
 use App\Modules\Customer\Presentation\Http\Controllers\StoreAddressController;
 use App\Modules\Customer\Presentation\Http\Controllers\UpdateAddressController;
@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     // ── Notifikasi ────────────────────────────────────────────────────────
     Route::get('/customer/notifications', ListNotificationsController::class);
-    Route::post('/customer/notifications/{id}/read', MarkNotificationReadController::class);
+    Route::post('/customer/notifications/{id}/read', MarkNotificationReadNewController::class);
 
     // ── Komplain ──────────────────────────────────────────────────────────
     Route::get('/customer/complaints', ListComplaintsController::class);

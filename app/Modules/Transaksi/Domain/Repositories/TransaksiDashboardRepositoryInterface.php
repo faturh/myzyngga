@@ -69,8 +69,6 @@ interface TransaksiDashboardRepositoryInterface
 
     public function updateTransaksiStatusByCabang(int $cabangId, string $transaksiId, string $status): int;
 
-    public function updateKonfirmasiUpah(string $transaksiId, bool $konfirmasi): void;
-
     public function getTransaksiGamisByUser(int $cabangId, int $userId, ?string $tanggal = null): Collection;
 
     public function getMonitoringGamisByUser(int $cabangId, int $userId, ?string $tanggal = null): Collection;

@@ -91,5 +91,15 @@ class DeliveryApiTest extends TestCase
                 'redirect',
                 'estimated_finished',
             ]);
+
+        // Verifikasi data pengantaran benar-benar tersimpan di database (payment_metadata),
+        // bukan hanya tercermin di response JSON.
+        $order = $order->fresh();
+        $meta = json_decode($order->payment_metadata, true);
+
+        $this->assertNotNull($meta);
+        $this->assertArrayHasKey('pending_delivery', $meta);
+        $this->assertEquals('Jalan Antar Baru', $meta['pending_delivery']['address']);
+        $this->assertEquals('Pagar Hijau', $meta['pending_delivery']['detail_address']);
     }
 }

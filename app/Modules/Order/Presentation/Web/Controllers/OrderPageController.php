@@ -316,6 +316,14 @@ class OrderPageController
                 $order->pickup_lng = $oldState['pickup_lng'];
                 $order->is_roundtrip = $oldState['is_roundtrip'];
                 $order->total_bayar_akhir = $oldState['total_bayar_akhir'];
+
+                // Hapus juga pending_delivery dari metadata, karena jika tidak,
+                // perubahan yang sudah dibatalkan ini akan tetap diterapkan
+                // saat webhook pembayaran settlement diterima nanti.
+                $meta = json_decode($order->payment_metadata, true) ?? [];
+                unset($meta['pending_delivery']);
+                $order->payment_metadata = json_encode($meta);
+
                 $order->save();
             }
             session()->forget('pending_rollback_delivery_' . $id);
@@ -396,6 +404,14 @@ class OrderPageController
                 $order->total_biaya_prioritas = $oldState['total_biaya_prioritas'];
                 $order->total_bayar_akhir = $oldState['total_bayar_akhir'];
                 $order->jenis_pembayaran = $oldState['jenis_pembayaran'];
+
+                // Hapus juga pending_upgrade dari metadata, karena jika tidak,
+                // upgrade yang sudah dibatalkan ini akan tetap diterapkan
+                // saat webhook pembayaran settlement diterima nanti.
+                $meta = json_decode($order->payment_metadata, true) ?? [];
+                unset($meta['pending_upgrade']);
+                $order->payment_metadata = json_encode($meta);
+
                 $order->save();
             }
             session()->forget('pending_rollback_upgrade_' . $id);
