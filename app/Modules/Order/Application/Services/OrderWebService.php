@@ -445,10 +445,6 @@ class OrderWebService
             'can_upgrade' => $this->canBeUpgraded($order),
             'upgrade_fee' => $upgradeFee,
             'snap_token' => $this->getSnapToken($order),
-<<<<<<< HEAD
-            'has_complaint' => $complaint !== null,
-            'complaint_id' => $complaint?->id,
-=======
             'has_complaint' => \App\Models\Complaint::where('transaksi_id', $order->id)->exists(),
             'clothing_details' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
                 return [
@@ -456,7 +452,6 @@ class OrderWebService
                     'qty' => $item->qty,
                 ];
             })->all() : [],
->>>>>>> origin/develop
         ];
     }
 
