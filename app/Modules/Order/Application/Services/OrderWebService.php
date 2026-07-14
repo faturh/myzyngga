@@ -445,7 +445,8 @@ class OrderWebService
             'can_upgrade' => $this->canBeUpgraded($order),
             'upgrade_fee' => $upgradeFee,
             'snap_token' => $this->getSnapToken($order),
-            'has_complaint' => \App\Models\Complaint::where('transaksi_id', $order->id)->exists(),
+            'has_complaint' => $complaint !== null,
+            'complaint_id' => $complaint?->id,
             'clothing_details' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
                 return [
                     'nama' => $item->jenisPakaian->nama ?? '-',
