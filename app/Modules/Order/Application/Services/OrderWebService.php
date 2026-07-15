@@ -145,14 +145,16 @@ class OrderWebService
     }
 
     /**
-     * session('orders') cuma menyimpan daftar ID (string) pesanan yang dibuat
-     * di sesi browser ini (dicatat di confirmOrder(), dipakai juga untuk
-     * proteksi guest checkout) — bukan data pesanan yang sudah di-map untuk
-     * ditampilkan. Halaman "Cek Pesanan" butuh versi yang sudah di-map.
+     * session('guest_order_ids') cuma menyimpan daftar ID (string) pesanan
+     * yang dibuat di sesi browser ini (dicatat di confirmOrder(), dipakai
+     * untuk proteksi guest checkout) — bukan data pesanan yang sudah di-map
+     * untuk ditampilkan. Method ini map ke bentuk kartu untuk kebutuhan
+     * tampilan, kalau suatu saat dibutuhkan (bukan dipakai di check.blade.php,
+     * yang isinya hasil pencarian nota+telepon lewat checkOrder()).
      */
     public function sessionOrdersData(): array
     {
-        $orderIds = session('orders', []);
+        $orderIds = session('guest_order_ids', []);
 
         return collect($orderIds)
             ->map(fn (string $id) => $this->orderRepository->findById($id))
@@ -259,9 +261,15 @@ class OrderWebService
 
         session()->forget('order');
 
-        $orders = session('orders', []);
-        $orders[] = $order->id;
-        session(['orders' => $orders]);
+        // Kunci session 'orders' sudah dipakai checkOrder() untuk nge-flash hasil
+        // pencarian nota+telepon (array kartu order yang sudah di-map) lewat
+        // back()->with('orders', ...) — pakai kunci terpisah di sini supaya
+        // daftar ID guna proteksi guest checkout ini tidak numpuk/ketimpa oleh
+        // data flash pencarian (atau sebaliknya), yang bikin salah satu sisi
+        // dapat bentuk data yang tidak diharapkan.
+        $orderIds = session('guest_order_ids', []);
+        $orderIds[] = $order->id;
+        session(['guest_order_ids' => $orderIds]);
 
         return redirect()->route('order.detail', ['id' => $order->nota])->with('success', 'Pesanan Anda berhasil dibuat!');
     }
@@ -1196,7 +1204,7 @@ class OrderWebService
             return;
         }
 
-        if (! in_array($order->id, session('orders', []), true)) {
+        if (! in_array($order->id, session('guest_order_ids', []), true)) {
             abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
         }
     }

@@ -460,13 +460,109 @@ class OrderFlowSmokeTest extends TestCase
             'payment_status' => 'pending',
         ]);
 
-        // session('orders') cuma berisi ID (string), bukan array data pesanan
-        // yang sudah di-map — kalau controller lempar ini langsung ke view,
-        // $order['nota_layanan'] di blade error karena $order adalah string.
-        $response = $this->withSession(['orders' => [$order->id]])->get(route('order.check'));
+        // session('guest_order_ids') (proteksi guest checkout) berisi ID (string)
+        // saja, bukan array data pesanan yang sudah di-map. check.blade.php cuma
+        // baca session('orders') (hasil flash pencarian dari checkOrder()), jadi
+        // populate 'guest_order_ids' saja seharusnya tidak mempengaruhi halaman
+        // ini sama sekali — dan yang penting, tidak boleh 500.
+        $response = $this->withSession(['guest_order_ids' => [$order->id]])->get(route('order.check'));
+
+        $response->assertOk();
+    }
+
+    public function test_halaman_cek_pesanan_tidak_error_500_saat_dua_kunci_session_sama_sama_terisi(): void
+    {
+        // Regresi nyata yang kejadian di production: 'orders' dipakai DUA tempat
+        // berbeda — checkOrder() flash hasil pencarian (array kartu yang sudah
+        // di-map) lewat back()->with('orders', ...), sementara guest checkout
+        // (confirmOrder()) dulu juga menulis ke kunci yang SAMA berupa array ID
+        // string. Kalau keduanya kepasang bareng, salah satu bentuknya pasti
+        // salah untuk yang lain — pastikan sekarang keduanya benar-benar
+        // terpisah (guest_order_ids vs orders) dan tidak saling tabrakan.
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+        $pelanggan = Pelanggan::create([
+            'user_id' => null,
+            'nama' => 'Guest Cek Pesanan',
+            'telepon' => '081200003333',
+            'alamat' => 'Alamat Guest',
+            'jenis_kelamin' => 'L',
+        ]);
+        $order = Transaksi::create([
+            'nota' => 'ZYG-CEK-PESANAN',
+            'waktu' => now(),
+            'total_biaya_layanan' => 10000,
+            'total_biaya_prioritas' => 0,
+            'total_biaya_layanan_tambahan' => 0,
+            'total_bayar_akhir' => 10000,
+            'jenis_pembayaran' => 'cash',
+            'bayar' => 0,
+            'kembalian' => 0,
+            'layanan_prioritas_id' => $layananPrioritas->id,
+            'pelanggan_id' => $pelanggan->id,
+            'pegawai_id' => '0',
+            'cabang_id' => $cabang->id,
+            'payment_status' => 'pending',
+        ]);
+
+        $response = $this->withSession([
+            'guest_order_ids' => [$order->id],
+            'orders' => [[
+                'id' => $order->id,
+                'nota_layanan' => $order->nota,
+                'customer_name' => 'Guest Cek Pesanan',
+                'phone_last_4' => '3333',
+                'service' => 'Reguler',
+                'date' => '15 Jul 2026',
+                'delivery_icon' => 'truck',
+                'delivery_status' => 'Delivery',
+                'progress' => 20,
+            ]],
+        ])->get(route('order.check'));
 
         $response->assertOk();
         $response->assertSee('ZYG-CEK-PESANAN');
+    }
+
+    public function test_pencarian_cek_pesanan_post_lalu_get_menampilkan_hasil_tanpa_error(): void
+    {
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+        $pelanggan = Pelanggan::create([
+            'user_id' => null,
+            'nama' => 'Guest Pencarian',
+            'telepon' => '081200004444',
+            'alamat' => 'Alamat Guest',
+            'jenis_kelamin' => 'L',
+        ]);
+        Transaksi::create([
+            'nota' => 'ZYG-SEARCH-FLOW',
+            'waktu' => now(),
+            'total_biaya_layanan' => 10000,
+            'total_biaya_prioritas' => 0,
+            'total_biaya_layanan_tambahan' => 0,
+            'total_bayar_akhir' => 10000,
+            'jenis_pembayaran' => 'cash',
+            'bayar' => 0,
+            'kembalian' => 0,
+            'layanan_prioritas_id' => $layananPrioritas->id,
+            'pelanggan_id' => $pelanggan->id,
+            'pegawai_id' => '0',
+            'cabang_id' => $cabang->id,
+            'payment_status' => 'pending',
+        ]);
+
+        // Alur asli end-to-end: POST cari nota+4 digit terakhir telepon, di-flash
+        // via back()->with('orders', ...), lalu GET halaman yang sama merender
+        // hasilnya. Ini alur yang kena regresi saat kunci session 'orders' dulu
+        // tabrakan dengan proteksi guest checkout.
+        $this->post(route('order.check'), [
+            'query' => 'ZYG-SEARCH-FLOW',
+            'phone_last_4' => '4444',
+        ])->assertRedirect();
+
+        $response = $this->get(route('order.check'));
+
+        $response->assertOk();
+        $response->assertSee('ZYG-SEARCH-FLOW');
     }
 
     private function createAdminUser(): User

@@ -89,7 +89,7 @@ class OrderAccessTest extends TestCase
             'nama' => 'Express', 'harga' => 15000, 'prioritas' => 3, 'cabang_id' => $order->cabang_id,
         ]);
 
-        $this->withSession(['orders' => [$order->id]])
+        $this->withSession(['guest_order_ids' => [$order->id]])
             ->post(route('order.upgrade.process', $order->id), [
                 'new_service_id' => $express->id,
             ], ['Accept' => 'application/json'])
@@ -130,7 +130,7 @@ class OrderAccessTest extends TestCase
         $order->bayar = $order->total_bayar_akhir; // sudah lunas → lolos ownership, gagal di step lain (bukan 403)
         $order->save();
 
-        $this->withSession(['orders' => [$order->id]])
+        $this->withSession(['guest_order_ids' => [$order->id]])
             ->post(route('order.process-payment', $order->id), [
                 'method' => 'qris',
             ])
@@ -159,7 +159,7 @@ class OrderAccessTest extends TestCase
         $order = $this->makeOwnedOrder($pelanggan);
         $order->update(['midtrans_order_id' => 'MID-TEST-123']);
 
-        $this->withSession(['orders' => [$order->id]])
+        $this->withSession(['guest_order_ids' => [$order->id]])
             ->post(route('order.payment-cancel', $order->id))
             ->assertStatus(200)
             ->assertJsonPath('success', true);

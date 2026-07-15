@@ -174,7 +174,10 @@ class OrderPageController
             return $this->webService->checkOrder($request);
         }
 
-        $orders = $this->webService->sessionOrdersData();
+        // 'orders' di sini murni hasil flash dari checkOrder() (back()->with()) —
+        // sudah dalam bentuk kartu yang di-map, bukan session('guest_order_ids')
+        // (daftar ID untuk proteksi guest checkout) yang punya bentuk berbeda.
+        $orders = session('orders', []);
         return view('pelanggan.order.check', compact('orders'));
     }
     public function complaint(Request $request, string $id)
