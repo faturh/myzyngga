@@ -32,5 +32,15 @@ class RegistrationTest extends TestCase
         $component->assertRedirect(route('home', absolute: false));
 
         $this->assertAuthenticated();
+
+        // Halaman profil (Ubah Profil) baca nomor WhatsApp dari users.phone,
+        // bukan pelanggan.telepon — kalau ini kosong, nomor yang baru saja
+        // dimasukkan saat daftar tidak muncul di profil.
+        $user = \App\Models\User::where('email', 'test@example.com')->first();
+        $this->assertSame(
+            '08123456789',
+            $user->phone,
+            'users.phone tidak ke-set saat registrasi — nomor WhatsApp hilang dari halaman profil.'
+        );
     }
 }

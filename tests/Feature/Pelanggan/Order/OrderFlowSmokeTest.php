@@ -433,6 +433,42 @@ class OrderFlowSmokeTest extends TestCase
         $this->actingAs($customer)->get(route('dashboard'))->assertOk();
     }
 
+    public function test_halaman_cek_pesanan_tidak_error_500_saat_session_orders_terisi(): void
+    {
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+        $pelanggan = Pelanggan::create([
+            'user_id' => null,
+            'nama' => 'Guest Cek Pesanan',
+            'telepon' => '081200003333',
+            'alamat' => 'Alamat Guest',
+            'jenis_kelamin' => 'L',
+        ]);
+        $order = Transaksi::create([
+            'nota' => 'ZYG-CEK-PESANAN',
+            'waktu' => now(),
+            'total_biaya_layanan' => 10000,
+            'total_biaya_prioritas' => 0,
+            'total_biaya_layanan_tambahan' => 0,
+            'total_bayar_akhir' => 10000,
+            'jenis_pembayaran' => 'cash',
+            'bayar' => 0,
+            'kembalian' => 0,
+            'layanan_prioritas_id' => $layananPrioritas->id,
+            'pelanggan_id' => $pelanggan->id,
+            'pegawai_id' => '0',
+            'cabang_id' => $cabang->id,
+            'payment_status' => 'pending',
+        ]);
+
+        // session('orders') cuma berisi ID (string), bukan array data pesanan
+        // yang sudah di-map — kalau controller lempar ini langsung ke view,
+        // $order['nota_layanan'] di blade error karena $order adalah string.
+        $response = $this->withSession(['orders' => [$order->id]])->get(route('order.check'));
+
+        $response->assertOk();
+        $response->assertSee('ZYG-CEK-PESANAN');
+    }
+
     private function createAdminUser(): User
     {
         $this->ensureRoleExists('admin');

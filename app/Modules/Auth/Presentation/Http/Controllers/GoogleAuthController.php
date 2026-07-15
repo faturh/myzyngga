@@ -126,6 +126,7 @@ class GoogleAuthController extends Controller
             'username' => 'google_' . Str::random(10),
             'slug' => Str::slug('google_' . Str::random(10)),
             'email' => $pendingData['email'],
+            'phone' => $phone,
             'google_id' => $pendingData['google_id'],
             'google_token' => $pendingData['google_token'],
             'password' => Hash::make(Str::random(24)),

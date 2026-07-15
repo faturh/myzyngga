@@ -174,14 +174,18 @@ class OrderPageController
             return $this->webService->checkOrder($request);
         }
 
-        $orders = session('orders', []);
+        $orders = $this->webService->sessionOrdersData();
         return view('pelanggan.order.check', compact('orders'));
     }
     public function complaint(Request $request, string $id)
     {
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
-            return redirect()->route('home');
+            // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
+            // malah kebentur middleware auth dan didiamkan ke landing page tanpa
+            // pesan error apapun. Konsisten dengan fallback di detail().
+            return redirect()->route($request->user() ? 'order.history' : 'order.check')
+                ->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
         return view('pelanggan.order.complaint', compact('order'));
     }
@@ -239,7 +243,11 @@ class OrderPageController
     {
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
-            return redirect()->route('home');
+            // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
+            // malah kebentur middleware auth dan didiamkan ke landing page tanpa
+            // pesan error apapun. Konsisten dengan fallback di detail().
+            return redirect()->route($request->user() ? 'order.history' : 'order.check')
+                ->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
 
         $address = $order['address'] ?? '';
@@ -354,7 +362,11 @@ class OrderPageController
     {
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
-            return redirect()->route('home');
+            // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
+            // malah kebentur middleware auth dan didiamkan ke landing page tanpa
+            // pesan error apapun. Konsisten dengan fallback di detail().
+            return redirect()->route($request->user() ? 'order.history' : 'order.check')
+                ->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
 
         return view('pelanggan.order.request-delivery-confirm', [
@@ -475,7 +487,11 @@ class OrderPageController
     {
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
-            return redirect()->route('home');
+            // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
+            // malah kebentur middleware auth dan didiamkan ke landing page tanpa
+            // pesan error apapun. Konsisten dengan fallback di detail().
+            return redirect()->route($request->user() ? 'order.history' : 'order.check')
+                ->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
         return view('pelanggan.order.payment-method', ['order' => $order]);
     }
@@ -484,7 +500,11 @@ class OrderPageController
     {
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
-            return redirect()->route('home');
+            // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
+            // malah kebentur middleware auth dan didiamkan ke landing page tanpa
+            // pesan error apapun. Konsisten dengan fallback di detail().
+            return redirect()->route($request->user() ? 'order.history' : 'order.check')
+                ->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
         return view('pelanggan.order.waiting', ['order' => $order]);
     }
@@ -536,7 +556,11 @@ class OrderPageController
     {
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
-            return redirect()->route('home');
+            // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
+            // malah kebentur middleware auth dan didiamkan ke landing page tanpa
+            // pesan error apapun. Konsisten dengan fallback di detail().
+            return redirect()->route($request->user() ? 'order.history' : 'order.check')
+                ->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
 
         // Fetch the pending payment instructions from the database or cache.

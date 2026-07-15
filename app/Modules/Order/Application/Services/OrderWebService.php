@@ -144,6 +144,24 @@ class OrderWebService
         ];
     }
 
+    /**
+     * session('orders') cuma menyimpan daftar ID (string) pesanan yang dibuat
+     * di sesi browser ini (dicatat di confirmOrder(), dipakai juga untuk
+     * proteksi guest checkout) — bukan data pesanan yang sudah di-map untuk
+     * ditampilkan. Halaman "Cek Pesanan" butuh versi yang sudah di-map.
+     */
+    public function sessionOrdersData(): array
+    {
+        $orderIds = session('orders', []);
+
+        return collect($orderIds)
+            ->map(fn (string $id) => $this->orderRepository->findById($id))
+            ->filter()
+            ->map(fn (Transaksi $order) => $this->mapOrderCard($order))
+            ->values()
+            ->all();
+    }
+
     public function detailData(?string $id, ?User $user): ?array
     {
         $order = null;

@@ -405,4 +405,32 @@ class OrderAccessTest extends TestCase
     {
         $this->get(route('dashboard'))->assertStatus(302);
     }
+
+    // ── BB-O15  Fix: order tidak ketemu di halaman pembayaran guest tidak ────
+    // ── boleh mental ke route('home') — itu butuh login, tamu jadi didiamkan ──
+    // ── ke landing page tanpa pesan error apapun (nyasar, bukan "ketemu"). ───
+
+    /** @test */
+    public function halaman_payment_method_order_tidak_ada_redirect_ke_order_check_bukan_home(): void
+    {
+        $response = $this->get(route('order.payment-method', $this->fakeOrderId()));
+
+        $response->assertRedirect(route('order.check'));
+    }
+
+    /** @test */
+    public function halaman_payment_instruction_order_tidak_ada_redirect_ke_order_check_bukan_home(): void
+    {
+        $response = $this->get(route('order.payment-instruction', $this->fakeOrderId()));
+
+        $response->assertRedirect(route('order.check'));
+    }
+
+    /** @test */
+    public function halaman_payment_waiting_order_tidak_ada_redirect_ke_order_check_bukan_home(): void
+    {
+        $response = $this->get(route('order.payment.waiting', $this->fakeOrderId()));
+
+        $response->assertRedirect(route('order.check'));
+    }
 }
