@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Pelanggan;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -66,6 +67,14 @@ new #[Layout('layouts.auth')] class extends Component
         ];
 
         $user = User::create($payload);
+
+        Pelanggan::create([
+            'user_id' => $user->id,
+            'nama' => $validated['name'],
+            'jenis_kelamin' => 'L',
+            'telepon' => $validated['whatsapp'],
+            'alamat' => null,
+        ]);
 
         if (class_exists(\Spatie\Permission\Models\Role::class)) {
             $customerRole = \Spatie\Permission\Models\Role::query()->firstOrCreate([

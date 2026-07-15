@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Pelanggan\Auth;
 
+use App\Models\Pelanggan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Livewire\Livewire;
@@ -40,6 +41,16 @@ class AuthSmokeTest extends TestCase
         $this->assertNotEmpty($user->slug);
         $this->assertTrue($user->hasRole('customer'));
         $this->assertAuthenticatedAs($user);
+
+        $pelanggan = Pelanggan::where('user_id', $user->id)->first();
+        $this->assertNotNull(
+            $pelanggan,
+            'Registrasi lewat halaman web harus otomatis membuat row Pelanggan, sama seperti registrasi lewat API — kalau tidak, profil, alamat, dan pembuatan order pelanggan ini akan langsung gagal (404).'
+        );
+        $this->assertSame('08123456789', $pelanggan->telepon);
+
+        // Buktikan dampaknya: tanpa Pelanggan, endpoint profil akan 404.
+        $this->getJson('/api/v1/customer/profile')->assertOk();
     }
 
     public function test_user_can_login_and_open_dashboard(): void
