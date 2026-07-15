@@ -174,7 +174,7 @@ class OrderPageController
             return $this->webService->checkOrder($request);
         }
 
-        $orders = session('orders', []);
+        $orders = $this->webService->sessionOrdersData();
         return view('pelanggan.order.check', compact('orders'));
     }
     public function complaint(Request $request, string $id)
