@@ -362,7 +362,7 @@ class OrderFlowSmokeTest extends TestCase
         );
     }
 
-    public function test_dashboard_pesanan_terakhir_menampilkan_order_terbaru_apapun_statusnya(): void
+    public function test_dashboard_pesanan_terakhir_hanya_menampilkan_order_yang_sudah_selesai(): void
     {
         $this->createAdminUser();
         $customer = $this->createCustomerUser('dashboard-recent@example.com', 'dashboard-recent');
@@ -379,7 +379,7 @@ class OrderFlowSmokeTest extends TestCase
             ]);
         }
 
-        // Order lama, sudah selesai.
+        // Order lama, sudah selesai (list_status_pengerjaan_id = 5).
         $oldFinished = Transaksi::create([
             'nota' => 'ZYG-OLD-DONE',
             'waktu' => now()->subDays(5),
@@ -390,15 +390,16 @@ class OrderFlowSmokeTest extends TestCase
             'jenis_pembayaran' => 'cash',
             'bayar' => 10000,
             'kembalian' => 0,
-            'status' => 'Selesai',
             'layanan_prioritas_id' => $layananPrioritas->id,
             'pelanggan_id' => $pelanggan->id,
             'pegawai_id' => '0',
             'cabang_id' => $cabang->id,
             'payment_status' => 'paid',
         ]);
+        $oldFinished->pending_status_id = 5;
+        $oldFinished->save();
 
-        // Order paling baru, TAPI masih diproses (bukan "Selesai").
+        // Order paling baru, TAPI masih diproses (belum status "Selesai").
         $newInProgress = Transaksi::create([
             'nota' => 'ZYG-NEW-PROGRESS',
             'waktu' => now(),
@@ -409,7 +410,6 @@ class OrderFlowSmokeTest extends TestCase
             'jenis_pembayaran' => 'cash',
             'bayar' => 0,
             'kembalian' => 0,
-            'status' => 'Proses',
             'layanan_prioritas_id' => $layananPrioritas->id,
             'pelanggan_id' => $pelanggan->id,
             'pegawai_id' => '0',
@@ -417,23 +417,20 @@ class OrderFlowSmokeTest extends TestCase
             'payment_status' => 'pending',
         ]);
 
-        $response = $this->actingAs($customer)->get(route('dashboard'));
+        // "Pesanan Terakhir" cuma dipakai untuk tombol "Ulangi Pesanan", yang
+        // cuma masuk akal untuk pesanan yang sudah tuntas (dikonfirmasi dengan
+        // Syihan) — jadi order yang masih diproses TIDAK boleh muncul di sana,
+        // walaupun itu order paling baru. Order yang masih diproses tetap
+        // ditampilkan lewat "Pesanan Aktif", bukan "Pesanan Terakhir".
+        $data = app(\App\Modules\Order\Application\Services\OrderWebService::class)->dashboardData($customer);
 
-        $response->assertOk();
+        $this->assertNotNull($data['latestOrder']);
+        $this->assertSame('ZYG-OLD-DONE', $data['latestOrder']['nota_layanan']);
 
-        // "Pesanan Terakhir" harus menampilkan order yang PALING BARU dibuat
-        // (ZYG-NEW-PROGRESS) meskipun statusnya masih diproses, bukan cuma
-        // melompat ke order lama yang kebetulan sudah selesai.
-        $notaOldPos = strpos($response->getContent(), 'ZYG-OLD-DONE');
-        $notaNewPos = strpos($response->getContent(), 'ZYG-NEW-PROGRESS');
+        $this->assertNotNull($data['activeOrder']);
+        $this->assertSame('ZYG-NEW-PROGRESS', $data['activeOrder']['nota_layanan']);
 
-        $this->assertNotFalse($notaNewPos, 'Order terbaru (walau belum selesai) harus muncul di dashboard.');
-        $this->assertNotFalse($notaOldPos, 'Order lama yang sudah selesai tetap harus muncul di daftar.');
-        $this->assertLessThan(
-            $notaOldPos,
-            $notaNewPos,
-            'Order paling baru harus tampil lebih dulu (di atas) dibanding order lama, apapun statusnya.'
-        );
+        $this->actingAs($customer)->get(route('dashboard'))->assertOk();
     }
 
     private function createAdminUser(): User
