@@ -62,7 +62,7 @@
         </x-dashboard-header>
 
         {{-- ── MAIN CONTENT ── --}}
-        <main class="flex-1 flex flex-col relative mt-2" style="min-height: calc(100vh - 200px);">
+        <main class="flex-1 flex flex-col relative" style="min-height: calc(100vh - 200px);">
             <div class="w-full max-w-5xl mx-auto px-5 pb-10">
                 @forelse($complaints as $complaint)
                     @php
@@ -84,7 +84,7 @@
                     @endphp
                     
                     <a href="{{ route('profile.complaint.detail', $complaint->id) }}" 
-                       class="block mb-4"
+                       class="block"
                        x-show="activeTab === 'Semua' || activeTab === '{{ $displayStatus }}'"
                     >
                         <x-zyngga-card>
