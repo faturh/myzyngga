@@ -32,7 +32,7 @@
             'md:ml-[80px]': sidebarCollapsed, 
             'md:ml-[280px]': !sidebarCollapsed 
         }"
-        @toggle-sidebar.window="sidebarCollapsed = !sidebarCollapsed"
+        @sidebar-toggled.window="sidebarCollapsed = $event.detail.collapsed"
     >
         {{-- Header (if provided) --}}
         @isset($header)
