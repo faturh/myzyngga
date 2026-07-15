@@ -81,23 +81,62 @@ class OrderAccessTest extends TestCase
         ])->assertStatus(302);
     }
 
-    // ── BB-O06  Fix: POST process-payment sekarang butuh login ──────────────
+    // ── BB-O06  Guest checkout: process-payment cuma boleh untuk order sendiri ──
 
     /** @test */
-    public function post_process_payment_memerlukan_login(): void
+    public function post_process_payment_ditolak_untuk_guest_yang_bukan_pemilik_order(): void
     {
-        $this->post(route('order.process-payment', $this->fakeOrderId()), [
+        [$owner, $pelanggan] = $this->userWithPelanggan();
+        $order = $this->makeOwnedOrder($pelanggan);
+
+        // Guest (tanpa login, tanpa order ini di sesinya) cuma tahu/nebak ID order.
+        $this->post(route('order.process-payment', $order->id), [
             'method' => 'qris',
-        ])->assertStatus(302);
+        ])->assertStatus(403);
     }
 
-    // ── BB-O07  Fix: POST payment-cancel sekarang butuh login ────────────────
+    /** @test */
+    public function post_process_payment_diizinkan_untuk_guest_pemilik_order_di_sesi(): void
+    {
+        $pelanggan = Pelanggan::factory()->create(['user_id' => null]);
+        $order = $this->makeOwnedOrder($pelanggan);
+        $order->pending_status_id = 3; // sudah ditimbang, biar lolos cek isUnweighed()
+        $order->bayar = $order->total_bayar_akhir; // sudah lunas → lolos ownership, gagal di step lain (bukan 403)
+        $order->save();
+
+        $this->withSession(['orders' => [$order->id]])
+            ->post(route('order.process-payment', $order->id), [
+                'method' => 'qris',
+            ])
+            ->assertStatus(400)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Pesanan sudah lunas.');
+    }
+
+    // ── BB-O07  Guest checkout: payment-cancel cuma boleh untuk order sendiri ──
 
     /** @test */
-    public function post_payment_cancel_memerlukan_login(): void
+    public function post_payment_cancel_ditolak_untuk_guest_yang_bukan_pemilik_order(): void
     {
-        $this->post(route('order.payment-cancel', $this->fakeOrderId()))
-            ->assertStatus(302);
+        [$owner, $pelanggan] = $this->userWithPelanggan();
+        $order = $this->makeOwnedOrder($pelanggan);
+        $order->update(['midtrans_order_id' => 'MID-TEST-123']);
+
+        $this->post(route('order.payment-cancel', $order->id))
+            ->assertStatus(403);
+    }
+
+    /** @test */
+    public function post_payment_cancel_diizinkan_untuk_guest_pemilik_order_di_sesi(): void
+    {
+        $pelanggan = Pelanggan::factory()->create(['user_id' => null]);
+        $order = $this->makeOwnedOrder($pelanggan);
+        $order->update(['midtrans_order_id' => 'MID-TEST-123']);
+
+        $this->withSession(['orders' => [$order->id]])
+            ->post(route('order.payment-cancel', $order->id))
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
     }
 
     // ── BB-O08  Fix: repeat() memverifikasi kepemilikan order ────────────────

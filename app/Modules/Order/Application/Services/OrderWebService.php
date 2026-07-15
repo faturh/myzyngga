@@ -535,6 +535,7 @@ class OrderWebService
             throw new \Exception('Order tidak ditemukan.');
         }
         $this->assertOwnership($order, $user);
+        $this->assertGuestOwnsOrderInSession($order, $user);
 
         if ($this->isUnweighed($order)) {
             throw new \Exception('Pesanan Anda belum ditimbang oleh operator.');
@@ -861,6 +862,7 @@ class OrderWebService
             throw new \Exception('Transaksi pembayaran tidak ditemukan.');
         }
         $this->assertOwnership($order, $user);
+        $this->assertGuestOwnsOrderInSession($order, $user);
 
         \Midtrans\Config::$serverKey = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
@@ -1137,6 +1139,26 @@ class OrderWebService
     private function assertOwnership(Transaksi $order, ?User $user): void
     {
         if ($user && (!$order->pelanggan || $order->pelanggan->user_id !== $user->id)) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+        }
+    }
+
+    /**
+     * Untuk aksi guest checkout yang mengubah data (bayar/batalkan pembayaran):
+     * assertOwnership() saja tidak cukup karena user null lolos begitu saja —
+     * itu aman untuk aksi read-only (order bisa dilihat siapa saja yang tahu
+     * ID/nota, seperti tracking number), tapi TIDAK aman untuk aksi mutasi
+     * karena siapapun yang tahu/nebak ID order orang lain bisa ikut memproses
+     * atau membatalkan pembayarannya. Guest hanya boleh mengaksi order yang
+     * benar-benar mereka buat sendiri di sesi ini (dicatat di confirmOrder()).
+     */
+    private function assertGuestOwnsOrderInSession(Transaksi $order, ?User $user): void
+    {
+        if ($user) {
+            return;
+        }
+
+        if (! in_array($order->id, session('orders', []), true)) {
             abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
         }
     }
