@@ -322,4 +322,38 @@ class OrderWebServiceBugTest extends TestCase
             'totalWeightKg tidak boleh 0 hanya karena detailTransaksi belum diisi — biaya upgrade di halaman upgrade jadi Rp0 kalau ini 0.'
         );
     }
+
+    // ── WB-OS-10  Fix: estimasi berat di detail order tidak boleh ikut ────────
+    // ── menelan biaya upgrade yang sudah dibayar (double count) ───────────────
+
+    /** @test */
+    public function mapOrderItems_estimasi_berat_tidak_ikut_menghitung_biaya_upgrade_yang_sudah_dibayar(): void
+    {
+        // Order Reguler 3.6kg (17.460) yang sudah di-upgrade & dibayar —
+        // total_bayar_akhir sekarang 28.260 (17.460 dasar + 10.800 upgrade),
+        // persis seperti yang diterapkan PaymentWebhookService::markAsPaid().
+        // detailTransaksi sengaja kosong supaya mapOrderItems() masuk ke jalur
+        // estimasi (bukan rincian per-item asli).
+        $order = $this->makeTransaksi([
+            'total_biaya_layanan'   => 17460,
+            'total_biaya_prioritas' => 10800,
+            'total_bayar_akhir'     => 28260,
+            'bayar'                 => 28260,
+            'payment_status'        => 'paid',
+        ]);
+
+        $service = app(OrderWebService::class);
+        $data = $service->detailData($order->id, $order->pelanggan->user);
+
+        $this->assertSame(
+            '3.6',
+            $data['items'][0]['qty'],
+            'Berat di baris layanan dasar berubah gara-gara ikut menghitung biaya upgrade — harusnya tetap sama seperti sebelum upgrade (3.6kg), bukan ke-inflate jadi lebih berat.'
+        );
+        $this->assertSame(
+            17460.0,
+            $data['items'][0]['subtotal'],
+            'Subtotal baris layanan dasar seharusnya cuma biaya dasar (17.460), bukan ikut menelan biaya upgrade yang sudah ditampilkan terpisah sebagai "Biaya Upgrade".'
+        );
+    }
 }
