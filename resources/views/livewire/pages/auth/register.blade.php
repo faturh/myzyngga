@@ -62,6 +62,7 @@ new #[Layout('layouts.auth')] class extends Component
             'username' => $username,
             'slug' => $slug,
             'email' => $validated['email'],
+            'phone' => $validated['whatsapp'],
             'password' => Hash::make($validated['password']),
             'role' => 'customer',
         ];

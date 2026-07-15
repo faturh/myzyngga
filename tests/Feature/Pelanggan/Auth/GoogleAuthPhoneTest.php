@@ -43,6 +43,16 @@ class GoogleAuthPhoneTest extends TestCase
             'telepon' => '081298765432',
         ]);
 
+        // users.phone juga harus terisi — halaman profil (Ubah Profil) baca dari
+        // User::phone, bukan Pelanggan::telepon. Kalau ini kosong, nomor WhatsApp
+        // yang baru saja dimasukkan saat registrasi Google tidak muncul di profil,
+        // sampai user logout-login lagi dan dipaksa isi ulang lewat register/phone.
+        $this->assertSame(
+            '081298765432',
+            $user->phone,
+            'users.phone tidak ke-set saat registrasi Google — nomor WhatsApp hilang dari halaman profil.'
+        );
+
         $this->assertAuthenticatedAs($user);
     }
 
