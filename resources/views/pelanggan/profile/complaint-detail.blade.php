@@ -157,7 +157,7 @@
                 <div class="max-w-5xl mx-auto px-5 flex items-center justify-center">
                     <x-zyngga-button 
                         type="a"
-                        href="https://wa.me/6282125322500?text=Halo%20Admin%20Zyngga,%20saya%20ingin%20menanyakan%20status%20komplain%20saya%20untuk%20pesanan%20%23{{ $complaint->transaksi->nota_layanan ?? $complaint->transaksi_id }}"
+                        href="https://wa.me/6282125322500?text=Halo%20Admin%20Zyngga,%20saya%20ingin%20menanyakan%20status%20komplain%20saya%20untuk%20pesanan%20%23{{ $complaint->transaksi->nota ?? $complaint->transaksi_id }}"
                         target="_blank"
                         variant="secondary"
                         size="l"

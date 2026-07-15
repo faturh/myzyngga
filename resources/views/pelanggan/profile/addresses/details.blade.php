@@ -21,7 +21,7 @@
     <div class="min-h-screen flex flex-col" x-data>
         {{-- HEADER --}}
         <x-dashboard-header 
-            title="Lengkapi Detail Alamat" 
+            title="Detail Alamat" 
             :backUrl="route('addresses.create')" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
