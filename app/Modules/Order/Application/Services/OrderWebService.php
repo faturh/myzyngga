@@ -1158,12 +1158,12 @@ class OrderWebService
     }
 
     /**
-     * Untuk aksi guest checkout yang mengubah data (bayar/batalkan pembayaran):
-     * assertOwnership() saja tidak cukup karena user null lolos begitu saja —
-     * itu aman untuk aksi read-only (order bisa dilihat siapa saja yang tahu
-     * ID/nota, seperti tracking number), tapi TIDAK aman untuk aksi mutasi
-     * karena siapapun yang tahu/nebak ID order orang lain bisa ikut memproses
-     * atau membatalkan pembayarannya. Guest hanya boleh mengaksi order yang
+     * Untuk aksi guest checkout yang mengubah data (bayar, batalkan pembayaran,
+     * upgrade layanan): assertOwnership() saja tidak cukup karena user null
+     * lolos begitu saja — itu aman untuk aksi read-only (order bisa dilihat
+     * siapa saja yang tahu ID/nota, seperti tracking number), tapi TIDAK aman
+     * untuk aksi mutasi karena siapapun yang tahu/nebak ID order orang lain
+     * bisa ikut memprosesnya. Guest hanya boleh mengakses order yang
      * benar-benar mereka buat sendiri di sesi ini (dicatat di confirmOrder()).
      */
     private function assertGuestOwnsOrderInSession(Transaksi $order, ?User $user): void
@@ -1462,6 +1462,7 @@ class OrderWebService
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
         $this->assertOwnership($order, $user);
+        $this->assertGuestOwnsOrderInSession($order, $user);
 
         $currentPriority = $order->layananPrioritas;
         $newPriority = \App\Models\LayananPrioritas::find($newServiceId);

@@ -61,14 +61,40 @@ class OrderAccessTest extends TestCase
         ])->assertStatus(302);
     }
 
-    // ── BB-O04  Fix: POST upgrade sekarang butuh login ───────────────────────
+    // ── BB-O04  Guest checkout: upgrade cuma boleh untuk order sendiri ───────
 
     /** @test */
-    public function post_upgrade_memerlukan_login(): void
+    public function post_upgrade_ditolak_untuk_guest_yang_bukan_pemilik_order(): void
     {
-        $this->post(route('order.upgrade.process', $this->fakeOrderId()), [
-            'new_service_id' => 1,
-        ])->assertStatus(302);
+        [$owner, $pelanggan] = $this->userWithPelanggan();
+        $order = $this->makeOwnedOrder($pelanggan);
+        $express = \App\Models\LayananPrioritas::create([
+            'nama' => 'Express', 'harga' => 15000, 'prioritas' => 3, 'cabang_id' => $order->cabang_id,
+        ]);
+
+        // Guest (tanpa login, tanpa order ini di sesinya) cuma tahu/nebak ID order.
+        $this->post(route('order.upgrade.process', $order->id), [
+            'new_service_id' => $express->id,
+        ])->assertStatus(403);
+    }
+
+    /** @test */
+    public function post_upgrade_diizinkan_untuk_guest_pemilik_order_di_sesi(): void
+    {
+        $pelanggan = Pelanggan::factory()->create(['user_id' => null]);
+        $order = $this->makeOwnedOrder($pelanggan);
+        $order->pending_status_id = 3; // sudah ditimbang, biar lolos cek isUnweighed()
+        $order->save();
+        $express = \App\Models\LayananPrioritas::create([
+            'nama' => 'Express', 'harga' => 15000, 'prioritas' => 3, 'cabang_id' => $order->cabang_id,
+        ]);
+
+        $this->withSession(['orders' => [$order->id]])
+            ->post(route('order.upgrade.process', $order->id), [
+                'new_service_id' => $express->id,
+            ], ['Accept' => 'application/json'])
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
     }
 
     // ── BB-O05  Fix: POST complaint sekarang butuh login ─────────────────────
