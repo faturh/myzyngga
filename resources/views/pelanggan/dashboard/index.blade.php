@@ -195,7 +195,7 @@
                             <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
                             <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($latestOrder['total'], 0, ',', '.') }}</x-zyngga-text>
                         </div>
-                        <x-zyngga-button 
+                        <x-zyngga-button
                             type="a"
                             href="{{ route('order.repeat', $latestOrder['id']) }}"
                             variant="primary"

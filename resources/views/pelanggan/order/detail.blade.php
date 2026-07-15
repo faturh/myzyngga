@@ -148,7 +148,7 @@
                         <div class="space-y-2.5">
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Kasir</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $order['cashier_name'] ?? 'Azhep' }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $order['cashier_name'] ?? 'Belum ditugaskan' }}</x-zyngga-text>
                             </div>
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Tanggal Pemesanan</x-zyngga-text>
@@ -165,7 +165,7 @@
                         <div class="space-y-2.5">
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Parfum</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $order['perfume'] ?? 'Lavender' }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $order['perfume'] ?? '-' }}</x-zyngga-text>
                             </div>
                             <div class="flex justify-between items-start">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Catatan</x-zyngga-text>
@@ -260,22 +260,25 @@
                 {{-- CARD 2.5: RINCIAN PAKAIAN --}}
                 <x-zyngga-card title="Rincian Pakaian">
                     @php
-                        $clothingItems = (isset($order['clothing_items']) && count($order['clothing_items']) > 0) 
-                            ? $order['clothing_items'] 
-                            : [
-                                ['name' => 'Kemeja', 'qty' => 1],
-                                ['name' => 'Kaos', 'qty' => 2],
-                                ['name' => 'Jeans', 'qty' => 1]
-                            ];
+                        $clothingItems = $order['clothing_items'] ?? [];
                         $totalClothing = collect($clothingItems)->sum('qty');
                     @endphp
 
+                    @if(!empty($order['weight']))
+                    <div class="flex justify-between items-center mb-3">
+                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Berat Timbangan</x-zyngga-text>
+                        <x-zyngga-text variant="sm" color="neutral-500">{{ $order['weight'] }} Kg</x-zyngga-text>
+                    </div>
+                    <div class="divider"></div>
+                    @endif
+
+                    @if(count($clothingItems) > 0)
                     <div x-show="showClothingDetail" x-collapse x-cloak>
                         <div class="space-y-3 mb-4">
                             @foreach($clothingItems as $item)
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $item['qty'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $item['qty'] }} pcs</x-zyngga-text>
                             </div>
                             @endforeach
                         </div>
@@ -288,9 +291,9 @@
                     </div>
 
                     <div class="flex justify-center pt-4">
-                        <x-zyngga-button 
-                            variant="tertiary" 
-                            size="m" 
+                        <x-zyngga-button
+                            variant="tertiary"
+                            size="m"
                             icon="chevron-down"
                             iconPosition="right"
                             ::class="showClothingDetail ? 'rotate-icon' : ''"
@@ -299,6 +302,9 @@
                             <span x-text="showClothingDetail ? 'Sembunyikan' : 'Lihat Detail'"></span>
                         </x-zyngga-button>
                     </div>
+                    @else
+                    <x-zyngga-text variant="sm" color="neutral-500">Belum ada data rincian pakaian.</x-zyngga-text>
+                    @endif
                 </x-zyngga-card>
 
                 {{-- CARD 3: RINCIAN PEMBAYARAN --}}
@@ -328,7 +334,7 @@
                                 @endif
                                 <div class="flex justify-between">
                                     <x-zyngga-text variant="sm" color="neutral-900">Biaya Pengiriman</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp0</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['delivery_fee'] ?? 0, 0, ',', '.') }}</x-zyngga-text>
                                 </div>
                             </div>
 
@@ -356,22 +362,6 @@
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['total'], 0, ',', '.') }}</x-zyngga-text>
                             </div>
                         </div>
-                </x-zyngga-card>
-                @endif
-
-                @if(isset($order['clothing_details']) && count($order['clothing_details']) > 0)
-                {{-- CARD: RINCIAN PAKAIAN --}}
-                <x-zyngga-card title="Rincian Pakaian">
-                    <div class="space-y-4">
-                        <div class="space-y-3">
-                            @foreach($order['clothing_details'] as $item)
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-900">{{ $item['nama'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $item['qty'] }} pcs</x-zyngga-text>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
                 </x-zyngga-card>
                 @endif
 

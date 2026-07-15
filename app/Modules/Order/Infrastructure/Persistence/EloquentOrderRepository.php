@@ -33,6 +33,11 @@ class EloquentOrderRepository implements OrderRepositoryInterface
         return Transaksi::query()->with(self::ORDER_RELATIONS)->find($id);
     }
 
+    public function lockById(string $id): ?Transaksi
+    {
+        return Transaksi::query()->lockForUpdate()->find($id);
+    }
+
     public function findByNotaPelanggan(string $nota): ?Transaksi
     {
         return Transaksi::query()

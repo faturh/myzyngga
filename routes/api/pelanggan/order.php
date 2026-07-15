@@ -8,7 +8,10 @@ use App\Modules\Order\Presentation\Http\Controllers\UpdateOrderStatusController;
 use App\Modules\Order\Presentation\Web\Controllers\OrderPageController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/orders/track', [OrderPageController::class, 'check']);
+// Throttled: pencarian cocok berdasarkan nama pelanggan (mudah ditebak) +
+// phone_last_4 (cuma 4 digit) — tanpa batas percobaan bisa di-brute-force.
+Route::post('/orders/track', [OrderPageController::class, 'check'])
+    ->middleware('throttle:10,1');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/orders', CreateOrderController::class);

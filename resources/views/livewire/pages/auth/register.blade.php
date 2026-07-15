@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Pelanggan;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -66,6 +67,18 @@ new #[Layout('layouts.auth')] class extends Component
         ];
 
         $user = User::create($payload);
+
+        // Catatan: auto-link ke Pelanggan guest berdasarkan nomor WhatsApp dibatalkan
+        // — nomor telepon di form ini tidak diverifikasi, jadi rawan account-takeover
+        // (siapapun yang tahu nomor telepon korban bisa "mewarisi" data guest
+        // mereka). Perlu verifikasi OTP dulu sebelum fitur ini aman diaktifkan.
+        Pelanggan::create([
+            'user_id' => $user->id,
+            'nama' => $validated['name'],
+            'jenis_kelamin' => 'L',
+            'telepon' => $validated['whatsapp'],
+            'alamat' => null,
+        ]);
 
         if (class_exists(\Spatie\Permission\Models\Role::class)) {
             $customerRole = \Spatie\Permission\Models\Role::query()->firstOrCreate([

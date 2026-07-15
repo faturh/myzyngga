@@ -119,8 +119,11 @@ Route::get('/download-image', function (\Illuminate\Http\Request $request) {
     }
 })->name('download.image');
 
-// Public Order Check
+// Public Order Check — throttled: pencarian bisa cocok berdasarkan nama pelanggan
+// (mudah ditebak) + phone_last_4 (cuma 4 digit, 10.000 kemungkinan). Tanpa batas
+// percobaan, ini bisa di-brute-force untuk melihat alamat & riwayat pesanan orang lain.
 Route::match(['get', 'post'], '/order/check', [OrderPageController::class, 'check'])
+    ->middleware('throttle:10,1')
     ->name('order.check');
 
 Route::get('/public-struk/{idOrNota}', PublicStrukController::class)

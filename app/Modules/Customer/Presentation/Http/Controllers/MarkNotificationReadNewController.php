@@ -27,7 +27,7 @@ class MarkNotificationReadNewController
 
         // IDOR protection: notifikasi personal hanya boleh ditandai oleh pemiliknya
         if ($notifikasi->pelanggan_id !== null && (int) $notifikasi->pelanggan_id !== $pelanggan->id) {
-            return ApiResponse::error('ini bukan id kamu', 403);
+            return ApiResponse::error('Akses ditolak.', 403);
         }
 
         if ($notifikasi->pelanggan_id === null) {
