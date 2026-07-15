@@ -58,9 +58,9 @@
                                 <x-zyngga-text variant="lg" weight="medium" color="neutral-900">{{ $complaint->transaksi->tipe_layanan ?? 'Express' }}</x-zyngga-text>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->nota_layanan ?? $complaint->transaksi_id }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->nota ?? $complaint->transaksi_id }}</x-zyngga-text>
                                 <button 
-                                    @click="navigator.clipboard.writeText('{{ $complaint->transaksi->nota_layanan ?? $complaint->transaksi_id }}');"
+                                    @click="navigator.clipboard.writeText('{{ $complaint->transaksi->nota ?? $complaint->transaksi_id }}');"
                                     class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors"
                                 >
                                     <i data-feather="copy" class="w-4 h-4"></i>
@@ -157,7 +157,7 @@
                 <div class="max-w-5xl mx-auto px-5 flex items-center justify-center">
                     <x-zyngga-button 
                         type="a"
-                        href="https://wa.me/6282125322500?text=Halo%20Admin%20Zyngga,%20saya%20ingin%20menanyakan%20status%20komplain%20saya%20untuk%20pesanan%20%23{{ $complaint->transaksi->nota_layanan ?? $complaint->transaksi_id }}"
+                        href="https://wa.me/6282125322500?text=Halo%20Admin%20Zyngga,%20saya%20ingin%20menanyakan%20status%20komplain%20saya%20untuk%20pesanan%20%23{{ $complaint->transaksi->nota ?? $complaint->transaksi_id }}"
                         target="_blank"
                         variant="secondary"
                         size="l"

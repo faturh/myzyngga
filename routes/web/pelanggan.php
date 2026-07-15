@@ -22,6 +22,69 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('profile', 'pelanggan.profile.index')->name('profile');
     Route::view('profile/account', 'pelanggan.profile.account')->name('profile.account');
     Route::get('notifications', [CustomerNotificationController::class, 'index'])->name('notifications');
+    Route::get('notifications/demo-empty', function () {
+        return view('pelanggan.notifications.index', ['notifications' => collect()]);
+    })->name('notifications.empty');
+    Route::get('notifications/demo-filled', function () {
+        $notifications = collect([
+            [
+                'id' => 1,
+                'category' => 'Transaksi',
+                'title' => 'Pembayaran Berhasil',
+                'message' => 'Pembayaran untuk pesanan #IJK877C telah berhasil dikonfirmasi.',
+                'time' => '22 menit lalu',
+                'timestamp' => now()->subMinutes(22),
+                'icon' => 'credit-card',
+                'box_class' => 'bg-orange-50',
+                'icon_class' => 'text-orange-600',
+            ],
+            [
+                'id' => 2,
+                'category' => 'Status',
+                'title' => 'Pesanan Sudah Sampai',
+                'message' => 'Kurir telah mengantarkan pesanan Anda ke alamat tujuan.',
+                'time' => '22 menit lalu',
+                'timestamp' => now()->subMinutes(22),
+                'icon' => 'package',
+                'box_class' => 'bg-orange-50',
+                'icon_class' => 'text-orange-600',
+            ],
+            [
+                'id' => 3,
+                'category' => 'Promo',
+                'title' => 'Diskon Spesial Gajian!',
+                'message' => 'Nikmati potongan harga hingga 30% untuk layanan cuci sepatu.',
+                'time' => '5 jam lalu',
+                'timestamp' => now()->subHours(5),
+                'icon' => 'percent',
+                'box_class' => 'bg-orange-50',
+                'icon_class' => 'text-orange-600',
+            ],
+            [
+                'id' => 4,
+                'category' => 'Transaksi',
+                'title' => 'Pembayaran Gagal',
+                'message' => 'Transaksi untuk pesanan #IJK877C gagal karena saldo tidak mencukupi.',
+                'time' => '1 hari lalu',
+                'timestamp' => now()->subDays(1),
+                'icon' => 'x-circle',
+                'box_class' => 'bg-orange-50',
+                'icon_class' => 'text-orange-600',
+            ],
+            [
+                'id' => 5,
+                'category' => 'Info',
+                'title' => 'Laundry Libur',
+                'message' => 'Laundry tutup sementara pada tanggal 17 Agustus.',
+                'time' => '22 menit lalu',
+                'timestamp' => now()->subMinutes(22),
+                'icon' => 'calendar',
+                'box_class' => 'bg-orange-50',
+                'icon_class' => 'text-orange-600',
+            ],
+        ]);
+        return view('pelanggan.notifications.index', ['notifications' => $notifications]);
+    })->name('notifications.filled');
     Route::post('notifications/{notifikasi}/read', [CustomerNotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('profile/complaints', [OrderPageController::class, 'complaintsHistory'])->name('profile.complaints');
     Route::get('profile/complaints/{id}', [OrderPageController::class, 'complaintDetail'])->name('profile.complaint.detail');
