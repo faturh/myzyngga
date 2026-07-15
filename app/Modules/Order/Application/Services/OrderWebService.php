@@ -959,7 +959,13 @@ class OrderWebService
             return $items->values()->all();
         }
 
-        $total = (float) $order->total_bayar_akhir;
+        // Pakai total_biaya_layanan (biaya dasar), BUKAN total_bayar_akhir —
+        // total_bayar_akhir sudah termasuk total_biaya_prioritas (biaya upgrade)
+        // begitu upgrade dibayar (lihat PaymentWebhookService::markAsPaid()).
+        // Kalau dipakai di sini, biaya upgrade ke-hitung dua kali: sekali
+        // "ketelan" ke estimasi berat/harga baris dasar ini, sekali lagi
+        // ditampilkan terpisah sebagai "Biaya Upgrade".
+        $total = (float) ($order->total_biaya_layanan ?: $order->total_bayar_akhir);
         $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
         $basePrice = $this->resolveEstimatedTotal(strtolower($originalService->nama ?? ''));
         $estimatedQty = $basePrice > 0 
