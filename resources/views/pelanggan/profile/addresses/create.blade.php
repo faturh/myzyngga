@@ -119,7 +119,7 @@
                         iconPosition="only"
                         aria-label="Kembali"
                     />
-                    <x-zyngga-text variant="lg" weight="medium" as="h1" class="flex-1">Pilih Alamat Kamu</x-zyngga-text>
+                    <x-zyngga-text variant="lg" weight="medium" as="h1" class="flex-1">Pilih Lokasi Alamat</x-zyngga-text>
                 </div>
 
                 {{-- Search bar --}}
