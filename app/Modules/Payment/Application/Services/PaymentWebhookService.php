@@ -3,6 +3,7 @@
 namespace App\Modules\Payment\Application\Services;
 
 use App\Modules\Order\Domain\Repositories\OrderRepositoryInterface;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PaymentWebhookService
@@ -74,78 +75,82 @@ class PaymentWebhookService
 
     private function markAsPaid(string $orderId, object $notification): void
     {
-        $order = $this->orderRepository->findById($orderId);
-        if (!$order) return;
+        DB::transaction(function () use ($orderId, $notification) {
+            // Lock the row so concurrent/duplicate webhook deliveries for the same
+            // order (Midtrans resends notifications at-least-once) can't both read
+            // stale state and double-apply pending_upgrade/pending_delivery.
+            $order = $this->orderRepository->lockById($orderId);
+            if (!$order) return;
 
-        // Process pending metadata if any to calculate real target amount
-        $meta = json_decode($order->payment_metadata, true) ?? [];
-        $targetAmount = (float) $order->total_bayar_akhir;
-        if (isset($meta['pending_upgrade'])) {
-            $targetAmount += (float) ($meta['pending_upgrade']['price_diff'] ?? 0);
-        }
-        if (isset($meta['pending_delivery'])) {
-            $targetAmount += (float) ($meta['pending_delivery']['delivery_fee'] ?? 0);
-        }
+            // Process pending metadata if any to calculate real target amount
+            $meta = json_decode($order->payment_metadata, true) ?? [];
+            $targetAmount = (float) $order->total_bayar_akhir;
+            if (isset($meta['pending_upgrade'])) {
+                $targetAmount += (float) ($meta['pending_upgrade']['price_diff'] ?? 0);
+            }
+            if (isset($meta['pending_delivery'])) {
+                $targetAmount += (float) ($meta['pending_delivery']['delivery_fee'] ?? 0);
+            }
 
-        // If it's already fully paid against the new target amount, skip
-        if ((float)$order->bayar >= $targetAmount && $targetAmount > 0) {
-            return;
-        }
+            // If it's already fully paid against the new target amount, skip
+            if ((float)$order->bayar >= $targetAmount && $targetAmount > 0) {
+                return;
+            }
 
-        $grossAmount = (float) ($notification->gross_amount ?? 0);
-        $paymentType = $notification->payment_type ?? 'unknown';
+            $grossAmount = (float) ($notification->gross_amount ?? 0);
+            $paymentType = $notification->payment_type ?? 'unknown';
 
-        $newBayar = (float)$order->bayar + $grossAmount;
-        
-        $payload = [
-            'bayar' => $newBayar,
-            'jenis_pembayaran' => $paymentType === 'gopay' || $paymentType === 'qris' ? 'qris' : ($paymentType === 'credit_card' ? 'credit_card' : 'transfer'),
-        ];
+            $newBayar = (float)$order->bayar + $grossAmount;
 
-        // Process pending metadata if any
-        $meta = json_decode($order->payment_metadata, true) ?? [];
-        $metaChanged = false;
+            $payload = [
+                'bayar' => $newBayar,
+                'jenis_pembayaran' => $paymentType === 'gopay' || $paymentType === 'qris' ? 'qris' : ($paymentType === 'credit_card' ? 'credit_card' : 'transfer'),
+            ];
 
-        if (isset($meta['pending_upgrade'])) {
-            $payload['layanan_prioritas_id'] = $meta['pending_upgrade']['new_service_id'];
-            $payload['total_biaya_prioritas'] = (float) $order->total_biaya_prioritas + (float) $meta['pending_upgrade']['price_diff'];
-            $payload['total_bayar_akhir'] = (float) $order->total_bayar_akhir + (float) $meta['pending_upgrade']['price_diff'];
-            
-            // Record to upgrade history
-            \App\Models\UpgradeLayanan::create([
-                'transaksi_id' => $orderId,
-                'layanan_asal_id' => $order->layanan_prioritas_id,
-                'layanan_tujuan_id' => $meta['pending_upgrade']['new_service_id'],
-                'biaya_upgrade' => (float) $meta['pending_upgrade']['price_diff'],
-            ]);
+            $metaChanged = false;
 
-            unset($meta['pending_upgrade']);
-            $metaChanged = true;
-        }
+            if (isset($meta['pending_upgrade'])) {
+                $payload['layanan_prioritas_id'] = $meta['pending_upgrade']['new_service_id'];
+                $payload['total_biaya_prioritas'] = (float) $order->total_biaya_prioritas + (float) $meta['pending_upgrade']['price_diff'];
+                $payload['total_bayar_akhir'] = (float) $order->total_bayar_akhir + (float) $meta['pending_upgrade']['price_diff'];
 
-        if (isset($meta['pending_delivery'])) {
-            $payload['pickup_address'] = $meta['pending_delivery']['address'];
-            $payload['pickup_detail_address'] = $meta['pending_delivery']['detail_address'];
-            $payload['pickup_lat'] = $meta['pending_delivery']['lat'] ?? null;
-            $payload['pickup_lng'] = $meta['pending_delivery']['lng'] ?? null;
-            $payload['is_roundtrip'] = true;
-            unset($meta['pending_delivery']);
-            $metaChanged = true;
-        }
+                // Record to upgrade history
+                \App\Models\UpgradeLayanan::create([
+                    'transaksi_id' => $orderId,
+                    'layanan_asal_id' => $order->layanan_prioritas_id,
+                    'layanan_tujuan_id' => $meta['pending_upgrade']['new_service_id'],
+                    'biaya_upgrade' => (float) $meta['pending_upgrade']['price_diff'],
+                ]);
 
-        if ($metaChanged) {
-            $payload['payment_metadata'] = json_encode($meta);
-        }
+                unset($meta['pending_upgrade']);
+                $metaChanged = true;
+            }
 
-        // Check if fully paid against the potentially updated total_bayar_akhir
-        $finalTotal = $payload['total_bayar_akhir'] ?? $order->total_bayar_akhir;
-        if ($newBayar >= (float)$finalTotal) {
-            $payload['payment_status'] = 'paid';
-            $payload['paid_at'] = now();
-        }
+            if (isset($meta['pending_delivery'])) {
+                $payload['pickup_address'] = $meta['pending_delivery']['address'];
+                $payload['pickup_detail_address'] = $meta['pending_delivery']['detail_address'];
+                $payload['pickup_lat'] = $meta['pending_delivery']['lat'] ?? null;
+                $payload['pickup_lng'] = $meta['pending_delivery']['lng'] ?? null;
+                $payload['is_roundtrip'] = true;
+                $payload['total_bayar_akhir'] = (float) ($payload['total_bayar_akhir'] ?? $order->total_bayar_akhir) + (float) ($meta['pending_delivery']['delivery_fee'] ?? 0);
+                unset($meta['pending_delivery']);
+                $metaChanged = true;
+            }
 
-        $this->orderRepository->updatePaymentInformation($orderId, $payload);
+            if ($metaChanged) {
+                $payload['payment_metadata'] = json_encode($meta);
+            }
 
-        Log::info("Midtrans Webhook: Order $orderId marked as paid.");
+            // Check if fully paid against the potentially updated total_bayar_akhir
+            $finalTotal = $payload['total_bayar_akhir'] ?? $order->total_bayar_akhir;
+            if ($newBayar >= (float)$finalTotal) {
+                $payload['payment_status'] = 'paid';
+                $payload['paid_at'] = now();
+            }
+
+            $this->orderRepository->updatePaymentInformation($orderId, $payload);
+
+            Log::info("Midtrans Webhook: Order $orderId marked as paid.");
+        });
     }
 }

@@ -170,34 +170,36 @@
             </div>
 
             {{-- ─────────────────────────────────────────────────────────
-                 PESANAN TERAKHIR CARD
+                 PESANAN TERAKHIR — daftar pesanan terbaru, apapun statusnya,
+                 yang paling atas adalah yang paling baru dibuat.
             ───────────────────────────────────────────────────────── --}}
-            @if($latestOrder)
-            <div class="px-5 py-[6px]">
-                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail', ['id' => $latestOrder['nota_layanan']]) }}'">
-                    <x-zyngga-text variant="base" weight="medium" class="h-8 flex items-center">Pesanan Terakhir</x-zyngga-text>
+            @if($recentOrders->isNotEmpty())
+            <div class="px-5 py-[6px] space-y-3">
+                <x-zyngga-text variant="base" weight="medium" class="h-8 flex items-center">Pesanan Terakhir</x-zyngga-text>
 
+                @foreach($recentOrders as $order)
+                <div class="bg-white rounded-lg p-4 space-y-4 cursor-pointer" onclick="window.location.href='{{ route('order.detail', ['id' => $order['nota_layanan']]) }}'">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 bg-zyngga-yellow-50 rounded-full flex items-center justify-center shrink-0">
-                                <x-zyngga-service-icon :service="$latestOrder['service']" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
+                                <x-zyngga-service-icon :service="$order['service']" class="w-[18px] h-[18px] text-zyngga-yellow-300" />
                             </div>
                             <div class="flex flex-col">
-                                <x-zyngga-text variant="lg" weight="medium">{{ $latestOrder['service'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $latestOrder['date'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="lg" weight="medium">{{ $order['service'] }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $order['date'] }}</x-zyngga-text>
                             </div>
                         </div>
-                        <x-zyngga-status type="secondary" size="M" :icon="$latestOrder['delivery_icon']" :label="$latestOrder['delivery_status']" />
+                        <x-zyngga-status type="secondary" size="M" :icon="$order['delivery_icon']" :label="$order['delivery_status']" />
                     </div>
 
                     <div class="flex items-end justify-between">
                         <div>
                             <x-zyngga-text variant="sm" color="neutral-500" weight="regular">Total</x-zyngga-text>
-                            <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($latestOrder['total'], 0, ',', '.') }}</x-zyngga-text>
+                            <x-zyngga-text variant="base" weight="medium">Rp{{ number_format($order['total'], 0, ',', '.') }}</x-zyngga-text>
                         </div>
-                        <x-zyngga-button 
+                        <x-zyngga-button
                             type="a"
-                            href="{{ route('order.repeat', $latestOrder['id']) }}"
+                            href="{{ route('order.repeat', $order['id']) }}"
                             variant="primary"
                             size="m"
                             label="Ulangi Pesanan"
@@ -205,6 +207,7 @@
                         />
                     </div>
                 </div>
+                @endforeach
             </div>
             @endif
 

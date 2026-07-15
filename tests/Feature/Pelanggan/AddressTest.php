@@ -86,6 +86,30 @@ class AddressTest extends TestCase
         $this->assertSame(3, $user->addresses()->count());
     }
 
+    // ── BB-A03b  batas 3 alamat juga berlaku lewat alur booking pesanan ──────
+    // (storePickupDetails pakai model Address yang sama dengan AddressController
+    // — sebelumnya limit-nya beda: 5 vs 3, jadi bisa dilewati lewat alur ini)
+
+    /** @test */
+    public function tidak_bisa_simpan_lebih_dari_3_alamat_lewat_pickup_details_booking(): void
+    {
+        $user = $this->user();
+        foreach (range(1, 3) as $i) {
+            $this->addressFor($user, $i === 1);
+        }
+
+        $this->actingAs($user)->post(route('order.pickup.details.store'), [
+            'service' => 'regular',
+            'label' => 'Alamat ke-4',
+            'address_detail' => 'Jl. Baru No. 4',
+            'latitude' => -6.21,
+            'longitude' => 106.81,
+            'save_address' => true,
+        ]);
+
+        $this->assertSame(3, $user->addresses()->count(), 'Batas 3 alamat harus konsisten juga lewat alur booking, tidak cuma di halaman Alamat Saya.');
+    }
+
     // ── BB-A04  IDOR: edit alamat milik orang lain ditolak ───────────────────
 
     /** @test */

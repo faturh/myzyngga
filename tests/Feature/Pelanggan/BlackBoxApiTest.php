@@ -30,7 +30,7 @@ class BlackBoxApiTest extends TestCase
     private function createCustomerUser()
     {
         $user = User::factory()->create([
-            'email' => 'login_test@domain.com', 
+            'email' => 'login_test@domain.com',
             'password' => bcrypt('password123'),
             'role' => 'customer'
         ]);
@@ -57,7 +57,8 @@ class BlackBoxApiTest extends TestCase
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
-        dump('--- POST /api/v1/auth/register (VALID) ---', $response->status(), json_encode($response->json()));
+        $response->assertStatus(201)->assertJsonPath('success', true);
+        $this->assertDatabaseHas('users', ['email' => 'valid@domain.com']);
 
         // 1b. Registrasi Invalid (Password Pendek)
         $responseShort = $this->postJson('/api/v1/auth/register', [
@@ -68,9 +69,8 @@ class BlackBoxApiTest extends TestCase
             'password' => '123',
             'password_confirmation' => '123',
         ]);
-        dump('--- POST /api/v1/auth/register (INVALID - PASS PENDEK) ---', $responseShort->status(), json_encode($responseShort->json()));
-        
-        $this->assertTrue(true);
+        $responseShort->assertStatus(422)->assertJsonValidationErrors('password');
+        $this->assertDatabaseMissing('users', ['email' => 'short@domain.com']);
     }
 
     // 2. Alamat Batas Maksimal
@@ -78,7 +78,7 @@ class BlackBoxApiTest extends TestCase
     {
         $user = $this->createCustomerUser();
         $pelangganId = Pelanggan::where('user_id', $user->id)->first()->id;
-        
+
         CustomerAddress::create(['pelanggan_id' => $pelangganId, 'label' => 'A1', 'address' => 'A1', 'lat' => 1, 'lng' => 1]);
         CustomerAddress::create(['pelanggan_id' => $pelangganId, 'label' => 'A2', 'address' => 'A2', 'lat' => 1, 'lng' => 1]);
 
@@ -86,15 +86,16 @@ class BlackBoxApiTest extends TestCase
         $res3 = $this->actingAs($user, 'sanctum')->postJson('/api/v1/customer/addresses', [
             'label' => 'A3', 'address' => 'A3', 'lat' => 1, 'lng' => 1
         ]);
-        dump('--- POST /api/v1/customer/addresses (VALID - 3RD ADDRESS) ---', $res3->status(), json_encode($res3->json()));
+        $res3->assertStatus(201);
+        $this->assertDatabaseHas('customer_addresses', ['pelanggan_id' => $pelangganId, 'label' => 'A3']);
 
         // 2b. Address Limit Invalid (4th)
         $res4 = $this->actingAs($user, 'sanctum')->postJson('/api/v1/customer/addresses', [
             'label' => 'A4', 'address' => 'A4', 'lat' => 1, 'lng' => 1
         ]);
-        dump('--- POST /api/v1/customer/addresses (INVALID - 4TH ADDRESS) ---', $res4->status(), json_encode($res4->json()));
-        
-        $this->assertTrue(true);
+        $res4->assertStatus(422);
+        $this->assertDatabaseMissing('customer_addresses', ['pelanggan_id' => $pelangganId, 'label' => 'A4']);
+        $this->assertSame(3, CustomerAddress::where('pelanggan_id', $pelangganId)->count());
     }
 
     // 3. Alamat Koordinat Peta
@@ -106,15 +107,13 @@ class BlackBoxApiTest extends TestCase
         $resValid = $this->actingAs($user, 'sanctum')->postJson('/api/v1/customer/addresses', [
             'label' => 'Valid', 'address' => 'Valid', 'lat' => -6.2, 'lng' => 106.8
         ]);
-        dump('--- POST /api/v1/customer/addresses (VALID LAT/LNG) ---', $resValid->status(), json_encode($resValid->json()));
+        $resValid->assertStatus(201);
 
-        // 3b. Invalid Lat Lng (Null)
+        // 3b. Invalid Lat Lng (Null) — lat/lng wajib diisi saat membuat alamat baru
         $resInvalid = $this->actingAs($user, 'sanctum')->postJson('/api/v1/customer/addresses', [
             'label' => 'Invalid', 'address' => 'Invalid', 'lat' => null, 'lng' => null
         ]);
-        dump('--- POST /api/v1/customer/addresses (INVALID LAT/LNG) ---', $resInvalid->status(), json_encode($resInvalid->json()));
-
-        $this->assertTrue(true);
+        $resInvalid->assertStatus(422)->assertJsonValidationErrors(['lat', 'lng']);
     }
 
     // 4. Buat Pesanan
@@ -122,22 +121,29 @@ class BlackBoxApiTest extends TestCase
     {
         $user = $this->createCustomerUser();
         $pelangganId = Pelanggan::where('user_id', $user->id)->first()->id;
-        
-        $cabang = Cabang::create(['nama' => 'Pusat', 'lokasi' => 'Pusat', 'deskripsi' => 'Pusat']);
+
+        // Order creation butuh admin/pegawai yang bisa di-assign otomatis (lihat
+        // EloquentOrderRepository::firstAssignablePegawaiId) — tanpa ini, order
+        // gagal dengan 422 meski data yang dikirim valid.
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->assignRole('admin');
+
+        $cabang = Cabang::create(['nama' => 'Pusat', 'lokasi' => 'Pusat', 'alamat' => 'Pusat']);
         $prio = LayananPrioritas::create(['nama' => 'Reguler', 'cabang_id' => $cabang->id, 'harga' => 0, 'prioritas' => 1]);
 
         // 4a. Buat Pesanan Lengkap
         $resComplete = $this->actingAs($user, 'sanctum')->postJson('/api/v1/orders', [
             'pelanggan_id' => $pelangganId,
             'pickup_address' => 'Jalan Coba 123',
-            'pickup_date' => '2026-10-10',
+            'pickup_date' => now()->toDateString(),
             'pickup_time' => '10:00',
             'payment_method' => 'cash',
             'cabang_id' => $cabang->id,
             'layanan_prioritas_id' => $prio->id,
             'estimated_total' => 50000,
         ]);
-        dump('--- POST /api/v1/orders (VALID LENGKAP) ---', $resComplete->status(), json_encode($resComplete->json()));
+        $resComplete->assertStatus(201);
+        $this->assertDatabaseHas('transaksi', ['pelanggan_id' => $pelangganId, 'pickup_address' => 'Jalan Coba 123']);
 
         // 4b. Buat Pesanan Tanggal Invalid
         $resInvalidDate = $this->actingAs($user, 'sanctum')->postJson('/api/v1/orders', [
@@ -150,9 +156,7 @@ class BlackBoxApiTest extends TestCase
             'layanan_prioritas_id' => $prio->id,
             'estimated_total' => 50000,
         ]);
-        dump('--- POST /api/v1/orders (INVALID DATE) ---', $resInvalidDate->status(), json_encode($resInvalidDate->json()));
-
-        $this->assertTrue(true);
+        $resInvalidDate->assertStatus(422)->assertJsonValidationErrors('pickup_date');
     }
 
     // 5. Pelacakan Pesanan
@@ -160,11 +164,11 @@ class BlackBoxApiTest extends TestCase
     {
         $user = $this->createCustomerUser();
         $pelangganId = Pelanggan::where('user_id', $user->id)->first()->id;
-        
-        $cabang = Cabang::create(['nama' => 'Pusat', 'lokasi' => 'Pusat', 'deskripsi' => 'Pusat']);
+
+        $cabang = Cabang::create(['nama' => 'Pusat', 'lokasi' => 'Pusat', 'alamat' => 'Pusat']);
         $prio = LayananPrioritas::create(['nama' => 'Reguler', 'cabang_id' => $cabang->id, 'harga' => 0, 'prioritas' => 1]);
 
-        $order = Transaksi::create([
+        Transaksi::create([
             'id' => Str::uuid(),
             'nota' => 'ZYG-TEST-123',
             'status' => 'created',
@@ -172,35 +176,31 @@ class BlackBoxApiTest extends TestCase
             'waktu' => now(),
             'total_biaya_layanan' => 10000,
             'total_biaya_prioritas' => 0,
-            'total_biaya_antar' => 0,
             'total_biaya_layanan_tambahan' => 0,
-            'total_biaya_penjemputan' => 0,
             'bayar' => 0,
-            'sisa_bayar' => 0,
             'kembalian' => 0,
             'total_bayar_akhir' => 10000,
             'jenis_pembayaran' => 'cash',
             'layanan_prioritas_id' => $prio->id,
             'cabang_id' => $cabang->id,
-            'pegawai_id' => $user->id,
+            'pegawai_id' => (string) $user->id,
             'payment_status' => 'pending',
             'is_roundtrip' => false,
         ]);
 
-        // 5a. Lacak Valid
+        // 5a. Lacak Valid — kontrak endpoint ini pakai 'query' + 'phone_last_4' (4 digit
+        // terakhir), bukan 'nota'/'phone_digits'.
         $resValid = $this->postJson('/api/v1/orders/track', [
-            'nota' => 'ZYG-TEST-123',
-            'phone_digits' => '8888'
+            'query' => 'ZYG-TEST-123',
+            'phone_last_4' => '8888',
         ]);
-        dump('--- POST /api/v1/orders/track (VALID) ---', $resValid->status(), json_encode($resValid->json()));
+        $resValid->assertStatus(200)->assertJsonPath('success', true);
 
-        // 5b. Lacak Tanpa Nota
+        // 5b. Lacak Tanpa Query
         $resInvalid = $this->postJson('/api/v1/orders/track', [
-            'phone_digits' => '8888'
+            'phone_last_4' => '8888',
         ]);
-        dump('--- POST /api/v1/orders/track (INVALID - TANPA NOTA) ---', $resInvalid->status(), json_encode($resInvalid->json()));
-
-        $this->assertTrue(true);
+        $resInvalid->assertStatus(422)->assertJsonValidationErrors('query');
     }
 
     // 6. Komplain
@@ -208,8 +208,8 @@ class BlackBoxApiTest extends TestCase
     {
         $user = $this->createCustomerUser();
         $pelangganId = Pelanggan::where('user_id', $user->id)->first()->id;
-        
-        $cabang = Cabang::create(['nama' => 'Pusat', 'lokasi' => 'Pusat', 'deskripsi' => 'Pusat']);
+
+        $cabang = Cabang::create(['nama' => 'Pusat', 'lokasi' => 'Pusat', 'alamat' => 'Pusat']);
         $prio = LayananPrioritas::create(['nama' => 'Reguler', 'cabang_id' => $cabang->id, 'harga' => 0, 'prioritas' => 1]);
 
         $order = Transaksi::create([
@@ -220,57 +220,45 @@ class BlackBoxApiTest extends TestCase
             'waktu' => now(),
             'total_biaya_layanan' => 10000,
             'total_biaya_prioritas' => 0,
-            'total_biaya_antar' => 0,
             'total_biaya_layanan_tambahan' => 0,
-            'total_biaya_penjemputan' => 0,
             'bayar' => 0,
-            'sisa_bayar' => 0,
             'kembalian' => 0,
             'total_bayar_akhir' => 10000,
             'jenis_pembayaran' => 'cash',
             'layanan_prioritas_id' => $prio->id,
             'cabang_id' => $cabang->id,
-            'pegawai_id' => $user->id,
+            'pegawai_id' => (string) $user->id,
             'payment_status' => 'pending',
             'is_roundtrip' => false,
         ]);
 
-        Storage::fake('public');
-
-        \Illuminate\Http\UploadedFile::macro('storeOnCloudinary', function ($path = null) {
-            return new class {
-                public function getSecurePath() {
-                    return 'https://res.cloudinary.com/demo/image/upload/sample.jpg';
-                }
-            };
-        });
+        Storage::fake('cloudinary');
 
         // 6a. Komplain Foto Valid
         $file = UploadedFile::fake()->image('bukti.jpg');
         $resPhoto = $this->actingAs($user, 'sanctum')->post("/api/v1/orders/{$order->id}/complaint", [
             'content' => 'Rusak ada foto',
             'issue_types' => ['lainnya'],
-            'issue_image' => $file
+            'issue_image' => $file,
         ], ['Accept' => 'application/json']);
-        dump('--- POST /api/v1/orders/{id}/complaint (VALID - DENGAN FOTO) ---', $resPhoto->status(), json_encode($resPhoto->json()));
+        $resPhoto->assertStatus(200)->assertJsonPath('success', true);
+        $this->assertDatabaseHas('complaints', ['transaksi_id' => $order->id, 'pelanggan_id' => $pelangganId]);
 
         // 6b. Komplain Ekstensi Terlarang
         $filePdf = UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf');
         $resPdf = $this->actingAs($user, 'sanctum')->post("/api/v1/orders/{$order->id}/complaint", [
             'content' => 'Rusak pdf',
             'issue_types' => ['lainnya'],
-            'issue_image' => $filePdf
+            'issue_image' => $filePdf,
         ], ['Accept' => 'application/json']);
-        dump('--- POST /api/v1/orders/{id}/complaint (INVALID - EKSTENSI PDF) ---', $resPdf->status(), json_encode($resPdf->json()));
-
-        $this->assertTrue(true);
+        $resPdf->assertStatus(422);
     }
 
     // 7. Notifikasi
     public function test_notifikasi()
     {
         $user = $this->createCustomerUser();
-        
+
         $user2 = User::factory()->create(['email' => 'user2@domain.com', 'role' => 'customer']);
         $user2->assignRole('customer');
         Pelanggan::create([
@@ -280,7 +268,7 @@ class BlackBoxApiTest extends TestCase
             'alamat' => 'Jalan U2',
             'jenis_kelamin' => 'L',
         ]);
-        
+
         $pelanggan1 = Pelanggan::where('user_id', $user->id)->first();
         $pelanggan2 = Pelanggan::where('user_id', $user2->id)->first();
 
@@ -300,12 +288,12 @@ class BlackBoxApiTest extends TestCase
 
         // 7a. Akses Milik Sendiri (Valid)
         $resOwned = $this->actingAs($user, 'sanctum')->postJson("/api/v1/customer/notifications/{$notif1->id}/read");
-        dump('--- POST /api/v1/customer/notifications/{id}/read (VALID - MILIK SENDIRI) ---', $resOwned->status(), json_encode($resOwned->json()));
+        $resOwned->assertStatus(200);
+        $this->assertDatabaseHas('notifikasi', ['id' => $notif1->id, 'is_read' => true]);
 
-        // 7b. Akses Milik Orang Lain (Invalid - IDOR)
+        // 7b. Akses Milik Orang Lain (Invalid - IDOR) — harus ditolak
         $resOthers = $this->actingAs($user, 'sanctum')->postJson("/api/v1/customer/notifications/{$notif2->id}/read");
-        dump('--- POST /api/v1/customer/notifications/{id}/read (INVALID - IDOR ORANG LAIN) ---', $resOthers->status(), json_encode($resOthers->json()));
-
-        $this->assertTrue(true);
+        $resOthers->assertStatus(403);
+        $this->assertDatabaseHas('notifikasi', ['id' => $notif2->id, 'is_read' => false]);
     }
 }

@@ -53,14 +53,14 @@
                         <div class="space-y-2">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-full bg-zyngga-yellow-50 flex items-center justify-center">
-                                    <x-zyngga-service-icon service="{{ $complaint->transaksi->tipe_layanan ?? 'Express' }}" class="w-4 h-4 text-zyngga-yellow-300" />
+                                    <x-zyngga-service-icon service="{{ $complaint->transaksi->layananPrioritas->nama ?? '-' }}" class="w-4 h-4 text-zyngga-yellow-300" />
                                 </div>
-                                <x-zyngga-text variant="lg" weight="medium" color="neutral-900">{{ $complaint->transaksi->tipe_layanan ?? 'Express' }}</x-zyngga-text>
+                                <x-zyngga-text variant="lg" weight="medium" color="neutral-900">{{ $complaint->transaksi->layananPrioritas->nama ?? '-' }}</x-zyngga-text>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->nota_layanan ?? $complaint->transaksi_id }}</x-zyngga-text>
-                                <button 
-                                    @click="navigator.clipboard.writeText('{{ $complaint->transaksi->nota_layanan ?? $complaint->transaksi_id }}');"
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->nota ?? $complaint->transaksi_id }}</x-zyngga-text>
+                                <button
+                                    @click="navigator.clipboard.writeText('{{ $complaint->transaksi->nota ?? $complaint->transaksi_id }}');"
                                     class="text-zyngga-blue-300 hover:text-zyngga-blue-400 transition-colors"
                                 >
                                     <i data-feather="copy" class="w-4 h-4"></i>
@@ -87,7 +87,7 @@
                         <div class="space-y-2.5">
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Kasir</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->admin->user->name ?? 'Azhep' }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->pegawai->name ?? 'Belum ditugaskan' }}</x-zyngga-text>
                             </div>
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Tanggal Komplain</x-zyngga-text>

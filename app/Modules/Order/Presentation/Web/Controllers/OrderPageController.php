@@ -45,7 +45,7 @@ class OrderPageController
 
     public function booking(Request $request)
     {
-        $payload = $this->webService->bookingData();
+        $payload = $this->webService->bookingData($request->user());
         if ($payload === null) {
             return redirect()->route('dashboard');
         }
@@ -188,6 +188,18 @@ class OrderPageController
 
     public function storeComplaint(Request $request, string $id)
     {
+        // Terima juga issue_image dikirim sebagai satu file tunggal (bukan array),
+        // supaya klien yang tidak tahu field ini harus dibungkus array tidak
+        // langsung ditolak validasi.
+        // Baca langsung dari FileBag Symfony (belum di-cache) — Request::file()/allFiles()
+        // meng-cache hasilnya di $convertedFiles, jadi mutasi harus terjadi SEBELUM
+        // method Laravel manapun (hasFile/file/all) dipanggil, kalau tidak mutasinya
+        // tidak akan pernah terlihat oleh validate() maupun kode di bawahnya.
+        $rawIssueImage = $request->files->get('issue_image');
+        if ($rawIssueImage instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
+            $request->files->set('issue_image', [$rawIssueImage]);
+        }
+
         $request->validate([
             'content' => 'nullable|string|max:1000',
             'issue_description' => 'nullable|string|max:1000',
@@ -209,6 +221,8 @@ class OrderPageController
             }
             return redirect()->route('order.detail', ['id' => $id])
                 ->with('success', 'Komplain berhasil dikirim');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             if ($request->wantsJson() || $request->is('api/*')) {
                 return response()->json([
@@ -296,6 +310,8 @@ class OrderPageController
             }
             return redirect()->route('order.detail', ['id' => $id])
                 ->with('success', 'Lokasi pengantaran berhasil diajukan');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -309,6 +325,9 @@ class OrderPageController
         $oldState = session()->get('pending_rollback_delivery_' . $id);
         if ($oldState) {
             $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
+            if ($order && (!$order->pelanggan || $order->pelanggan->user_id !== $request->user()->id)) {
+                abort(403);
+            }
             if ($order) {
                 $order->pickup_address = $oldState['pickup_address'];
                 $order->pickup_detail_address = $oldState['pickup_detail_address'];
@@ -352,6 +371,8 @@ class OrderPageController
         try {
             $data = $this->webService->upgradeData($id, $request->user());
             return view('pelanggan.order.upgrade', $data);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             return redirect()->route('order.detail', ['id' => $id])->withErrors(['order' => $e->getMessage()]);
         }
@@ -386,6 +407,8 @@ class OrderPageController
                 ]);
             }
             return redirect()->route('order.detail', ['id' => $id])->with('success', 'Pesanan berhasil di-upgrade!');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -399,6 +422,9 @@ class OrderPageController
         $oldState = session()->get('pending_rollback_upgrade_' . $id);
         if ($oldState) {
             $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
+            if ($order && (!$order->pelanggan || $order->pelanggan->user_id !== $request->user()->id)) {
+                abort(403);
+            }
             if ($order) {
                 $order->layanan_prioritas_id = $oldState['layanan_prioritas_id'];
                 $order->total_biaya_prioritas = $oldState['total_biaya_prioritas'];
@@ -423,6 +449,8 @@ class OrderPageController
         try {
             $data = $this->webService->paymentData($id, $request->user());
             return view('pelanggan.order.payment', $data);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             return redirect()->route('order.detail', ['id' => $id])->withErrors(['order' => $e->getMessage()]);
         }
@@ -437,6 +465,8 @@ class OrderPageController
         try {
             $this->webService->updatePayment($id, $request->payment_method, $request->user());
             return redirect()->route('order.detail', ['id' => $id])->with('success', 'Metode pembayaran berhasil diubah!');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             return redirect()->route('order.detail', ['id' => $id])->withErrors(['order' => $e->getMessage()]);
         }
@@ -466,7 +496,7 @@ class OrderPageController
         ]);
 
         try {
-            $response = $this->webService->processCoreApiPayment($id, $request->method);
+            $response = $this->webService->processCoreApiPayment($id, $request->method, $request->user());
             
             $redirectUrl = route('order.payment-instruction', ['id' => $id]);
             if ($request->method === 'gopay') {
@@ -495,6 +525,8 @@ class OrderPageController
                 'redirect' => $redirectUrl,
                 'deeplink' => $deeplinkUrl
             ]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -509,7 +541,7 @@ class OrderPageController
 
         // Fetch the pending payment instructions from the database or cache.
         // For simplicity, we can fetch it via OrderWebService
-        $instruction = $this->webService->getPaymentInstruction($id);
+        $instruction = $this->webService->getPaymentInstruction($id, $request->user());
 
         if (!$instruction) {
             return redirect()->route('order.detail', ['id' => $id])->with('error', 'Instruksi pembayaran tidak ditemukan.');
@@ -523,7 +555,7 @@ class OrderPageController
 
     public function paymentStatus(Request $request, string $id)
     {
-        $status = $this->webService->checkPaymentStatus($id);
+        $status = $this->webService->checkPaymentStatus($id, $request->user());
         return response()->json([
             'success' => true,
             'status' => $status
@@ -533,8 +565,10 @@ class OrderPageController
     public function paymentCancel(Request $request, string $id)
     {
         try {
-            $this->webService->cancelCoreApiPayment($id);
+            $this->webService->cancelCoreApiPayment($id, $request->user());
             return response()->json(['success' => true]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }

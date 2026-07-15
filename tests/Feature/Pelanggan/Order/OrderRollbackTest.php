@@ -129,6 +129,38 @@ class OrderRollbackTest extends TestCase
         $this->assertEquals($originalServiceId, $order->layanan_prioritas_id, 'Setelah rollback, settlement pembayaran tidak boleh menerapkan upgrade layanan yang sudah dibatalkan.');
     }
 
+    public function test_batalkan_popup_pembayaran_tidak_menghapus_pending_upgrade_yang_belum_dibatalkan(): void
+    {
+        [$user, $order] = $this->makeCustomerOrder('cancel-payment@example.com', 'cancel-payment');
+
+        // Simulasikan pending_upgrade aktif (sudah minta upgrade, belum bayar) DAN
+        // sedang di tengah percobaan charge Midtrans (midtrans_order_id ke-set).
+        $order->update([
+            'midtrans_order_id' => $order->id . '-123456',
+            'payment_metadata' => json_encode([
+                'pending_upgrade' => ['new_service_id' => 99, 'price_diff' => 15000],
+                'payment_type' => 'qris',
+                'transaction_status' => 'pending',
+            ]),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('order.payment-cancel', ['id' => $order->id]))
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $order->refresh();
+        $this->assertNull($order->midtrans_order_id, 'midtrans_order_id harus dibersihkan setelah pembayaran dibatalkan.');
+
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $this->assertArrayHasKey(
+            'pending_upgrade',
+            $meta,
+            'Membatalkan popup pembayaran tidak boleh ikut menghapus pending_upgrade yang belum pernah dibatalkan pelanggan lewat rollback.'
+        );
+        $this->assertEquals(15000, $meta['pending_upgrade']['price_diff']);
+    }
+
     /**
      * @return array{0: User, 1: Transaksi, 2: Cabang}
      */
