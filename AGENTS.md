@@ -98,8 +98,8 @@ Aturan tegas:
 - Jika ada perubahan pelanggan, ikuti flow publish:
   - commit ke `Backend-Pelanggan`
   - push ke `origin/Backend-Pelanggan`
-  - merge ke `Finalisasi(Sebelum-merge-main)`
-  - push ke `origin/Finalisasi(Sebelum-merge-main)`
+  - merge ke `develop`
+  - push ke `origin/develop`
   - merge ke `main`
   - push ke `origin/main`
 
