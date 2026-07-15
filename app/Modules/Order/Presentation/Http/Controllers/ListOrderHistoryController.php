@@ -16,7 +16,7 @@ class ListOrderHistoryController
 
     public function __invoke(Request $request)
     {
-        $perPage = (int) $request->integer('per_page', 10);
+        $perPage = min(100, max(1, (int) $request->integer('per_page', 10)));
         $paginator = $this->service->historyForUser($request->user(), $perPage);
 
         $paginator->getCollection()->each(function ($order) {

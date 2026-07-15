@@ -134,6 +134,10 @@ class GoogleAuthController extends Controller
         
         $user->assignRole('customer');
 
+        // Catatan: auto-link ke Pelanggan guest berdasarkan nomor telepon dibatalkan
+        // — nomor telepon di sini tidak diverifikasi, jadi rawan account-takeover
+        // (siapapun yang tahu nomor telepon korban bisa "mewarisi" data guest
+        // mereka). Perlu verifikasi OTP dulu sebelum fitur ini aman diaktifkan.
         \App\Models\Pelanggan::create([
             'user_id' => $user->id,
             'nama' => $user->name,

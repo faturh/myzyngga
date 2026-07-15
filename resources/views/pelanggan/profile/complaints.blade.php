@@ -91,11 +91,11 @@
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-zyngga-yellow-50 flex items-center justify-center shrink-0">
-                                        <x-zyngga-service-icon service="{{ $complaint->transaksi->tipe_layanan ?? 'Express' }}" class="w-5 h-5 text-zyngga-yellow-300" />
+                                        <x-zyngga-service-icon service="{{ $complaint->transaksi->layananPrioritas->nama ?? '-' }}" class="w-5 h-5 text-zyngga-yellow-300" />
                                     </div>
                                     <div class="flex flex-col">
-                                        <x-zyngga-text variant="lg" weight="medium" color="neutral-900">{{ $complaint->transaksi->tipe_layanan ?? 'Express' }}</x-zyngga-text>
-                                        <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->nota_layanan ?? $complaint->transaksi_id }}</x-zyngga-text>
+                                        <x-zyngga-text variant="lg" weight="medium" color="neutral-900">{{ $complaint->transaksi->layananPrioritas->nama ?? '-' }}</x-zyngga-text>
+                                        <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->nota ?? $complaint->transaksi_id }}</x-zyngga-text>
                                     </div>
                                 </div>
                                 <x-zyngga-status 
@@ -109,7 +109,7 @@
                             <div class="space-y-2.5 mt-5">
                                 <div class="flex justify-between items-center">
                                     <x-zyngga-text variant="sm" color="neutral-900" weight="medium">Kasir</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->admin->user->name ?? 'Azhep' }}</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" color="neutral-500">{{ $complaint->transaksi->pegawai->name ?? 'Belum ditugaskan' }}</x-zyngga-text>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <x-zyngga-text variant="sm" color="neutral-900" weight="medium">Tanggal Komplain</x-zyngga-text>

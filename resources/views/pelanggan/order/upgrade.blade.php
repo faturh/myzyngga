@@ -82,7 +82,7 @@
             };
             return ['id' => (string) $u['id'], 'name' => $u['name'], 'eta' => $originalEta, 'workingHours' => $workingHours, 'price_diff' => $u['price_diff'], 'is_available' => $u['is_available']];
         }, $upgrades)) }},
-        totalWeight: {{ collect($order['items'])->sum(fn($i) => (float) $i['qty']) }},
+        totalWeight: {{ $totalWeightKg }},
         baseTotal: {{ $order['payment_status'] === 'Lunas' ? 0 : $order['total'] }},
         init() {
             const firstAvailable = this.upgradesData.find(u => u.is_available);
@@ -248,7 +248,7 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <x-zyngga-text variant="sm" color="neutral-900">Biaya Pengiriman</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp0</x-zyngga-text>
+                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['delivery_fee'] ?? 0, 0, ',', '.') }}</x-zyngga-text>
                                 </div>
                             </div>
 

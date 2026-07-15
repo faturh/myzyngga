@@ -42,7 +42,12 @@ class ApiAuthController extends Controller
 
         $user->assignRole('customer');
 
-        // Buat row Pelanggan secara otomatis agar profil & riwayat order langsung tersedia
+        // Catatan: sempat dicoba auto-link ke Pelanggan guest yang punya nomor
+        // telepon sama (supaya riwayat order guest ikut kebawa), tapi itu dibatalkan
+        // karena nomor telepon di form registrasi tidak diverifikasi (rawan
+        // account-takeover — siapapun yang tahu nomor telepon korban bisa
+        // "mewarisi" data guest mereka). Perlu verifikasi OTP dulu sebelum
+        // fitur "gabungkan riwayat guest" ini aman untuk diaktifkan lagi.
         $pelanggan = Pelanggan::create([
             'user_id'       => $user->id,
             'nama'          => $request->name,

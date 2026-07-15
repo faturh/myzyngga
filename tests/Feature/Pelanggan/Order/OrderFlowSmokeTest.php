@@ -68,7 +68,7 @@ class OrderFlowSmokeTest extends TestCase
             ->first();
 
         $this->assertNotNull($order);
-        $response->assertRedirect(route('order.detail', ['id' => $order->id]));
+        $response->assertRedirect(route('order.detail', ['id' => $order->nota]));
         $this->assertSame('cash', $order->jenis_pembayaran);
         $this->assertSame('pending', $order->payment_status);
         $this->assertSame('Jalan Testing Nomor 1', $order->pickup_address);
@@ -160,6 +160,14 @@ class OrderFlowSmokeTest extends TestCase
             'default_payment_method' => 'qris',
         ])->assertOk()
             ->assertJsonPath('data.preferences.default_payment_method', 'qris');
+
+        $preferenceOwner = Pelanggan::query()->where('user_id', $customer->id)->first();
+        $this->assertDatabaseHas('customer_preferences', [
+            'pelanggan_id' => $preferenceOwner->id,
+            'default_parfum' => 'ocean',
+            'default_note' => 'Jangan pakai pemutih',
+            'default_payment_method' => 'qris',
+        ]);
 
         $profileResponse = $this->getJson('/api/v1/customer/profile')
             ->assertOk()
@@ -291,6 +299,138 @@ class OrderFlowSmokeTest extends TestCase
         $latestLog = \App\Models\ListHistoryPengerjaan::orderBy('id', 'desc')->first();
         $this->assertEquals(4, $latestLog->status_sebelumnya);
         $this->assertEquals(2, $latestLog->status_sesudahnya);
+    }
+
+    public function test_preferensi_tersimpan_dipakai_sebagai_default_saat_booking_dan_konfirmasi_order(): void
+    {
+        $this->createAdminUser();
+        $customer = $this->createCustomerUser('preferensi@example.com', 'preferensi');
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+
+        $pelanggan = Pelanggan::create([
+            'user_id' => $customer->id,
+            'nama' => 'Preferensi Test',
+            'telepon' => '081200001111',
+            'alamat' => 'Alamat Awal',
+            'jenis_kelamin' => 'L',
+        ]);
+
+        \App\Models\CustomerPreference::create([
+            'pelanggan_id' => $pelanggan->id,
+            'default_parfum' => 'Lavender',
+            'default_note' => 'Tolong pisahkan baju putih',
+            'default_payment_method' => 'transfer',
+        ]);
+
+        $this->actingAs($customer);
+
+        $this->post(route('order.pickup.store'), [
+            'service' => 'regular',
+            'address' => 'Jalan Preferensi No. 1',
+            'lat' => -6.2,
+            'lng' => 106.8,
+        ])->assertRedirect(route('order.booking'));
+
+        // Halaman booking harus pre-fill dari preferensi tersimpan, bukan hardcode "Fresh"/kosong.
+        $this->get(route('order.booking'))
+            ->assertOk()
+            ->assertSee('Lavender')
+            ->assertSee('Tolong pisahkan baju putih');
+
+        // Form booking tidak punya field pemilihan metode bayar sendiri — konfirmasi
+        // tanpa mengirim 'payment' sama sekali, seperti yang benar-benar terjadi di form asli.
+        $response = $this->post(route('order.confirm'), [
+            'service' => 'regular',
+            'address' => 'Jalan Preferensi No. 1',
+            'lat' => -6.2,
+            'lng' => 106.8,
+            'selected_service_id' => 'regular',
+            'pickup_date' => 'today',
+            'pickup_time' => '09:00',
+            'parfum' => 'Lavender',
+            'catatan' => 'Tolong pisahkan baju putih',
+        ]);
+
+        $order = Transaksi::query()->where('pelanggan_id', $pelanggan->id)->latest('created_at')->first();
+
+        $this->assertNotNull($order);
+        $response->assertRedirect(route('order.detail', ['id' => $order->nota]));
+        $this->assertSame(
+            'transfer',
+            $order->jenis_pembayaran,
+            'Tanpa metode bayar eksplisit, order harus pakai default_payment_method dari preferensi tersimpan pelanggan, bukan hardcode qris.'
+        );
+    }
+
+    public function test_dashboard_pesanan_terakhir_hanya_menampilkan_order_yang_sudah_selesai(): void
+    {
+        $this->createAdminUser();
+        $customer = $this->createCustomerUser('dashboard-recent@example.com', 'dashboard-recent');
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+
+        $pelanggan = Pelanggan::query()->where('user_id', $customer->id)->first();
+        if (!$pelanggan) {
+            $pelanggan = Pelanggan::create([
+                'user_id' => $customer->id,
+                'nama' => 'Dashboard Recent',
+                'telepon' => '081200002222',
+                'alamat' => 'Alamat Awal',
+                'jenis_kelamin' => 'L',
+            ]);
+        }
+
+        // Order lama, sudah selesai (list_status_pengerjaan_id = 5).
+        $oldFinished = Transaksi::create([
+            'nota' => 'ZYG-OLD-DONE',
+            'waktu' => now()->subDays(5),
+            'total_biaya_layanan' => 10000,
+            'total_biaya_prioritas' => 0,
+            'total_biaya_layanan_tambahan' => 0,
+            'total_bayar_akhir' => 10000,
+            'jenis_pembayaran' => 'cash',
+            'bayar' => 10000,
+            'kembalian' => 0,
+            'layanan_prioritas_id' => $layananPrioritas->id,
+            'pelanggan_id' => $pelanggan->id,
+            'pegawai_id' => '0',
+            'cabang_id' => $cabang->id,
+            'payment_status' => 'paid',
+        ]);
+        $oldFinished->pending_status_id = 5;
+        $oldFinished->save();
+
+        // Order paling baru, TAPI masih diproses (belum status "Selesai").
+        $newInProgress = Transaksi::create([
+            'nota' => 'ZYG-NEW-PROGRESS',
+            'waktu' => now(),
+            'total_biaya_layanan' => 15000,
+            'total_biaya_prioritas' => 0,
+            'total_biaya_layanan_tambahan' => 0,
+            'total_bayar_akhir' => 15000,
+            'jenis_pembayaran' => 'cash',
+            'bayar' => 0,
+            'kembalian' => 0,
+            'layanan_prioritas_id' => $layananPrioritas->id,
+            'pelanggan_id' => $pelanggan->id,
+            'pegawai_id' => '0',
+            'cabang_id' => $cabang->id,
+            'payment_status' => 'pending',
+        ]);
+
+        // "Pesanan Terakhir" cuma dipakai untuk tombol "Ulangi Pesanan", yang
+        // cuma masuk akal untuk pesanan yang sudah tuntas (dikonfirmasi dengan
+        // Syihan) — jadi order yang masih diproses TIDAK boleh muncul di sana,
+        // walaupun itu order paling baru. Order yang masih diproses tetap
+        // ditampilkan lewat "Pesanan Aktif", bukan "Pesanan Terakhir".
+        $data = app(\App\Modules\Order\Application\Services\OrderWebService::class)->dashboardData($customer);
+
+        $this->assertNotNull($data['latestOrder']);
+        $this->assertSame('ZYG-OLD-DONE', $data['latestOrder']['nota_layanan']);
+
+        $this->assertNotNull($data['activeOrder']);
+        $this->assertSame('ZYG-NEW-PROGRESS', $data['activeOrder']['nota_layanan']);
+
+        $this->actingAs($customer)->get(route('dashboard'))->assertOk();
     }
 
     private function createAdminUser(): User

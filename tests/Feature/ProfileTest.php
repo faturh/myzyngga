@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Pelanggan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
@@ -48,6 +49,38 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('08123456789', $user->phone);
+    }
+
+    public function test_profile_information_update_juga_menyinkronkan_data_pelanggan(): void
+    {
+        $user = User::factory()->create(['name' => 'Nama Lama']);
+        $pelanggan = Pelanggan::create([
+            'user_id' => $user->id,
+            'nama' => 'Nama Lama',
+            'jenis_kelamin' => 'L',
+            'telepon' => '080000000000',
+            'alamat' => null,
+        ]);
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', 'Nama Baru')
+            ->set('phone', '08199998888')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $pelanggan->refresh();
+        $this->assertSame(
+            'Nama Baru',
+            $pelanggan->nama,
+            'Update nama profil harus tersinkron ke Pelanggan.nama — kalau tidak, riwayat pesanan, nota, dan komplain tetap menampilkan nama lama selamanya.'
+        );
+        $this->assertSame(
+            '08199998888',
+            $pelanggan->telepon,
+            'Update telepon profil harus tersinkron ke Pelanggan.telepon.'
+        );
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

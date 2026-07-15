@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Address;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,34 +47,43 @@ class AddressController extends Controller
         ]);
 
         $user = Auth::user();
-        
-        // Limit to 3 addresses
-        if ($user->addresses()->count() >= 3) {
-            return back()->with('error', 'Kamu hanya bisa menyimpan maksimal 3 alamat.');
+
+        try {
+            $address = DB::transaction(function () use ($user, $request) {
+                // Lock the user row so two concurrent "simpan alamat" requests can't
+                // both pass the count check before either insert commits.
+                User::query()->where('id', $user->id)->lockForUpdate()->first();
+
+                if ($user->addresses()->count() >= 3) {
+                    throw new \RuntimeException('Kamu hanya bisa menyimpan maksimal 3 alamat.');
+                }
+
+                // Determine if this address should be primary
+                $isPrimaryRequest = $request->boolean('is_primary');
+                $isFirstAddress = $user->addresses()->count() === 0;
+
+                $shouldBePrimary = $isPrimaryRequest || $isFirstAddress;
+
+                if ($shouldBePrimary) {
+                    // Set all others to false if this one is going to be primary
+                    $user->addresses()->update(['is_primary' => false]);
+                } else if ($user->addresses()->count() === 0) {
+                    // First address MUST be primary
+                    $shouldBePrimary = true;
+                }
+
+                return $user->addresses()->create([
+                    'label' => $request->label,
+                    'address_detail' => $request->address_detail,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'note' => $request->note,
+                    'is_primary' => $shouldBePrimary,
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        // Determine if this address should be primary
-        $isPrimaryRequest = $request->boolean('is_primary');
-        $isFirstAddress = $user->addresses()->count() === 0;
-        
-        $shouldBePrimary = $isPrimaryRequest || $isFirstAddress;
-
-        if ($shouldBePrimary) {
-            // Set all others to false if this one is going to be primary
-            $user->addresses()->update(['is_primary' => false]);
-        } else if ($user->addresses()->count() === 0) {
-            // First address MUST be primary
-            $shouldBePrimary = true;
-        }
-
-        $address = $user->addresses()->create([
-            'label' => $request->label,
-            'address_detail' => $request->address_detail,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'note' => $request->note,
-            'is_primary' => $shouldBePrimary,
-        ]);
 
         if ($request->has('service')) {
             session([
@@ -126,41 +136,46 @@ class AddressController extends Controller
         ]);
 
         $user = Auth::user();
-        $isPrimaryRequest = $request->boolean('is_primary');
-        $currentAddressCount = $user->addresses()->count();
 
-        // If it's the only address, it MUST be primary
-        if ($currentAddressCount === 1) {
-            $isPrimaryRequest = true;
-        }
+        DB::transaction(function () use ($user, $request, $address) {
+            User::query()->where('id', $user->id)->lockForUpdate()->first();
 
-        if ($isPrimaryRequest) {
-            // Set all others to false
-            $user->addresses()->where('id', '!=', $address->id)->update(['is_primary' => false]);
-        } else if ($address->is_primary) {
-            // If we are turning OFF the primary status of the currently primary address,
-            // we must set another one as primary.
-            $nextAddress = $user->addresses()
-                ->where('id', '!=', $address->id)
-                ->orderBy('updated_at', 'desc') // Pick the most recently updated one as fallback
-                ->first();
-            
-            if ($nextAddress) {
-                $nextAddress->update(['is_primary' => true]);
-            } else {
-                // No other addresses, keep this one as primary
+            $isPrimaryRequest = $request->boolean('is_primary');
+            $currentAddressCount = $user->addresses()->count();
+
+            // If it's the only address, it MUST be primary
+            if ($currentAddressCount === 1) {
                 $isPrimaryRequest = true;
             }
-        }
 
-        $address->update([
-            'label' => $request->label,
-            'address_detail' => $request->address_detail,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'note' => $request->note,
-            'is_primary' => $isPrimaryRequest,
-        ]);
+            if ($isPrimaryRequest) {
+                // Set all others to false
+                $user->addresses()->where('id', '!=', $address->id)->update(['is_primary' => false]);
+            } else if ($address->is_primary) {
+                // If we are turning OFF the primary status of the currently primary address,
+                // we must set another one as primary.
+                $nextAddress = $user->addresses()
+                    ->where('id', '!=', $address->id)
+                    ->orderBy('updated_at', 'desc') // Pick the most recently updated one as fallback
+                    ->first();
+
+                if ($nextAddress) {
+                    $nextAddress->update(['is_primary' => true]);
+                } else {
+                    // No other addresses, keep this one as primary
+                    $isPrimaryRequest = true;
+                }
+            }
+
+            $address->update([
+                'label' => $request->label,
+                'address_detail' => $request->address_detail,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'note' => $request->note,
+                'is_primary' => $isPrimaryRequest,
+            ]);
+        });
 
         if ($request->has('service')) {
             session([

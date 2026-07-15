@@ -3,6 +3,7 @@
 namespace App\Modules\Order\Presentation\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateOrderRequest extends FormRequest
 {
@@ -14,7 +15,11 @@ class CreateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pelanggan_id' => ['required', 'integer', 'exists:pelanggan,id'],
+            'pelanggan_id' => [
+                'required',
+                'integer',
+                Rule::exists('pelanggan', 'id')->where('user_id', $this->user()?->id),
+            ],
             'cabang_id' => ['required', 'integer', 'exists:cabang,id'],
             'layanan_prioritas_id' => ['required', 'integer', 'exists:layanan_prioritas,id'],
             'pickup_address' => ['required', 'string', 'max:1000'],

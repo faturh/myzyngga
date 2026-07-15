@@ -70,13 +70,18 @@ class OrderWebService
         return redirect()->route('order.booking');
     }
 
-    public function bookingData(): ?array
+    public function bookingData(?User $user = null): ?array
     {
         if (! session()->has('order.address')) {
             return null;
         }
 
         $service = session('order.service', 'regular');
+
+        // Pre-fill dari preferensi tersimpan pelanggan kalau session belum
+        // punya nilai (misal baru masuk ke alur booking) — kalau tidak,
+        // preferensi yang mereka simpan tidak pernah benar-benar dipakai.
+        $preference = $user ? $this->customerRepository->findByUser($user)?->preference : null;
 
         return [
             'service' => $service,
@@ -87,12 +92,13 @@ class OrderWebService
             'lng' => session('order.lng', ''),
             'pickupDate' => session('order.pickup_date', ''),
             'pickupTime' => session('order.pickup_time', ''),
-            'parfum' => session('order.parfum', ''),
-            'note' => session('order.note', ''),
+            'parfum' => session('order.parfum') ?: ($preference->default_parfum ?? ''),
+            'note' => session('order.note') ?: ($preference->default_note ?? ''),
             'customerName' => session('order.customer_name', ''),
             'customerPhone' => session('order.customer_phone', ''),
             'customerEmail' => session('order.customer_email', ''),
             'isRoundtrip' => session('order.is_roundtrip', true),
+            'defaultPaymentMethod' => $preference->default_payment_method ?? 'qris',
         ];
     }
 
@@ -108,6 +114,9 @@ class OrderWebService
         }
 
         $activeOrder = $this->orderRepository->latestByPelangganId((int) $pelanggan->id, false);
+        // "Pesanan Terakhir" memang khusus pesanan yang sudah selesai — dipakai
+        // untuk tombol "Ulangi Pesanan", yang cuma masuk akal untuk pesanan
+        // yang sudah tuntas (dikonfirmasi dengan Syihan).
         $latestOrder = $this->orderRepository->latestByPelangganId((int) $pelanggan->id, true);
 
         return [
@@ -140,6 +149,9 @@ class OrderWebService
         $order = null;
         if ($id) {
             $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
+            if ($order) {
+                $this->assertOwnership($order, $user);
+            }
         }
 
         if (! $order && $user) {
@@ -220,7 +232,9 @@ class OrderWebService
             pickupLng: isset($data['lng']) && $data['lng'] !== '' ? (float) $data['lng'] : null,
             parfum: $data['parfum'] ?? null,
             catatan: $data['catatan'] ?? null,
-            paymentMethod: $data['payment'] ?? 'qris',
+            // Halaman booking tidak punya pemilihan metode bayar sendiri — kalau
+            // tidak dikirim, pakai preferensi tersimpan pelanggan, baru fallback ke qris.
+            paymentMethod: $data['payment'] ?? $pelanggan->preference?->default_payment_method ?? 'qris',
             estimatedTotal: $this->resolveEstimatedTotal($data['selected_service_id']),
             isRoundtrip: $request->boolean('is_roundtrip'),
         ));
@@ -282,7 +296,10 @@ class OrderWebService
                     ]);
                 }
             } else {
-                if ($user->addresses()->count() < 5) {
+                // Batas harus sama dengan yang dipakai di halaman "Alamat Saya"
+                // (AddressController) — model Address yang sama, kalau beda
+                // pelanggan bisa melewati batas 3 lewat alur booking ini.
+                if ($user->addresses()->count() < 3) {
                     $user->addresses()->create([
                         'label' => $request->label,
                         'address_detail' => $request->address_detail,
@@ -319,6 +336,7 @@ class OrderWebService
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
+        $this->assertOwnership($order, $request->user());
 
         // Biaya pengantaran ditetapkan server-side — tidak dari input client.
         $deliveryFee = (float) config('laundry.delivery_fee', 0);
@@ -411,6 +429,8 @@ class OrderWebService
             $total += (float) ($meta['pending_upgrade']['price_diff'] ?? 0);
             $upgradeFee += (float) ($meta['pending_upgrade']['price_diff'] ?? 0);
         }
+        $deliveryFee = (float) ($meta['pending_delivery']['delivery_fee'] ?? 0);
+        $total += $deliveryFee;
 
         $complaint = \App\Models\Complaint::where('transaksi_id', $order->id)->first();
 
@@ -436,6 +456,7 @@ class OrderWebService
             'subtotal' => (float) ($order->total_biaya_layanan ?: $total),
             'discount' => 0,
             'tax' => 0,
+            'delivery_fee' => $deliveryFee,
             'total' => $total,
             'cash' => (float) $order->bayar,
             'change' => (float) ($order->kembalian ?: 0),
@@ -445,10 +466,15 @@ class OrderWebService
             'can_upgrade' => $this->canBeUpgraded($order),
             'upgrade_fee' => $upgradeFee,
             'snap_token' => $this->getSnapToken($order),
-            'has_complaint' => \App\Models\Complaint::where('transaksi_id', $order->id)->exists(),
-            'clothing_details' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
+            'has_complaint' => $complaint !== null,
+            'complaint_id' => $complaint?->id,
+            'cashier_name' => $order->pegawai->name ?? 'Belum ditugaskan',
+            'perfume' => $order->parfum ?: '-',
+            'notes' => $order->catatan ?: '-',
+            'weight' => $order->timbangan?->actual_weight,
+            'clothing_items' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
                 return [
-                    'nama' => $item->jenisPakaian->nama ?? '-',
+                    'name' => $item->jenisPakaian->nama ?? '-',
                     'qty' => $item->qty,
                 ];
             })->all() : [],
@@ -462,7 +488,18 @@ class OrderWebService
         }
 
         $unpaidAmount = max(0, (float) $order->total_bayar_akhir - (float) $order->bayar);
-        
+
+        // Sertakan biaya pending_upgrade/pending_delivery, sama seperti processCoreApiPayment() —
+        // kalau tidak, gross_amount yang ditagih via Snap lebih kecil dari yang dicek
+        // markAsPaid() saat settlement, dan order tidak akan pernah lunas.
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        if (isset($meta['pending_upgrade'])) {
+            $unpaidAmount += (float) ($meta['pending_upgrade']['price_diff'] ?? 0);
+        }
+        if (isset($meta['pending_delivery'])) {
+            $unpaidAmount += (float) ($meta['pending_delivery']['delivery_fee'] ?? 0);
+        }
+
         if ($unpaidAmount <= 0) {
             return null;
         }
@@ -491,12 +528,13 @@ class OrderWebService
             return null;
         }
     }
-    public function processCoreApiPayment(string $id, string $method)
+    public function processCoreApiPayment(string $id, string $method, ?User $user = null)
     {
         $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order) {
             throw new \Exception('Order tidak ditemukan.');
         }
+        $this->assertOwnership($order, $user);
 
         if ($this->isUnweighed($order)) {
             throw new \Exception('Pesanan Anda belum ditimbang oleh operator.');
@@ -507,9 +545,13 @@ class OrderWebService
         $pendingDelivery = $existingMeta['pending_delivery'] ?? null;
 
         $unpaidAmount = max(0, (float) $order->total_bayar_akhir - (float) $order->bayar);
-        
+
         if ($pendingUpgrade) {
             $unpaidAmount += (float) ($pendingUpgrade['price_diff'] ?? 0);
+        }
+
+        if ($pendingDelivery) {
+            $unpaidAmount += (float) ($pendingDelivery['delivery_fee'] ?? 0);
         }
 
         if ($unpaidAmount <= 0) {
@@ -587,12 +629,13 @@ class OrderWebService
         return 'bank_transfer';
     }
 
-    public function getPaymentInstruction(string $id)
+    public function getPaymentInstruction(string $id, ?User $user = null)
     {
         $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order || !$order->midtrans_order_id || !$order->payment_metadata) {
             return null;
         }
+        $this->assertOwnership($order, $user);
 
         $meta = json_decode($order->payment_metadata, true);
         
@@ -775,12 +818,13 @@ class OrderWebService
         return $instruction;
     }
 
-    public function checkPaymentStatus(string $id): string
+    public function checkPaymentStatus(string $id, ?User $user = null): string
     {
         $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order || !$order->midtrans_order_id) {
             return 'unknown';
         }
+        $this->assertOwnership($order, $user);
 
         $meta = json_decode($order->payment_metadata, true) ?? [];
         $targetAmount = (float) $order->total_bayar_akhir;
@@ -810,27 +854,34 @@ class OrderWebService
         return 'pending';
     }
 
-    public function cancelCoreApiPayment(string $id): void
+    public function cancelCoreApiPayment(string $id, ?User $user = null): void
     {
         $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
         if (!$order || !$order->midtrans_order_id) {
             throw new \Exception('Transaksi pembayaran tidak ditemukan.');
         }
+        $this->assertOwnership($order, $user);
 
         \Midtrans\Config::$serverKey = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
 
         try {
             \Midtrans\Transaction::cancel($order->midtrans_order_id);
-            $order->midtrans_order_id = null;
-            $order->payment_metadata = null;
-            $order->save();
         } catch (\Exception $e) {
-            // It might already be expired or canceled.
-            $order->midtrans_order_id = null;
-            $order->payment_metadata = null;
-            $order->save();
+            // It might already be expired or canceled — still proceed to clear
+            // the local charge attempt below.
         }
+
+        $order->midtrans_order_id = null;
+
+        // Batalkan hanya percobaan charge Midtrans-nya, bukan pending_upgrade/
+        // pending_delivery — itu request terpisah yang belum pernah dibatalkan
+        // pelanggan (pembatalannya lewat endpoint rollback tersendiri).
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $preserved = array_intersect_key($meta, array_flip(['pending_upgrade', 'pending_delivery']));
+        $order->payment_metadata = $preserved ? json_encode($preserved) : null;
+
+        $order->save();
     }
     private function mapOrderItems(Transaksi $order): array
     {
@@ -989,6 +1040,18 @@ class OrderWebService
         return $notifications;
     }
 
+    private function calculateKiloanWeight(Transaksi $order): float
+    {
+        // Upgrade price-per-kg must only be multiplied by kiloan weight — satuan
+        // (per-piece) detail groups use a different unit and would otherwise get
+        // summed together with kg, corrupting the price calculation.
+        return (float) $order->detailTransaksi->filter(function ($detail) {
+            $firstServiceDetail = $detail->detailLayananTransaksi->first();
+            $satuan = $firstServiceDetail?->hargaJenisLayanan?->jenis_satuan;
+            return !$satuan || strtolower($satuan) === 'kg';
+        })->sum('total_pakaian');
+    }
+
     private function serviceName(Transaksi $order): string
     {
         $hasSatuan = $order->detailTransaksi->contains(function ($detail) {
@@ -1064,9 +1127,30 @@ class OrderWebService
         return in_array($order->status, ['Baru', 'created', 'Perlu Diproses']);
     }
 
+    /**
+     * Tolak akses kalau order ini punya pemilik akun (bukan guest order) dan
+     * yang mengakses adalah user LAIN yang sedang login. Guest (tanpa $user)
+     * tetap diizinkan lewat — itu memang alur checkout tamu yang sah, otorisasinya
+     * lewat mengetahui UUID order (dikirim balik saat order dibuat / lewat
+     * pelacakan nota+telepon).
+     */
+    private function assertOwnership(Transaksi $order, ?User $user): void
+    {
+        if ($user && (!$order->pelanggan || $order->pelanggan->user_id !== $user->id)) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+        }
+    }
+
     private function canBeUpgraded(Transaksi $order): bool
     {
         if ($this->isFinished($order)) {
+            return false;
+        }
+
+        // Upgrade pricing is calculated from real weighed items (mapOrderItems()),
+        // which only exist after the operator weighs the order. Before that, the
+        // price would be based on a rough estimate — block upgrades until then.
+        if ($this->isUnweighed($order)) {
             return false;
         }
 
@@ -1109,7 +1193,16 @@ class OrderWebService
 
     private function latestPayment(Transaksi $order): ?object
     {
-        return $order->payments->sortByDesc('created_at')->first();
+        // Prefer the payment record that actually succeeded (paid/verified) over
+        // whichever row happens to have been created last — a customer can retry
+        // with a different method after a failed/expired attempt, and the retry's
+        // row isn't necessarily the one that got paid.
+        $paid = $order->payments
+            ->whereIn('status', ['paid', 'verified'])
+            ->sortByDesc('created_at')
+            ->first();
+
+        return $paid ?? $order->payments->sortByDesc('created_at')->first();
     }
 
     private function formatDateTime($date): string
@@ -1212,9 +1305,14 @@ class OrderWebService
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
+        $this->assertOwnership($order, $user);
 
         if ($this->isFinished($order)) {
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
+        }
+
+        if ($this->isUnweighed($order)) {
+            throw new \Exception('Pesanan Anda belum ditimbang oleh operator.');
         }
 
         $currentPriority = $order->layananPrioritas;
@@ -1278,6 +1376,7 @@ class OrderWebService
             'currentService' => $currentPriority->nama,
             'upgrades' => $upgrades->values()->all(),
             'baseDate' => $baseDate->toIso8601String(),
+            'totalWeightKg' => $this->calculateKiloanWeight($order),
         ];
     }
 
@@ -1288,6 +1387,7 @@ class OrderWebService
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
+        $this->assertOwnership($order, $user);
 
         if ($this->isFinished($order) || $this->isPaid($order)) {
             throw new \Exception('Metode pembayaran tidak dapat diubah karena pesanan sudah lunas atau selesai.');
@@ -1309,6 +1409,7 @@ class OrderWebService
         if (!$order || $this->isFinished($order) || $this->isPaid($order)) {
             throw new \Exception('Metode pembayaran tidak dapat diubah.');
         }
+        $this->assertOwnership($order, $user);
 
         $order->jenis_pembayaran = match(strtolower($method)) {
             'qris' => 'QRIS',
@@ -1324,6 +1425,7 @@ class OrderWebService
         if (!$order || $this->isFinished($order)) {
             throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
+        $this->assertOwnership($order, $user);
 
         $currentPriority = $order->layananPrioritas;
         $newPriority = \App\Models\LayananPrioritas::find($newServiceId);
@@ -1377,6 +1479,7 @@ class OrderWebService
         if (!$order) {
             throw new \Exception('Pesanan tidak ditemukan.');
         }
+        $this->assertOwnership($order, $user);
 
         $pelanggan = $user ? $this->customerRepository->findByUser($user) : null;
         if (!$pelanggan) {
@@ -1488,7 +1591,7 @@ class OrderWebService
             return collect();
         }
 
-        return \App\Models\Complaint::with('transaksi')
+        return \App\Models\Complaint::with('transaksi.layananPrioritas', 'transaksi.pegawai')
             ->where('pelanggan_id', $pelanggan->id)
             ->latest()
             ->get();
@@ -1501,7 +1604,7 @@ class OrderWebService
             throw new \Exception('Pelanggan tidak valid.');
         }
 
-        return \App\Models\Complaint::with('transaksi')
+        return \App\Models\Complaint::with('transaksi.layananPrioritas', 'transaksi.pegawai')
             ->where('pelanggan_id', $pelanggan->id)
             ->findOrFail($id);
     }
