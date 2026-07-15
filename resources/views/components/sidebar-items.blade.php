@@ -29,6 +29,14 @@
                 'active' => request()->routeIs('order.check'),
                 'show'   => true,
             ],
+            [
+                'id'     => 'layanan',
+                'label'  => 'Layanan',
+                'icon'   => 'shopping-bag',
+                'href'   => '#',
+                'active' => false,
+                'show'   => true,
+            ],
 
             [
                 'id'     => 'profile',
