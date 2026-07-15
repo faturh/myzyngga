@@ -147,6 +147,143 @@ class OrderAccessTest extends TestCase
             ->assertForbidden();
     }
 
+    // ── BB-O08b  Ownership check untuk aksi order lain (delivery/upgrade/
+    // complaint/payment) — SEHARUSNYA 403 seperti repeat(), tapi belum ada
+    // pengecekan kepemilikan sama sekali di service-nya. ───────────────────
+
+    private function makeOwnedOrder(Pelanggan $pelanggan): Transaksi
+    {
+        $cabang = \App\Models\Cabang::create([
+            'nama' => 'Cabang Test Ownership',
+            'lokasi' => '-6.2,106.8',
+            'alamat' => 'Jl. Test',
+        ]);
+        $layanan = \App\Models\LayananPrioritas::create([
+            'nama' => 'Reguler',
+            'harga' => 5000,
+            'prioritas' => 1,
+            'cabang_id' => $cabang->id,
+        ]);
+
+        return Transaksi::create([
+            'nota' => 'TEST-OWN-' . uniqid(),
+            'pelanggan_id' => $pelanggan->id,
+            'cabang_id' => $cabang->id,
+            'layanan_prioritas_id' => $layanan->id,
+            'pegawai_id' => '0',
+            'status' => 'Baru',
+            'jenis_pembayaran' => 'cash',
+            'total_biaya_layanan' => 10000,
+            'total_biaya_prioritas' => 0,
+            'total_biaya_layanan_tambahan' => 0,
+            'total_bayar_akhir' => 10000,
+            'bayar' => 0,
+            'kembalian' => 0,
+            'waktu' => now(),
+            'pickup_lat' => -6.2,
+            'pickup_lng' => 106.8,
+            'pickup_address' => 'Jl. A No. 1',
+        ]);
+    }
+
+    /** @test */
+    public function komplain_order_milik_pelanggan_lain_seharusnya_ditolak_403(): void
+    {
+        [$userA, $pelangganA] = $this->userWithPelanggan();
+        [$userB] = $this->userWithPelanggan();
+        $orderA = $this->makeOwnedOrder($pelangganA);
+
+        $response = $this->actingAs($userB)->postJson(route('order.complaint.store', $orderA->id), [
+            'issue_description' => 'Komplain dari user yang bukan pemilik order',
+            'issue_types' => ['lainnya'],
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('complaints', ['transaksi_id' => $orderA->id]);
+    }
+
+    /** @test */
+    public function upgrade_order_milik_pelanggan_lain_seharusnya_ditolak_403(): void
+    {
+        [$userA, $pelangganA] = $this->userWithPelanggan();
+        [$userB] = $this->userWithPelanggan();
+        $orderA = $this->makeOwnedOrder($pelangganA);
+
+        $newService = \App\Models\LayananPrioritas::create([
+            'nama' => 'Kilat',
+            'harga' => 20000,
+            'prioritas' => 5,
+            'cabang_id' => $orderA->cabang_id,
+        ]);
+
+        $response = $this->actingAs($userB)->postJson(route('order.upgrade.process', $orderA->id), [
+            'new_service_id' => $newService->id,
+        ]);
+
+        $response->assertForbidden();
+        $orderA->refresh();
+        $meta = json_decode($orderA->payment_metadata, true) ?? [];
+        $this->assertArrayNotHasKey('pending_upgrade', $meta);
+    }
+
+    /** @test */
+    public function payment_cancel_order_milik_pelanggan_lain_seharusnya_ditolak_403(): void
+    {
+        [$userA, $pelangganA] = $this->userWithPelanggan();
+        [$userB] = $this->userWithPelanggan();
+        $orderA = $this->makeOwnedOrder($pelangganA);
+        $orderA->update(['midtrans_order_id' => $orderA->id . '-999']);
+
+        $response = $this->actingAs($userB)->postJson(route('order.payment-cancel', $orderA->id));
+
+        $response->assertForbidden();
+        $this->assertNotNull($orderA->fresh()->midtrans_order_id, 'User lain tidak boleh bisa membatalkan percobaan pembayaran order orang lain.');
+    }
+
+    /** @test */
+    public function rollback_delivery_order_milik_pelanggan_lain_seharusnya_ditolak_403(): void
+    {
+        [$userA, $pelangganA] = $this->userWithPelanggan();
+        [$userB] = $this->userWithPelanggan();
+        $orderA = $this->makeOwnedOrder($pelangganA);
+        $originalAddress = $orderA->pickup_address;
+
+        // User B mencoba request-delivery ke order A dulu (bakal 403, tapi ini
+        // yang men-trigger session 'pending_rollback_delivery_*' terisi di sesi B
+        // SEBELUM pengecekan kepemilikan jalan).
+        $this->actingAs($userB)->postJson(route('order.delivery.store', $orderA->id), [
+            'address' => 'Alamat Palsu', 'lat' => -6.1, 'lng' => 106.1,
+        ])->assertForbidden();
+
+        // Lalu User B coba panggil endpoint rollback-nya langsung.
+        $response = $this->actingAs($userB)->postJson(route('order.delivery.rollback', $orderA->id));
+
+        $response->assertForbidden();
+        $this->assertSame($originalAddress, $orderA->fresh()->pickup_address);
+    }
+
+    /** @test */
+    public function rollback_upgrade_order_milik_pelanggan_lain_seharusnya_ditolak_403(): void
+    {
+        [$userA, $pelangganA] = $this->userWithPelanggan();
+        [$userB] = $this->userWithPelanggan();
+        $orderA = $this->makeOwnedOrder($pelangganA);
+        $originalServiceId = $orderA->layanan_prioritas_id;
+
+        $newService = \App\Models\LayananPrioritas::create([
+            'nama' => 'Kilat', 'harga' => 20000, 'prioritas' => 5, 'cabang_id' => $orderA->cabang_id,
+        ]);
+
+        $this->actingAs($userB)->postJson(route('order.upgrade.process', $orderA->id), [
+            'new_service_id' => $newService->id,
+        ])->assertForbidden();
+
+        $response = $this->actingAs($userB)->postJson(route('order.upgrade.rollback', $orderA->id));
+
+        $response->assertForbidden();
+        $this->assertSame($originalServiceId, $orderA->fresh()->layanan_prioritas_id);
+    }
+
     // ── BB-O09  updateSession: isolasi sesi antar user ───────────────────────
 
     /** @test */

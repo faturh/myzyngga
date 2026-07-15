@@ -8,7 +8,7 @@ use App\Models\Pelanggan;
 use App\Shared\Http\ApiResponse;
 use Illuminate\Http\Request;
 
-class MarkNotificationReadController
+class MarkNotificationReadNewController
 {
     public function __invoke(Request $request, $id)
     {

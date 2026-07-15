@@ -63,6 +63,14 @@ new class extends Component
             'phone' => $this->phone,
         ]);
 
+        // Pelanggan.nama/telepon adalah field terpisah dari User — dipakai di
+        // riwayat pesanan, nota, dan komplain. Tanpa ini, perubahan nama/telepon
+        // tidak akan pernah terlihat di manapun kecuali di form ini sendiri.
+        \App\Models\Pelanggan::where('user_id', Auth::id())->update([
+            'nama' => $this->name,
+            'telepon' => $this->phone,
+        ]);
+
         $this->dispatch('profile-updated', name: $this->name);
         
         $this->redirect(route('profile'), navigate: true);

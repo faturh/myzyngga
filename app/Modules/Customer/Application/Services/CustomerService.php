@@ -62,11 +62,17 @@ class CustomerService
     {
         $pelanggan = $this->resolvePelanggan($user);
 
-        if ($this->repository->listAddresses($pelanggan)->count() >= 3) {
-            throw new DomainException('Kamu hanya dapat menyimpan maksimal 3 alamat.', 422);
-        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($pelanggan, $payload) {
+            // Lock the pelanggan row so two concurrent "simpan alamat" requests
+            // can't both pass the count check before either insert commits.
+            \App\Models\Pelanggan::query()->where('id', $pelanggan->id)->lockForUpdate()->first();
 
-        return $this->repository->storeAddress($pelanggan, $payload);
+            if ($this->repository->listAddresses($pelanggan)->count() >= 3) {
+                throw new DomainException('Kamu hanya dapat menyimpan maksimal 3 alamat.', 422);
+            }
+
+            return $this->repository->storeAddress($pelanggan, $payload);
+        });
     }
 
     public function updateAddressForUser(User $user, int $addressId, array $payload): CustomerAddress

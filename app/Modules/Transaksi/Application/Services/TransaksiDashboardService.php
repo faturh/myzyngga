@@ -346,10 +346,6 @@ class TransaksiDashboardService
         return compact('title', 'transaksi', 'detailTransaksi', 'cabang', 'layananTambahanTransaksi');
     }
 
-    public function konfirmasiUpah(Request $request): void
-    {
-        $this->repository->updateKonfirmasiUpah((string) $request->transaksi_id, ! $request->boolean('konfirmasi'));
-    }
 
     public function transaksiGamisData(User $user, bool $harian): array
     {

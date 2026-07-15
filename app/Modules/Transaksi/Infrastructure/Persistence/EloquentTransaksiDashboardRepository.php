@@ -245,11 +245,6 @@ class EloquentTransaksiDashboardRepository implements TransaksiDashboardReposito
         return 0;
     }
 
-    public function updateKonfirmasiUpah(string $transaksiId, bool $konfirmasi): void
-    {
-        // No-op
-    }
-
     public function getTransaksiGamisByUser(int $cabangId, int $userId, ?string $tanggal = null): Collection
     {
         return collect();

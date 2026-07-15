@@ -74,6 +74,26 @@ class AuthApiTest extends TestCase
             ]);
     }
 
+    public function test_login_api_dibatasi_rate_limit_untuk_cegah_brute_force_password(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'bruteforce-target@example.com',
+            'password' => bcrypt('password-asli'),
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/v1/auth/login', [
+                'email' => $user->email,
+                'password' => 'tebakan-salah-'.$i,
+            ])->assertStatus(401);
+        }
+
+        $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'tebakan-salah-lagi',
+        ])->assertStatus(429);
+    }
+
     /**
      * Test Google Redirect route exists.
      */

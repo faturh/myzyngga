@@ -12,6 +12,8 @@ interface OrderRepositoryInterface
 
     public function findById(string $id): ?Transaksi;
 
+    public function lockById(string $id): ?Transaksi;
+
     public function findByNotaPelanggan(string $nota): ?Transaksi;
 
     public function latestByPelangganId(int $pelangganId, ?bool $finished = null): ?Transaksi;
