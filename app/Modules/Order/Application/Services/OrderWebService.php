@@ -1047,11 +1047,25 @@ class OrderWebService
         // Upgrade price-per-kg must only be multiplied by kiloan weight — satuan
         // (per-piece) detail groups use a different unit and would otherwise get
         // summed together with kg, corrupting the price calculation.
-        return (float) $order->detailTransaksi->filter(function ($detail) {
+        $realWeight = (float) $order->detailTransaksi->filter(function ($detail) {
             $firstServiceDetail = $detail->detailLayananTransaksi->first();
             $satuan = $firstServiceDetail?->hargaJenisLayanan?->jenis_satuan;
             return !$satuan || strtolower($satuan) === 'kg';
         })->sum('total_pakaian');
+
+        if ($realWeight > 0) {
+            return $realWeight;
+        }
+
+        // Order belum punya rincian timbangan (detailTransaksi kosong) meski
+        // status-nya sudah lolos isUnweighed() — tanpa fallback ini, biaya
+        // upgrade di halaman upgrade kalikan dengan 0 dan selalu tampil Rp0.
+        // Perkirakan berat dari total_bayar_akhir, sama seperti fallback di
+        // mapOrderItems() supaya konsisten dengan label item yang ditampilkan.
+        $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
+        $basePrice = $this->resolveEstimatedTotal(strtolower($originalService->nama ?? ''));
+
+        return $basePrice > 0 ? max(1, round((float) $order->total_bayar_akhir / $basePrice, 2)) : 1.0;
     }
 
     private function serviceName(Transaksi $order): string

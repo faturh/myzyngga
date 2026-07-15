@@ -252,18 +252,14 @@
                                 </div>
                             </div>
 
-                            {{-- Group 2: Diskon, Pajak --}}
+                            {{-- Group 2: Diskon --}}
                             <div class="space-y-1">
                                 <div class="flex justify-between">
                                     <x-zyngga-text variant="sm" color="neutral-900">Diskon</x-zyngga-text>
                                     <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['discount'], 0, ',', '.') }}</x-zyngga-text>
                                 </div>
-                                <div class="flex justify-between">
-                                    <x-zyngga-text variant="sm" color="neutral-900">Pajak</x-zyngga-text>
-                                    <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Rp{{ number_format($order['tax'], 0, ',', '.') }}</x-zyngga-text>
-                                </div>
                             </div>
-                                
+
                             <div class="divider"></div>
 
                             {{-- Group 4: Total --}}

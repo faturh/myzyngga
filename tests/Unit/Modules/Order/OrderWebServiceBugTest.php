@@ -289,4 +289,37 @@ class OrderWebServiceBugTest extends TestCase
         $this->assertArrayHasKey('notifications', $result);
         $this->assertCount(0, $result['notifications']);
     }
+
+    // ── WB-OS-09  Fix: upgradeData tidak boleh kasih totalWeightKg = 0 kalau ──
+    // ── detailTransaksi belum diisi (biaya upgrade jadi ke-nol-kan di halaman) ─
+
+    /** @test */
+    public function upgradeData_menghitung_total_weight_kg_estimasi_kalau_detail_transaksi_belum_ada(): void
+    {
+        $order = $this->makeTransaksi([
+            'total_bayar_akhir' => 4850,
+        ]);
+        // Status sudah lewat "belum ditimbang" (mis. operator sudah proses status)
+        // TAPI detailTransaksi (rincian per-item timbangan) belum pernah diisi —
+        // skenario ini bisa terjadi kalau alur status & pengisian detail terpisah.
+        $order->pending_status_id = 3;
+        $order->save();
+        $this->assertTrue($order->fresh()->detailTransaksi->isEmpty());
+
+        LayananPrioritas::create([
+            'nama'      => 'Quick',
+            'harga'     => 6000,
+            'prioritas' => 2,
+            'cabang_id' => $order->cabang_id,
+        ]);
+
+        $service = app(OrderWebService::class);
+        $data = $service->upgradeData($order->id, $order->pelanggan->user);
+
+        $this->assertGreaterThan(
+            0,
+            $data['totalWeightKg'],
+            'totalWeightKg tidak boleh 0 hanya karena detailTransaksi belum diisi — biaya upgrade di halaman upgrade jadi Rp0 kalau ini 0.'
+        );
+    }
 }
