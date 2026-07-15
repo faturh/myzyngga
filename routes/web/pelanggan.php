@@ -39,8 +39,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/order/{id}/request-delivery', [OrderPageController::class, 'storeRequestDelivery'])->name('order.delivery.store');
     Route::post('/order/{id}/complaint', [OrderPageController::class, 'storeComplaint'])->name('order.complaint.store');
     Route::post('/order/{id}/upgrade', [OrderPageController::class, 'processUpgrade'])->name('order.upgrade.process');
-    Route::post('/order/{id}/process-payment', [OrderPageController::class, 'processPayment'])->name('order.process-payment');
-    Route::post('/order/{id}/payment-cancel', [OrderPageController::class, 'paymentCancel'])->name('order.payment-cancel');
 });
 
 // Public Order Routes (Enabled for Guests)
@@ -95,6 +93,18 @@ Route::post('/order/confirm', [OrderPageController::class, 'confirm'])
 
  Route::post('/order/{id}/payment', [OrderPageController::class, 'updatePayment'])
     ->name('order.payment.update');
+
+// Guest checkout bisa bikin & bayar pesanan tanpa login. Dua route ini dulu
+// ada di grup middleware auth+verified sehingga tamu yang sudah sampai
+// halaman payment-method (guest-accessible) malah kena 401 saat mau bayar.
+// Sekarang guest boleh akses, tapi assertGuestOwnsOrderInSession() di service
+// layer memastikan guest cuma bisa memproses/membatalkan pembayaran order
+// yang benar-benar mereka buat sendiri di sesi ini (bukan order sembarangan
+// milik orang lain yang ID/nota-nya kebetulan diketahui).
+Route::post('/order/{id}/process-payment', [OrderPageController::class, 'processPayment'])
+    ->name('order.process-payment');
+Route::post('/order/{id}/payment-cancel', [OrderPageController::class, 'paymentCancel'])
+    ->name('order.payment-cancel');
 
  Route::get('/order/{id}/payment-method', [OrderPageController::class, 'paymentMethod'])
     ->name('order.payment-method');
