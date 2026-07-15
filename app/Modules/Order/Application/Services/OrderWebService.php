@@ -109,24 +109,19 @@ class OrderWebService
         if (! $pelanggan) {
             return [
                 'activeOrder' => null,
-                'recentOrders' => collect(),
+                'latestOrder' => null,
             ];
         }
 
         $activeOrder = $this->orderRepository->latestByPelangganId((int) $pelanggan->id, false);
-
-        // "Pesanan Terakhir" harus benar-benar menampilkan pesanan-pesanan
-        // terbaru (apapun statusnya), bukan cuma yang sudah selesai — kalau
-        // tidak, pesanan yang baru dibuat tapi masih diproses malah tidak
-        // pernah muncul di sini sampai selesai duluan.
-        $recentOrders = $this->orderRepository
-            ->paginateByPelangganId((int) $pelanggan->id, 5)
-            ->getCollection()
-            ->map(fn (Transaksi $order) => $this->mapOrderCard($order));
+        // "Pesanan Terakhir" memang khusus pesanan yang sudah selesai — dipakai
+        // untuk tombol "Ulangi Pesanan", yang cuma masuk akal untuk pesanan
+        // yang sudah tuntas (dikonfirmasi dengan Syihan).
+        $latestOrder = $this->orderRepository->latestByPelangganId((int) $pelanggan->id, true);
 
         return [
             'activeOrder' => $activeOrder ? $this->mapOrderCard($activeOrder) : null,
-            'recentOrders' => $recentOrders,
+            'latestOrder' => $latestOrder ? $this->mapOrderCard($latestOrder) : null,
         ];
     }
 
