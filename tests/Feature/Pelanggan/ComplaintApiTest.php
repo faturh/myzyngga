@@ -184,4 +184,34 @@ class ComplaintApiTest extends TestCase
                 ]
             ]);
     }
+
+    public function test_riwayat_komplain_mengembalikan_image_path_sebagai_array_bukan_string_json_mentah(): void
+    {
+        [$user, $pelanggan, $order] = $this->setupOrderData();
+
+        Complaint::create([
+            'transaksi_id' => $order->id,
+            'pelanggan_id' => $pelanggan->id,
+            'content' => 'Baju robek, ada 2 foto',
+            'status' => 'pending',
+            'issue_types' => ['pakaian_rusak'],
+            'image_path' => json_encode(['https://cdn.example.com/a.jpg', 'https://cdn.example.com/b.jpg']),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/customer/complaints');
+
+        $response->assertStatus(200);
+
+        $imagePath = $response->json('data.complaints.0.image_path');
+
+        $this->assertIsArray(
+            $imagePath,
+            'image_path harus berupa array URL foto, bukan string JSON mentah yang perlu di-decode manual lagi oleh klien.'
+        );
+        $this->assertSame(
+            ['https://cdn.example.com/a.jpg', 'https://cdn.example.com/b.jpg'],
+            $imagePath
+        );
+    }
 }

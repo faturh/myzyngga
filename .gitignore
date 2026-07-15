@@ -33,3 +33,6 @@ config.bat
 # Postman collections (tidak perlu di-push ke repo)
 *.postman_collection.json
 *.postman_environment.json
+
+# Playwright MCP
+.playwright-mcp/

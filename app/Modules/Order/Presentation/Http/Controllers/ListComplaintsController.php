@@ -29,7 +29,7 @@ class ListComplaintsController
                 'content'     => $c->content,
                 'status'      => $c->status,
                 'issue_types' => $c->issue_types,
-                'image_path'  => $c->image_path,
+                'image_path'  => is_string($c->image_path) ? (json_decode($c->image_path, true) ?? []) : ($c->image_path ?? []),
                 'created_at'  => $c->created_at?->toISOString(),
             ]);
 
