@@ -9,7 +9,6 @@ storage/*.key
 /database/database.sqlite
 /database/testing.sqlite
 .env.backup
-.env.production
 storage/logs/*.log
 .phpunit.result.cache
 docker-compose.override.yml
@@ -28,7 +27,6 @@ config.bat
 .DS_Store
 
 .vercel
-.env
 
 # Postman collections (tidak perlu di-push ke repo)
 *.postman_collection.json
@@ -36,3 +34,10 @@ config.bat
 
 # Playwright MCP
 .playwright-mcp/
+
+# Load testing artifacts (k6 binary alone is ~55MB — blows past Vercel's
+# 250MB uncompressed function size limit when accidentally bundled)
+/k6_bin
+/load_tests
+/load_test.js
+/loadtest.js
