@@ -36,3 +36,10 @@ config.bat
 
 # Playwright MCP
 .playwright-mcp/
+
+# Load testing artifacts (k6 binary alone is ~55MB — blows past Vercel's
+# 250MB uncompressed function size limit when accidentally bundled)
+/k6_bin
+/load_tests
+/load_test.js
+/loadtest.js
