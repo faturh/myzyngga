@@ -112,7 +112,7 @@ class OrderPageController
 
     public function repeat(Request $request, string $id)
     {
-        $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
+        $order = $this->resolveOrderModel($id);
         if (!$order) {
             return redirect()->route('dashboard');
         }
@@ -292,7 +292,7 @@ class OrderPageController
 
     public function storeRequestDelivery(Request $request, string $id)
     {
-        $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
+        $order = $this->resolveOrderModel($id);
         if ($order) {
             $oldState = [
                 'pickup_address' => $order->pickup_address,
@@ -309,7 +309,7 @@ class OrderPageController
             $this->webService->storeRequestDelivery($request, $id);
             if ($request->ajax() || $request->wantsJson()) {
                 $updatedOrder = $this->webService->detailData($id, $request->user());
-                $orderModel = \App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id);
+                $orderModel = $this->resolveOrderModel($id);
                 $estimatedFinished = $orderModel ? $this->webService->formatEstimatedFinished($orderModel) : '-';
                 
                 return response()->json([
@@ -335,7 +335,7 @@ class OrderPageController
     {
         $oldState = session()->get('pending_rollback_delivery_' . $id);
         if ($oldState) {
-            $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
+            $order = $this->resolveOrderModel($id);
             if ($order && (!$order->pelanggan || $order->pelanggan->user_id !== $request->user()->id)) {
                 abort(403);
             }
@@ -400,7 +400,7 @@ class OrderPageController
             'payment_method' => 'nullable|string|in:cash,qris,transfer'
         ]);
 
-        $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
+        $order = $this->resolveOrderModel($id);
         if ($order) {
             $oldState = [
                 'layanan_prioritas_id' => $order->layanan_prioritas_id,
@@ -436,7 +436,7 @@ class OrderPageController
     {
         $oldState = session()->get('pending_rollback_upgrade_' . $id);
         if ($oldState) {
-            $order = (\App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id));
+            $order = $this->resolveOrderModel($id);
             if ($order && (!$order->pelanggan || $order->pelanggan->user_id !== $request->user()->id)) {
                 abort(403);
             }
@@ -599,5 +599,17 @@ class OrderPageController
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
+    }
+
+    /**
+     * Cari order by nota dulu, baru fallback ke id (UUID). Kolom id di Postgres
+     * bertipe uuid — Transaksi::find() dengan string non-UUID (mis. nota yang
+     * sudah dicoba dan tidak cocok) bikin driver pgsql lempar QueryException
+     * (SQLSTATE 22P02) alih-alih return null seperti di MySQL.
+     */
+    private function resolveOrderModel(string $id): ?\App\Models\Transaksi
+    {
+        return \App\Models\Transaksi::where('nota', $id)->first()
+            ?? (\Illuminate\Support\Str::isUuid($id) ? \App\Models\Transaksi::find($id) : null);
     }
 }

@@ -30,11 +30,22 @@ class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function findById(string $id): ?Transaksi
     {
+        // Kolom id di Postgres bertipe uuid — string non-UUID (mis. nota yang
+        // sudah dicoba lebih dulu dan tidak cocok) bikin driver pgsql lempar
+        // QueryException (SQLSTATE 22P02) alih-alih return null seperti di MySQL.
+        if (! \Illuminate\Support\Str::isUuid($id)) {
+            return null;
+        }
+
         return Transaksi::query()->with(self::ORDER_RELATIONS)->find($id);
     }
 
     public function lockById(string $id): ?Transaksi
     {
+        if (! \Illuminate\Support\Str::isUuid($id)) {
+            return null;
+        }
+
         return Transaksi::query()->lockForUpdate()->find($id);
     }
 
