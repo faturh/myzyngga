@@ -38,12 +38,15 @@ class EloquentCustomerRepository implements CustomerRepositoryInterface
             );
         }
 
-        // For Guest: Find by phone or create new
+        // Guest: simpan juga email-nya (kalau diisi) supaya notifikasi
+        // pembayaran/pesanan selesai bisa dikirim — guest tidak punya akun User
+        // jadi tidak ada sumber email lain untuk mereka.
         return Pelanggan::query()->updateOrCreate(
             ['telepon' => $payload['telepon']],
             [
                 'nama'          => $payload['nama'],
                 'jenis_kelamin' => $payload['jenis_kelamin'] ?? 'L',
+                'email'         => $payload['email'] ?? null,
                 'alamat'        => $payload['alamat'] ?? null,
             ]
         );

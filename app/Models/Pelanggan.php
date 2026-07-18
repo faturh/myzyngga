@@ -20,6 +20,7 @@ class Pelanggan extends Model
         'nama',
         'jenis_kelamin',
         'telepon',
+        'email',
         'alamat',
     ];
 
