@@ -144,9 +144,11 @@ class Transaksi extends Model
                 $transaksi->status_changed_to = null;
             }
 
-            // 1. Kirim email jika pembayaran di-update menjadi paid (Lunas)
+            // 1. Kirim email jika pembayaran di-update menjadi paid (Lunas).
+            // Guest tidak punya akun User, jadi fallback ke email yang mereka
+            // isi sendiri saat checkout (disimpan di pelanggan.email).
             if ($transaksi->wasChanged('payment_status') && $transaksi->payment_status === 'paid') {
-                $email = $transaksi->pelanggan->user->email ?? null;
+                $email = $transaksi->pelanggan->user->email ?? $transaksi->pelanggan->email ?? null;
                 if ($email) {
                     try {
                         \Illuminate\Support\Facades\Mail::to($email)
@@ -162,7 +164,7 @@ class Transaksi extends Model
             // tidak pernah cocok sehingga email "pesanan selesai" tidak pernah terkirim.
             $statusChanged = $transaksi->wasChanged('list_pengerjaan_id') || $transaksi->wasChanged('status');
             if ($statusChanged && in_array($transaksi->status, ['Selesai', 'Pesanan Selesai'], true)) {
-                $email = $transaksi->pelanggan->user->email ?? null;
+                $email = $transaksi->pelanggan->user->email ?? $transaksi->pelanggan->email ?? null;
                 if ($email) {
                     try {
                         \Illuminate\Support\Facades\Mail::to($email)

@@ -227,6 +227,7 @@ class OrderWebService
             'nama' => $user ? $user->name : $request->input('customer_name'),
             'jenis_kelamin' => 'L',
             'telepon' => $user ? ($user->phone ?? '-') : $request->input('customer_phone'),
+            'email' => $data['customer_email'] ?? null,
             'alamat' => $data['address'],
         ]);
 

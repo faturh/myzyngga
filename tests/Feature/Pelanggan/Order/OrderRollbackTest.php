@@ -341,6 +341,74 @@ class OrderRollbackTest extends TestCase
         $response->assertRedirect(route('order.history'));
     }
 
+    public function test_guest_yang_bayar_dapat_email_notifikasi_pembayaran(): void
+    {
+        // Form booking guest MEMINTA email (customer_email), tapi confirmOrder()
+        // sempat cuma validasi field ini lalu buang begitu saja — tidak pernah
+        // disimpan ke mana pun. Akibatnya guest yang bayar tidak pernah dapat
+        // email konfirmasi karena tidak ada email tersimpan sama sekali untuk
+        // Pelanggan mereka (guest tidak punya akun User).
+        \Illuminate\Support\Facades\Mail::fake();
+
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+
+        $response = $this->post(route('order.confirm'), [
+            'service' => 'regular',
+            'address' => 'Jalan Guest No. 1',
+            'lat' => -6.2,
+            'lng' => 106.8,
+            'selected_service_id' => 'regular',
+            'pickup_date' => 'today',
+            'pickup_time' => '09:00',
+            'customer_name' => 'Guest Bayar',
+            'customer_phone' => '081200003333',
+            'customer_email' => 'guest-bayar@example.com',
+            'payment' => 'cash',
+        ]);
+
+        $pelanggan = \App\Models\Pelanggan::where('telepon', '081200003333')->first();
+        $this->assertNotNull($pelanggan);
+        $this->assertSame(
+            'guest-bayar@example.com',
+            $pelanggan->email,
+            'Email yang diisi guest saat checkout harus tersimpan ke Pelanggan supaya bisa dikirimi notifikasi.'
+        );
+
+        $order = \App\Models\Transaksi::where('pelanggan_id', $pelanggan->id)->latest('created_at')->first();
+        $order->payment_status = 'paid';
+        $order->save();
+
+        \Illuminate\Support\Facades\Mail::assertSent(
+            \App\Mail\PaymentConfirmedMail::class,
+            fn ($mail) => $mail->transaksi->id === $order->id
+        );
+    }
+
+    private function ensureOrderReferencesExist(): array
+    {
+        $this->ensureRoleExists('admin');
+        $this->ensureRoleExists('customer');
+        $admin = User::query()->where('username', 'admin-guest-email')->first() ?? User::factory()->create([
+            'username' => 'admin-guest-email',
+            'slug' => 'admin-guest-email',
+            'email' => 'admin-guest-email@example.com',
+            'role' => 'admin',
+        ]);
+        $admin->assignRole('admin');
+        $cabang = Cabang::firstOrCreate(['nama' => 'Cabang Guest Email'], ['alamat' => 'Alamat', 'lokasi' => 'Jakarta']);
+        $layananPrioritas = LayananPrioritas::firstOrCreate(
+            ['nama' => 'Reguler', 'cabang_id' => $cabang->id],
+            ['harga' => 0, 'prioritas' => 1]
+        );
+
+        return [$cabang, $layananPrioritas];
+    }
+
+    private function ensureRoleExists(string $name): void
+    {
+        Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+    }
+
     /**
      * @return array{0: User, 1: Transaksi, 2: Cabang}
      */
