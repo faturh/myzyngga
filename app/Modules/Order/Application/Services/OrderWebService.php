@@ -1676,16 +1676,30 @@ class OrderWebService
             ->get();
     }
 
-    public function complaintDetailData(string $id, User $user): \App\Models\Complaint
+    public function complaintDetailData(string $id, ?User $user): \App\Models\Complaint
     {
-        $pelanggan = $this->customerRepository->findByUser($user);
-        if (!$pelanggan) {
-            throw new \Exception('Pelanggan tidak valid.');
+        // Parameter ini dulu bertipe User (tidak nullable) — guest yang baru
+        // mengajukan komplain lewat storeComplaint() diarahkan ke sini dengan
+        // $user null, jadi PHP langsung melempar TypeError fatal (bukan
+        // \Exception biasa, jadi tidak ketangkep catch di controller) sebelum
+        // sempat merender apapun.
+        $complaint = \App\Models\Complaint::with('transaksi.layananPrioritas', 'transaksi.pegawai')
+            ->findOrFail($id);
+
+        if ($user) {
+            $pelanggan = $this->customerRepository->findByUser($user);
+            if (!$pelanggan || (int) $complaint->pelanggan_id !== (int) $pelanggan->id) {
+                abort(403, 'Anda tidak memiliki akses ke komplain ini.');
+            }
+
+            return $complaint;
         }
 
-        return \App\Models\Complaint::with('transaksi.layananPrioritas', 'transaksi.pegawai')
-            ->where('pelanggan_id', $pelanggan->id)
-            ->findOrFail($id);
+        if (!$complaint->transaksi || !in_array($complaint->transaksi->id, session('guest_order_ids', []), true)) {
+            abort(403, 'Anda tidak memiliki akses ke komplain ini.');
+        }
+
+        return $complaint;
     }
 }
 
