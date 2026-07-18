@@ -161,6 +161,167 @@ class OrderRollbackTest extends TestCase
         $this->assertEquals(15000, $meta['pending_upgrade']['price_diff']);
     }
 
+    public function test_ajukan_delivery_dengan_nota_bukan_uuid_tidak_error(): void
+    {
+        // Order pelanggan (dibuat via booking sendiri) pakai nota berformat
+        // "PLG-XXXXXXXX", bukan UUID. Endpoint ajukan-delivery sempat query
+        // Transaksi::find($id) langsung pakai nota ini tanpa fallback ke kolom
+        // nota dulu — di Postgres (tipe kolom id = uuid) ini bikin request
+        // AJAX gagal dengan SQLSTATE 22P02 (invalid input syntax for type uuid).
+        [$user, $order] = $this->makeCustomerOrder('ajukan-delivery-nota@example.com', 'ajukan-delivery-nota');
+        $order->update(['nota' => 'PLG-' . strtoupper(substr(md5($order->id), 0, 8))]);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('order.delivery.store', ['id' => $order->nota]), [
+                'address' => 'Alamat Pengantaran Baru',
+                'detail_address' => 'Detail Baru',
+                'lat' => -6.3,
+                'lng' => 106.9,
+            ]);
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertNotSame(
+            '-',
+            $response->json('estimated_finished'),
+            'estimated_finished harus terisi dari order yang berhasil ditemukan lewat nota, bukan fallback kosong karena lookup id gagal.'
+        );
+    }
+
+    public function test_status_pengerjaan_diproses_muncul_di_log_pesanan_pelanggan(): void
+    {
+        // getStatusName() menghasilkan 'Proses Pengerjaan', 'Perlu Dikerjakan', dst —
+        // bukan literal 'Proses'. mapOrderLogs() sempat cuma cek in_array($status,
+        // ['Proses', 'Selesai']) sehingga log "Pesanan sedang diproses" TIDAK PERNAH
+        // muncul walau progress sudah 56% (admin sudah mulai mengerjakan).
+        [$user, $order] = $this->makeCustomerOrder('status-log@example.com', 'status-log');
+
+        $order->pending_status_id = 4; // 'Proses Pengerjaan'
+        $order->save();
+
+        $data = app(\App\Modules\Order\Application\Services\OrderWebService::class)->detailData($order->id, $user);
+
+        $notes = array_column($data['logs'], 'note');
+        $this->assertContains(
+            'Pesanan sedang diproses',
+            $notes,
+            'Log status pesanan harus menampilkan "Pesanan sedang diproses" begitu admin mulai mengerjakan pesanan (status Proses Pengerjaan), bukan diam di "Pesanan diterima" saja.'
+        );
+    }
+
+    public function test_rincian_pakaian_yang_diisi_admin_muncul_di_detail_pesanan_pelanggan(): void
+    {
+        [$user, $order, $cabang] = $this->makeCustomerOrder('rincian-pakaian@example.com', 'rincian-pakaian');
+        $admin = User::factory()->create([
+            'username' => 'rincian-pakaian-admin2',
+            'slug' => 'rincian-pakaian-admin2',
+            'email' => 'rincian-pakaian-admin2@example.com',
+            'role' => 'admin',
+        ]);
+        $admin->assignRole('admin');
+
+        // Simulasikan alur admin sungguhan: timbang dulu, baru isi rincian pakaian
+        // lewat endpoint "mulai kerjakan" — persis seperti UI admin sebenarnya.
+        $this->actingAs($admin)->postJson(route('admin.riwayat-pesanan.proses', $order->id), [
+            'berat' => 5.6,
+        ])->assertStatus(200);
+
+        $this->actingAs($admin)->postJson(route('admin.riwayat-pesanan.kerjakan', $order->id), [
+            'pegawai_id' => $admin->id,
+            'items' => [
+                ['nama_item' => 'Kaos', 'qty' => 3],
+                ['nama_item' => 'Celana', 'qty' => 2],
+            ],
+        ])->assertStatus(200);
+
+        $data = app(\App\Modules\Order\Application\Services\OrderWebService::class)->detailData($order->id, $user);
+
+        $this->assertNotEmpty(
+            $data['clothing_items'],
+            'Rincian pakaian yang sudah diisi admin lewat endpoint kerjakan harus muncul di halaman detail pesanan pelanggan.'
+        );
+        $this->assertEqualsCanonicalizing(
+            ['Kaos', 'Celana'],
+            array_column($data['clothing_items'], 'name')
+        );
+    }
+
+    public function test_email_pesanan_selesai_terkirim_saat_admin_menyelesaikan_pesanan(): void
+    {
+        // getStatusName(5) menghasilkan 'Pesanan Selesai', bukan literal 'Selesai' —
+        // pengecekan lama di Transaksi::booted() (saved hook) memakai
+        // $transaksi->status === 'Selesai' yang tidak pernah cocok, sehingga
+        // OrderFinishedMail tidak pernah benar-benar terkirim ke pelanggan.
+        \Illuminate\Support\Facades\Mail::fake();
+
+        [$user, $order] = $this->makeCustomerOrder('email-selesai@example.com', 'email-selesai');
+        $order->update(['payment_status' => 'paid']);
+
+        $order->status = 'Selesai';
+        $order->save();
+
+        \Illuminate\Support\Facades\Mail::assertSent(
+            \App\Mail\OrderFinishedMail::class,
+            fn ($mail) => $mail->transaksi->id === $order->id
+        );
+    }
+
+    public function test_ajukan_delivery_pada_order_lunas_tidak_menambah_biaya_dan_status_tetap_lunas(): void
+    {
+        // "Gratis pickup dan delivery" dijanjikan di Syarat & Ketentuan halaman
+        // detail pesanan. config('laundry.delivery_fee') dulu default Rp5.000,
+        // yang diam-diam menambah Total pesanan yang sudah Lunas tanpa pernah
+        // mengubah payment_status atau menyediakan cara untuk melunasinya.
+        [$user, $order] = $this->makeCustomerOrder('delivery-gratis@example.com', 'delivery-gratis');
+        $order->update(['payment_status' => 'paid']);
+        $originalTotal = $order->total_bayar_akhir;
+
+        $this->actingAs($user)->postJson(route('order.delivery.store', ['id' => $order->id]), [
+            'address' => 'Alamat Pengantaran Baru',
+            'lat' => -6.3,
+            'lng' => 106.9,
+        ])->assertOk()->assertJson(['success' => true]);
+
+        $data = app(\App\Modules\Order\Application\Services\OrderWebService::class)->detailData($order->id, $user);
+
+        $this->assertSame(0.0, $data['delivery_fee'], 'Biaya pengiriman harus Rp0 karena delivery memang gratis.');
+        $this->assertEquals($originalTotal, $data['total'], 'Total tidak boleh bertambah oleh biaya delivery yang seharusnya gratis.');
+        $this->assertSame('Lunas', $data['payment_status']);
+    }
+
+    public function test_bukti_timbangan_yang_diunggah_admin_muncul_di_galeri_pelanggan(): void
+    {
+        // mapOrderDetail() sempat tidak pernah mengisi key 'gallery' sama sekali
+        // (blade selalu menampilkan "Tidak ada Gambar"), dan endpoint upload bukti
+        // timbangan bahkan belum terdaftar sebagai route — jadi fitur Galeri
+        // 100% tidak bisa dipakai dari ujung ke ujung.
+        [$user, $order] = $this->makeCustomerOrder('galeri@example.com', 'galeri');
+        $admin = User::factory()->create([
+            'username' => 'galeri-admin2',
+            'slug' => 'galeri-admin2',
+            'email' => 'galeri-admin2@example.com',
+            'role' => 'admin',
+        ]);
+        $admin->assignRole('admin');
+
+        \Illuminate\Support\Facades\Storage::fake('cloudinary');
+        $file = \Illuminate\Http\UploadedFile::fake()->image('timbangan.jpg');
+
+        $this->actingAs($admin)->post(route('admin.riwayat-pesanan.bukti-timbangan', $order->id), [
+            'bukti_timbangan' => $file,
+        ])->assertRedirect();
+
+        $order->refresh();
+        $this->assertNotNull($order->bukti_timbangan, 'Upload bukti timbangan harus tersimpan ke kolom bukti_timbangan.');
+
+        $data = app(\App\Modules\Order\Application\Services\OrderWebService::class)->detailData($order->id, $user);
+
+        $this->assertNotEmpty(
+            $data['gallery'],
+            'Foto bukti timbangan yang sudah diunggah admin harus muncul di Galeri halaman detail pesanan pelanggan.'
+        );
+        $this->assertSame($order->bukti_timbangan, $data['gallery'][0]);
+    }
+
     /**
      * @return array{0: User, 1: Transaksi, 2: Cabang}
      */

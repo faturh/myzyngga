@@ -309,7 +309,7 @@ class OrderPageController
             $this->webService->storeRequestDelivery($request, $id);
             if ($request->ajax() || $request->wantsJson()) {
                 $updatedOrder = $this->webService->detailData($id, $request->user());
-                $orderModel = \App\Models\Transaksi::find($id);
+                $orderModel = \App\Models\Transaksi::where('nota', $id)->first() ?? \App\Models\Transaksi::find($id);
                 $estimatedFinished = $orderModel ? $this->webService->formatEstimatedFinished($orderModel) : '-';
                 
                 return response()->json([
