@@ -322,6 +322,25 @@ class OrderRollbackTest extends TestCase
         $this->assertSame($order->bukti_timbangan, $data['gallery'][0]);
     }
 
+    public function test_detail_pesanan_nota_tidak_ada_menampilkan_404_bukan_crash_500(): void
+    {
+        // Kolom id di Postgres bertipe uuid. Kalau nota tidak ketemu, kode lama
+        // fallback ke Transaksi::find($nota) — string non-UUID bikin driver pgsql
+        // lempar QueryException (SQLSTATE 22P02) alih-alih return null seperti
+        // MySQL, sehingga halaman crash 500 alih-alih redirect "tidak ditemukan".
+        $user = User::factory()->create([
+            'username' => 'nota-hilang',
+            'slug' => 'nota-hilang',
+            'email' => 'nota-hilang@example.com',
+            'password' => 'password',
+        ]);
+        $user->assignRole('customer');
+
+        $response = $this->actingAs($user)->get(route('order.detail', ['id' => 'PLG-TIDAK-ADA']));
+
+        $response->assertRedirect(route('order.history'));
+    }
+
     /**
      * @return array{0: User, 1: Transaksi, 2: Cabang}
      */
