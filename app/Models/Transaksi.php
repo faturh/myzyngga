@@ -157,9 +157,11 @@ class Transaksi extends Model
                 }
             }
 
-            // 2. Kirim email jika status laundry di-update menjadi 'Selesai'
+            // 2. Kirim email jika status laundry di-update menjadi selesai. getStatusName(5)
+            // menghasilkan 'Pesanan Selesai', bukan literal 'Selesai' — perbandingan lama
+            // tidak pernah cocok sehingga email "pesanan selesai" tidak pernah terkirim.
             $statusChanged = $transaksi->wasChanged('list_pengerjaan_id') || $transaksi->wasChanged('status');
-            if ($statusChanged && $transaksi->status === 'Selesai') {
+            if ($statusChanged && in_array($transaksi->status, ['Selesai', 'Pesanan Selesai'], true)) {
                 $email = $transaksi->pelanggan->user->email ?? null;
                 if ($email) {
                     try {

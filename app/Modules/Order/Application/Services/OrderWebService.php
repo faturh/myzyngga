@@ -484,6 +484,7 @@ class OrderWebService
             'tax' => 0,
             'delivery_fee' => $deliveryFee,
             'total' => $total,
+            'gallery' => $order->bukti_timbangan ? [$order->bukti_timbangan] : [],
             'cash' => (float) $order->bayar,
             'change' => (float) ($order->kembalian ?: 0),
             'items' => $this->mapOrderItems($order),
@@ -1009,7 +1010,12 @@ class OrderWebService
             'note' => 'Pesanan diterima',
         ]];
 
-        if (in_array($order->status, ['Proses', 'Selesai'], true)) {
+        // Nama status asli dari Transaksi::getStatusName() bukan cuma 'Proses'/'Selesai'
+        // ('Proses Pengerjaan', 'Perlu Dikerjakan', dst) — samakan set-nya dengan
+        // progressForStatus() supaya log ini benar-benar muncul begitu admin mulai
+        // mengerjakan pesanan, bukan cuma diam di "Pesanan diterima" terus.
+        $inProgressStatuses = ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'Selesai', 'Pesanan Selesai'];
+        if (in_array($order->status, $inProgressStatuses, true)) {
             $logs[] = [
                 'time' => optional($order->updated_at)->format('H:i') ?: $createdAt->copy()->addHour()->format('H:i'),
                 'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: $createdAt->locale('id')->isoFormat('dddd, D MMM'),

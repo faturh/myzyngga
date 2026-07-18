@@ -191,6 +191,25 @@
                                 </div>
                             </div>
 
+                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
+                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
+                                    <i data-feather="camera" class="w-4 h-4 text-blue-500"></i>
+                                    Bukti Timbangan
+                                </h3>
+                                @if($transaksi->bukti_timbangan)
+                                    <img src="{{ $transaksi->bukti_timbangan }}" alt="Bukti Timbangan" class="w-full rounded-xl border border-slate-100 object-cover">
+                                @endif
+                                <form action="{{ route('admin.riwayat-pesanan.bukti-timbangan', $transaksi->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
+                                    @csrf
+                                    <input type="file" name="bukti_timbangan" accept="image/*" required
+                                        class="w-full text-xs font-semibold text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100">
+                                    <button type="submit" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                                        {{ $transaksi->bukti_timbangan ? 'Ganti Foto' : 'Unggah Foto' }}
+                                    </button>
+                                </form>
+                                <p class="text-[10px] text-slate-400">Foto ini akan tampil di Galeri halaman detail pesanan pelanggan.</p>
+                            </div>
+
                             @if($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)
                             <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
                                 <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
