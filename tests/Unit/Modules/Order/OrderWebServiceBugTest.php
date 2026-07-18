@@ -69,6 +69,10 @@ class OrderWebServiceBugTest extends TestCase
         $order = $this->makeTransaksi();
         $service = app(OrderWebService::class);
 
+        // Guest butuh order ini tercatat di sesi (assertGuestOwnsOrderInSession)
+        // supaya lolos verifikasi kepemilikan, sama seperti confirmOrder() asli.
+        session(['guest_order_ids' => [$order->id]]);
+
         // Delivery fee TIDAK dikirim dari client — diambil dari config server
         $request = Request::create('/', 'POST', [
             'address'        => 'Jl. Merdeka No. 1',
@@ -94,6 +98,8 @@ class OrderWebServiceBugTest extends TestCase
     {
         $order = $this->makeTransaksi();
         $service = app(OrderWebService::class);
+
+        session(['guest_order_ids' => [$order->id]]);
 
         // Seandainya client mengirim delivery_fee yang dimanipulasi, harus diabaikan
         $request = Request::create('/', 'POST', [

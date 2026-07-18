@@ -409,6 +409,56 @@ class OrderRollbackTest extends TestCase
         Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
     }
 
+    public function test_guest_bisa_ajukan_komplain_untuk_pesanan_sendiri(): void
+    {
+        // storeComplaint() sudah didesain menerima $user null, tapi route-nya
+        // sempat kepagar middleware auth — guest yang submit selalu kena
+        // 401 Unauthenticated walau ini pesanan yang mereka buat sendiri.
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+
+        $this->post(route('order.confirm'), [
+            'service' => 'regular',
+            'address' => 'Jalan Guest Komplain No. 1',
+            'lat' => -6.2,
+            'lng' => 106.8,
+            'selected_service_id' => 'regular',
+            'pickup_date' => 'today',
+            'pickup_time' => '09:00',
+            'customer_name' => 'Guest Komplain',
+            'customer_phone' => '081200004444',
+            'payment' => 'cash',
+        ]);
+
+        $pelanggan = \App\Models\Pelanggan::where('telepon', '081200004444')->first();
+        $order = \App\Models\Transaksi::where('pelanggan_id', $pelanggan->id)->latest('created_at')->first();
+
+        $response = $this->postJson(route('order.complaint.store', ['id' => $order->id]), [
+            'issue_description' => 'Baju saya hilang satu',
+            'issue_types' => ['pakaian_rusak'],
+        ]);
+
+        $response->assertStatus(200)->assertJsonPath('success', true);
+        $this->assertDatabaseHas('complaints', [
+            'transaksi_id' => $order->id,
+            'pelanggan_id' => $pelanggan->id,
+        ]);
+    }
+
+    public function test_guest_tidak_bisa_ajukan_komplain_untuk_pesanan_orang_lain(): void
+    {
+        // assertGuestOwnsOrderInSession() harus tetap menolak guest yang
+        // sekadar tahu/nebak ID order orang lain (tidak tercatat di sesi mereka).
+        [$user, $order] = $this->makeCustomerOrder('komplain-bukan-punya@example.com', 'komplain-bukan-punya');
+
+        $response = $this->postJson(route('order.complaint.store', ['id' => $order->id]), [
+            'issue_description' => 'Coba komplain punya orang lain',
+            'issue_types' => ['pakaian_rusak'],
+        ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseMissing('complaints', ['transaksi_id' => $order->id]);
+    }
+
     /**
      * @return array{0: User, 1: Transaksi, 2: Cabang}
      */

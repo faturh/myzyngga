@@ -364,6 +364,7 @@ class OrderWebService
             throw new \Exception('Pesanan tidak ditemukan.');
         }
         $this->assertOwnership($order, $request->user());
+        $this->assertGuestOwnsOrderInSession($order, $request->user());
 
         // Biaya pengantaran ditetapkan server-side — tidak dari input client.
         $deliveryFee = (float) config('laundry.delivery_fee', 0);
@@ -1485,6 +1486,7 @@ class OrderWebService
             throw new \Exception('Metode pembayaran tidak dapat diubah.');
         }
         $this->assertOwnership($order, $user);
+        $this->assertGuestOwnsOrderInSession($order, $user);
 
         $order->jenis_pembayaran = match(strtolower($method)) {
             'qris' => 'QRIS',
@@ -1556,6 +1558,7 @@ class OrderWebService
             throw new \Exception('Pesanan tidak ditemukan.');
         }
         $this->assertOwnership($order, $user);
+        $this->assertGuestOwnsOrderInSession($order, $user);
 
         $pelanggan = $user ? $this->customerRepository->findByUser($user) : null;
         if (!$pelanggan) {
