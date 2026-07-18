@@ -99,9 +99,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Auth-protected order actions (BUG-UNAUTH-03..07 + BUG-OWNERSHIP-08)
     Route::get('/order/{id}/repeat', [OrderPageController::class, 'repeat'])->name('order.repeat');
-    Route::post('/order/{id}/request-delivery', [OrderPageController::class, 'storeRequestDelivery'])->name('order.delivery.store');
-    Route::post('/order/{id}/complaint', [OrderPageController::class, 'storeComplaint'])->name('order.complaint.store');
 });
+
+// Guest checkout juga bisa ajukan delivery & komplain untuk pesanan mereka
+// sendiri (bukan cuma pelanggan yang login) — dulu dua route ini kepagar
+// middleware auth, padahal service method-nya (storeRequestDelivery(),
+// storeComplaint()) sudah didesain menerima $user null. Akibatnya guest yang
+// coba submit selalu kena 401 Unauthenticated. Kepemilikan tetap diverifikasi
+// via assertGuestOwnsOrderInSession() (order harus tercatat di sesi guest_order_ids).
+Route::post('/order/{id}/request-delivery', [OrderPageController::class, 'storeRequestDelivery'])->name('order.delivery.store');
+Route::post('/order/{id}/complaint', [OrderPageController::class, 'storeComplaint'])->name('order.complaint.store');
 
 // Public Order Routes (Enabled for Guests)
 Route::post('/order/update-session', [OrderPageController::class, 'updateSession'])
