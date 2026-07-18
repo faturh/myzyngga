@@ -444,6 +444,60 @@ class OrderRollbackTest extends TestCase
         ]);
     }
 
+    public function test_guest_bisa_lihat_detail_komplain_yang_baru_dibuat(): void
+    {
+        // complaintDetailData() dulu bertipe parameter User $user (tidak nullable).
+        // Guest yang baru berhasil kirim komplain diarahkan ke halaman ini dengan
+        // $request->user() === null, sehingga PHP melempar TypeError fatal —
+        // bukan \Exception biasa, jadi tidak ketangkep catch di controller dan
+        // halamannya blank/500 alih-alih menampilkan detail komplain.
+        [$cabang, $layananPrioritas] = $this->ensureOrderReferencesExist();
+
+        $this->post(route('order.confirm'), [
+            'service' => 'regular',
+            'address' => 'Jalan Guest Lihat Komplain',
+            'lat' => -6.2,
+            'lng' => 106.8,
+            'selected_service_id' => 'regular',
+            'pickup_date' => 'today',
+            'pickup_time' => '09:00',
+            'customer_name' => 'Guest Lihat Komplain',
+            'customer_phone' => '081200005555',
+            'payment' => 'cash',
+        ]);
+
+        $pelanggan = \App\Models\Pelanggan::where('telepon', '081200005555')->first();
+        $order = \App\Models\Transaksi::where('pelanggan_id', $pelanggan->id)->latest('created_at')->first();
+
+        $storeResponse = $this->postJson(route('order.complaint.store', ['id' => $order->id]), [
+            'issue_description' => 'Pengantaran telat',
+            'issue_types' => ['masalah_pengantaran'],
+        ]);
+        $complaintId = $storeResponse->json('complaint_id');
+
+        $response = $this->get(route('profile.complaint.detail', ['id' => $complaintId]));
+
+        $response->assertOk();
+        $response->assertSee('Pengantaran telat');
+    }
+
+    public function test_guest_tidak_bisa_lihat_detail_komplain_orang_lain(): void
+    {
+        [$user, $order] = $this->makeCustomerOrder('komplain-detail-orang-lain@example.com', 'komplain-detail-orang-lain');
+        $pelanggan = \App\Models\Pelanggan::where('user_id', $user->id)->first();
+        $complaint = \App\Models\Complaint::create([
+            'transaksi_id' => $order->id,
+            'pelanggan_id' => $pelanggan->id,
+            'content' => 'Punya orang lain',
+            'status' => 'pending',
+            'issue_types' => ['pakaian_rusak'],
+        ]);
+
+        $response = $this->get(route('profile.complaint.detail', ['id' => $complaint->id]));
+
+        $response->assertRedirect(route('profile.complaints'));
+    }
+
     public function test_guest_tidak_bisa_ajukan_komplain_untuk_pesanan_orang_lain(): void
     {
         // assertGuestOwnsOrderInSession() harus tetap menolak guest yang

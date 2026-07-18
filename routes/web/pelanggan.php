@@ -87,7 +87,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('notifications.filled');
     Route::post('notifications/{notifikasi}/read', [CustomerNotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('profile/complaints', [OrderPageController::class, 'complaintsHistory'])->name('profile.complaints');
-    Route::get('profile/complaints/{id}', [OrderPageController::class, 'complaintDetail'])->name('profile.complaint.detail');
 
     // Address Management
     Route::get('addresses/create/details', [AddressController::class, 'createDetails'])->name('addresses.create.details');
@@ -109,6 +108,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // via assertGuestOwnsOrderInSession() (order harus tercatat di sesi guest_order_ids).
 Route::post('/order/{id}/request-delivery', [OrderPageController::class, 'storeRequestDelivery'])->name('order.delivery.store');
 Route::post('/order/{id}/complaint', [OrderPageController::class, 'storeComplaint'])->name('order.complaint.store');
+
+// storeComplaint() me-redirect guest ke halaman detail komplain yang baru
+// mereka buat — halaman ini juga harus guest-accessible, dengan kepemilikan
+// diverifikasi via assertGuestOwnsOrderInSession() di complaintDetailData().
+Route::get('profile/complaints/{id}', [OrderPageController::class, 'complaintDetail'])->name('profile.complaint.detail');
 
 // Public Order Routes (Enabled for Guests)
 Route::post('/order/update-session', [OrderPageController::class, 'updateSession'])
