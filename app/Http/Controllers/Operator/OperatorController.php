@@ -350,12 +350,14 @@ class OperatorController extends Controller
             // Fetch available Satuan items
             $satuanItemsAvailable = \App\Models\KategoriPakaianSatuan::get();
 
+            $tab = request()->query('tab', 'perlu-diproses');
             return view('operator.admin.proses-transaksi', compact(
                 'transaksi',
                 'satuanItemsAvailable',
                 'pendingUpgrade',
                 'upgradeHistory',
-                'availableUpgrades'
+                'availableUpgrades',
+                'tab'
             ));
         } catch (\Exception $e) {
             return redirect()->route('admin.riwayat-pesanan')->with('error', $e->getMessage());
@@ -418,7 +420,8 @@ class OperatorController extends Controller
                     'status' => 200
                 ], 200);
             }
-            return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
+            $tab = $request->input('tab', 'perlu-diproses');
+            return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -445,7 +448,8 @@ class OperatorController extends Controller
                 
             $itemsAvailable = \App\Models\JenisPakaian::get();
 
-            return view('operator.admin.proses-pekerjaan', compact('transaksi', 'pegawaiList', 'itemsAvailable'));
+            $tab = request()->query('tab', 'perlu-dikerjakan');
+            return view('operator.admin.proses-pekerjaan', compact('transaksi', 'pegawaiList', 'itemsAvailable', 'tab'));
         } catch (\Exception $e) {
             return redirect()->route('admin.riwayat-pesanan')->with('error', $e->getMessage());
         }
@@ -525,7 +529,8 @@ class OperatorController extends Controller
                     'status' => 200
                 ], 200);
             }
-            return redirect()->route('admin.riwayat-pesanan')->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
+            $tab = $request->input('tab', 'perlu-dikerjakan');
+            return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -553,7 +558,8 @@ class OperatorController extends Controller
                 'status' => 200
             ], 200);
         }
-        return redirect()->back()->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.');
+        $tab = request()->input('tab', 'dibatalkan');
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil dibatalkan.');
     }
 
     /**
@@ -619,7 +625,8 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        return redirect()->back()->with('success', $message);
+        $tab = request()->input('tab', 'proses-pengerjaan');
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
     }
 
     /**
@@ -640,7 +647,8 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        return redirect()->back()->with('success', $message);
+        $tab = request()->input('tab', 'perlu-di-antar');
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
     }
 
     /**
@@ -661,7 +669,8 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        return redirect()->back()->with('success', $message);
+        $tab = request()->input('tab', 'menunggu-di-jemput');
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
     }
 
     /**
@@ -683,7 +692,8 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        return redirect()->back()->with('success', $message);
+        $tab = request()->input('tab', 'menunggu-pembayaran');
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
     }
 
     /**
@@ -703,7 +713,8 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        return redirect()->back()->with('success', $message);
+        $tab = request()->input('tab', 'kendala');
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
     }
 
     /**
@@ -1126,5 +1137,24 @@ class OperatorController extends Controller
             }
             return redirect()->back()->with('error', 'Gagal mengubah tarif gaji: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get real-time transaction and complaint counts.
+     */
+    public function getRealtimeCounts()
+    {
+        return response()->json([
+            'menunggu_di_jemput' => \App\Models\Operator::getMenungguDiJemputCount(),
+            'perlu_diproses'     => \App\Models\Operator::getPerluDiprosesCount(),
+            'perlu_dikerjakan'   => \App\Models\Operator::getPerluDikerjakanCount(),
+            'proses_pengerjaan'  => \App\Models\Operator::getProsesPengerjaanCount(),
+            'menunggu_pembayaran'=> \App\Models\Operator::getMenungguPembayaranCount(),
+            'perlu_di_antar'     => \App\Models\Operator::getPerluDiAntarCount(),
+            'selesai'            => \App\Models\Operator::getPesananSelesaiCount(),
+            'dibatalkan'         => \App\Models\Operator::getSedangDibatalkanCount(),
+            'kendala'            => \App\Models\Complaint::count(),
+            'status'             => 200
+        ], 200);
     }
 }
