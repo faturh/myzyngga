@@ -237,9 +237,13 @@
                                                 <!-- Aksi Column -->
                                                 <td class="py-4 text-right">
                                                     @if($rec['source'] === 'manual')
-                                                        <button type="button" onclick="deleteKeuanganRecord({{ $rec['id'] }})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
-                                                            <i data-feather="trash-2" class="w-4 h-4"></i>
-                                                        </button>
+                                                        <form method="POST" action="{{ route('admin.keuangan.destroy', $rec['id']) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan manual ini?')" class="inline-block">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
+                                                                <i data-feather="trash-2" class="w-4 h-4"></i>
+                                                            </button>
+                                                        </form>
                                                     @else
                                                         <span class="text-slate-300 text-[10px] font-normal italic">-</span>
                                                     @endif
@@ -334,28 +338,7 @@
             </div>
         </div>
     </div>
-    <!-- Hidden Forms for Deletion -->
-    @foreach($records as $rec)
-        @if($rec['source'] === 'manual')
-            <form id="delete-form-{{ $rec['id'] }}" method="POST" action="{{ route('admin.keuangan.destroy', $rec['id']) }}" class="hidden">
-                @csrf
-                @method('DELETE')
-            </form>
-        @endif
-    @endforeach
-
-    <!-- FIX: Pendaftaran Fungsi Global Dipindah ke Luar DOM Lifecycle Listener -->
     <script>
-        window.deleteKeuanganRecord = function(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus catatan manual ini?')) {
-                const form = document.getElementById('delete-form-' + id);
-                if (form) {
-                    form.submit();
-                } else {
-                    console.error('Delete form not found for ID:', id);
-                }
-            }
-        };
 
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof feather !== 'undefined') {
