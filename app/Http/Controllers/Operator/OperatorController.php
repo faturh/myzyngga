@@ -166,7 +166,7 @@ class OperatorController extends Controller
      */
     public function riwayatPesanan(Request $request)
     {
-        $tab = $request->query('tab', 'perlu-diproses');
+        $tab = $request->query('tab', 'menunggu-di-jemput');
         $search = $request->query('search');
         $sort = $request->query('sort', 'deadline');
 
@@ -176,98 +176,116 @@ class OperatorController extends Controller
         $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
         $prosesPengerjaanCount = Operator::getProsesPengerjaanCount();
         $pesananSelesaiCount = Operator::getPesananSelesaiCount();
-        $kendalaPesananCount = Operator::getKendalaPesananCount();
+        $kendalaPesananCount = \App\Models\Complaint::count();
         $sedangDibatalkanCount = Operator::getSedangDibatalkanCount();
-        $sedangDijemputCount = Operator::getSedangDijemputCount();
+        $menungguDiJemputCount = Operator::getMenungguDiJemputCount();
+        $perluDiAntarCount = Operator::getPerluDiAntarCount();
 
         // Query setup
-        $query = Transaksi::query()
-            ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas']);
+        if ($tab === 'kendala') {
+            $query = \App\Models\Complaint::query()
+                ->with(['transaksi.pelanggan.user', 'transaksi.pegawai', 'transaksi.cabang', 'transaksi.layananPrioritas', 'pelanggan.user'])
+                ->latest();
 
-        // Search filter (Nomor Pesanan / Nota or Pelanggan Name)
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nota', 'like', "%{$search}%")
-                  ->orWhereHas('pelanggan', function ($pq) use ($search) {
-                      $pq->where('nama', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        // Tab filter
-        switch ($tab) {
-            case 'perlu-diproses':
-                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 1));
-                break;
-            case 'menunggu-pembayaran':
-                $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-                      ->where('payment_status', '!=', 'paid');
-                break;
-            case 'perlu-dikerjakan':
-                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 3));
-                break;
-            case 'proses-pengerjaan':
-                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 4));
-                break;
-            case 'selesai':
-                $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-                      ->where('payment_status', 'paid');
-                break;
-            case 'kendala':
-                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 6));
-                break;
-            case 'dibatalkan':
-                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7));
-                break;
-            case 'sedang-dijemput':
-                $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 8));
-                break;
-            case 'semua':
-            default:
-                // Return all
-                break;
-        }
-
-        // Apply sorting
-        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
-        if ($sort === 'deadline') {
-            if ($driver === 'pgsql') {
-                $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
-                      ->select('transaksi.*')
-                      ->orderByRaw("
-                          transaksi.waktu + (
-                              CASE 
-                                  WHEN LOWER(lp.nama) = 'kilat' THEN INTERVAL '5 hours'
-                                  WHEN LOWER(lp.nama) = 'express' THEN INTERVAL '10 hours'
-                                  WHEN LOWER(lp.nama) = 'quick' THEN INTERVAL '20 hours'
-                                  ELSE INTERVAL '30 hours'
-                              END
-                          ) ASC
-                      ");
-            } else {
-                $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
-                      ->select('transaksi.*')
-                      ->orderByRaw("
-                          datetime(transaksi.waktu, 
-                              CASE 
-                                  WHEN LOWER(lp.nama) = 'kilat' THEN '+5 hours'
-                                  WHEN LOWER(lp.nama) = 'express' THEN '+10 hours'
-                                  WHEN LOWER(lp.nama) = 'quick' THEN '+20 hours'
-                                  ELSE '+30 hours'
-                              END
-                          ) ASC
-                      ");
+            // Search filter (Nomor Pesanan / Nota or Pelanggan Name)
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('transaksi', function ($tq) use ($search) {
+                        $tq->where('nota', 'like', "%{$search}%");
+                    })->orWhereHas('pelanggan', function ($pq) use ($search) {
+                        $pq->where('nama', 'like', "%{$search}%");
+                    });
+                });
             }
-        } elseif ($sort === 'terbaru') {
-            $query->orderBy('waktu', 'desc');
-        } elseif ($sort === 'terlama') {
-            $query->orderBy('waktu', 'asc');
-        } elseif ($sort === 'prioritas_desc') {
-            $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
-                  ->select('transaksi.*')
-                  ->orderBy('lp.prioritas', 'desc');
         } else {
-            $query->orderBy('waktu', 'desc');
+            $query = Transaksi::query()
+                ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas']);
+
+            // Search filter (Nomor Pesanan / Nota or Pelanggan Name)
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nota', 'like', "%{$search}%")
+                      ->orWhereHas('pelanggan', function ($pq) use ($search) {
+                          $pq->where('nama', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            // Tab filter
+            switch ($tab) {
+                case 'perlu-diproses':
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 1));
+                    break;
+                case 'menunggu-pembayaran':
+                    $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
+                          ->where('payment_status', '!=', 'paid');
+                    break;
+                case 'perlu-dikerjakan':
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 3));
+                    break;
+                case 'proses-pengerjaan':
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 4));
+                    break;
+                case 'selesai':
+                    $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
+                          ->where('payment_status', 'paid');
+                    break;
+                case 'dibatalkan':
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7));
+                    break;
+                case 'menunggu-di-jemput':
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 8));
+                    break;
+                case 'perlu-di-antar':
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 9));
+                    break;
+                case 'semua':
+                default:
+                    // Return all
+                    break;
+            }
+
+            // Apply sorting
+            $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+            if ($sort === 'deadline') {
+                if ($driver === 'pgsql') {
+                    $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                          ->select('transaksi.*')
+                          ->orderByRaw("
+                              transaksi.waktu + (
+                                  CASE 
+                                      WHEN LOWER(lp.nama) = 'kilat' THEN INTERVAL '5 hours'
+                                      WHEN LOWER(lp.nama) = 'express' THEN INTERVAL '10 hours'
+                                      WHEN LOWER(lp.nama) = 'quick' THEN INTERVAL '20 hours'
+                                      ELSE INTERVAL '30 hours'
+                                  END
+                              ) ASC
+                          ");
+                } else {
+                    $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                          ->select('transaksi.*')
+                          ->orderByRaw("
+                              datetime(transaksi.waktu, 
+                                  CASE 
+                                      WHEN LOWER(lp.nama) = 'kilat' THEN '+5 hours'
+                                      WHEN LOWER(lp.nama) = 'express' THEN '+10 hours'
+                                      WHEN LOWER(lp.nama) = 'quick' THEN '+20 hours'
+                                      ELSE '+30 hours'
+                                  END
+                              ) ASC
+                          ");
+                }
+            } elseif ($sort === 'terbaru') {
+                $query->orderBy('waktu', 'desc');
+            } elseif ($sort === 'terlama') {
+                $query->orderBy('waktu', 'asc');
+            } elseif ($sort === 'prioritas_desc') {
+                $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
+                      ->select('transaksi.*')
+                      ->orderBy('lp.prioritas', 'desc');
+            } else {
+                $query->orderBy('waktu', 'desc');
+            }
         }
 
         $transaksi = $query->paginate(10)->withQueryString();
@@ -291,7 +309,8 @@ class OperatorController extends Controller
             'pesananSelesaiCount',
             'kendalaPesananCount',
             'sedangDibatalkanCount',
-            'sedangDijemputCount'
+            'menungguDiJemputCount',
+            'perluDiAntarCount'
         ));
     }
 
@@ -604,6 +623,90 @@ class OperatorController extends Controller
     }
 
     /**
+     * Complete order delivery (update status to 'Pesanan Selesai' / statusId 5).
+     */
+    public function selesaikanAntar(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->list_status_pengerjaan_id = 5;
+        $transaksi->save();
+
+        $message = 'Pengantaran pesanan #' . $transaksi->nota . ' telah selesai.';
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'data'    => $transaksi,
+                'message' => $message,
+                'status'  => 200
+            ], 200);
+        }
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Confirm order pickup (update status to 'Perlu Diproses' / statusId 1).
+     */
+    public function konfirmasiJemput(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->list_status_pengerjaan_id = 1;
+        $transaksi->save();
+
+        $message = 'Pesanan #' . $transaksi->nota . ' berhasil dijemput. Silakan proses timbangan.';
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'data'    => $transaksi,
+                'message' => $message,
+                'status'  => 200
+            ], 200);
+        }
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Confirm order payment (update payment status to 'paid' / statusId changes accordingly).
+     */
+    public function konfirmasiBayar(string $id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->payment_status = 'paid';
+        $transaksi->bayar = $transaksi->total_bayar_akhir;
+        $transaksi->save();
+
+        $message = 'Pembayaran pesanan #' . $transaksi->nota . ' berhasil dikonfirmasi.';
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'data'    => $transaksi,
+                'message' => $message,
+                'status'  => 200
+            ], 200);
+        }
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Resolve and delete complaint.
+     */
+    public function selesaikanComplaint(string $id)
+    {
+        $complaint = \App\Models\Complaint::findOrFail($id);
+        $nota = optional($complaint->transaksi)->nota ?? 'N/A';
+        $complaint->delete();
+
+        $message = 'Kendala pesanan #' . $nota . ' telah diselesaikan dan dihapus.';
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'status'  => 200
+            ], 200);
+        }
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
      * Show the manual order creation form.
      */
     public function tambahPesananForm()
@@ -637,6 +740,7 @@ class OperatorController extends Controller
              'jenis_pembayaran' => 'required|string|in:cash,qris,transfer',
              'payment_status' => 'required|string|in:pending,paid',
              'pegawai_id' => 'required|exists:users,id',
+             'antar_laundry' => 'nullable|boolean',
          ], [
              'pelanggan_id.required_if' => 'Pelanggan lama wajib dipilih.',
              'customer_name.required_if' => 'Nama pelanggan baru wajib diisi.',
@@ -704,6 +808,7 @@ class OperatorController extends Controller
                 'bayar' => $validated['payment_status'] === 'paid' ? $defaultCost : 0,
                 'kembalian' => 0,
                 'status' => 'Perlu Diproses',
+                'is_roundtrip' => $request->has('antar_laundry'),
                 'layanan_prioritas_id' => $layanan->id,
                 'pelanggan_id' => $pelanggan->id,
                 'pegawai_id' => $validated['pegawai_id'],

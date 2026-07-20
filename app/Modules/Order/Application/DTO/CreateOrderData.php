@@ -49,7 +49,7 @@ class CreateOrderData
             'payment_status' => 'pending',
             'bayar' => 0,
             'kembalian' => 0,
-            'status' => 'created',
+            'status' => 'Menunggu di Jemput',
             'layanan_prioritas_id' => $this->layananPrioritasId,
             'pelanggan_id' => $this->pelangganId,
             'pegawai_id' => $this->pegawaiId ?? $pegawaiId,

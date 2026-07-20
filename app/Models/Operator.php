@@ -67,10 +67,18 @@ class Operator extends Model
     }
 
     /**
-     * Get count of orders being picked up (status 'Sedang Dijemput').
+     * Get count of orders waiting to be picked up (status 'Menunggu di Jemput').
      */
-    public static function getSedangDijemputCount(): int
+    public static function getMenungguDiJemputCount(): int
     {
         return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 8))->count();
+    }
+
+    /**
+     * Get count of orders waiting to be delivered (status 'Perlu di Antar').
+     */
+    public static function getPerluDiAntarCount(): int
+    {
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 9))->count();
     }
 }

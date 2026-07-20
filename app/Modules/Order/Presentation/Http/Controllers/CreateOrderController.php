@@ -31,6 +31,7 @@ class CreateOrderController
             catatan: $validated['catatan'] ?? null,
             paymentMethod: $validated['payment_method'],
             estimatedTotal: (float) $validated['estimated_total'],
+            isRoundtrip: (bool) ($validated['is_roundtrip'] ?? false),
         ));
 
         $order->load(['layananPrioritas', 'timbangan.items.jenisPakaian', 'pegawai', 'pelanggan', 'listPengerjaan']);

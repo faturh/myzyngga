@@ -265,7 +265,7 @@
                             <form action="{{ route('admin.riwayat-pesanan.proses', $transaksi->id) }}" method="POST" @submit.prevent="submitForm($event)" class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-6">
                                 @csrf
                                 @php
-                                    $isNewOrder = in_array($transaksi->status, ['Baru', 'created', 'Perlu Diproses']);
+                                    $isNewOrder = in_array($transaksi->status, ['Baru', 'created', 'Perlu Diproses', 'Menunggu di Jemput', 'Menunggu di jemput']);
                                 @endphp
                                 
                                 @if(!$isNewOrder)

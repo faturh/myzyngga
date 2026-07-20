@@ -26,7 +26,8 @@ return new class extends Migration
             ['id' => 5, 'nama' => 'Pesanan Selesai', 'created_at' => now(), 'updated_at' => now()],
             ['id' => 6, 'nama' => 'Kendala Pesanan', 'created_at' => now(), 'updated_at' => now()],
             ['id' => 7, 'nama' => 'Sedang Dibatalkan', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 8, 'nama' => 'Sedang Dijemput', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 8, 'nama' => 'Menunggu di Jemput', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 9, 'nama' => 'Perlu di Antar', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 

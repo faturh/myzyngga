@@ -187,14 +187,28 @@
 
                         <!-- Addons inputs -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-50 pt-4">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pilihan Parfum</label>
-                                <select name="parfum" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
-                                    <option value="Standard" {{ old('parfum') === 'Standard' ? 'selected' : '' }}>Standard (Soft)</option>
-                                    <option value="Fresh" {{ old('parfum') === 'Fresh' ? 'selected' : '' }}>Fresh (Floral)</option>
-                                    <option value="Lavender" {{ old('parfum') === 'Lavender' ? 'selected' : '' }}>Lavender (Menenangkan)</option>
-                                    <option value="None" {{ old('parfum') === 'None' ? 'selected' : '' }}>Tanpa Parfum</option>
-                                </select>
+                            <div class="space-y-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pilihan Parfum</label>
+                                    <select name="parfum" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
+                                        <option value="Standard" {{ old('parfum') === 'Standard' ? 'selected' : '' }}>Standard (Soft)</option>
+                                        <option value="Fresh" {{ old('parfum') === 'Fresh' ? 'selected' : '' }}>Fresh (Floral)</option>
+                                        <option value="Lavender" {{ old('parfum') === 'Lavender' ? 'selected' : '' }}>Lavender (Menenangkan)</option>
+                                        <option value="None" {{ old('parfum') === 'None' ? 'selected' : '' }}>Tanpa Parfum</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" 
+                                           id="antar_laundry" 
+                                           name="antar_laundry" 
+                                           value="1" 
+                                           {{ old('antar_laundry') ? 'checked' : '' }}
+                                           class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                                    <label for="antar_laundry" class="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                                        Antar Laundry (Kirim pesanan ke alamat saat selesai)
+                                    </label>
+                                </div>
                             </div>
 
                             <div class="space-y-1">

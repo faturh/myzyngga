@@ -19,6 +19,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/riwayat-pesanan/{id}/konfirmasi-upgrade', [OperatorController::class, 'konfirmasiUpgrade'])->name('admin.riwayat-pesanan.konfirmasi-upgrade');
         Route::post('/admin/riwayat-pesanan/{id}/inisiasi-upgrade', [OperatorController::class, 'inisiasiUpgrade'])->name('admin.riwayat-pesanan.inisiasi-upgrade');
         Route::post('/admin/riwayat-pesanan/{id}/selesaikan', [OperatorController::class, 'selesaikanPengerjaan'])->name('admin.riwayat-pesanan.selesaikan');
+        Route::post('/admin/riwayat-pesanan/{id}/selesaikan-antar', [OperatorController::class, 'selesaikanAntar'])->name('admin.riwayat-pesanan.selesaikan-antar');
+        Route::post('/admin/riwayat-pesanan/{id}/konfirmasi-jemput', [OperatorController::class, 'konfirmasiJemput'])->name('admin.riwayat-pesanan.konfirmasi-jemput');
+        Route::post('/admin/riwayat-pesanan/{id}/konfirmasi-bayar', [OperatorController::class, 'konfirmasiBayar'])->name('admin.riwayat-pesanan.konfirmasi-bayar');
+        Route::post('/admin/riwayat-pesanan/kendala/{id}/selesai', [OperatorController::class, 'selesaikanComplaint'])->name('admin.riwayat-pesanan.selesaikan-kendala');
         Route::post('/admin/riwayat-pesanan/{transaksi}/bukti-timbangan', [\App\Modules\Transaksi\Presentation\Web\Controllers\UploadBuktiTimbanganController::class, 'upload'])->name('admin.riwayat-pesanan.bukti-timbangan');
         Route::get('/admin/gaji-karyawan', [OperatorController::class, 'gajiKaryawan'])->name('admin.gaji-karyawan');
         Route::get('/admin/gaji-karyawan/download', [OperatorController::class, 'downloadGajiKaryawan'])->name('admin.gaji-karyawan.download');
