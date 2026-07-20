@@ -51,8 +51,8 @@
             display: none;
         }
 
-        /* Hide native calendar picker indicator icon but keep it clickable across the input */
-        input[type="date"]::-webkit-calendar-picker-indicator {
+        /* Selector dikunci hanya untuk input di dalam .relative-input-container */
+        .relative-input-container input::-webkit-calendar-picker-indicator {
             position: absolute;
             top: 0;
             left: 0;
@@ -62,8 +62,8 @@
             height: 100%;
             opacity: 0;
             cursor: pointer;
+            z-index: 10;
         }
-        /* Style for parent container of date input to allow relative positioning absolute picker */
         .relative-input-container {
             position: relative;
         }
@@ -101,8 +101,8 @@
             <!-- CONTENT INNER CONTAINER -->
             <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar bg-[#f0f6ff]">
                 
-                <!-- Inner Page Stack: Constrained and Centered for mockup alignment -->
-                <div class="max-w-md mx-auto w-full space-y-5">
+                <!-- Inner Page Stack -->
+                <div class="max-w-5xl mx-auto w-full space-y-5">
                     
                     <!-- Alerts for success/errors -->
                     @if(session('success'))
@@ -150,109 +150,116 @@
                         </div>
                     </div>
 
-                    <!-- 4. FILTER CARD -->
-                    <div class="bg-white border border-slate-100/80 p-5 rounded-2xl shadow-sm">
-                        <form method="GET" action="{{ route('admin.keuangan') }}" class="space-y-4">
-                            <!-- Jenis Filter -->
-                            <div class="space-y-1">
-                                <label class="text-xs font-normal text-slate-400 block">Jenis Filter</label>
-                                <div class="relative">
-                                    <select name="filter_type" id="filter_type" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3.5 focus:outline-none focus:border-blue-500 focus:bg-white appearance-none transition-all">
-                                        <option value="daily" {{ $filterType === 'daily' ? 'selected' : '' }}>Harian</option>
-                                        <option value="weekly" {{ $filterType === 'weekly' ? 'selected' : '' }}>Mingguan</option>
-                                        <option value="monthly" {{ $filterType === 'monthly' ? 'selected' : '' }}>Bulanan</option>
-                                    </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                                        <i data-feather="chevron-down" class="w-4 h-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Pilih Waktu -->
-                            <div class="space-y-1">
-                                <label class="text-xs font-normal text-slate-400 block">Pilih Waktu</label>
-                                <div class="relative relative-input-container">
-                                    <input type="date" name="date_value" id="date_value" value="{{ $filterType === 'daily' ? $dateValue : '' }}" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3.5 focus:outline-none focus:border-blue-500 focus:bg-white transition-all relative" style="position: relative;">
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                                        <i data-feather="calendar" class="w-4 h-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="pt-2">
-                                <button type="submit" class="w-full bg-[#0b4ab1] hover:bg-blue-800 text-white font-medium text-sm py-3.5 px-4 rounded-xl shadow-sm transition-colors text-center block">
-                                    Terapkan Filter
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- 5. RIWAYAT TRANSAKSI CARD -->
-                    <div class="bg-white border border-slate-100/80 rounded-2xl shadow-sm p-5 space-y-4">
-                        <div>
-                            <h3 class="font-medium text-slate-800 text-sm">Riwayat Transaksi</h3>
-                            <p class="text-[10px] text-slate-400 font-normal mt-0.5">Periode: {{ $startDate }} s.d. {{ $endDate }}</p>
-                        </div>
+                    <!-- Split layout grid for filter and history cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
                         
-                        <hr class="border-slate-100">
+                        <!-- 4. FILTER CARD -->
+                        <div class="bg-white border border-slate-100/80 p-5 rounded-2xl shadow-sm md:col-span-1">
+                            <form method="GET" action="{{ route('admin.keuangan') }}" class="space-y-4">
+                                <!-- Jenis Filter -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-normal text-slate-400 block">Jenis Filter</label>
+                                    <div class="relative">
+                                        <select name="filter_type" id="filter_type" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3.5 focus:outline-none focus:border-blue-500 focus:bg-white appearance-none transition-all">
+                                            <option value="daily" {{ $filterType === 'daily' ? 'selected' : '' }}>Harian</option>
+                                            <option value="weekly" {{ $filterType === 'weekly' ? 'selected' : '' }}>Mingguan</option>
+                                            <option value="monthly" {{ $filterType === 'monthly' ? 'selected' : '' }}>Bulanan</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                            <i data-feather="chevron-down" class="w-4 h-4"></i>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <div class="overflow-x-auto custom-scrollbar">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-medium">
-                                        <!-- Hidden columns preserved in DOM but hidden as requested -->
-                                        <th class="hidden">Tanggal</th>
-                                        <th class="hidden">Sumber</th>
-                                        <th class="hidden">Kategori</th>
-                                        
-                                        <th class="pb-3 text-xs font-medium">Keterangan</th>
-                                        <th class="pb-3 text-xs font-medium text-center">Nominal</th>
-                                        <th class="pb-3 text-xs font-medium text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50 text-xs">
-                                    @forelse($records as $rec)
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
-                                            <!-- Preserved hidden columns -->
-                                            <td class="hidden">{{ $rec['tanggal'] }}</td>
-                                            <td class="hidden">{{ $rec['source'] }}</td>
-                                            <td class="hidden">{{ $rec['kategori'] }}</td>
-                                            
-                                            <!-- Keterangan Column -->
-                                            <td class="py-4 font-normal text-slate-500">
-                                                {{ $rec['kategori'] ?: ($rec['tipe'] === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran') }}
-                                            </td>
-                                            
-                                            <!-- Nominal Column -->
-                                            <td class="py-4 text-center font-normal text-slate-700 whitespace-nowrap">
-                                                Rp {{ number_format($rec['nominal'], 0, ',', '.') }}
-                                            </td>
-                                            
-                                            <!-- Aksi Column -->
-                                            <td class="py-4 text-right">
-                                                @if($rec['source'] === 'manual')
-                                                    <button type="button" onclick="deleteKeuanganRecord({{ $rec['id'] }})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
-                                                        <i data-feather="trash-2" class="w-4 h-4"></i>
-                                                    </button>
-                                                @else
-                                                    <span class="text-slate-300 text-[10px] font-normal italic">-</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="3" class="py-12 text-center text-slate-400 font-normal">
-                                                <div class="flex flex-col items-center justify-center gap-2">
-                                                    <i data-feather="folder-open" class="w-8 h-8 opacity-45"></i>
-                                                    <span>Belum ada catatan keuangan.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                <!-- Pilih Waktu -->
+                                <div class="space-y-1">
+                                    <label class="text-xs font-normal text-slate-400 block">Pilih Waktu</label>
+                                    <div class="relative relative-input-container">
+                                        <input type="date" name="date_value" id="date_value" value="{{ $filterType === 'daily' ? $dateValue : '' }}" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3.5 focus:outline-none focus:border-blue-500 focus:bg-white transition-all relative" style="position: relative;">
+                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                            <i data-feather="calendar" class="w-4 h-4"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="pt-2">
+                                    <button type="submit" class="w-full bg-[#0b4ab1] hover:bg-blue-800 text-white font-medium text-sm py-3.5 px-4 rounded-xl shadow-sm transition-colors text-center block">
+                                        Terapkan Filter
+                                    </button>
+                                </div>
+                            </form>
                         </div>
+
+                        <!-- 5. RIWAYAT TRANSAKSI CARD -->
+                        <div class="bg-white border border-slate-100/80 rounded-2xl shadow-sm p-5 space-y-4 md:col-span-2">
+                            <div>
+                                <h3 class="font-medium text-slate-800 text-sm">Riwayat Transaksi</h3>
+                                <p class="text-[10px] text-slate-400 font-normal mt-0.5">Periode: {{ $startDate }} s.d. {{ $endDate }}</p>
+                            </div>
+                            
+                            <hr class="border-slate-100">
+
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-medium">
+                                            <th class="hidden">Tanggal</th>
+                                            <th class="hidden">Sumber</th>
+                                            
+                                            <th class="pb-3 text-xs font-medium">Kategori</th>
+                                            <th class="pb-3 text-xs font-medium">Keterangan</th>
+                                            <th class="pb-3 text-xs font-medium text-center">Jumlah</th>
+                                            <th class="pb-3 text-xs font-medium text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50 text-xs">
+                                        @forelse($records as $rec)
+                                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                                <td class="hidden">{{ $rec['tanggal'] }}</td>
+                                                <td class="hidden">{{ $rec['source'] }}</td>
+                                                
+                                                <!-- Kategori Column -->
+                                                <td class="py-4 font-normal text-slate-500">
+                                                    {{ $rec['kategori'] ?: ($rec['tipe'] === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran') }}
+                                                </td>
+
+                                                <!-- Keterangan Column -->
+                                                <td class="py-4 font-normal text-slate-500">
+                                                    {{ $rec['keterangan'] ?: '-' }}
+                                                </td>
+                                                
+                                                <!-- Jumlah Column -->
+                                                <td class="py-4 text-center font-normal text-slate-700 whitespace-nowrap">
+                                                    Rp {{ number_format($rec['nominal'], 0, ',', '.') }}
+                                                </td>
+                                                
+                                                <!-- Aksi Column -->
+                                                <td class="py-4 text-right">
+                                                    @if($rec['source'] === 'manual')
+                                                        <button type="button" onclick="deleteKeuanganRecord({{ $rec['id'] }})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
+                                                            <i data-feather="trash-2" class="w-4 h-4"></i>
+                                                        </button>
+                                                    @else
+                                                        <span class="text-slate-300 text-[10px] font-normal italic">-</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="py-12 text-center text-slate-400 font-normal">
+                                                    <div class="flex flex-col items-center justify-center gap-2">
+                                                        <i data-feather="folder-open" class="w-8 h-8 opacity-45"></i>
+                                                        <span>Belum ada catatan keuangan.</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -272,7 +279,7 @@
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
                     <h3 class="font-medium text-[#0f172a] text-sm">Catat Kas Manual</h3>
-                    <button @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
                         <i data-feather="x" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -296,7 +303,12 @@
 
                     <div>
                         <label class="text-xs font-normal text-slate-500 block mb-1.5">Tanggal</label>
-                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all">
+                        <div class="relative relative-input-container">
+                            <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all relative">
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                <i data-feather="calendar" class="w-4 h-4"></i>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
@@ -318,13 +330,10 @@
                             Simpan Catatan
                         </button>
                     </div>
-
                 </form>
-
             </div>
         </div>
     </div>
-
     <!-- Hidden Forms for Deletion -->
     @foreach($records as $rec)
         @if($rec['source'] === 'manual')
@@ -335,8 +344,19 @@
         @endif
     @endforeach
 
-    <!-- Initialize Icons & Alpine logic for date value inputs -->
+    <!-- FIX: Pendaftaran Fungsi Global Dipindah ke Luar DOM Lifecycle Listener -->
     <script>
+        window.deleteKeuanganRecord = function(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus catatan manual ini?')) {
+                const form = document.getElementById('delete-form-' + id);
+                if (form) {
+                    form.submit();
+                } else {
+                    console.error('Delete form not found for ID:', id);
+                }
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof feather !== 'undefined') {
                 feather.replace();
@@ -349,7 +369,6 @@
                 const val = filterTypeSelect.value;
                 if (val === 'daily') {
                     dateValueInput.type = 'date';
-                    // Parse if value was month or week format
                     if (dateValueInput.value && dateValueInput.value.length < 10) {
                         dateValueInput.value = new Date().toISOString().split('T')[0];
                     }
@@ -360,34 +379,24 @@
                 }
             }
 
-            filterTypeSelect.addEventListener('change', adjustInputType);
-            
-            // Initial call based on current backend value
-            const currentFilter = "{{ $filterType }}";
-            const currentValue = "{{ $dateValue }}";
-            
-            if (currentFilter === 'weekly') {
-                dateValueInput.type = 'week';
-                dateValueInput.value = currentValue;
-            } else if (currentFilter === 'monthly') {
-                dateValueInput.type = 'month';
-                dateValueInput.value = currentValue;
-            } else {
-                dateValueInput.type = 'date';
-                dateValueInput.value = currentValue;
-            }
-        });
-
-        window.deleteKeuanganRecord = function(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus catatan manual ini?')) {
-                const form = document.getElementById('delete-form-' + id);
-                if (form) {
-                    form.submit();
+            if (filterTypeSelect && dateValueInput) {
+                filterTypeSelect.addEventListener('change', adjustInputType);
+                
+                const currentFilter = "{{ $filterType }}";
+                const currentValue = "{{ $dateValue }}";
+                
+                if (currentFilter === 'weekly') {
+                    dateValueInput.type = 'week';
+                    dateValueInput.value = currentValue;
+                } else if (currentFilter === 'monthly') {
+                    dateValueInput.type = 'month';
+                    dateValueInput.value = currentValue;
                 } else {
-                    console.error('Delete form not found for ID:', id);
+                    dateValueInput.type = 'date';
+                    dateValueInput.value = currentValue;
                 }
             }
-        };
+        });
     </script>
 </body>
 </html>

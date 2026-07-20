@@ -94,10 +94,10 @@
             </header>
 
             <!-- CONTENT INNER CONTAINER -->
-            <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar bg-[#f0f6ff]">
+            <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-8 custom-scrollbar bg-[#f0f6ff]">
                 
-                <!-- Inner Page Stack -->
-                <div class="max-w-3xl mx-auto w-full space-y-8">
+                <!-- INNER PAGE CONTAINER -->
+                <div class="max-w-5xl mx-auto w-full space-y-8">
                     
                     <!-- SECTION 1: PESANAN AKTIF -->
                     <section class="space-y-4">
@@ -108,35 +108,34 @@
                             </p>
                         </div>
                         
-                        <!-- Cards Grid: 2 columns on mobile, 5 columns on desktop -->
                         <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                             <!-- Card 1 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300">
-                                <span class="text-xs font-normal text-slate-400">Perlu Diproses</span>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                                <span class="text-xs font-normal text-slate-400 truncate">Perlu Diproses</span>
                                 <h3 class="text-3xl font-medium text-[#0f172a]">{{ $perluDiprosesCount }}</h3>
                             </a>
 
                             <!-- Card 2 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300">
-                                <span class="text-xs font-normal text-slate-400">Menunggu Pembayaran</span>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                                <span class="text-xs font-normal text-slate-400 truncate">Menunggu Pembayaran</span>
                                 <h3 class="text-3xl font-medium text-[#0f172a]">{{ $menungguPembayaranCount }}</h3>
                             </a>
 
                             <!-- Card 3 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300">
-                                <span class="text-xs font-normal text-slate-400">Perlu Dikerjakan</span>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                                <span class="text-xs font-normal text-slate-400 truncate">Perlu Dikerjakan</span>
                                 <h3 class="text-3xl font-medium text-[#0f172a]">{{ $perluDikerjakanCount }}</h3>
                             </a>
 
                             <!-- Card 4 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300">
-                                <span class="text-xs font-normal text-slate-400">Kendala Pesanan</span>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                                <span class="text-xs font-normal text-slate-400 truncate">Kendala Pesanan</span>
                                 <h3 class="text-3xl font-medium text-[#0f172a]">0</h3>
                             </a>
 
                             <!-- Card 5 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300">
-                                <span class="text-xs font-normal text-slate-400">Sedang Dibatalkan</span>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                                <span class="text-xs font-normal text-slate-400 truncate">Sedang Dibatalkan</span>
                                 <h3 class="text-3xl font-medium text-[#0f172a]">0</h3>
                             </a>
                         </div>
@@ -148,7 +147,6 @@
                             <h1 class="text-xl font-medium text-[#0f172a] leading-none">Keuangan Toko</h1>
                         </div>
                         
-                        <!-- Keuangan Card -->
                         <div class="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] w-full">
                             <div class="flex items-center gap-4 mb-5">
                                 <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
@@ -174,22 +172,18 @@
                             </p>
                         </div>
                         
-                        <!-- Performa Panel Card -->
                         <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] overflow-hidden">
                             <div class="divide-y divide-slate-100">
-                                <!-- Metric 1: Jumlah Pelanggan -->
                                 <div class="flex items-center justify-between p-5">
                                     <span class="text-sm font-medium text-slate-700">Jumlah Pelanggan</span>
                                     <span class="text-base font-medium text-[#0f172a]">88</span>
                                 </div>
 
-                                <!-- Metric 2: Pesanan Selesai -->
                                 <div class="flex items-center justify-between p-5">
                                     <span class="text-sm font-medium text-slate-700">Pesanan Selesai</span>
                                     <span class="text-base font-medium text-[#0f172a]">{{ $pesananSelesaiCount }}</span>
                                 </div>
 
-                                <!-- Metric 3: Pesanan Dibatalkan -->
                                 <div class="flex items-center justify-between p-5">
                                     <span class="text-sm font-medium text-slate-700">Pesanan Dibatalkan</span>
                                     <span class="text-base font-medium text-[#0f172a]">1</span>
@@ -205,12 +199,6 @@
         </div>
         
     </div>
-
-    <!-- FLOATING CHAT BUTTON -->
-    <a href="#" class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-5 py-3.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2 z-40">
-        <i data-feather="message-circle" class="w-4 h-4"></i>
-        <span>Pesan</span>
-    </a>
 
     <!-- Initialize Icons -->
     <script>
