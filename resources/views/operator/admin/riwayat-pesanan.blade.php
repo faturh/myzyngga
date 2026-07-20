@@ -88,14 +88,14 @@
                         <!-- Dropdown Settings/Logout -->
                         <div x-show="open" @click.away="open = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
                             <div class="px-4 py-2 border-b border-slate-50 mb-1">
-                                <p class="text-xs font-bold text-[#0f172a]">MyZyngga Operator</p>
+                                <p class="text-xs font-medium text-[#0f172a]">MyZyngga Operator</p>
                                 <p class="text-[10px] text-slate-400 truncate">{{ Auth::user()->email ?? 'operator@zyngga.com' }}</p>
                             </div>
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
                                 <i data-feather="settings" class="w-3.5 h-3.5 text-slate-400"></i>
                                 Pengaturan Toko
                             </a>
-                            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50">
+                            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50">
                                 <i data-feather="log-out" class="w-3.5 h-3.5"></i>
                                 Keluar Aplikasi
                             </a>
@@ -114,7 +114,7 @@
                     
                     <!-- Alerts for Success/Error -->
                     @if(session('success'))
-                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold px-4 py-3 rounded-xl flex items-center gap-2">
+                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
                             <i data-feather="check-circle" class="w-4 h-4 stroke-[2.5]"></i>
                             <span>{{ session('success') }}</span>
                         </div>
@@ -123,15 +123,15 @@
                     <!-- TOP HEADER TITLE ROW -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
                         <div>
-                            <h1 class="text-2xl font-extrabold text-[#0f172a] tracking-tight">Riwayat Pesanan</h1>
-                            <p class="text-xs font-semibold text-slate-400 mt-1">Kelola dan pantau status transaksi laundry tokomu.</p>
+                            <h1 class="text-2xl font-medium text-[#0f172a] tracking-tight">Riwayat Pesanan</h1>
+                            <p class="text-xs font-medium text-slate-400 mt-1">Kelola dan pantau status transaksi laundry tokomu.</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('admin.riwayat-pesanan.tambah-form') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                            <a href="{{ route('admin.riwayat-pesanan.tambah-form') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap">
                                 <i data-feather="plus" class="w-4 h-4"></i>
                                 Tambah Pesanan Manual
                             </a>
-                            <button class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all">
+                            <button class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-medium shadow-sm flex items-center gap-2 transition-all">
                                 <i data-feather="download" class="w-3.5 h-3.5"></i>
                                 Unduh Riwayat Pesanan
                             </button>
@@ -139,7 +139,7 @@
                     </div>
 
                     <!-- TABS NAVIGATION -->
-                    <div class="flex border-b border-slate-100 overflow-x-auto scrollbar-none gap-8 text-xs font-bold">
+                    <div class="flex border-b border-slate-100 overflow-x-auto scrollbar-none gap-8 text-xs font-medium">
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-di-jemput', 'search' => $search, 'sort' => $sort]) }}" 
                            class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-di-jemput' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                             Menunggu di Jemput
@@ -210,7 +210,7 @@
                         <input type="hidden" name="tab" value="{{ $tab }}">
                         
                         <div class="relative col-span-1">
-                            <select class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 outline-none appearance-none">
+                            <select class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none">
                                 <option>Nomor Pesanan</option>
                             </select>
                             <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
@@ -220,7 +220,7 @@
 
                         <!-- Dropdown Sorting -->
                         <div class="relative col-span-1">
-                            <select name="sort" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 outline-none appearance-none cursor-pointer">
+                            <select name="sort" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none cursor-pointer">
                                 <option value="deadline" {{ $sort === 'deadline' ? 'selected' : '' }}>Deadline Terdekat</option>
                                 <option value="terbaru" {{ $sort === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
                                 <option value="terlama" {{ $sort === 'terlama' ? 'selected' : '' }}>Terlama</option>
@@ -236,18 +236,18 @@
                                    name="search" 
                                    value="{{ $search }}" 
                                    placeholder="Cari Nomor Pesanan atau Nama Pembeli..." 
-                                   class="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:bg-white transition-all">
+                                   class="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2.5 text-xs font-medium text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:bg-white transition-all">
                             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
                                 <i data-feather="search" class="w-3.5 h-3.5"></i>
                             </div>
                         </div>
 
                         <div class="flex gap-2">
-                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm">
+                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm">
                                 Terapkan
                             </button>
                             @if(!empty($search) || $sort !== 'deadline')
-                                <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs px-3 py-2.5 rounded-xl flex items-center justify-center transition-all">
+                                <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs px-3 py-2.5 rounded-xl flex items-center justify-center transition-all">
                                     Reset
                                 </a>
                             @endif
@@ -267,27 +267,27 @@
                                     <!-- Header Card -->
                                     <div class="flex flex-wrap justify-between items-center border-b border-slate-50 pb-4 gap-2">
                                         <div class="flex items-center gap-3">
-                                            <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Kendala Pesanan</span>
+                                            <span class="text-xs font-medium text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Kendala Pesanan</span>
                                             
                                             @if($order)
-                                                <a href="{{ route('order.detail', $order->id) }}" target="_blank" class="text-xs font-bold text-blue-600 hover:text-blue-800 font-mono hover:underline inline-flex items-center gap-1.5 transition-all">
+                                                <a href="{{ route('order.detail', $order->id) }}" target="_blank" class="text-xs font-medium text-blue-600 hover:text-blue-800 font-mono hover:underline inline-flex items-center gap-1.5 transition-all">
                                                     {{ $order->nota }}
                                                     <i data-feather="external-link" class="w-3 h-3 stroke-[2.5]"></i>
                                                 </a>
                                             @else
-                                                <span class="text-xs font-bold text-slate-400">N/A</span>
+                                                <span class="text-xs font-medium text-slate-400">N/A</span>
                                             @endif
                                         </div>
-                                        <div class="text-[11px] font-semibold text-slate-400">
+                                        <div class="text-[11px] font-medium text-slate-400">
                                             Tanggal Laporan: <span class="text-slate-600">{{ $complaint->created_at->format('d M Y H:i:s') }}</span>
                                         </div>
                                     </div>
 
                                     <!-- Body Card -->
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-semibold">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-medium">
                                         <!-- Issue Detail -->
                                         <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                            <p class="text-[#0f172a] font-extrabold text-sm capitalize">
+                                            <p class="text-[#0f172a] font-medium text-sm capitalize">
                                                 Detail Kendala
                                             </p>
                                             <p class="text-slate-500 font-normal leading-relaxed bg-slate-50 border border-slate-100 p-3 rounded-xl mt-2">
@@ -295,14 +295,14 @@
                                             </p>
                                             @if(!empty($complaint->issue_types))
                                                 <p class="text-slate-400 mt-2">
-                                                    Kategori: <span class="text-slate-700 font-extrabold">{{ is_array($complaint->issue_types) ? implode(', ', $complaint->issue_types) : $complaint->issue_types }}</span>
+                                                    Kategori: <span class="text-slate-700 font-medium">{{ is_array($complaint->issue_types) ? implode(', ', $complaint->issue_types) : $complaint->issue_types }}</span>
                                                 </p>
                                             @endif
                                         </div>
 
                                         <!-- Customer Details -->
                                         <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                            <p class="text-[#0f172a] font-extrabold">Informasi Pembeli</p>
+                                            <p class="text-[#0f172a] font-medium">Informasi Pembeli</p>
                                             <div class="space-y-1">
                                                 <p class="text-slate-400">Nama: <span class="text-slate-700">{{ $cust->nama ?? 'N/A' }}</span></p>
                                                 <p class="text-slate-400">Telepon: <span class="text-slate-700">{{ $cust->telepon ?? 'N/A' }}</span></p>
@@ -314,7 +314,7 @@
 
                                         <!-- Complaint Images (if any) -->
                                         <div class="space-y-1.5">
-                                            <p class="text-[#0f172a] font-extrabold">Foto Bukti Kendala</p>
+                                            <p class="text-[#0f172a] font-medium">Foto Bukti Kendala</p>
                                             @php
                                                 $images = [];
                                                 if (is_string($complaint->image_path)) {
@@ -340,8 +340,8 @@
                                     <!-- Footer Card / Action Buttons -->
                                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-t border-slate-50 pt-4 gap-4">
                                         <div>
-                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status Kendala</p>
-                                            <p class="text-base font-extrabold text-[#0f172a]">
+                                            <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Status Kendala</p>
+                                            <p class="text-base font-medium text-[#0f172a]">
                                                 {{ ucfirst($complaint->status) }}
                                             </p>
                                         </div>
@@ -362,7 +362,7 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat WhatsApp
@@ -370,7 +370,7 @@
 
                                             <form action="{{ route('admin.riwayat-pesanan.selesaikan-kendala', [$complaint->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none" onsubmit="return confirm('Apakah Anda yakin menyelesaikan kendala pesanan ini? Laporan kendala akan dihapus.')">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Selesai (Hapus Kendala)
                                                 </button>
@@ -390,52 +390,52 @@
                                     <div class="flex items-center gap-3">
                                         <!-- Status Badge -->
                                         @if(in_array($item->status, ['Baru', 'created', 'Perlu Diproses']))
-                                            <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">Butuh diproses</span>
+                                            <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">Butuh diproses</span>
                                         @elseif($item->status === 'Menunggu Pembayaran' || (in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status !== 'paid'))
-                                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">Menunggu Pembayaran</span>
+                                            <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">Menunggu Pembayaran</span>
                                         @elseif($item->status === 'Perlu Dikerjakan')
-                                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">Perlu Dikerjakan</span>
+                                            <span class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">Perlu Dikerjakan</span>
                                         @elseif($item->status === 'Proses Pengerjaan')
-                                            <span class="text-xs font-bold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">Proses Pengerjaan</span>
+                                            <span class="text-xs font-medium text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">Proses Pengerjaan</span>
                                         @elseif(in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status === 'paid')
-                                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Pesanan Selesai</span>
+                                            <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Pesanan Selesai</span>
                                         @elseif($item->status === 'Sedang Dibatalkan' || $item->status === 'Batal')
-                                            <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Sedang Dibatalkan</span>
+                                            <span class="text-xs font-medium text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Sedang Dibatalkan</span>
                                         @elseif(in_array($item->status, ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput']))
-                                            <span class="text-xs font-bold text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-lg">Menunggu di Jemput</span>
+                                            <span class="text-xs font-medium text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-lg">Menunggu di Jemput</span>
                                         @elseif(in_array($item->status, ['Perlu di Antar', 'Perlu di antar']))
-                                            <span class="text-xs font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-lg">Perlu di Antar</span>
+                                            <span class="text-xs font-medium text-teal-600 bg-teal-50 px-2.5 py-1 rounded-lg">Perlu di Antar</span>
                                         @elseif($item->status === 'Kendala Pesanan')
-                                            <span class="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg">Kendala Pesanan</span>
+                                            <span class="text-xs font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg">Kendala Pesanan</span>
                                         @else
-                                            <span class="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">{{ $item->status }}</span>
+                                            <span class="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">{{ $item->status }}</span>
                                         @endif
 
                                         @if($hasPendingUpgrade)
-                                            <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 animate-pulse flex items-center gap-1">
+                                            <span class="text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 animate-pulse flex items-center gap-1">
                                                 <i data-feather="bell" class="w-3.5 h-3.5"></i>
                                                 Pending Upgrade
                                             </span>
                                         @endif
 
-                                        <a href="{{ route('order.detail', $item->id) }}" target="_blank" class="text-xs font-bold text-blue-600 hover:text-blue-800 font-mono hover:underline inline-flex items-center gap-1.5 transition-all">
+                                        <a href="{{ route('order.detail', $item->id) }}" target="_blank" class="text-xs font-medium text-blue-600 hover:text-blue-800 font-mono hover:underline inline-flex items-center gap-1.5 transition-all">
                                             {{ $item->nota }}
                                             <i data-feather="external-link" class="w-3 h-3 stroke-[2.5]"></i>
                                         </a>
                                         @if(strtolower($item->layananPrioritas->nama ?? '') === 'satuan' || $item->fk_tambahan !== null)
-                                            <span class="text-[10px] font-black tracking-wider text-pink-700 bg-pink-100 border border-pink-200 px-2 py-0.5 rounded-md animate-pulse">SATUAN</span>
+                                            <span class="text-[10px] font-medium tracking-wider text-pink-700 bg-pink-100 border border-pink-200 px-2 py-0.5 rounded-md animate-pulse">SATUAN</span>
                                         @endif
                                     </div>
-                                    <div class="text-[11px] font-semibold text-slate-400">
+                                    <div class="text-[11px] font-medium text-slate-400">
                                         Tanggal Transaksi: <span class="text-slate-600">{{ $item->waktu->format('d M Y H:i:s') }}</span>
                                     </div>
                                 </div>
 
                                 <!-- Body Card -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-semibold">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-medium">
                                     <!-- Laundry Service Details -->
                                     <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                        <p class="text-[#0f172a] font-extrabold text-sm capitalize">
+                                        <p class="text-[#0f172a] font-medium text-sm capitalize">
                                             {{ $item->layananPrioritas->nama ?? 'Layanan Laundry' }}
                                         </p>
                                         <p class="text-slate-400">
@@ -448,16 +448,16 @@
                                             Metode Pembayaran: <span class="text-slate-700 font-medium uppercase">{{ $item->jenis_pembayaran }}</span>
                                         </p>
                                         <p class="text-slate-400">
-                                            Estimasi Durasi: <span class="text-indigo-600 font-extrabold">{{ $item->getEstimasiPengerjaanJam() }} Jam</span>
+                                            Estimasi Durasi: <span class="text-indigo-600 font-medium">{{ $item->getEstimasiPengerjaanJam() }} Jam</span>
                                         </p>
                                         <p class="text-slate-400">
-                                            Deadline: <span class="text-rose-600 font-extrabold">{{ $item->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</span>
+                                            Deadline: <span class="text-rose-600 font-medium">{{ $item->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</span>
                                         </p>
                                     </div>
 
                                     <!-- Customer Details -->
                                     <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                        <p class="text-[#0f172a] font-extrabold">Informasi Pembeli</p>
+                                        <p class="text-[#0f172a] font-medium">Informasi Pembeli</p>
                                         <div class="space-y-1">
                                             <p class="text-slate-400">Nama: <span class="text-slate-700">{{ $item->pelanggan->nama ?? 'N/A' }}</span></p>
                                             <p class="text-slate-400">Telepon: <span class="text-slate-700">{{ $item->pelanggan->telepon ?? 'N/A' }}</span></p>
@@ -467,7 +467,7 @@
 
                                     <!-- Laundry Notes / Specific Instructions -->
                                     <div class="space-y-1.5">
-                                        <p class="text-[#0f172a] font-extrabold">Catatan Khusus</p>
+                                        <p class="text-[#0f172a] font-medium">Catatan Khusus</p>
                                         <p class="text-slate-500 font-normal leading-relaxed">
                                             {{ $item->catatan ?? '-' }}
                                         </p>
@@ -477,8 +477,8 @@
                                 <!-- Footer Card / Action Buttons -->
                                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-t border-slate-50 pt-4 gap-4">
                                     <div>
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pendapatan</p>
-                                        <p class="text-base font-extrabold text-[#0f172a]">
+                                        <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total Pendapatan</p>
+                                        <p class="text-base font-medium text-[#0f172a]">
                                             Rp {{ number_format($item->total_bayar_akhir, 0, ',', '.') }}
                                         </p>
                                     </div>
@@ -488,7 +488,7 @@
                                         <div class="flex items-center gap-3 w-full sm:w-auto">
                                             <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="flex-1 sm:flex-none"><input type="hidden" name="tab" value="{{ $tab }}">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition-all">
+                                                <button type="submit" class="w-full text-center border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-medium transition-all">
                                                     Batalkan Pesanan
                                                 </button>
                                             </form>
@@ -496,7 +496,7 @@
                                             <form action="{{ route('admin.riwayat-pesanan.konfirmasi-jemput', $item->id) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
                                                 @csrf
                                                 <input type="hidden" name="tab" value="{{ $tab }}">
-                                                <button type="submit" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Konfirmasi Sudah Dijemput
                                                 </button>
@@ -506,12 +506,12 @@
                                         <div class="flex items-center gap-3 w-full sm:w-auto">
                                             <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="flex-1 sm:flex-none"><input type="hidden" name="tab" value="{{ $tab }}">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition-all">
+                                                <button type="submit" class="w-full text-center border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-medium transition-all">
                                                     Batalkan Pesanan
                                                 </button>
                                             </form>
                                             
-                                            <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all block text-center">
+                                            <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all block text-center">
                                                  Proses Pesanan
                                              </a>
                                         </div>
@@ -536,20 +536,20 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
 
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
-                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
 
-                                            <a href="{{ route('admin.riwayat-pesanan.kerjakan-form', [$item->id, 'tab' => $tab]) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.riwayat-pesanan.kerjakan-form', [$item->id, 'tab' => $tab]) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
                                                 <i data-feather="play" class="w-4 h-4"></i>
                                                 Proses Pekerjaan
                                             </a>
@@ -575,14 +575,14 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
 
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
-                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
@@ -590,7 +590,7 @@
 
                                             <form action="{{ route('admin.riwayat-pesanan.selesaikan', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Selesaikan Pekerjaan
                                                 </button>
@@ -617,14 +617,14 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
 
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
-                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
@@ -632,7 +632,7 @@
 
                                             <form action="{{ route('admin.riwayat-pesanan.konfirmasi-bayar', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none" onsubmit="return confirm('Apakah Anda yakin mengkonfirmasi pembayaran pesanan #{{ $item->nota }}?')">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Sudah Dibayar
                                                 </button>
@@ -659,7 +659,7 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
@@ -667,7 +667,7 @@
 
                                             <form action="{{ route('admin.riwayat-pesanan.selesaikan-antar', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Selesaikan Pengantaran
                                                 </button>
@@ -684,8 +684,8 @@
                                 <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mb-4">
                                     <i data-feather="inbox" class="w-8 h-8"></i>
                                 </div>
-                                <h3 class="text-sm font-bold text-[#0f172a]">Belum ada pesanan</h3>
-                                <p class="text-xs font-semibold text-slate-400 mt-1 max-w-xs mx-auto">
+                                <h3 class="text-sm font-medium text-[#0f172a]">Belum ada pesanan</h3>
+                                <p class="text-xs font-medium text-slate-400 mt-1 max-w-xs mx-auto">
                                     Tidak ada transaksi laundry yang ditemukan untuk kategori atau pencarian saat ini.
                                 </p>
                             </div>
@@ -717,15 +717,15 @@
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                     </span>
                     <div>
-                        <h4 class="text-xs font-bold font-outfit text-white">Pesanan Baru Masuk!</h4>
-                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5" x-text="'Ada ' + newOrdersCount + ' pesanan baru menunggu di jemput.'"></p>
+                        <h4 class="text-xs font-medium font-dm-sans text-white">Pesanan Baru Masuk!</h4>
+                        <p class="text-[11px] text-slate-400 font-medium mt-0.5" x-text="'Ada ' + newOrdersCount + ' pesanan baru menunggu di jemput.'"></p>
                     </div>
                 </div>
                 <div class="flex gap-2 justify-end">
-                    <button @click="dismiss()" class="text-slate-400 hover:text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-all">
+                    <button @click="dismiss()" class="text-slate-400 hover:text-white text-[10px] font-medium px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-all">
                         Tutup
                     </button>
-                    <button @click="window.location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-lg shadow-md transition-all">
+                    <button @click="window.location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-medium px-3 py-1.5 rounded-lg shadow-md transition-all">
                         Muat Ulang Halaman
                     </button>
                 </div>
