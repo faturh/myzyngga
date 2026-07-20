@@ -30,6 +30,7 @@ class CreateOrderRequest extends FormRequest
             'catatan' => ['nullable', 'string', 'max:2000'],
             'payment_method' => ['required', 'string', 'in:cash,qris,transfer'],
             'estimated_total' => ['required', 'numeric', 'min:0'],
+            'is_roundtrip' => ['nullable', 'boolean'],
         ];
     }
 }
