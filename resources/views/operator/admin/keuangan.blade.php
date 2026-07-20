@@ -232,10 +232,6 @@
                                             <!-- Aksi Column -->
                                             <td class="py-4 text-right">
                                                 @if($rec['source'] === 'manual')
-                                                    <form id="delete-form-{{ $rec['id'] }}" method="POST" action="{{ route('admin.keuangan.destroy', $rec['id']) }}" class="hidden">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                    </form>
                                                     <button type="button" onclick="deleteKeuanganRecord({{ $rec['id'] }})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
                                                         <i data-feather="trash-2" class="w-4 h-4"></i>
                                                     </button>
@@ -328,6 +324,16 @@
             </div>
         </div>
     </div>
+
+    <!-- Hidden Forms for Deletion -->
+    @foreach($records as $rec)
+        @if($rec['source'] === 'manual')
+            <form id="delete-form-{{ $rec['id'] }}" method="POST" action="{{ route('admin.keuangan.destroy', $rec['id']) }}" class="hidden">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endif
+    @endforeach
 
     <!-- Initialize Icons & Alpine logic for date value inputs -->
     <script>
