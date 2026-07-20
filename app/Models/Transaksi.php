@@ -78,7 +78,7 @@ class Transaksi extends Model
 
             if (strtolower(trim($transaksi->payment_status ?? '')) === 'paid') {
                 if ($newStatusId == 2) {
-                    $newStatusId = 5;
+                    $newStatusId = $transaksi->is_roundtrip ? 9 : 5;
                 }
             }
 
@@ -261,7 +261,10 @@ class Transaksi extends Model
     public function getListStatusPengerjaanIdAttribute()
     {
         if ($this->list_pengerjaan_id) {
-            return $this->listPengerjaan?->list_status_pengerjaan_id;
+            if ($this->relationLoaded('listPengerjaan') && $this->listPengerjaan) {
+                return $this->listPengerjaan->list_status_pengerjaan_id;
+            }
+            return $this->listPengerjaan()->value('list_status_pengerjaan_id') ?? $this->pending_status_id ?? null;
         }
         return $this->pending_status_id ?? null;
     }
@@ -289,7 +292,8 @@ class Transaksi extends Model
             5 => 'Pesanan Selesai',
             6 => 'Kendala Pesanan',
             7 => 'Sedang Dibatalkan',
-            8 => 'Sedang Dijemput',
+            8 => 'Menunggu di Jemput',
+            9 => 'Perlu di Antar',
         ];
         return $statusNames[$id] ?? 'Perlu Diproses';
     }
@@ -305,12 +309,16 @@ class Transaksi extends Model
             $statusId = 2;
         } elseif (in_array($normalized, ['proses', 'perlu dikerjakan', 'perlu_dikerjakan'])) {
             $statusId = 3;
-        } elseif (in_array($normalized, ['proses pengerjaan', 'proses_pengerjaan', 'siap ambil', 'siap_ambil', 'antar', 'pengantaran', 'in_progress', 'ready_for_delivery'])) {
+        } elseif (in_array($normalized, ['proses pengerjaan', 'proses_pengerjaan', 'siap ambil', 'siap_ambil', 'in_progress'])) {
             $statusId = 4;
         } elseif (in_array($normalized, ['selesai', 'completed', 'pesanan selesai', 'pesanan_selesai'])) {
             $paymentStatus = strtolower(trim($this->payment_status ?? ''));
             if ($paymentStatus === 'paid') {
-                $statusId = 5;
+                if ($this->list_status_pengerjaan_id == 9) {
+                    $statusId = 5;
+                } else {
+                    $statusId = $this->is_roundtrip ? 9 : 5;
+                }
             } else {
                 $statusId = 2;
             }
@@ -318,8 +326,10 @@ class Transaksi extends Model
             $statusId = 6;
         } elseif (in_array($normalized, ['batal', 'dibatalkan', 'cancelled', 'sedang dibatalkan', 'sedang_dibatalkan'])) {
             $statusId = 7;
-        } elseif (in_array($normalized, ['jemput', 'penjemputan', 'picked_up', 'sedang dijemput', 'sedang_dijemput'])) {
+        } elseif (in_array($normalized, ['jemput', 'penjemputan', 'picked_up', 'sedang dijemput', 'sedang_dijemput', 'menunggu di jemput', 'menunggu_di_jemput'])) {
             $statusId = 8;
+        } elseif (in_array($normalized, ['antar', 'pengantaran', 'ready_for_delivery', 'perlu di antar', 'perlu_di_antar'])) {
+            $statusId = 9;
         }
 
         $this->pending_status_id = $statusId;

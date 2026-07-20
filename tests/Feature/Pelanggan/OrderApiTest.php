@@ -57,7 +57,7 @@ class OrderApiTest extends TestCase
         return [$user, $pelanggan, $cabang, $layananPrioritas, $admin];
     }
 
-    public function test_buat_pesanan_berhasil_dengan_status_created(): void
+    public function test_buat_pesanan_berhasil_dengan_status_picked_up(): void
     {
         [$user, $pelanggan, $cabang, $lp] = $this->setupOrderData();
 
@@ -74,7 +74,7 @@ class OrderApiTest extends TestCase
             ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('data.order.status', 'created');
+            ->assertJsonPath('data.order.status', 'picked_up');
     }
 
     public function test_buat_pesanan_dengan_pelanggan_id_milik_orang_lain_harus_ditolak(): void

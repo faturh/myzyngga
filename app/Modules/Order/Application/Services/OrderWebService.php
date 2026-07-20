@@ -1192,6 +1192,9 @@ class OrderWebService
      */
     private function assertOwnership(Transaksi $order, ?User $user): void
     {
+        if ($user && in_array($user->role, ['admin', 'operator', 'manajer_laundry'])) {
+            return;
+        }
         if ($user && (!$order->pelanggan || $order->pelanggan->user_id !== $user->id)) {
             abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
         }
