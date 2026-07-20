@@ -42,7 +42,7 @@
     </style>
     @yield('css')
 </head>
-<body class="font-outfit antialiased bg-[#f8fafc] text-[#1e293b] h-full overflow-hidden" x-data="{ sidebarOpen: false }">
+<body class="font-dm-sans antialiased bg-[#f8fafc] text-[#1e293b] h-full overflow-hidden" x-data="{ sidebarOpen: false }">
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
@@ -60,14 +60,13 @@
                     <button @click="sidebarOpen = true" class="lg:hidden p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors">
                         <i data-feather="menu" class="w-6 h-6"></i>
                     </button>
-                    <h1 class="text-lg font-bold text-slate-800">{{ $title ?? 'Dashboard' }}</h1>
+                    <h1 class="text-lg font-medium text-slate-800">{{ $title ?? 'Dashboard' }}</h1>
                 </div>
                 
                 <!-- Right Header Actions -->
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-3">
                         <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-8 h-8 rounded-full border border-slate-100 object-cover">
-                        <span class="text-sm font-bold text-[#0f172a]">MyZyngga</span>
                     </div>
                 </div>
             </header>
