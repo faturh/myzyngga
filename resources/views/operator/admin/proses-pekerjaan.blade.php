@@ -58,7 +58,7 @@
             <!-- HEADER -->
             <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
                 <div class="flex items-center gap-4">
-                    <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-all">
+                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-all">
                         <i data-feather="arrow-left" class="w-4 h-4"></i>
                         Kembali ke Riwayat Pesanan
                     </a>
@@ -217,6 +217,7 @@
                         <div class="md:col-span-2 space-y-6">
                             <form action="{{ route('admin.riwayat-pesanan.kerjakan', $transaksi->id) }}" method="POST" @submit.prevent="submitForm($event)" class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-6">
                                 @csrf
+                                <input type="hidden" name="tab" value="{{ $tab }}">
 
                                 <!-- Item Satuan (Eceran) Info Box -->
                                 @if($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)
