@@ -237,11 +237,11 @@
                                                 <!-- Aksi Column -->
                                                 <td class="py-4 text-right">
                                                     @if($rec['source'] === 'manual')
-                                                        <form method="POST" action="{{ route('admin.keuangan.destroy', $rec['id']) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan manual ini?')" class="inline-block">
+                                                        <form method="POST" action="{{ route('admin.keuangan.destroy', $rec['id']) }}" onsubmit="event.stopPropagation(); return confirm('Apakah Anda yakin ingin menghapus catatan manual ini?')" class="inline-block">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
-                                                                <i data-feather="trash-2" class="w-4 h-4"></i>
+                                                            <button type="submit" onclick="event.stopPropagation();" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
+                                                                <i data-feather="trash-2" class="w-4 h-4 pointer-events-none"></i>
                                                             </button>
                                                         </form>
                                                     @else
