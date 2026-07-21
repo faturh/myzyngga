@@ -1,212 +1,109 @@
 <aside class="dark:bg-slate-850 max-w-64 ease-nav-brand z-990 fixed inset-y-0 my-4 block w-full -translate-x-full flex-wrap items-center justify-between overflow-y-auto rounded-2xl border-0 bg-white p-0 antialiased shadow-xl transition-transform duration-200 dark:shadow-none xl:left-0 xl:ml-6 xl:translate-x-0" aria-expanded="false">
-    <div class="h-19">
+    <!-- Store Profile Head -->
+    <div class="p-6 border-b border-slate-100 flex flex-col items-start relative">
         <i class="ri-close-large-fill absolute right-0 top-0 cursor-pointer p-4 text-slate-400 opacity-50 dark:text-white xl:hidden" sidenav-close></i>
-        <a class="m-0 block whitespace-nowrap px-8 py-6 text-sm text-slate-700 dark:text-white" href="{{ route("dashboard") }}">
-            <img src="{{ asset("img/logo-laundry-simokerto-noback.png") }}" class="ease-nav-brand inline h-full max-h-10 max-w-full transition-all duration-200 dark:hidden" alt="main_logo" />
-            <img src="{{ asset("img/logo-laundry-simokerto-noback.png") }}" class="ease-nav-brand hidden h-full max-h-10 max-w-full transition-all duration-200 dark:inline" alt="main_logo" />
-            <span class="ease-nav-brand ml-1 font-semibold transition-all duration-200">Laundry Lurah</span>
-        </a>
+        <img src="/img/logo-laundry-simokerto.png" alt="MyZyngga" class="w-14 h-14 rounded-full border border-slate-100 object-cover shadow-sm mb-3">
+        <h2 class="font-medium text-[#0f172a] text-lg leading-tight">{{ Auth::user()->name ?? 'Rian' }}</h2>
+        <span class="text-xs text-slate-400 font-normal mt-1">Operator Laundry</span>
     </div>
 
-    <hr class="mt-0 h-px bg-transparent bg-gradient-to-r from-transparent via-black/40 to-transparent dark:bg-gradient-to-r dark:from-transparent dark:via-white dark:to-transparent" />
-
-    <div class="h-sidenav block max-h-screen w-auto grow basis-full items-center overflow-auto">
-        <ul class="mb-0 flex flex-col pl-0">
-            <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand {{ Request::routeIs("dashboard") ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("dashboard") }}">
-                    <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-tv-2-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Dashboard</span>
-                </a>
-            </li>
-
-            @role(["lurah", "manajer_laundry", "pic"])
-                @role(["lurah", "pic"])
-                    {{-- Awal Data Master --}}
-                    <li class="mt-4 w-full">
-                        <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">Data Master</h6>
-                    </li>
-
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["cabang"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("cabang") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-home-smile-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Cabang</span>
-                        </a>
-                    </li>
-                    {{-- Akhir Data Master --}}
-                @endrole
-
-                {{-- Awal User Management --}}
-                <li class="mt-4 w-full">
-                    <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">User Management</h6>
-                </li>
-
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["user", "user.cabang", "user.cabang.create", "user.create", "user.view", "user.edit", "user.edit.password", "user.trash"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("user") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-user-3-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Akun</span>
+    <!-- Navigation Links -->
+    <div class="h-sidenav block max-h-screen w-auto grow basis-full items-center overflow-auto px-4 py-6 space-y-7">
+        <!-- Group 1: Tokoku -->
+        <div>
+            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <i class="ri-home-5-line text-slate-400"></i>
+                <span>Tokoku</span>
+            </div>
+            <ul class="space-y-1 pl-6 flex flex-col pl-0 list-none">
+                <li>
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm {{ Request::routeIs('admin.dashboard') || Request::routeIs('dashboard') ? 'font-medium bg-blue-50 text-blue-600' : 'font-normal text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        @if(Request::routeIs('admin.dashboard') || Request::routeIs('dashboard'))
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>
+                        @endif
+                        Beranda
                     </a>
                 </li>
-                {{-- Akhir User Management --}}
-
-                {{-- Awal Layanan --}}
-                <li class="mt-4 w-full">
-                    <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">Layanan</h6>
-                </li>
-
-
-
-                @role("manajer_laundry")
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["jenis-layanan"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("jenis-layanan") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-hand-heart-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Jenis Layanan</span>
-                        </a>
-                    </li>
-
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["jenis-pakaian"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("jenis-pakaian") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-shirt-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Jenis Pakaian</span>
-                        </a>
-                    </li>
-
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["harga-jenis-layanan"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("harga-jenis-layanan") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-price-tag-3-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Harga Jenis Layanan</span>
-                        </a>
-                    </li>
-
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["layanan-prioritas"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("layanan-prioritas") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-customer-service-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Layanan Prioritas</span>
-                        </a>
-                    </li>
-
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["layanan-tambahan"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("layanan-tambahan") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-hand-heart-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Layanan Tambahan</span>
-                        </a>
-                    </li>
-                @endrole
-                {{-- Akhir Layanan --}}
-            @endrole
-
-            @role(["lurah", "manajer_laundry", "pegawai_laundry", "pic"])
-                {{-- Awal Transaksi --}}
-                <li class="mt-4 w-full">
-                    <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">Transaksi</h6>
-                </li>
-
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["pelanggan", "pelanggan.cabang"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("pelanggan") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-user-5-line relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Pelanggan</span>
+                <li>
+                    <a href="{{ route('admin.keuangan') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm {{ Request::routeIs('admin.keuangan') ? 'font-medium bg-blue-50 text-blue-600' : 'font-normal text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        @if(Request::routeIs('admin.keuangan'))
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>
+                        @endif
+                        Keuangan Toko
                     </a>
                 </li>
+            </ul>
+        </div>
 
-                @role(["lurah", "pic"])
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["transaksi.lurah", "transaksi.lurah.cabang", "transaksi.lurah.cabang.jadwal", "transaksi.lurah.view", "transaksi.lurah.view.layanan", "transaksi.lurah.cabang.create", "transaksi.lurah.cabang.edit"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("transaksi.lurah") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-shopping-bag-4-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Transaksi Cabang</span>
-                        </a>
-                    </li>
-                @endrole
-
-                @role(["manajer_laundry", "pegawai_laundry"])
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["transaksi", "transaksi", "transaksi.view", "transaksi.view.layanan", "transaksi.create", "transaksi.edit"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("transaksi") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-todo-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Transaksi Layanan</span>
-                        </a>
-                    </li>
-
-                    <li class="mt-0.5 w-full">
-                        <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["transaksi.jadwal"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("transaksi.jadwal") }}">
-                            <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                                <i class="ri-timeline-view relative top-0 text-lg leading-normal text-blue-500"></i>
-                            </div>
-                            <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Jadwal Layanan</span>
-                        </a>
-                    </li>
-                @endrole
-                {{-- Akhir Transaksi --}}
-            @endrole
-
-            @role(["lurah", "manajer_laundry", "pic"])
-                {{-- Awal Laporan --}}
-                <li class="mt-4 w-full">
-                    <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">Laporan</h6>
-                </li>
-
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["laporan.pendapatan.laundry"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("laporan.pendapatan.laundry") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-book-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Pendapatan Laundry</span>
+        <!-- Group 2: Pesanan -->
+        <div>
+            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <i class="ri-shopping-bag-3-line text-slate-400"></i>
+                <span>Pesanan</span>
+            </div>
+            <ul class="space-y-1 pl-6 flex flex-col pl-0 list-none">
+                <li>
+                    <a href="{{ route('admin.riwayat-pesanan') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('admin.riwayat-pesanan') && request()->query('tab') !== 'kendala' ? 'font-medium bg-blue-50 text-blue-600' : 'font-normal text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        @if(request()->routeIs('admin.riwayat-pesanan') && request()->query('tab') !== 'kendala')
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>
+                        @endif
+                        Riwayat Pesanan
                     </a>
                 </li>
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["laporan.pelanggan"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("laporan.pelanggan") }}">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-book-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                        </div>
-                        <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Pelanggan</span>
+                <li>
+                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala']) }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm {{ request()->query('tab') === 'kendala' ? 'font-medium bg-blue-50 text-blue-600' : 'font-normal text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        @if(request()->query('tab') === 'kendala')
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>
+                        @endif
+                        Kendala Pesanan
                     </a>
                 </li>
-                {{-- Akhir Laporan --}}
-            @endrole
+            </ul>
+        </div>
 
-            <li class="mt-4 w-full">
-                <h6 class="ml-2 pl-6 text-xs font-bold uppercase leading-tight opacity-60 dark:text-white">Pengaturan</h6>
-            </li>
+        <!-- Group 3: Karyawan -->
+        <div>
+            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <i class="ri-group-line text-slate-400"></i>
+                <span>Karyawan</span>
+            </div>
+            <ul class="space-y-1 pl-6 flex flex-col pl-0 list-none">
+                <li>
+                    <a href="{{ route('admin.gaji-karyawan') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('admin.gaji-karyawan') ? 'font-medium bg-blue-50 text-blue-600' : 'font-normal text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        @if(request()->routeIs('admin.gaji-karyawan'))
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>
+                        @endif
+                        Gaji Karyawan
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-            <li class="mt-0.5 w-full">
-                <a class="py-2.7 ease-nav-brand {{ Request::routeIs(["profile", "profile.edit", "profile.edit.password"]) ? "rounded-lg font text-slate-700 bg-blue-500/10" : "" }} mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white" href="{{ route("profile", auth()->user()->slug) }}">
-                    <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                        <i class="ri-profile-fill relative top-0 text-lg leading-normal text-blue-500"></i>
-                    </div>
-                    <span class="ease pointer-events-none ml-1 opacity-100 duration-300">Profile</span>
-                </a>
-            </li>
-
-            <li class="mt-0.5 w-full">
-                <form method="POST" action="{{ route("logout") }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="py-2.7 ease-nav-brand mx-2 my-0 flex items-center whitespace-nowrap px-4 text-sm transition-colors hover:rounded-lg hover:bg-blue-500/10 dark:text-white">
-                        <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="ri-login-box-line relative top-0 text-lg leading-normal text-cyan-500"></i>
-                        </div>
-                        <button type="submit" class="ease ml-1 opacity-100 duration-300">Logout</button>
-                    </div>
-                </form>
-            </li>
-        </ul>
+        @if(auth()->user()->isAdmin())
+        <!-- Group 4: Manajemen Admin -->
+        <div>
+            <div class="flex items-center gap-2 px-3 mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <i class="ri-shield-line text-slate-400"></i>
+                <span>Manajemen Admin</span>
+            </div>
+            <ul class="space-y-1 pl-6 flex flex-col pl-0 list-none">
+                <li>
+                    <a href="{{ route('user') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs(['user', 'user.create', 'user.edit', 'user.view', 'user.edit.password']) ? 'font-medium bg-blue-50 text-blue-600' : 'font-normal text-slate-500 hover:bg-slate-50 hover:text-slate-800' }} transition-all">
+                        @if(request()->routeIs(['user', 'user.create', 'user.edit', 'user.view', 'user.edit.password']))
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>
+                        @endif
+                        Kelola Akun
+                    </a>
+                </li>
+            </ul>
+        </div>
+        @endif
+    </div>
+    
+    <!-- Sidebar Footer Info -->
+    <div class="p-6 border-t border-slate-100 bg-slate-50/50">
+        <div class="text-[11px] text-slate-400 text-center font-normal">
+            &copy; 2026 Zyngga Laundry.
+        </div>
     </div>
 </aside>

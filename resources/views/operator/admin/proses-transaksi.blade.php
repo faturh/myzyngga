@@ -10,7 +10,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
 
     <!-- Scripts and Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -21,21 +21,40 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- Remix Icon CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
     <style>
         [x-cloak] { display: none !important; }
-        .transition-transform-hover:hover {
-            transform: translateY(-2px);
+        
+        body, input, select, textarea, button {
+            font-family: 'DM Sans', sans-serif;
         }
-        .form-shadow {
-            box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08), 0 2px 8px -1px rgba(148, 163, 184, 0.04);
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
         }
-        .active-ring:focus-within {
-            ring-color: #3b82f6;
-            border-color: #3b82f6;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
         }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        select {
+            background-image: none !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        select::-ms-expand { display: none; }
     </style>
 </head>
-<body class="font-outfit antialiased bg-[#f8fafc] text-[#1e293b] h-full" x-data="{ sidebarOpen: false }">
+<body class="antialiased h-full overflow-hidden" style="background:#E6F0FF; color:#0F0F0F;" x-data="{ sidebarOpen: false }">
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
@@ -47,41 +66,59 @@
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
             
             <!-- HEADER -->
-            <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-4">
-                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-all">
-                        <i data-feather="arrow-left" class="w-4 h-4"></i>
-                        Kembali ke Riwayat Pesanan
+            <header class="h-12 bg-white flex items-center justify-between px-4 sticky top-0 z-30 shrink-0">
+                <div class="flex items-center gap-3">
+                    <button @click="sidebarOpen = true" class="lg:hidden p-1 text-[#0F0F0F] hover:opacity-70 transition-opacity">
+                        <i data-feather="menu" class="w-5 h-5"></i>
+                    </button>
+                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="flex items-center gap-1.5 text-xs font-medium text-[#0F0F0F] hover:text-[#003E9C] transition-colors">
+                        <i class="ri-arrow-left-line text-base"></i>
+                        <span>Kembali</span>
                     </a>
                 </div>
                 
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-8 h-8 rounded-full border border-slate-100 object-cover">
-                        <span class="text-sm font-bold text-[#0f172a]">MyZyngga</span>
+                <div class="relative" x-data="{ profileOpen: false }">
+                    <button @click="profileOpen = !profileOpen" type="button" class="flex items-center focus:outline-none cursor-pointer bg-transparent border-0 p-0">
+                        <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
+                    </button>
+                    
+                    <div x-show="profileOpen" 
+                         @click.outside="profileOpen = false" 
+                         x-transition 
+                         x-cloak 
+                         class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-50">
+                        <button type="button" 
+                                onclick="event.preventDefault(); document.getElementById('logout-form-header').submit();" 
+                                class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left bg-transparent border-0 cursor-pointer">
+                            <i data-feather="log-out" class="w-4 h-4 text-rose-600"></i>
+                            <span>Keluar Aplikasi</span>
+                        </button>
+                        <form id="logout-form-header" method="POST" action="{{ route('logout') }}" class="hidden">
+                            @csrf
+                        </form>
                     </div>
                 </div>
             </header>
 
             <!-- CONTENT INNER CONTAINER -->
-            <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar">
+            <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
                 
-                <div class="max-w-5xl mx-auto space-y-6">
+                <div class="max-w-xl mx-auto w-full flex flex-col gap-4">
 
-                    <!-- Alerts for Errors -->
+                    <!-- ALERTS FOR ERRORS -->
                     @if(session('error'))
-                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold px-4 py-3 rounded-xl flex items-center gap-2">
-                            <i data-feather="alert-circle" class="w-4 h-4 stroke-[2.5]"></i>
+                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
+                            <i data-feather="alert-circle" class="w-4 h-4 shrink-0"></i>
                             <span>{{ session('error') }}</span>
                         </div>
                     @endif
                     @if($errors->any())
-                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold px-4 py-3 rounded-xl space-y-1">
+                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl space-y-1">
                             <div class="flex items-center gap-2">
-                                <i data-feather="alert-circle" class="w-4 h-4 stroke-[2.5]"></i>
+                                <i data-feather="alert-circle" class="w-4 h-4 shrink-0"></i>
                                 <span>Terdapat kesalahan pengisian:</span>
                             </div>
-                            <ul class="list-disc list-inside pl-6 font-semibold">
+                            <ul class="list-disc list-inside pl-6">
                                 @foreach($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -89,11 +126,10 @@
                         </div>
                     @endif
 
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-                        <div>
-                            <h1 class="text-2xl font-extrabold text-[#0f172a] tracking-tight">Proses Timbangan & Item Pesanan</h1>
-                            <p class="text-xs font-semibold text-slate-400 mt-1">Masukkan list pakaian dan lakukan timbangan untuk Nota <span class="font-mono text-blue-600">{{ $transaksi->nota }}</span></p>
-                        </div>
+                    <!-- PAGE TITLE SECTION -->
+                    <div>
+                        <h1 class="text-base font-medium" style="color:#0F0F0F;">Proses Timbangan</h1>
+                        <p class="text-xs font-normal" style="color:#808080;">{{ $transaksi->nota }}</p>
                     </div>
 
                     @php
@@ -115,307 +151,148 @@
                         }
                     @endphp
 
-                    <!-- Grid Layout -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" x-data="prosesTransaksiForm()">
-                        
-                        <!-- Left Side: Order Details -->
-                        <div class="md:col-span-1 space-y-6">
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
-                                    <i data-feather="file-text" class="w-4 h-4 text-blue-500"></i>
-                                    Detail Pesanan
-                                </h3>
-                                <div class="text-xs space-y-3 font-semibold text-slate-500">
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Nota</p>
-                                        <p class="text-[#0f172a] font-mono text-sm mt-0.5">{{ $transaksi->nota }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Pelanggan</p>
-                                        <p class="text-[#0f172a] text-sm mt-0.5">{{ $transaksi->pelanggan->nama ?? '-' }}</p>
-                                        <p class="text-slate-400 font-normal mt-0.5">{{ $transaksi->pelanggan->telepon ?? '-' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Layanan</p>
-                                        <p class="text-[#0f172a] mt-0.5 capitalize">{{ $transaksi->layananPrioritas->nama ?? '-' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Parfum</p>
-                                        <p class="text-[#0f172a] mt-0.5">{{ $transaksi->parfum ?? 'Standard' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Catatan</p>
-                                        <p class="text-[#0f172a] font-normal leading-relaxed mt-0.5">{{ $transaksi->catatan ?? '-' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Estimasi Awal</p>
-                                        <p class="text-blue-600 font-extrabold text-sm mt-0.5">Rp {{ number_format($transaksi->total_bayar_akhir, 0, ',', '.') }}</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- KARTU 1: DETAIL PESANAN -->
+                    <div class="bg-white rounded-lg p-5 shadow-sm space-y-3">
+                        <h3 class="text-sm font-medium" style="color:#0F0F0F;">Detail Pesanan</h3>
 
-                            <!-- BUKTI TIMBANGAN -->
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
-                                    <i data-feather="camera" class="w-4 h-4 text-blue-500"></i>
-                                    Bukti Timbangan
-                                </h3>
-                                @if($transaksi->bukti_timbangan)
-                                    <img src="{{ $transaksi->bukti_timbangan }}" alt="Bukti Timbangan" class="w-full rounded-xl border border-slate-100 object-cover">
-                                @endif
-                                <form action="{{ route('admin.riwayat-pesanan.bukti-timbangan', $transaksi->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
-                                    @csrf
-                                    <input type="file" name="bukti_timbangan" accept="image/*" required
-                                        class="w-full text-xs font-semibold text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100">
-                                    <button type="submit" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all">
-                                        {{ $transaksi->bukti_timbangan ? 'Ganti Foto' : 'Unggah Foto' }}
-                                    </button>
-                                </form>
-                                <p class="text-[10px] text-slate-400">Foto ini akan tampil di Galeri halaman detail pesanan pelanggan.</p>
+                        <div class="space-y-2.5 text-xs font-normal">
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Nama Pelanggan</span>
+                                <span class="font-medium" style="color:#0F0F0F;">{{ $transaksi->pelanggan->nama ?? '-' }}</span>
                             </div>
-
-                            <!-- UPGRADE LAYANAN SECTIONS -->
-                            
-                            {{-- 1. Pending Upgrade dari Pelanggan --}}
-                            @if(isset($pendingUpgrade) && $pendingUpgrade)
-                            <div class="bg-amber-50/50 border border-amber-200/60 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-bold text-amber-800 text-sm flex items-center gap-2">
-                                    <i data-feather="bell" class="w-4 h-4 animate-bounce text-amber-600"></i>
-                                    Permintaan Upgrade Layanan
-                                </h3>
-                                <div class="text-xs space-y-3 font-semibold text-amber-700">
-                                    <div>
-                                        <p class="text-[10px] text-amber-600/70 uppercase">Layanan Baru</p>
-                                        <p class="text-amber-900 text-sm mt-0.5 capitalize">{{ $pendingUpgrade['target_service_name'] }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-amber-600/70 uppercase">Biaya Selisih (Tunai)</p>
-                                        <p class="text-amber-900 text-base font-extrabold mt-0.5">Rp {{ number_format($pendingUpgrade['price_diff'], 0, ',', '.') }}</p>
-                                    </div>
-                                </div>
-                                <form action="{{ route('admin.riwayat-pesanan.konfirmasi-upgrade', $transaksi->id) }}" method="POST" class="pt-2">
-                                    @csrf
-                                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
-                                        <i data-feather="check-circle" class="w-4 h-4"></i>
-                                        Konfirmasi Upgrade & Terima Cash
-                                    </button>
-                                </form>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Nomor Telepon</span>
+                                <span class="font-medium" style="color:#0F0F0F;">{{ $transaksi->pelanggan->telepon ?? '-' }}</span>
                             </div>
-                            @endif
-
-                            {{-- 2. Inisiasi Upgrade Langsung oleh Operator --}}
-                            @if($transaksi->canBeUpgraded() && $availableUpgrades->isNotEmpty())
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
-                                    <i data-feather="arrow-up-circle" class="w-4 h-4 text-emerald-500"></i>
-                                    Upgrade Layanan Langsung
-                                </h3>
-                                <form action="{{ route('admin.riwayat-pesanan.inisiasi-upgrade', $transaksi->id) }}" method="POST" class="space-y-4">
-                                    @csrf
-                                    <div>
-                                        <label for="new_service_id" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Pilih Layanan Lebih Tinggi</label>
-                                        <select name="new_service_id" id="new_service_id" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                                            <option value="">-- Pilih Layanan --</option>
-                                            @foreach($availableUpgrades as $upgrade)
-                                                <option value="{{ $upgrade->id }}">
-                                                    {{ $upgrade->nama }} (+Rp {{ number_format($upgrade->harga - ($transaksi->layananPrioritas->harga ?? 0), 0, ',', '.') }}/kg)
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
-                                        <i data-feather="zap" class="w-4 h-4"></i>
-                                        Proses Upgrade Tunai
-                                    </button>
-                                </form>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Jenis Layanan</span>
+                                <span class="font-medium capitalize" style="color:#0F0F0F;">{{ $transaksi->layananPrioritas->nama ?? '-' }}</span>
                             </div>
-                            @endif
-
-                            {{-- 3. Riwayat Upgrade Layanan --}}
-                            @if(isset($upgradeHistory) && $upgradeHistory->isNotEmpty())
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
-                                    <i data-feather="clock" class="w-4 h-4 text-slate-500"></i>
-                                    Riwayat Upgrade Layanan
-                                </h3>
-                                <div class="space-y-3">
-                                    @foreach($upgradeHistory as $history)
-                                    <div class="flex items-start justify-between text-xs border-b border-slate-50 pb-3 last:border-0 last:pb-0">
-                                        <div>
-                                            <p class="font-bold text-[#0f172a] capitalize">
-                                                {{ $history->layananAsal->nama ?? 'Reguler' }} <span class="text-slate-400 font-normal">→</span> {{ $history->layananTujuan->nama ?? 'Express' }}
-                                            </p>
-                                            <p class="text-slate-400 font-normal mt-0.5 text-[10px]">{{ $history->created_at->format('d M Y | H:i') }}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-bold text-slate-800">Rp {{ number_format($history->biaya_upgrade, 0, ',', '.') }}</p>
-                                            <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider {{ $history->metode_bayar === 'Tunai' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-blue-50 text-blue-600 border border-blue-100' }}">
-                                                {{ $history->metode_bayar ?? 'Cashless' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                </div>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Jenis Parfum</span>
+                                <span class="font-medium" style="color:#0F0F0F;">{{ $transaksi->parfum ?? 'Standard' }}</span>
                             </div>
-                            @endif
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Catatan</span>
+                                <span class="font-medium" style="color:#0F0F0F;">{{ $transaksi->catatan ?? '-' }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Estimasi Awal</span>
+                                <span class="font-medium" style="color:#003E9C;">Rp {{ number_format($transaksi->total_bayar_akhir, 0, ',', '.') }}</span>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Right Side: Items and Weights Form -->
-                        <div class="md:col-span-2 space-y-6">
-                            <form action="{{ route('admin.riwayat-pesanan.proses', $transaksi->id) }}" method="POST" @submit.prevent="submitForm($event)" class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-6">
-                                @csrf
-                                <input type="hidden" name="tab" value="{{ $tab }}">
-                                @php
-                                    $isNewOrder = in_array($transaksi->status, ['Baru', 'created', 'Perlu Diproses', 'Menunggu di Jemput', 'Menunggu di jemput']);
-                                @endphp
-                                
-                                @if(!$isNewOrder)
-                                    <!-- Read-only Info Badge -->
-                                    <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-500 font-medium leading-relaxed flex items-start gap-2">
-                                        <i data-feather="info" class="w-4 h-4 text-blue-500 shrink-0 mt-0.5"></i>
-                                        <div>
-                                            Pesanan ini sudah diproses timbangannya dan saat ini dalam tahap <strong>{{ $transaksi->status }}</strong>. Anda dapat melihat rincian di bawah atau mengelola upgrade layanan di kolom kiri.
-                                        </div>
-                                    </div>
-                                @endif
-                                
-                                <fieldset @disabled(!$isNewOrder) class="space-y-6">
+                    <!-- KARTU 2: INFORMASI TIMBANGAN -->
+                    <div x-data="prosesTransaksiForm()" class="space-y-4">
+                        <form action="{{ route('admin.riwayat-pesanan.proses', $transaksi->id) }}" method="POST" @submit.prevent="submitForm($event)" class="bg-white rounded-lg p-5 shadow-sm space-y-4">
+                            @csrf
+                            <input type="hidden" name="tab" value="{{ $tab }}">
+                            @php
+                                $isNewOrder = in_array($transaksi->status, ['Baru', 'created', 'Perlu Diproses', 'Menunggu di Jemput', 'Menunggu di jemput']);
+                            @endphp
 
-                                <!-- Service Type Selection Tabs -->
+                            <h3 class="text-sm font-medium" style="color:#0F0F0F;">Informasi Timbangan</h3>
+
+                            <fieldset @disabled(!$isNewOrder) class="space-y-4">
+
+                                <!-- TIPE LAYANAN SWITCH (Pill Container) -->
                                 @if($layananNama !== 'satuan')
-                                <div>
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Tipe Layanan Proses</label>
-                                    <div class="flex p-1 bg-slate-50 border border-slate-100 rounded-xl">
+                                    <div class="flex p-1 bg-[#D9D9D9] rounded-xl">
                                         <button type="button" 
                                                 @click="tipeLayanan = 'kiloan'"
-                                                :class="tipeLayanan === 'kiloan' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-700'"
-                                                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all">
+                                                :class="tipeLayanan === 'kiloan' ? 'bg-white text-[#003E9C] shadow-sm font-medium' : 'text-[#808080] font-normal'"
+                                                class="flex-1 py-2 text-xs rounded-lg transition-all border-0 cursor-pointer">
                                             Kiloan (Timbangan)
                                         </button>
                                         <button type="button" 
                                                 @click="tipeLayanan = 'satuan'"
-                                                :class="tipeLayanan === 'satuan' ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-700'"
-                                                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all">
+                                                :class="tipeLayanan === 'satuan' ? 'bg-white text-[#003E9C] shadow-sm font-medium' : 'text-[#808080] font-normal'"
+                                                class="flex-1 py-2 text-xs rounded-lg transition-all border-0 cursor-pointer">
                                             Satuan (Eceran)
                                         </button>
                                     </div>
-                                </div>
                                 @endif
                                 <input type="hidden" name="tipe_layanan" :value="tipeLayanan">
 
-                                <!-- Satuan Items Section -->
-                                <div class="space-y-4 border-t border-slate-50 pt-4">
-                                    <div class="flex justify-between items-center pb-2">
-                                        <h3 class="font-bold text-[#0f172a] text-sm flex items-center gap-2">
-                                            <i data-feather="grid" class="w-4 h-4 text-blue-500"></i>
-                                            Item Satuan Tambahan
-                                        </h3>
-                                        <button type="button" @click="addSatuanItem()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all">
-                                            <i data-feather="plus" class="w-3.5 h-3.5"></i>
-                                            Tambah Item Satuan
+                                <!-- ITEM SATUAN TAMBAHAN SECTION -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-medium" style="color:#0F0F0F;">Item Satuan Tambahan</span>
+                                        <button type="button" @click="addSatuanItem()" class="text-xs font-medium text-[#003E9C] hover:underline bg-transparent border-0 cursor-pointer">
+                                            + Tambah Item
                                         </button>
                                     </div>
 
-                                    <!-- Alpine Loop for Satuan Items -->
-                                    <div class="space-y-3">
+                                    <div class="space-y-2.5">
                                         <template x-for="(item, index) in satuanItems" :key="index">
-                                            <div class="flex items-center gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-100 relative group transition-all">
-                                                <div class="flex-1">
-                                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Kategori Pakaian Satuan</label>
+                                            <div class="flex items-center gap-2 bg-[#F8FAFC] p-2.5 rounded-xl border border-[#CCCCCC]">
+                                                <!-- Dropdown Kategori -->
+                                                <div class="flex-1 relative">
                                                     <select :name="'satuan_items[' + index + '][kategori_pakaian_satuan_id]'"
                                                             x-model="item.kategori_pakaian_satuan_id"
                                                             @change="updateItemPrice(item)"
-                                                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 transition-all"
+                                                            class="w-full bg-white border rounded-lg px-3 text-xs text-[#0F0F0F] font-normal focus:outline-none appearance-none"
+                                                            style="border-color:#CCCCCC; height:40px;"
                                                             required>
                                                         <option value="">-- Pilih Item Satuan --</option>
                                                         <template x-for="cat in satuanCategories" :key="cat.id">
                                                             <option :value="cat.id" x-text="cat.nama_pakaian + ' (' + formatRupiah(cat.harga) + ')'"></option>
                                                         </template>
                                                     </select>
+                                                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[#808080]">
+                                                        <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
+                                                    </div>
                                                 </div>
 
-                                                <div class="w-20">
-                                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1 text-center">Jumlah</label>
+                                                <!-- Input Jumlah -->
+                                                <div class="w-16">
                                                     <input type="number"
                                                            :name="'satuan_items[' + index + '][jumlah]'"
                                                            x-model.number="item.jumlah"
                                                            min="1"
-                                                           class="w-full bg-white border border-slate-200 rounded-lg py-1.5 text-center text-xs font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
+                                                           class="w-full bg-white border rounded-lg text-center text-xs font-medium text-[#0F0F0F] focus:outline-none"
+                                                           style="border-color:#CCCCCC; height:40px;"
                                                            required>
                                                 </div>
 
-                                                <div class="w-28 text-right pr-2">
-                                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Harga Akhir</span>
-                                                    <span class="text-xs font-extrabold text-slate-700 block mt-1.5" x-text="formatRupiah(calculateItemTotal(item))">Rp0</span>
+                                                <!-- Total Harga Baris -->
+                                                <div class="w-24 text-right">
+                                                    <span class="text-xs font-medium text-[#0F0F0F]" x-text="formatRupiah(calculateItemTotal(item))">Rp0</span>
                                                 </div>
 
-                                                <div class="self-end pb-0.5">
-                                                    <button type="button" @click="removeSatuanItem(index)"
-                                                            class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
-                                                        <i data-feather="trash-2" class="w-4 h-4"></i>
-                                                    </button>
-                                                </div>
+                                                <!-- Button Hapus -->
+                                                <button type="button" @click="removeSatuanItem(index)" class="p-1.5 text-[#EF4444] hover:bg-rose-50 rounded-lg transition-colors bg-transparent border-0 cursor-pointer">
+                                                    <i class="ri-delete-bin-line text-base"></i>
+                                                </button>
                                             </div>
                                         </template>
                                         <template x-if="satuanItems.length === 0">
-                                            <p class="text-xs font-medium text-slate-400 italic text-center py-2">Belum ada item satuan yang ditambahkan.</p>
+                                            <p class="text-xs font-normal text-[#808080] italic text-center py-1">Belum ada item satuan yang ditambahkan.</p>
                                         </template>
                                     </div>
                                 </div>
 
-                                <!-- Weight Scale and Price calculations -->
-                                <div class="space-y-4 border-t border-slate-50 pt-4" x-show="tipeLayanan === 'kiloan'" x-transition>
-                                    <h3 class="font-bold text-[#0f172a] text-sm flex items-center gap-2">
-                                        <i data-feather="activity" class="w-4 h-4 text-blue-500"></i>
-                                        Timbangan & Tarif
-                                    </h3>
-                                    
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <!-- Actual Weight input -->
-                                        <div>
-                                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Berat Timbangan (Kg)</label>
-                                            <div class="relative">
-                                                <input type="number"
-                                                        name="actual_weight"
-                                                        x-model.number="actualWeight"
-                                                        step="0.01"
-                                                        min="0"
-                                                        placeholder="0.00"
-                                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
-                                                <span class="absolute right-3 inset-y-0 flex items-center text-xs font-bold text-slate-400">kg</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Minimum Weight configuration -->
-                                        <div>
-                                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Minimal Berat (Kg)</label>
-                                            <div class="relative">
-                                                <input type="number"
-                                                       name="minimum_weight"
-                                                       x-model.number="minimumWeight"
-                                                       step="0.1"
-                                                       min="0"
-                                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
-                                                <span class="absolute right-3 inset-y-0 flex items-center text-xs font-bold text-slate-400">kg</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Price per Kg -->
-                                        <div>
-                                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Harga per Kg (Rp)</label>
-                                            <div class="relative">
-                                                <span class="absolute left-3 inset-y-0 flex items-center text-xs font-bold text-slate-400">Rp</span>
-                                                <input type="number"
-                                                       name="price_per_kg"
-                                                       x-model.number="pricePerKg"
-                                                       min="0"
-                                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all">
-                                            </div>
-                                        </div>
+                                <!-- BERAT TIMBANGAN SECTION -->
+                                <div x-show="tipeLayanan === 'kiloan'" x-transition class="space-y-1">
+                                    <label class="block text-xs font-normal text-[#808080]">Berat Timbangan</label>
+                                    <div class="relative">
+                                        <input type="number"
+                                               name="actual_weight"
+                                               x-model.number="actualWeight"
+                                               step="0.01"
+                                               min="0"
+                                               placeholder="0"
+                                               class="w-full bg-white border rounded-lg px-4 py-2.5 text-xs font-medium text-[#0F0F0F] focus:outline-none"
+                                               style="border-color:#CCCCCC; height:48px;">
+                                        <span class="absolute right-4 inset-y-0 flex items-center text-xs font-normal text-[#808080]">Kg</span>
                                     </div>
+                                    <p class="text-[11px] font-normal text-[#808080] mt-1">Tarif aktif: Rp {{ number_format($defaultPrice, 0, ',', '.') }}/kg</p>
                                 </div>
 
-                                <!-- Hidden fields for Satuan mode validation -->
+                                <!-- HIDDEN FIELDS UNTUK PRESERVASI BACKEND LOGIC -->
+                                <input type="hidden" name="minimum_weight" x-model.number="minimumWeight">
+                                <input type="hidden" name="price_per_kg" x-model.number="pricePerKg">
                                 <template x-if="tipeLayanan === 'satuan'">
                                     <div>
                                         <input type="hidden" name="actual_weight" value="0">
@@ -424,51 +301,94 @@
                                     </div>
                                 </template>
 
-                                <!-- Dynamic calculations results card -->
-                                <div class="bg-blue-50/50 rounded-2xl border border-blue-100/30 p-5 space-y-3 font-semibold text-xs">
-                                    <div class="flex justify-between items-center text-slate-500" x-show="tipeLayanan === 'kiloan'">
-                                        <span>Formula Berat Ditagih:</span>
-                                        <span class="font-normal">max(Minimal, Timbangan)</span>
+                                <!-- DYNAMIC SUMMARY BOX -->
+                                <div class="bg-[#F4F4F4] rounded-xl p-4 space-y-2 text-xs">
+                                    <div class="flex justify-between items-center text-[#808080] font-normal" x-show="tipeLayanan === 'kiloan'">
+                                        <span>Biaya Kiloan</span>
+                                        <span class="text-[#0F0F0F] font-medium" x-text="formatRupiah(chargedWeight * pricePerKg)">Rp 0</span>
                                     </div>
-                                    <div class="flex justify-between items-center text-slate-500" x-show="tipeLayanan === 'kiloan'">
-                                        <span>Berat yang Ditagih:</span>
-                                        <span class="text-slate-800 font-bold"><span x-text="chargedWeight.toFixed(2)">0.00</span> kg</span>
+                                    <div class="flex justify-between items-center text-[#808080] font-normal">
+                                        <span>Biaya Satuan</span>
+                                        <span class="text-[#0F0F0F] font-medium" x-text="formatRupiah(totalSatuanPrice)">Rp 0</span>
                                     </div>
-                                    <div class="flex justify-between items-center text-slate-500" x-show="tipeLayanan === 'kiloan'">
-                                        <span>Biaya Kiloan:</span>
-                                        <span class="text-slate-800 font-bold" x-text="formatRupiah(chargedWeight * pricePerKg)">Rp0</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-slate-500">
-                                        <span>Selisih Harga Layanan Prioritas:</span>
-                                        <span class="text-blue-600 font-bold">+ <span x-text="formatRupiah(priorityCharge)">Rp0</span> per item satuan</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-slate-500">
-                                        <span>Total Biaya Satuan:</span>
-                                        <span class="text-slate-800 font-bold" x-text="formatRupiah(totalSatuanPrice)">Rp0</span>
-                                    </div>
-                                    <div class="flex justify-between items-center border-t border-blue-100/50 pt-3 text-sm">
-                                        <span class="text-slate-800 font-bold">Total Biaya Layanan Akhir:</span>
-                                        <span class="text-blue-600 font-extrabold text-lg" x-text="formatRupiah(totalPrice)">Rp0</span>
+                                    <div class="flex justify-between items-center pt-2 border-t border-[#E2E8F0]">
+                                        <span class="text-[#0F0F0F] font-medium">Total Biaya</span>
+                                        <span class="text-[#003E9C] font-medium text-base" x-text="formatRupiah(totalPrice)">Rp 0</span>
                                     </div>
                                 </div>
 
-                                </fieldset>
- 
-                                <!-- Submission Buttons -->
-                                <div class="flex justify-end gap-3 pt-2">
-                                    <a href="{{ route('admin.riwayat-pesanan') }}" class="text-center border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition-all">
-                                        {{ $isNewOrder ? 'Batal' : 'Kembali' }}
-                                    </a>
-                                    @if($isNewOrder)
-                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
-                                            <i data-feather="check" class="w-4 h-4"></i>
-                                            Selesai & Proses Pesanan
-                                        </button>
-                                    @endif
+                            </fieldset>
+
+                            <!-- TOMBOL AKSI FORM -->
+                            <div class="flex items-center justify-center gap-3 pt-2">
+                                <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" 
+                                   class="flex-1 text-center font-medium text-xs rounded-full border transition-colors flex items-center justify-center cursor-pointer"
+                                   style="border-color:#003E9C; color:#003E9C; height:48px;">
+                                    Batal
+                                </a>
+                                @if($isNewOrder)
+                                    <button type="submit" 
+                                            class="flex-1 text-center text-white font-medium text-xs rounded-full border-0 shadow-sm transition-colors flex items-center justify-center cursor-pointer"
+                                            style="background:#003E9C; height:48px;">
+                                        Buat Pesanan
+                                    </button>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- KARTU 3: BUKTI TIMBANGAN -->
+                    <div class="bg-white rounded-lg p-5 shadow-sm space-y-3">
+                        <h3 class="text-sm font-medium flex items-center gap-2" style="color:#0F0F0F;">
+                            <i class="ri-camera-line text-lg text-[#003E9C]"></i>
+                            Bukti Timbangan
+                        </h3>
+
+                        @if($transaksi->bukti_timbangan)
+                            <img src="{{ $transaksi->bukti_timbangan }}" alt="Bukti Timbangan" class="w-full rounded-lg border border-[#F4F4F4] object-cover max-h-48">
+                        @endif
+
+                        <form action="{{ route('admin.riwayat-pesanan.bukti-timbangan', $transaksi->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3" x-data="{ fileName: '' }">
+                            @csrf
+                            <div class="flex items-center gap-3">
+                                <label class="px-5 py-2.5 rounded-full text-xs font-medium text-white cursor-pointer transition-colors shrink-0" style="background:#003E9C;">
+                                    Pilih File
+                                    <input type="file" name="bukti_timbangan" accept="image/*" class="hidden" @change="fileName = $event.target.files[0]?.name || ''" required>
+                                </label>
+                                <span class="text-xs font-normal text-[#808080] truncate" x-text="fileName ? fileName : 'Tidak ada file yang dipilih'">Tidak ada file yang dipilih</span>
+                            </div>
+                            <button type="submit" class="w-full text-white font-medium text-xs rounded-full transition-all border-0 cursor-pointer flex items-center justify-center" style="background:#003E9C; height:48px;">
+                                Unggah Foto
+                            </button>
+                        </form>
+                        <p class="text-[11px] font-normal text-[#808080]">Foto ini akan tampil di Galeri halaman detail pesanan pelanggan.</p>
+                    </div>
+
+                    <!-- UPGRADE SECTIONS (JIKA ADA PENDING ATAU TERSEDIA) -->
+                    @if(isset($pendingUpgrade) && $pendingUpgrade)
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-5 shadow-sm space-y-3">
+                            <h3 class="font-medium text-amber-800 text-sm flex items-center gap-2">
+                                <i data-feather="bell" class="w-4 h-4 text-amber-600"></i>
+                                Permintaan Upgrade Layanan
+                            </h3>
+                            <div class="text-xs space-y-2 font-normal text-amber-700">
+                                <div>
+                                    <p class="text-[10px] text-amber-600 uppercase">Layanan Baru</p>
+                                    <p class="text-amber-900 font-medium capitalize">{{ $pendingUpgrade['target_service_name'] }}</p>
                                 </div>
+                                <div>
+                                    <p class="text-[10px] text-amber-600 uppercase">Biaya Selisih (Tunai)</p>
+                                    <p class="text-amber-900 font-medium text-sm">Rp {{ number_format($pendingUpgrade['price_diff'], 0, ',', '.') }}</p>
+                                </div>
+                            </div>
+                            <form action="{{ route('admin.riwayat-pesanan.konfirmasi-upgrade', $transaksi->id) }}" method="POST" class="pt-1">
+                                @csrf
+                                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-2">
+                                    Konfirmasi Upgrade & Terima Cash
+                                </button>
                             </form>
                         </div>
-                    </div>
+                    @endif
 
                 </div>
 
@@ -478,7 +398,9 @@
 
     </div>
 
-    <!-- Initialize Icons & Alpine Component -->
+    <!-- CDNs and Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof feather !== 'undefined') {

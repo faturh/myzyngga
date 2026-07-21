@@ -10,7 +10,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
 
     <!-- Scripts and Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -44,7 +44,7 @@
         }
     </style>
 </head>
-<body class="font-outfit antialiased bg-[#f8fafc] text-[#1e293b] h-full overflow-hidden" x-data="{ sidebarOpen: false }">
+<body class="antialiased h-full overflow-hidden" style="background:#E6F0FF; color:#0F0F0F;" x-data="{ sidebarOpen: false }">
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
@@ -56,114 +56,53 @@
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
             
             <!-- HEADER -->
-            <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-4">
-                    <!-- Mobile Hamburger Menu Button -->
-                    <button @click="sidebarOpen = true" class="lg:hidden p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors">
-                        <i data-feather="menu" class="w-6 h-6"></i>
-                    </button>
-                    
-                    <!-- Navigation Tabs -->
-                    <nav class="hidden md:flex items-center space-x-6 text-sm">
-                        <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open" class="flex items-center gap-1 font-bold text-slate-800 hover:text-blue-600 px-1 py-2 transition-colors">
-                                <span>Buka</span>
-                                <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
-                            </button>
-                            <div x-show="open" @click.away="open = false" x-transition x-cloak class="absolute left-0 mt-1 w-32 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-50">
-                                <a href="#" class="block px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 font-semibold">Toko Aktif</a>
-                                <a href="#" class="block px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 font-semibold">Tutup Toko</a>
-                            </div>
-                        </div>
-                        <a href="{{ route('admin.riwayat-pesanan') }}" class="font-semibold text-slate-500 hover:text-blue-600 px-1 py-2 transition-colors">Pesanan</a>
-                        <a href="#" class="font-semibold text-slate-500 hover:text-blue-600 px-1 py-2 transition-colors">Keuangan</a>
-                        <a href="#" class="font-semibold text-slate-500 hover:text-blue-600 px-1 py-2 transition-colors">Profil Toko</a>
-                    </nav>
-                </div>
-                
-                <!-- Right Header Actions -->
-                <div class="flex items-center gap-4" x-data="{ open: false }">
-                    <div class="relative">
-                        <button @click="open = !open" class="flex items-center gap-3 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition-all">
-                            <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-8 h-8 rounded-full border border-slate-100 object-cover">
-                            <span class="hidden sm:inline text-sm font-bold text-[#0f172a]">MyZyngga</span>
-                            <i data-feather="chevron-down" class="w-4 h-4 text-slate-400 hidden sm:inline"></i>
-                        </button>
-                        
-                        <!-- Dropdown Settings/Logout -->
-                        <div x-show="open" @click.away="open = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                            <div class="px-4 py-2 border-b border-slate-50 mb-1">
-                                <p class="text-xs font-bold text-[#0f172a]">MyZyngga Operator</p>
-                                <p class="text-[10px] text-slate-400 truncate">{{ Auth::user()->email ?? 'operator@zyngga.com' }}</p>
-                            </div>
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
-                                <i data-feather="settings" class="w-3.5 h-3.5 text-slate-400"></i>
-                                Pengaturan Toko
-                            </a>
-                            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50">
-                                <i data-feather="log-out" class="w-3.5 h-3.5"></i>
-                                Keluar Aplikasi
-                            </a>
-                            <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">
-                                @csrf
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            @include('operator.partials.header', ['title' => 'Gaji Karyawan'])
 
             <!-- CONTENT INNER CONTAINER -->
-            <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar">
+            <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
                 
-                <!-- Inner Page Grid -->
-                <div class="max-w-4xl mx-auto space-y-6">
+                <div class="max-w-5xl mx-auto w-full flex flex-col gap-4">
                     
-                    <!-- Date Filter and Presets Form -->
-                    <form method="GET" action="{{ route('admin.gaji-karyawan') }}" class="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm space-y-4">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <!-- Date Filter Form -->
+                    <form method="GET" action="{{ route('admin.gaji-karyawan') }}" class="bg-white rounded-lg p-4 shadow-sm flex flex-col gap-3">
+                        <div class="text-sm font-medium mb-1" style="color:#0F0F0F;">Filter Periode Rekapitulasi Gaji</div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
-                                <h2 class="text-sm font-extrabold text-[#0f172a] uppercase tracking-wider">Filter Periode Rekap Gaji</h2>
-                                <p class="text-xs font-semibold text-slate-400 mt-1">Atur rentang tanggal untuk merekap gaji berdasarkan berat kiloan (kg) pengerjaan.</p>
+                                <label class="block text-xs font-normal text-[#808080] mb-1.5">Pilih Karyawan</label>
+                                <div class="relative">
+                                    <select name="pegawai_id" class="w-full bg-white border rounded-full px-4 py-2 text-[#808080] font-normal focus:outline-none appearance-none" style="border-color:#CCCCCC; height:48px;">
+                                        <option value="">Semua Karyawan</option>
+                                        @foreach ($allKaryawan as $emp)
+                                            <option value="{{ $emp->id }}" @if ($selectedEmployeeId == $emp->id) selected @endif>
+                                                {{ $emp->name ?? $emp->username }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none" style="color:#808080;">
+                                        <i data-feather="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <!-- Preset Buttons -->
-                            <div class="flex flex-wrap items-center gap-2">
-                                <button type="button" onclick="setPreset('today')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border border-slate-150">Hari Ini</button>
-                                <button type="button" onclick="setPreset('week')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border border-slate-150">Minggu Ini</button>
-                                <button type="button" onclick="setPreset('month')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border border-slate-150">Bulan Ini</button>
+                            <div>
+                                <label class="block text-xs font-normal text-[#808080] mb-1.5">Tanggal Mulai</label>
+                                <input type="date" name="start_date" id="start_date" value="{{ $startDate }}" class="w-full bg-white border rounded-full px-4 py-2 text-[#808080] font-normal focus:outline-none" style="border-color:#CCCCCC; height:48px;" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-normal text-[#808080] mb-1.5">Tanggal Selesai</label>
+                                <input type="date" name="end_date" id="end_date" value="{{ $endDate }}" class="w-full bg-white border rounded-full px-4 py-2 text-[#808080] font-normal focus:outline-none" style="border-color:#CCCCCC; height:48px;" />
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Pilih Karyawan</label>
-                                <select name="pegawai_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs h-10">
-                                    <option value="">Semua Karyawan</option>
-                                    @foreach ($allKaryawan as $emp)
-                                        <option value="{{ $emp->id }}" @if ($selectedEmployeeId == $emp->id) selected @endif>
-                                            {{ $emp->name ?? $emp->username }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tanggal Mulai</label>
-                                <input type="date" name="start_date" id="start_date" value="{{ $startDate }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs h-10" />
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tanggal Selesai</label>
-                                <input type="date" name="end_date" id="end_date" value="{{ $endDate }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-xs h-10" />
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 h-10">
-                                    <i data-feather="filter" class="w-4 h-4"></i>
-                                    Filter
-                                </button>
-                                <a href="{{ route('admin.gaji-karyawan.download', ['start_date' => $startDate, 'end_date' => $endDate, 'pegawai_id' => $selectedEmployeeId]) }}" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 h-10">
-                                    <i data-feather="download" class="w-4 h-4"></i>
-                                    Unduh Excel
-                                </a>
-                            </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+                            <button type="submit" class="w-full text-white font-medium text-xs rounded-full transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:48px;">
+                                Filter
+                            </button>
+                            <a href="{{ route('admin.gaji-karyawan.download', ['start_date' => $startDate, 'end_date' => $endDate, 'pegawai_id' => $selectedEmployeeId]) }}" 
+                               class="w-full bg-white border hover:bg-slate-50 text-[#003E9C] font-medium text-xs rounded-full transition-all flex items-center justify-center gap-1.5"
+                               style="border-color:#003E9C; height:48px; border-width:1px;">
+                                Unduh Excel
+                            </a>
                         </div>
                     </form>
                     
@@ -193,7 +132,7 @@
                     </script>
 
                     <!-- LEFT/CENTER CONTENT PANEL -->
-                    <div class="w-full space-y-6 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm"
+                    <div class="w-full space-y-4"
                          x-data="{
                              sortOrder: 'default',
                              employees: {{ json_encode($karyawan) }},
@@ -226,74 +165,51 @@
                                  this.showTarifModal = true;
                              }
                          }">
-                        
-                        <!-- Header Row inside Card -->
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
-                            <div>
-                                <h1 class="text-xl font-extrabold text-[#0f172a] leading-none">Daftar Gaji Karyawan</h1>
-                                <p class="text-xs font-semibold text-slate-400 mt-1.5">
-                                    Pantau pengeluaran gaji karyawan laundry berdasarkan kilogram pengerjaan.
-                                </p>
-                            </div>
-                            
-                            <!-- Actions -->
-                            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                                <div class="flex items-center gap-2 text-xs">
-                                    <span class="text-slate-400 font-semibold whitespace-nowrap">Urutkan Gaji:</span>
-                                    <select x-model="sortOrder" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all">
-                                        <option value="default">Default</option>
-                                        <option value="asc">Terendah -> Tertinggi</option>
-                                        <option value="desc">Tertinggi -> Terendah</option>
-                                    </select>
+
+                        <!-- Employees Cards Loop -->
+                        <template x-for="emp in sortedEmployees" :key="emp.id">
+                            <div class="bg-white rounded-lg p-4 flex flex-col gap-3 shadow-sm">
+                                <!-- Baris 1: Nama Karyawan -->
+                                <div class="text-sm font-medium" style="color:#0F0F0F;" x-text="emp.name"></div>
+
+                                <!-- Baris 2: Detail Rekening Bank -->
+                                <div class="text-xs font-normal" style="color:#808080;">
+                                    <span x-text="emp.bank"></span> – <span x-text="emp.nomor_rekening"></span>
+                                </div>
+
+                                <!-- Baris 3: Total Pengerjaan -->
+                                <div class="flex items-center justify-between text-xs font-normal" style="color:#808080;">
+                                    <span>Total Pengerjaan</span>
+                                    <span x-text="emp.total_kg + ' kg'"></span>
+                                </div>
+
+                                <!-- Baris 4: Tarif per Kg -->
+                                <div class="flex items-center justify-between text-xs font-normal" style="color:#808080;">
+                                    <span>Tarif per Kg</span>
+                                    <span x-text="'Rp ' + emp.gaji_per_kg.toLocaleString('id-ID')"></span>
+                                </div>
+
+                                <!-- Garis Pemisah (Divider) -->
+                                <div class="border-t border-[#F4F4F4] my-1"></div>
+
+                                <!-- Baris 5: Total Gaji Diterima & Tombol Aksi -->
+                                <div class="flex items-center justify-between pt-1">
+                                    <div>
+                                        <p class="text-[12px] font-normal" style="color:#808080;">Total Gaji Diterima</p>
+                                        <p class="text-xs font-medium text-[#0F0F0F]" x-text="'Rp ' + emp.total_gaji.toLocaleString('id-ID')"></p>
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <button @click="openTarif(emp)" type="button" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#F2994A; height:38px;">
+                                            Atur Tarif
+                                        </button>
+                                        <button @click="openBayar(emp)" type="button" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
+                                            Bayar Gaji
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Employees List Table -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                                        <th class="pb-3 pl-2">Karyawan</th>
-                                        <th class="pb-3 text-center">Tarif Gaji/Kg</th>
-                                        <th class="pb-3 text-center">Total Kg Dikerjakan</th>
-                                        <th class="pb-3 text-right pr-2">Total Gaji Diterima</th>
-                                        <th class="pb-3 text-right pr-2">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50 text-xs">
-                                    <template x-for="emp in sortedEmployees" :key="emp.id">
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
-                                            <td class="py-4 pl-2">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shadow-sm" x-text="emp.initial"></div>
-                                                    <div>
-                                                        <p class="font-extrabold text-[#0f172a] text-sm" x-text="emp.name"></p>
-                                                        <div class="text-[10px] text-slate-400 font-semibold space-y-0.5 mt-0.5">
-                                                            <p>ID Karyawan: #<span x-text="emp.id"></span></p>
-                                                            <p>Rekening: <span class="text-blue-600 font-bold" x-text="emp.bank"></span> (<span class="font-mono text-slate-500" x-text="emp.nomor_rekening"></span>)</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="py-4 text-center font-semibold text-slate-700" x-text="'Rp ' + emp.gaji_per_kg.toLocaleString('id-ID') + ' / kg'"></td>
-                                            <td class="py-4 text-center font-extrabold text-blue-600 text-sm" x-text="emp.total_kg + ' kg'"></td>
-                                            <td class="py-4 text-right pr-2 font-black text-emerald-600 text-sm" x-text="'Rp ' + emp.total_gaji.toLocaleString('id-ID')"></td>
-                                            <td class="py-4 text-right pr-2 whitespace-nowrap">
-                                                <div class="flex items-center justify-end gap-1.5">
-                                                    <button @click="openTarif(emp)" type="button" class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-extrabold text-[10px] px-2.5 py-1.5 rounded-xl transition-all border border-amber-200">
-                                                        Atur Tarif
-                                                    </button>
-                                                    <button @click="openBayar(emp)" type="button" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[10px] px-2.5 py-1.5 rounded-xl transition-all border border-blue-200">
-                                                        Bayar Gaji
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
+                        </template>
 
                         <!-- Modal Bayar Gaji -->
                         <div x-show="showBayarModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
@@ -304,7 +220,7 @@
                                 
                                 <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
                                     <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                                        <h3 class="text-sm font-extrabold text-[#0f172a] uppercase tracking-wider">Bayar Gaji Karyawan</h3>
+                                        <h3 class="text-sm font-medium text-[#0f172a] uppercase tracking-wider">Bayar Gaji Karyawan</h3>
                                         <button @click="showBayarModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
                                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
@@ -316,39 +232,39 @@
                                         <input type="hidden" name="end_date" value="{{ $endDate }}">
                                         
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
-                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.name" readonly>
+                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
+                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.name" readonly>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Bank</label>
-                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.bank" readonly>
+                                                <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Bank</label>
+                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.bank" readonly>
                                             </div>
                                             <div>
-                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">No. Rekening</label>
-                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.nomor_rekening" readonly>
+                                                <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">No. Rekening</label>
+                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.nomor_rekening" readonly>
                                             </div>
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tanggal Pembayaran</label>
-                                            <input type="date" name="tanggal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-bold focus:outline-none focus:border-blue-500" x-model="payoutDate" required>
+                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Tanggal Pembayaran</label>
+                                            <input type="date" name="tanggal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="payoutDate" required>
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Nominal Payout (Rp)</label>
-                                            <input type="number" name="nominal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-bold focus:outline-none focus:border-blue-500" x-model="payoutAmount" required>
+                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Nominal Payout (Rp)</label>
+                                            <input type="number" name="nominal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="payoutAmount" required>
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Catatan / Keterangan</label>
-                                            <textarea name="keterangan" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-blue-500" x-model="payoutNote" required></textarea>
+                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Catatan / Keterangan</label>
+                                            <textarea name="keterangan" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="payoutNote" required></textarea>
                                         </div>
                                         
                                         <div class="pt-2 flex gap-3">
-                                            <button type="button" @click="showBayarModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-all">Batal</button>
-                                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm">Konfirmasi</button>
+                                            <button type="button" @click="showBayarModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs py-2.5 rounded-xl transition-all">Batal</button>
+                                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-2.5 rounded-xl transition-all shadow-sm">Konfirmasi</button>
                                         </div>
                                     </form>
                                 </div>
@@ -364,7 +280,7 @@
                                 
                                 <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
                                     <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                                        <h3 class="text-sm font-extrabold text-[#0f172a] uppercase tracking-wider">Atur Tarif Gaji per Kg</h3>
+                                        <h3 class="text-sm font-medium text-[#0f172a] uppercase tracking-wider">Atur Tarif Gaji per Kg</h3>
                                         <button @click="showTarifModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
                                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
@@ -374,18 +290,18 @@
                                         <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
                                         
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
-                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold" :value="selectedEmp?.name" readonly>
+                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
+                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.name" readonly>
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Tarif Gaji Baru (Rp / kg)</label>
-                                            <input type="number" name="gaji" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-bold focus:outline-none focus:border-blue-500" x-model="tarifAmount" required>
+                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Tarif Gaji Baru (Rp / kg)</label>
+                                            <input type="number" name="gaji" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="tarifAmount" required>
                                         </div>
                                         
                                         <div class="pt-2 flex gap-3">
-                                            <button type="button" @click="showTarifModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-all">Batal</button>
-                                            <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm">Simpan Tarif</button>
+                                            <button type="button" @click="showTarifModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs py-2.5 rounded-xl transition-all">Batal</button>
+                                            <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs py-2.5 rounded-xl transition-all shadow-sm">Simpan Tarif</button>
                                         </div>
                                     </form>
                                 </div>
@@ -394,10 +310,10 @@
                     </div>
 
                     <!-- Riwayat Pengiriman Gaji Card -->
-                    <div class="w-full space-y-6 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm">
+                    <div class="w-full space-y-6 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hidden">
                         <div class="border-b border-slate-100 pb-5">
-                            <h2 class="text-lg font-extrabold text-[#0f172a] leading-none">Riwayat Pengiriman Gaji</h2>
-                            <p class="text-xs font-semibold text-slate-400 mt-1.5">
+                            <h2 class="text-lg font-medium text-[#0f172a] leading-none">Riwayat Pengiriman Gaji</h2>
+                            <p class="text-xs font-medium text-slate-400 mt-1.5">
                                 Riwayat pembayaran gaji yang telah diselesaikan sebelumnya.
                             </p>
                         </div>
@@ -405,7 +321,7 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <tr class="border-b border-slate-100 text-[11px] font-medium text-slate-400 uppercase tracking-wider">
                                         <th class="pb-3 pl-2">Karyawan</th>
                                         <th class="pb-3">Tanggal Bayar</th>
                                         <th class="pb-3">Periode Kerja</th>
@@ -416,19 +332,19 @@
                                 <tbody class="divide-y divide-slate-50 text-xs">
                                     @forelse($historyGaji as $history)
                                         <tr class="hover:bg-slate-50/50 transition-colors">
-                                            <td class="py-4 pl-2 font-extrabold text-[#0f172a]">
+                                            <td class="py-4 pl-2 font-medium text-[#0f172a]">
                                                 {{ $history->pegawai->name ?? $history->pegawai->username ?? 'N/A' }}
                                             </td>
-                                            <td class="py-4 font-semibold text-slate-600">
+                                            <td class="py-4 font-medium text-slate-600">
                                                 {{ $history->tanggal->format('d M Y') }}
                                             </td>
-                                            <td class="py-4 font-semibold text-slate-500">
+                                            <td class="py-4 font-medium text-slate-500">
                                                 {{ $history->start_date ? $history->start_date->format('d M Y') : '-' }} s/d {{ $history->end_date ? $history->end_date->format('d M Y') : '-' }}
                                             </td>
-                                            <td class="py-4 font-bold text-blue-600">
-                                                {{ $history->bank ?? '-' }} (<span class="font-mono text-slate-500 font-semibold">{{ $history->nomor_rekening ?? '-' }}</span>)
+                                            <td class="py-4 font-medium text-blue-600">
+                                                {{ $history->bank ?? '-' }} (<span class="font-mono text-slate-500 font-medium">{{ $history->nomor_rekening ?? '-' }}</span>)
                                             </td>
-                                            <td class="py-4 text-right pr-2 font-black text-emerald-600 text-sm">
+                                            <td class="py-4 text-right pr-2 font-medium text-emerald-600 text-sm">
                                                 Rp {{ number_format($history->nominal, 0, ',', '.') }}
                                             </td>
                                         </tr>

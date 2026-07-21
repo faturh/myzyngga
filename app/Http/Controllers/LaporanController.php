@@ -32,7 +32,7 @@ class LaporanController extends Controller
             ->where(DB::raw("DATE(transaksi.waktu)"), '<=', $tanggalAkhir)
             ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.nota', DB::raw("DATE(transaksi.waktu)"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'c.nama', 'c.id')
-            ->orderBy('transaksi.waktu', 'asc')
+            ->orderBy(DB::raw("DATE(transaksi.waktu)"), 'asc')
             ->get();
 
         $transaksiTidakGamis = collect();
@@ -75,7 +75,7 @@ class LaporanController extends Controller
             ->where(DB::raw("DATE(transaksi.waktu)"), '<=', $tanggalAkhir)
             ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.nota', DB::raw("DATE(transaksi.waktu)"), 'transaksi.layanan_prioritas_id', 'transaksi.total_bayar_akhir', 'transaksi.pelanggan_id', 'transaksi.pegawai_id', 'c.nama', 'c.id')
-            ->orderBy('transaksi.waktu', 'asc')
+            ->orderBy(DB::raw("DATE(transaksi.waktu)"), 'asc')
             ->get();
 
         $transaksiTidakGamis = collect();
@@ -155,7 +155,8 @@ class LaporanController extends Controller
             })
             ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw($monthFunc), DB::raw($yearFunc), 'c.id', 'c.nama')
-            ->orderBy('transaksi.waktu', 'asc')
+            ->orderBy(DB::raw($yearFunc), 'asc')
+            ->orderBy(DB::raw($monthFunc), 'asc')
             ->get();
 
         if ($request->cabang_id) {
@@ -222,7 +223,8 @@ class LaporanController extends Controller
             })
             ->where('lpen.list_status_pengerjaan_id', 5)
             ->groupBy('transaksi.pelanggan_id', 'p.nama', DB::raw($monthFunc), DB::raw($yearFunc), 'c.id', 'c.nama')
-            ->orderBy('transaksi.waktu', 'asc')
+            ->orderBy(DB::raw($yearFunc), 'asc')
+            ->orderBy(DB::raw($monthFunc), 'asc')
             ->get();
 
         if ($request->cabang_id) {
