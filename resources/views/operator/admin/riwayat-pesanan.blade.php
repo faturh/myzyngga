@@ -24,8 +24,8 @@
     <style>
         [x-cloak] { display: none !important; }
         
-        .transition-transform-hover:hover {
-            transform: translateY(-2px);
+        body, input, select, textarea, button {
+            font-family: 'DM Sans', sans-serif;
         }
         
         .custom-scrollbar::-webkit-scrollbar {
@@ -42,23 +42,41 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(1rem);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        select {
+            background-image: none !important;
+            -webkit-appearance: none;
+            appearance: none;
         }
-        .animate-fade-in-up {
-            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        select::-ms-expand { display: none; }
     </style>
 </head>
-<body class="font-dm-sans antialiased bg-[#f8fafc] text-[#1e293b] h-full overflow-hidden" x-data="{ sidebarOpen: false }">
+<body
+    class="antialiased h-full overflow-hidden"
+    style="background:#E6F0FF; color:#0F0F0F;"
+    x-data="{
+        sidebarOpen: false,
+        filterOpen: false,
+        confirmModalOpen: false,
+        confirmMessage: '',
+        confirmTargetForm: '',
+        openConfirm(formId, message) {
+            this.confirmTargetForm = formId;
+            this.confirmMessage = message;
+            this.confirmModalOpen = true;
+        },
+        closeConfirm() {
+            this.confirmModalOpen = false;
+            this.confirmTargetForm = '';
+            this.confirmMessage = '';
+        },
+        confirmYes() {
+            const form = document.getElementById(this.confirmTargetForm);
+            if (form) form.submit();
+            this.confirmModalOpen = false;
+        }
+    }"
+>
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
@@ -70,187 +88,151 @@
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
             
             <!-- HEADER -->
-            <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-4">
-                    <!-- Mobile Hamburger Menu Button -->
-                    <button @click="sidebarOpen = true" class="lg:hidden p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors">
-                        <i data-feather="menu" class="w-6 h-6"></i>
-                    </button>
-                </div>
-                
-                <!-- Right Header Actions -->
-                <div class="flex items-center gap-4" x-data="{ open: false }">
-                    <div class="relative">
-                        <button @click="open = !open" class="flex items-center gap-3 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition-all">
-                            <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-8 h-8 rounded-full border border-slate-100 object-cover">
-                        </button>
-                        
-                        <!-- Dropdown Settings/Logout -->
-                        <div x-show="open" @click.away="open = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                            <div class="px-4 py-2 border-b border-slate-50 mb-1">
-                                <p class="text-xs font-medium text-[#0f172a]">MyZyngga Operator</p>
-                                <p class="text-[10px] text-slate-400 truncate">{{ Auth::user()->email ?? 'operator@zyngga.com' }}</p>
-                            </div>
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
-                                <i data-feather="settings" class="w-3.5 h-3.5 text-slate-400"></i>
-                                Pengaturan Toko
-                            </a>
-                            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50">
-                                <i data-feather="log-out" class="w-3.5 h-3.5"></i>
-                                Keluar Aplikasi
-                            </a>
-                            <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">
-                                @csrf
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            @include('operator.partials.header', ['title' => 'Riwayat Pesanan'])
 
             <!-- CONTENT INNER CONTAINER -->
-            <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar">
+            <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
                 
-                <div class="max-w-7xl mx-auto space-y-6">
+                <div class="max-w-5xl mx-auto w-full flex flex-col gap-4">
                     
                     <!-- Alerts for Success/Error -->
                     @if(session('success'))
-                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
-                            <i data-feather="check-circle" class="w-4 h-4 stroke-[2.5]"></i>
+                        <div class="bg-white text-xs font-medium px-4 py-3 rounded-lg flex items-center gap-2" style="color:#10B981;">
+                            <i data-feather="check-circle" class="w-4 h-4 shrink-0" style="color:#10B981;"></i>
                             <span>{{ session('success') }}</span>
                         </div>
                     @endif
 
-                    <!-- TOP HEADER TITLE ROW -->
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-                        <div>
-                            <h1 class="text-2xl font-medium text-[#0f172a] tracking-tight">Riwayat Pesanan</h1>
-                            <p class="text-xs font-medium text-slate-400 mt-1">Kelola dan pantau status transaksi laundry tokomu.</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <a href="{{ route('admin.riwayat-pesanan.tambah-form') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap">
-                                <i data-feather="plus" class="w-4 h-4"></i>
-                                Tambah Pesanan Manual
-                            </a>
-                            <button class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-medium shadow-sm flex items-center gap-2 transition-all">
-                                <i data-feather="download" class="w-3.5 h-3.5"></i>
-                                Unduh Riwayat Pesanan
-                            </button>
-                        </div>
-                    </div>
+                    <!-- 1. BUTTON TAMBAH PESANAN MANUAL : bg #003E9C, radius 100, h-48, text 14/500 white -->
+                    <a href="{{ route('admin.riwayat-pesanan.tambah-form') }}" 
+                       class="w-full text-sm font-medium py-3.5 px-4 rounded-full shadow-sm transition-colors text-center block"
+                       style="background:#003E9C; color:#FFFFFF;"
+                       onmouseover="this.style.background='#002d73'" onmouseout="this.style.background='#003E9C'">
+                        + Tambah Pesanan Manual
+                    </a>
 
                     <!-- TABS NAVIGATION -->
-                    <div class="flex border-b border-slate-100 overflow-x-auto scrollbar-none gap-8 text-xs font-medium">
+                    <div class="flex overflow-x-auto scrollbar-none gap-8 text-xs font-medium border-b border-[#F4F4F4] pb-0.5">
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-di-jemput', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-di-jemput' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-di-jemput' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Menunggu di Jemput
-                            <span id="badge-menunggu-di-jemput" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-di-jemput' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-menunggu-di-jemput" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-di-jemput' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $menungguDiJemputCount }}
                             </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-diproses' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-diproses' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Menunggu Diproses
-                            <span id="badge-perlu-diproses" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-diproses' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-perlu-diproses" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-diproses' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $perluDiprosesCount }}
                             </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Sedang Diproses
-                            <span id="badge-perlu-dikerjakan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-dikerjakan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-perlu-dikerjakan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-dikerjakan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $perluDikerjakanCount }}
                             </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'proses-pengerjaan', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'proses-pengerjaan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'proses-pengerjaan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Proses Pengerjaan
-                            <span id="badge-proses-pengerjaan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'proses-pengerjaan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-proses-pengerjaan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'proses-pengerjaan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $prosesPengerjaanCount }}
                             </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Menunggu Pembayaran
-                            <span id="badge-menunggu-pembayaran" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-menunggu-pembayaran" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $menungguPembayaranCount }}
                             </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-di-antar', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-di-antar' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-di-antar' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Perlu di Antar
-                            <span id="badge-perlu-di-antar" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-di-antar' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-perlu-di-antar" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-di-antar' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $perluDiAntarCount }}
                             </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'selesai', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'selesai' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'selesai' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Pesanan Selesai
-                            <span id="badge-selesai" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'selesai' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-selesai" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'selesai' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $pesananSelesaiCount }}
                             </span>
                         </a>
 
                         <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
                             Sedang Dibatalkan
-                            <span id="badge-dibatalkan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'dibatalkan' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500' }}">
+                            <span id="badge-dibatalkan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'dibatalkan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $sedangDibatalkanCount }}
                             </span>
                         </a>
                     </div>
 
                     <!-- SEARCH & FILTER ROW -->
-                    <form method="GET" action="{{ route('admin.riwayat-pesanan') }}" class="grid grid-cols-1 sm:grid-cols-5 gap-4 bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
+                    <form method="GET" action="{{ route('admin.riwayat-pesanan') }}" class="flex flex-col gap-3">
                         <input type="hidden" name="tab" value="{{ $tab }}">
                         
-                        <div class="relative col-span-1">
-                            <select class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none">
-                                <option>Nomor Pesanan</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                                <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
+                        <div class="flex items-center gap-3">
+                            <div class="relative flex-1">
+                                <input type="text" 
+                                       name="search" 
+                                       value="{{ $search }}" 
+                                       placeholder="Cari nama atau nomor nota..." 
+                                       class="w-full text-xs font-normal rounded-full pl-10 pr-4 focus:outline-none placeholder:text-[#808080] bg-white"
+                                       style="border:1px solid #CCCCCC; color:#0F0F0F; height:48px;">
+                                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none" style="color:#808080;">
+                                    <i data-feather="search" class="w-4 h-4"></i>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Dropdown Sorting -->
-                        <div class="relative col-span-1">
-                            <select name="sort" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none cursor-pointer">
-                                <option value="deadline" {{ $sort === 'deadline' ? 'selected' : '' }}>Deadline Terdekat</option>
-                                <option value="terbaru" {{ $sort === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                                <option value="terlama" {{ $sort === 'terlama' ? 'selected' : '' }}>Terlama</option>
-                                <option value="prioritas_desc" {{ $sort === 'prioritas_desc' ? 'selected' : '' }}>Prioritas Teratas</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                                <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
-                            </div>
-                        </div>
-
-                        <div class="relative col-span-1 sm:col-span-2">
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ $search }}" 
-                                   placeholder="Cari Nomor Pesanan atau Nama Pembeli..." 
-                                   class="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2.5 text-xs font-medium text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:bg-white transition-all">
-                            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
-                                <i data-feather="search" class="w-3.5 h-3.5"></i>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm">
-                                Terapkan
+                            <button type="button" @click="filterOpen = !filterOpen" 
+                                    class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-colors cursor-pointer border-0"
+                                    style="background:#003E9C; color:#FFFFFF;">
+                                <i data-feather="sliders" class="w-5 h-5" x-show="!filterOpen"></i>
+                                <i data-feather="x" class="w-5 h-5" x-show="filterOpen" x-cloak></i>
                             </button>
-                            @if(!empty($search) || $sort !== 'deadline')
-                                <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs px-3 py-2.5 rounded-xl flex items-center justify-center transition-all">
-                                    Reset
-                                </a>
-                            @endif
+                        </div>
+
+                        <!-- Collapsible Sorting Panel (Alpine.js) -->
+                        <div x-show="filterOpen" x-transition x-cloak class="bg-white p-4 rounded-lg flex flex-col sm:flex-row items-stretch sm:items-end gap-3 shadow-sm border border-slate-50">
+                            <div class="relative flex-1">
+                                <label class="text-xs font-medium text-slate-500 block mb-1.5">Urutkan Berdasarkan</label>
+                                <div class="relative">
+                                    <select name="sort" onchange="this.form.submit()" 
+                                            class="w-full text-xs font-normal rounded-full px-4 focus:outline-none appearance-none"
+                                            style="border:1px solid #CCCCCC; color:#808080; height:48px; background-color:#FFFFFF;">
+                                        <option value="deadline" {{ $sort === 'deadline' ? 'selected' : '' }}>Deadline Terdekat</option>
+                                        <option value="terbaru" {{ $sort === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                        <option value="terlama" {{ $sort === 'terlama' ? 'selected' : '' }}>Terlama</option>
+                                        <option value="prioritas_desc" {{ $sort === 'prioritas_desc' ? 'selected' : '' }}>Prioritas Teratas</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none" style="color:#808080;">
+                                        <i data-feather="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <button type="submit" class="text-xs font-medium px-5 py-2.5 rounded-full text-white transition-all shadow-sm border-0 cursor-pointer h-12" style="background:#003E9C; min-width: 100px;">
+                                    Terapkan
+                                </button>
+                                @if(!empty($search) || $sort !== 'deadline')
+                                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" 
+                                       class="text-xs font-medium px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all h-12 min-width: 80px;">
+                                        Reset
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </form>
 
@@ -262,91 +244,82 @@
                                     $complaint = $item;
                                     $order = $complaint->transaksi;
                                     $cust = $complaint->pelanggan ?? $order?->pelanggan;
+                                    $kendalaFormId = 'form-selesai-kendala-' . $complaint->id;
                                 @endphp
-                                <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-5">
-                                    <!-- Header Card -->
-                                    <div class="flex flex-wrap justify-between items-center border-b border-slate-50 pb-4 gap-2">
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-xs font-medium text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Kendala Pesanan</span>
-                                            
-                                            @if($order)
-                                                <a href="{{ route('order.detail', $order->id) }}" target="_blank" class="text-xs font-medium text-blue-600 hover:text-blue-800 font-mono hover:underline inline-flex items-center gap-1.5 transition-all">
-                                                    {{ $order->nota }}
-                                                    <i data-feather="external-link" class="w-3 h-3 stroke-[2.5]"></i>
-                                                </a>
-                                            @else
-                                                <span class="text-xs font-medium text-slate-400">N/A</span>
-                                            @endif
+                                <div class="bg-white rounded-lg p-4 flex flex-col gap-3 shadow-sm">
+                                    <!-- Baris 1: Status & Nota -->
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#EF4444;">Kendala Pesanan</span>
+                                            <span class="text-[11px] font-medium text-slate-400">
+                                                Laporan: {{ $complaint->created_at->format('d M Y') }}
+                                            </span>
                                         </div>
-                                        <div class="text-[11px] font-medium text-slate-400">
-                                            Tanggal Laporan: <span class="text-slate-600">{{ $complaint->created_at->format('d M Y H:i:s') }}</span>
-                                        </div>
+                                        
+                                        @if($order)
+                                            <a href="{{ route('order.detail', $order->id) }}" target="_blank" class="text-xs font-normal hover:underline" style="color:#808080;">
+                                                {{ $order->nota }}
+                                            </a>
+                                        @else
+                                            <span class="text-xs font-normal" style="color:#808080;">N/A</span>
+                                        @endif
                                     </div>
 
-                                    <!-- Body Card -->
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-medium">
-                                        <!-- Issue Detail -->
-                                        <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                            <p class="text-[#0f172a] font-medium text-sm capitalize">
-                                                Detail Kendala
-                                            </p>
-                                            <p class="text-slate-500 font-normal leading-relaxed bg-slate-50 border border-slate-100 p-3 rounded-xl mt-2">
-                                                {{ $complaint->content }}
-                                            </p>
-                                            @if(!empty($complaint->issue_types))
-                                                <p class="text-slate-400 mt-2">
-                                                    Kategori: <span class="text-slate-700 font-medium">{{ is_array($complaint->issue_types) ? implode(', ', $complaint->issue_types) : $complaint->issue_types }}</span>
-                                                </p>
-                                            @endif
-                                        </div>
+                                    <!-- Baris 2: Nama Pelanggan -->
+                                    <div class="text-sm font-medium" style="color:#0F0F0F;">
+                                        {{ $cust->nama ?? 'N/A' }}
+                                    </div>
 
-                                        <!-- Customer Details -->
-                                        <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                            <p class="text-[#0f172a] font-medium">Informasi Pembeli</p>
-                                            <div class="space-y-1">
-                                                <p class="text-slate-400">Nama: <span class="text-slate-700">{{ $cust->nama ?? 'N/A' }}</span></p>
-                                                <p class="text-slate-400">Telepon: <span class="text-slate-700">{{ $cust->telepon ?? 'N/A' }}</span></p>
-                                                @if($order)
-                                                    <p class="text-slate-400">Alamat: <span class="text-slate-700 font-normal line-clamp-2">{{ $order->pickup_address ?? 'N/A' }}</span></p>
-                                                @endif
+                                    <!-- Baris 3: Nomor Telepon -->
+                                    <div class="text-xs font-normal" style="color:#808080;">
+                                        {{ $cust->telepon ?? 'N/A' }}
+                                    </div>
+
+                                    <!-- Baris 4: Alamat -->
+                                    <div class="text-xs font-normal leading-relaxed" style="color:#808080;">
+                                        {{ $order->pickup_address ?? 'N/A' }}
+                                    </div>
+
+                                    <!-- Baris 5: Detail Kendala -->
+                                    <div class="text-xs font-normal p-3 rounded-lg bg-slate-50 border border-slate-100" style="color:#808080;">
+                                        <p class="font-medium text-[#0F0F0F] mb-1">Detail Kendala:</p>
+                                        {{ $complaint->content }}
+                                        @if(!empty($complaint->issue_types))
+                                            <div class="mt-2 text-[10px] font-medium text-slate-500">
+                                                Kategori: {{ is_array($complaint->issue_types) ? implode(', ', $complaint->issue_types) : $complaint->issue_types }}
                                             </div>
-                                        </div>
-
-                                        <!-- Complaint Images (if any) -->
-                                        <div class="space-y-1.5">
-                                            <p class="text-[#0f172a] font-medium">Foto Bukti Kendala</p>
-                                            @php
-                                                $images = [];
-                                                if (is_string($complaint->image_path)) {
-                                                    $images = json_decode($complaint->image_path, true) ?? [];
-                                                } elseif (is_array($complaint->image_path)) {
-                                                    $images = $complaint->image_path;
-                                                }
-                                            @endphp
-                                            @if(!empty($images))
-                                                <div class="flex flex-wrap gap-2 mt-2">
-                                                    @foreach($images as $img)
-                                                        <a href="{{ $img }}" target="_blank" class="block w-16 h-16 rounded-xl border border-slate-100 overflow-hidden shadow-sm hover:scale-105 transition-all">
-                                                            <img src="{{ $img }}" alt="Bukti Kendala" class="w-full h-full object-cover">
-                                                        </a>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <p class="text-slate-400 font-normal">Tidak ada foto bukti.</p>
-                                            @endif
-                                        </div>
+                                        @endif
                                     </div>
 
-                                    <!-- Footer Card / Action Buttons -->
-                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-t border-slate-50 pt-4 gap-4">
+                                    <!-- Foto Bukti Kendala (if any) -->
+                                    @php
+                                        $images = [];
+                                        if (is_string($complaint->image_path)) {
+                                            $images = json_decode($complaint->image_path, true) ?? [];
+                                        } elseif (is_array($complaint->image_path)) {
+                                            $images = $complaint->image_path;
+                                        }
+                                    @endphp
+                                    @if(!empty($images))
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach($images as $img)
+                                                <a href="{{ $img }}" target="_blank" class="block w-12 h-12 rounded-lg border border-slate-100 overflow-hidden shadow-sm hover:scale-105 transition-transform">
+                                                    <img src="{{ $img }}" alt="Bukti Kendala" class="w-full h-full object-cover">
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <!-- Baris 6 & 7: Status & Aksi -->
+                                    <div class="flex items-center justify-between pt-2 border-t border-[#F4F4F4] mt-1 flex-wrap gap-2">
                                         <div>
-                                            <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Status Kendala</p>
-                                            <p class="text-base font-medium text-[#0f172a]">
+                                            <p class="text-[9px] font-normal text-slate-400 uppercase">Status Kendala</p>
+                                            <p class="text-xs font-medium text-[#0F0F0F]">
                                                 {{ ucfirst($complaint->status) }}
                                             </p>
                                         </div>
 
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                        <div class="flex items-center gap-2">
                                             @php
                                                 $phone = $cust->telepon ?? '';
                                                 $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
@@ -362,161 +335,139 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
+                                               class="notranslate text-center bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+                                               style="height:38px; border-width:1px;"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat WhatsApp
                                             </a>
 
-                                            <form action="{{ route('admin.riwayat-pesanan.selesaikan-kendala', [$complaint->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none" onsubmit="return confirm('Apakah Anda yakin menyelesaikan kendala pesanan ini? Laporan kendala akan dihapus.')">
+                                            <!-- Form ini di-submit lewat JS setelah user konfirmasi di modal custom (bukan confirm() native) -->
+                                            <form id="{{ $kendalaFormId }}" action="{{ route('admin.riwayat-pesanan.selesaikan-kendala', [$complaint->id, 'tab' => $tab]) }}" method="POST" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
-                                                    <i data-feather="check" class="w-4 h-4"></i>
-                                                    Selesai (Hapus Kendala)
-                                                </button>
                                             </form>
+                                            <button
+                                                type="button"
+                                                @click="openConfirm('{{ $kendalaFormId }}', 'Apakah Anda yakin menyelesaikan kendala pesanan ini? Laporan kendala akan dihapus.')"
+                                                class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
+                                                <i data-feather="check" class="w-4 h-4"></i>
+                                                Selesai (Hapus Kendala)
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             @else
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-5">
+                            <div class="bg-white rounded-lg p-4 flex flex-col gap-3 shadow-sm">
                                 
-                                <!-- Header Card -->
                                 @php
                                     $meta = json_decode($item->payment_metadata, true) ?? [];
                                     $hasPendingUpgrade = isset($meta['pending_upgrade']);
+                                    $bayarFormId = 'form-konfirmasi-bayar-' . $item->id;
                                 @endphp
-                                <div class="flex flex-wrap justify-between items-center border-b border-slate-50 pb-4 gap-2">
-                                    <div class="flex items-center gap-3">
-                                        <!-- Status Badge -->
+                                
+                                <!-- Baris 1: Status & Nota -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
                                         @if(in_array($item->status, ['Baru', 'created', 'Perlu Diproses']))
-                                            <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">Butuh diproses</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#F2994A;">Butuh diproses</span>
                                         @elseif($item->status === 'Menunggu Pembayaran' || (in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status !== 'paid'))
-                                            <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">Menunggu Pembayaran</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#003E9C;">Menunggu Pembayaran</span>
                                         @elseif($item->status === 'Perlu Dikerjakan')
-                                            <span class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">Perlu Dikerjakan</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#F2994A;">Perlu Dikerjakan</span>
                                         @elseif($item->status === 'Proses Pengerjaan')
-                                            <span class="text-xs font-medium text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">Proses Pengerjaan</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#003E9C;">Proses Pengerjaan</span>
                                         @elseif(in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status === 'paid')
-                                            <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Pesanan Selesai</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#10B981;">Pesanan Selesai</span>
                                         @elseif($item->status === 'Sedang Dibatalkan' || $item->status === 'Batal')
-                                            <span class="text-xs font-medium text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">Sedang Dibatalkan</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#EF4444;">Sedang Dibatalkan</span>
                                         @elseif(in_array($item->status, ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput']))
-                                            <span class="text-xs font-medium text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-lg">Menunggu di Jemput</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#F2994A;">Menunggu di Jemput</span>
                                         @elseif(in_array($item->status, ['Perlu di Antar', 'Perlu di antar']))
-                                            <span class="text-xs font-medium text-teal-600 bg-teal-50 px-2.5 py-1 rounded-lg">Perlu di Antar</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#003E9C;">Perlu di Antar</span>
                                         @elseif($item->status === 'Kendala Pesanan')
-                                            <span class="text-xs font-medium text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg">Kendala Pesanan</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#EF4444;">Kendala Pesanan</span>
                                         @else
-                                            <span class="text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">{{ $item->status }}</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full bg-slate-500">{{ $item->status }}</span>
                                         @endif
 
                                         @if($hasPendingUpgrade)
-                                            <span class="text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 animate-pulse flex items-center gap-1">
-                                                <i data-feather="bell" class="w-3.5 h-3.5"></i>
+                                            <span class="text-[10px] font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full animate-pulse border border-amber-200">
                                                 Pending Upgrade
                                             </span>
                                         @endif
-
-                                        <a href="{{ route('order.detail', $item->id) }}" target="_blank" class="text-xs font-medium text-blue-600 hover:text-blue-800 font-mono hover:underline inline-flex items-center gap-1.5 transition-all">
-                                            {{ $item->nota }}
-                                            <i data-feather="external-link" class="w-3 h-3 stroke-[2.5]"></i>
-                                        </a>
+                                        
                                         @if(strtolower($item->layananPrioritas->nama ?? '') === 'satuan' || $item->fk_tambahan !== null)
-                                            <span class="text-[10px] font-medium tracking-wider text-pink-700 bg-pink-100 border border-pink-200 px-2 py-0.5 rounded-md animate-pulse">SATUAN</span>
+                                            <span class="text-[9px] font-medium text-pink-700 bg-pink-100 border border-pink-200 px-1.5 py-0.5 rounded-md animate-pulse">SATUAN</span>
                                         @endif
                                     </div>
-                                    <div class="text-[11px] font-medium text-slate-400">
-                                        Tanggal Transaksi: <span class="text-slate-600">{{ $item->waktu->format('d M Y H:i:s') }}</span>
-                                    </div>
+
+                                    <a href="{{ route('order.detail', $item->id) }}" target="_blank" class="text-xs font-normal hover:underline" style="color:#808080;">
+                                        {{ $item->nota }}
+                                    </a>
                                 </div>
 
-                                <!-- Body Card -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-medium">
-                                    <!-- Laundry Service Details -->
-                                    <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                        <p class="text-[#0f172a] font-medium text-sm capitalize">
-                                            {{ $item->layananPrioritas->nama ?? 'Layanan Laundry' }}
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Parfum: <span class="text-slate-700 font-medium">{{ $item->parfum ?? 'Standard' }}</span>
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Layanan: <span class="text-slate-700 font-medium">{{ $item->is_roundtrip ? 'Antar-Jemput' : 'Satu Arah' }}</span>
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Metode Pembayaran: <span class="text-slate-700 font-medium uppercase">{{ $item->jenis_pembayaran }}</span>
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Estimasi Durasi: <span class="text-indigo-600 font-medium">{{ $item->getEstimasiPengerjaanJam() }} Jam</span>
-                                        </p>
-                                        <p class="text-slate-400">
-                                            Deadline: <span class="text-rose-600 font-medium">{{ $item->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</span>
-                                        </p>
-                                    </div>
-
-                                    <!-- Customer Details -->
-                                    <div class="space-y-1.5 md:border-r border-slate-50 md:pr-6">
-                                        <p class="text-[#0f172a] font-medium">Informasi Pembeli</p>
-                                        <div class="space-y-1">
-                                            <p class="text-slate-400">Nama: <span class="text-slate-700">{{ $item->pelanggan->nama ?? 'N/A' }}</span></p>
-                                            <p class="text-slate-400">Telepon: <span class="text-slate-700">{{ $item->pelanggan->telepon ?? 'N/A' }}</span></p>
-                                            <p class="text-slate-400">Alamat: <span class="text-slate-700 font-normal line-clamp-2">{{ $item->pickup_address ?? 'N/A' }}</span></p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Laundry Notes / Specific Instructions -->
-                                    <div class="space-y-1.5">
-                                        <p class="text-[#0f172a] font-medium">Catatan Khusus</p>
-                                        <p class="text-slate-500 font-normal leading-relaxed">
-                                            {{ $item->catatan ?? '-' }}
-                                        </p>
-                                    </div>
+                                <!-- Baris 2: Nama Pelanggan -->
+                                <div class="text-sm font-medium" style="color:#0F0F0F;">
+                                    {{ $item->pelanggan->nama ?? 'N/A' }}
                                 </div>
 
-                                <!-- Footer Card / Action Buttons -->
-                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-t border-slate-50 pt-4 gap-4">
-                                    <div>
-                                        <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total Pendapatan</p>
-                                        <p class="text-base font-medium text-[#0f172a]">
-                                            Rp {{ number_format($item->total_bayar_akhir, 0, ',', '.') }}
-                                        </p>
+                                <!-- Baris 3: Nomor Telepon -->
+                                <div class="text-xs font-normal" style="color:#808080;">
+                                    {{ $item->pelanggan->telepon ?? 'N/A' }}
+                                </div>
+
+                                <!-- Baris 4: Alamat -->
+                                <div class="text-xs font-normal leading-relaxed" style="color:#808080;">
+                                    {{ $item->pickup_address ?? 'N/A' }}
+                                </div>
+
+                                <!-- Baris 5: Catatan Khusus -->
+                                <div class="text-xs font-normal" style="color:#808080;">
+                                    {{ $item->catatan ?? '-' }}
+                                </div>
+
+                                <!-- Baris 6 & 7: Total & Aksi -->
+                                <div class="flex items-center justify-between pt-2 border-t border-[#F4F4F4] mt-1 flex-wrap gap-2">
+                                    <div class="text-sm font-medium" style="color:#0F0F0F;">
+                                        Rp {{ number_format($item->total_bayar_akhir, 0, ',', '.') }}
                                     </div>
 
                                     <!-- Actions for "Perlu Diproses" (status 'Baru' / 'created') -->
                                     @if(in_array($item->status, ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput']))
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
-                                            <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="flex-1 sm:flex-none"><input type="hidden" name="tab" value="{{ $tab }}">
+                                        <div class="flex items-center gap-2">
+                                            <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="inline-block">
+                                                <input type="hidden" name="tab" value="{{ $tab }}">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-medium transition-all">
+                                                <button type="submit" class="text-center bg-white border px-5 py-2 rounded-full text-xs font-medium transition-all" style="border-color:#003E9C; color:#003E9C; height:38px; border-width:1px;">
                                                     Batalkan Pesanan
                                                 </button>
                                             </form>
                                             
-                                            <form action="{{ route('admin.riwayat-pesanan.konfirmasi-jemput', $item->id) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
+                                            <form action="{{ route('admin.riwayat-pesanan.konfirmasi-jemput', $item->id) }}" method="POST" class="inline-block">
                                                 @csrf
                                                 <input type="hidden" name="tab" value="{{ $tab }}">
-                                                <button type="submit" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Konfirmasi Sudah Dijemput
                                                 </button>
                                             </form>
                                         </div>
                                     @elseif(in_array($item->status, ['Baru', 'created', 'Perlu Diproses']))
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
-                                            <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="flex-1 sm:flex-none"><input type="hidden" name="tab" value="{{ $tab }}">
+                                        <div class="flex items-center gap-2">
+                                            <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="inline-block">
+                                                <input type="hidden" name="tab" value="{{ $tab }}">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center border border-slate-200 hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-medium transition-all">
+                                                <button type="submit" class="text-center bg-white border px-5 py-2 rounded-full text-xs font-medium transition-all" style="border-color:#003E9C; color:#003E9C; height:38px; border-width:1px;">
                                                     Batalkan Pesanan
                                                 </button>
                                             </form>
                                             
-                                            <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all block text-center">
+                                            <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                  Proses Pesanan
                                              </a>
                                         </div>
                                     @elseif($item->status === 'Perlu Dikerjakan')
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                        <div class="flex items-center gap-2">
                                             @php
                                                 $phone = $item->pelanggan->telepon ?? '';
                                                 $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
@@ -536,26 +487,27 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
+                                               class="notranslate text-center bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+                                               style="height:38px; border-width:1px;"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
 
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
-                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
 
-                                            <a href="{{ route('admin.riwayat-pesanan.kerjakan-form', [$item->id, 'tab' => $tab]) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.riwayat-pesanan.kerjakan-form', [$item->id, 'tab' => $tab]) }}" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                 <i data-feather="play" class="w-4 h-4"></i>
                                                 Proses Pekerjaan
                                             </a>
                                         </div>
                                     @elseif($item->status === 'Proses Pengerjaan')
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                        <div class="flex items-center gap-2">
                                             @php
                                                 $phone = $item->pelanggan->telepon ?? '';
                                                 $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
@@ -575,29 +527,30 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
+                                               class="notranslate text-center bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+                                               style="height:38px; border-width:1px;"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
 
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
-                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
 
-                                            <form action="{{ route('admin.riwayat-pesanan.selesaikan', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
+                                            <form action="{{ route('admin.riwayat-pesanan.selesaikan', [$item->id, 'tab' => $tab]) }}" method="POST" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Selesaikan Pekerjaan
                                                 </button>
                                             </form>
                                         </div>
                                     @elseif($item->status === 'Menunggu Pembayaran' || (in_array($item->status, ['Pesanan Selesai', 'Selesai']) && $item->payment_status !== 'paid'))
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                        <div class="flex items-center gap-2">
                                             @php
                                                 $phone = $item->pelanggan->telepon ?? '';
                                                 $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
@@ -617,29 +570,34 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
+                                               class="notranslate text-center bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+                                               style="height:38px; border-width:1px;"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
 
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
-                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
 
-                                            <form action="{{ route('admin.riwayat-pesanan.konfirmasi-bayar', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none" onsubmit="return confirm('Apakah Anda yakin mengkonfirmasi pembayaran pesanan #{{ $item->nota }}?')">
+                                            <!-- Form ini di-submit lewat JS setelah user konfirmasi di modal custom (bukan confirm() native) -->
+                                            <form id="{{ $bayarFormId }}" action="{{ route('admin.riwayat-pesanan.konfirmasi-bayar', [$item->id, 'tab' => $tab]) }}" method="POST" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
-                                                    <i data-feather="check" class="w-4 h-4"></i>
-                                                    Sudah Dibayar
-                                                </button>
                                             </form>
+                                            <button
+                                                type="button"
+                                                @click="openConfirm('{{ $bayarFormId }}', 'Apakah Anda yakin konfirmasi pembayaran pesanan ini?')"
+                                                class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
+                                                <i data-feather="check" class="w-4 h-4"></i>
+                                                Sudah Dibayar
+                                            </button>
                                         </div>
                                     @elseif(in_array($item->status, ['Perlu di Antar', 'Perlu di antar']))
-                                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                                        <div class="flex items-center gap-2">
                                             @php
                                                 $phone = $item->pelanggan->telepon ?? '';
                                                 $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
@@ -659,15 +617,16 @@
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanPhone }}?text={{ rawurlencode($waText) }}" 
                                                target="_blank" 
-                                               class="notranslate w-full sm:w-auto text-center border border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2"
+                                               class="notranslate text-center bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+                                               style="height:38px; border-width:1px;"
                                                translate="no">
                                                 <i data-feather="message-circle" class="w-4 h-4"></i>
                                                 Chat Pelanggan
                                             </a>
 
-                                            <form action="{{ route('admin.riwayat-pesanan.selesaikan-antar', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
+                                            <form action="{{ route('admin.riwayat-pesanan.selesaikan-antar', [$item->id, 'tab' => $tab]) }}" method="POST" class="inline-block">
                                                 @csrf
-                                                <button type="submit" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center justify-center gap-2">
+                                                <button type="submit" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                     <i data-feather="check" class="w-4 h-4"></i>
                                                     Selesaikan Pengantaran
                                                 </button>
@@ -675,12 +634,11 @@
                                         </div>
                                     @endif
                                 </div>
-                            @endif
-
                             </div>
+                        @endif
                         @empty
                             <!-- Empty State -->
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-12 text-center flex flex-col items-center justify-center">
+                            <div class="bg-white rounded-lg p-12 text-center flex flex-col items-center justify-center shadow-sm">
                                 <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mb-4">
                                     <i data-feather="inbox" class="w-8 h-8"></i>
                                 </div>
@@ -705,6 +663,41 @@
 
         </div>
 
+    </div>
+
+    <!-- MODAL KONFIRMASI GLOBAL (custom, tidak pakai confirm() native) -->
+    <div x-show="confirmModalOpen" class="fixed inset-0 z-[70] overflow-y-auto" x-cloak role="dialog" aria-modal="true">
+        <div class="fixed inset-0" style="background:rgba(0,0,0,0.5);" @click="closeConfirm()"></div>
+
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div
+                class="relative w-full max-w-[320px] bg-white p-5 flex flex-col gap-4 text-center"
+                style="border-radius:16px; box-shadow:0px 8px 24px rgba(0,0,0,0.1);"
+                @click.away="closeConfirm()"
+            >
+                <div class="flex items-center justify-center w-10 h-10 rounded-full mx-auto" style="background:rgba(0,62,156,0.1);">
+                    <i data-feather="help-circle" class="w-5 h-5" style="color:#003E9C;"></i>
+                </div>
+
+                <div class="space-y-1">
+                    <h3 class="text-sm font-medium" style="color:#000000;">Konfirmasi</h3>
+                    <p class="text-xs" style="color:#808080;" x-text="confirmMessage"></p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" @click="closeConfirm()"
+                        class="flex-1 text-sm font-medium rounded-full transition-all"
+                        style="background:#FFFFFF; border:1px solid #003E9C; color:#003E9C; height:44px;">
+                        Batal
+                    </button>
+                    <button type="button" @click="confirmYes()"
+                        class="flex-1 text-sm font-medium rounded-full transition-all"
+                        style="background:#003E9C; border:1px solid #003E9C; color:#FFFFFF; height:44px;">
+                        Ya, Lanjutkan
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Real-time Background Order Poller Component -->
@@ -833,6 +826,11 @@
             if (typeof feather !== 'undefined') {
                 feather.replace();
             }
+            document.addEventListener('alpine:updated', function() {
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            });
         });
     </script>
 </body>

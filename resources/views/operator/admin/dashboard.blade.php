@@ -46,14 +46,8 @@
         <!-- MAIN WINDOW WRAPPER -->
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
             
-            <!-- HEADER : bg white, h-48px, padding 0 16px, gap 16px -->
-            <header class="h-12 bg-white flex items-center gap-4 px-4 sticky top-0 z-30 shrink-0">
-                <button @click="sidebarOpen = true" class="lg:hidden p-1 text-[#0F0F0F] hover:opacity-70 transition-opacity">
-                    <i data-feather="menu" class="w-5 h-5"></i>
-                </button>
-                <h1 class="text-sm font-medium flex-1" style="color:#0F0F0F;">Beranda</h1>
-                <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
-            </header>
+            <!-- HEADER -->
+            @include('operator.partials.header', ['title' => 'Beranda'])
 
             <!-- CONTENT INNER CONTAINER -->
             <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
