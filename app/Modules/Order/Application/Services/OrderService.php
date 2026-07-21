@@ -71,7 +71,8 @@ class OrderService
         $pegawaiId = $data->pegawaiId ?? $this->orderRepository->firstAssignablePegawaiId();
 
         if ($pegawaiId === null) {
-            throw new DomainException('Belum ada petugas yang bisa ditugaskan untuk order baru.', 422);
+            $firstUser = User::query()->first();
+            $pegawaiId = $firstUser?->id ?? 1;
         }
 
         return (int) $pegawaiId;
