@@ -10,7 +10,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
 
     <!-- Scripts and Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -44,7 +44,7 @@
         }
     </style>
 </head>
-<body class="font-outfit antialiased bg-[#f8fafc] text-[#1e293b] h-full" x-data="{ sidebarOpen: false }">
+<body class="font-dm-sans antialiased bg-[#f8fafc] text-[#1e293b] h-full" x-data="{ sidebarOpen: false }">
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
@@ -58,16 +58,31 @@
             <!-- HEADER -->
             <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
                 <div class="flex items-center gap-4">
-                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-all">
+                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-medium transition-all">
                         <i data-feather="arrow-left" class="w-4 h-4"></i>
                         Kembali ke Riwayat Pesanan
                     </a>
                 </div>
                 
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-8 h-8 rounded-full border border-slate-100 object-cover">
-                        <span class="text-sm font-bold text-[#0f172a]">MyZyngga</span>
+                <div class="relative" x-data="{ profileOpen: false }">
+                    <button @click="profileOpen = !profileOpen" type="button" class="flex items-center focus:outline-none cursor-pointer bg-transparent border-0 p-0">
+                        <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
+                    </button>
+                    
+                    <div x-show="profileOpen" 
+                         @click.outside="profileOpen = false" 
+                         x-transition 
+                         x-cloak 
+                         class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-50">
+                        <button type="button" 
+                                onclick="event.preventDefault(); document.getElementById('logout-form-header').submit();" 
+                                class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left bg-transparent border-0 cursor-pointer">
+                            <i data-feather="log-out" class="w-4 h-4 text-rose-600"></i>
+                            <span>Keluar Aplikasi</span>
+                        </button>
+                        <form id="logout-form-header" method="POST" action="{{ route('logout') }}" class="hidden">
+                            @csrf
+                        </form>
                     </div>
                 </div>
             </header>
@@ -79,18 +94,18 @@
 
                     <!-- Alerts for Errors -->
                     @if(session('error'))
-                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold px-4 py-3 rounded-xl flex items-center gap-2">
+                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
                             <i data-feather="alert-circle" class="w-4 h-4 stroke-[2.5]"></i>
                             <span>{{ session('error') }}</span>
                         </div>
                     @endif
                     @if($errors->any())
-                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold px-4 py-3 rounded-xl space-y-1">
+                        <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl space-y-1">
                             <div class="flex items-center gap-2">
                                 <i data-feather="alert-circle" class="w-4 h-4 stroke-[2.5]"></i>
                                 <span>Terdapat kesalahan pengisian:</span>
                             </div>
-                            <ul class="list-disc list-inside pl-6 font-semibold">
+                            <ul class="list-disc list-inside pl-6 font-medium">
                                 @foreach($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -100,8 +115,8 @@
 
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
                         <div>
-                            <h1 class="text-2xl font-extrabold text-[#0f172a] tracking-tight">Proses Pekerjaan & Rincian Pakaian</h1>
-                            <p class="text-xs font-semibold text-slate-400 mt-1">Pilih penanggung jawab dan isi rincian pakaian untuk Nota <span class="font-mono text-blue-600">{{ $transaksi->nota }}</span></p>
+                            <h1 class="text-2xl font-medium text-[#0f172a] tracking-tight">Proses Pekerjaan & Rincian Pakaian</h1>
+                            <p class="text-xs font-medium text-slate-400 mt-1">Pilih penanggung jawab dan isi rincian pakaian untuk Nota <span class="font-mono text-blue-600">{{ $transaksi->nota }}</span></p>
                         </div>
                     </div>
 
@@ -152,11 +167,11 @@
                         <!-- Left Side: Order Details -->
                         <div class="md:col-span-1 space-y-6">
                             <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
+                                <h3 class="font-medium text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
                                     <i data-feather="file-text" class="w-4 h-4 text-blue-500"></i>
                                     Detail Pesanan
                                 </h3>
-                                <div class="text-xs space-y-3 font-semibold text-slate-500">
+                                <div class="text-xs space-y-3 font-medium text-slate-500">
                                     <div>
                                         <p class="text-[10px] text-slate-400 uppercase">Nota</p>
                                         <p class="text-[#0f172a] font-mono text-sm mt-0.5">{{ $transaksi->nota }}</p>
@@ -178,22 +193,22 @@
                                     @endif
                                     <div>
                                         <p class="text-[10px] text-slate-400 uppercase">Estimasi Durasi</p>
-                                        <p class="text-indigo-600 font-extrabold text-sm mt-0.5">{{ $transaksi->getEstimasiPengerjaanJam() }} Jam</p>
+                                        <p class="text-indigo-600 font-medium text-sm mt-0.5">{{ $transaksi->getEstimasiPengerjaanJam() }} Jam</p>
                                     </div>
                                     <div>
                                         <p class="text-[10px] text-slate-400 uppercase">Deadline Pengerjaan</p>
-                                        <p class="text-rose-600 font-extrabold text-sm mt-0.5">{{ $transaksi->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</p>
+                                        <p class="text-rose-600 font-medium text-sm mt-0.5">{{ $transaksi->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</p>
                                     </div>
                                     <div>
                                         <p class="text-[10px] text-slate-400 uppercase">Total Bayar</p>
-                                        <p class="text-blue-600 font-extrabold text-sm mt-0.5">Rp {{ number_format($transaksi->total_bayar_akhir, 0, ',', '.') }}</p>
+                                        <p class="text-blue-600 font-medium text-sm mt-0.5">Rp {{ number_format($transaksi->total_bayar_akhir, 0, ',', '.') }}</p>
                                     </div>
                                 </div>
                             </div>
 
                             @if($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)
                             <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-bold text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
+                                <h3 class="font-medium text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
                                     <i data-feather="grid" class="w-4 h-4 text-blue-500"></i>
                                     Item Satuan (Eceran)
                                 </h3>
@@ -201,11 +216,11 @@
                                     @foreach($transaksi->tambahanSatuan as $item)
                                         <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
                                             <div>
-                                                <p class="text-xs font-bold text-[#0f172a]">{{ $item->kategoriPakaianSatuan->nama_pakaian ?? '-' }}</p>
-                                                <p class="text-[10px] text-slate-400 font-semibold">{{ $item->jumlah }} Pakaian x Rp {{ number_format(($item->harga_akhir / $item->jumlah), 0, ',', '.') }}</p>
+                                                <p class="text-xs font-medium text-[#0f172a]">{{ $item->kategoriPakaianSatuan->nama_pakaian ?? '-' }}</p>
+                                                <p class="text-[10px] text-slate-400 font-medium">{{ $item->jumlah }} Pakaian x Rp {{ number_format(($item->harga_akhir / $item->jumlah), 0, ',', '.') }}</p>
                                             </div>
                                             <div class="text-right">
-                                                <p class="text-xs font-extrabold text-blue-600">Rp {{ number_format($item->harga_akhir, 0, ',', '.') }}</p>
+                                                <p class="text-xs font-medium text-blue-600">Rp {{ number_format($item->harga_akhir, 0, ',', '.') }}</p>
                                             </div>
                                         </div>
                                     @endforeach
@@ -223,7 +238,7 @@
                                 <!-- Item Satuan (Eceran) Info Box -->
                                 @if($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)
                                 <div class="bg-blue-50/40 rounded-2xl border border-blue-100/30 p-5 space-y-3">
-                                    <h4 class="font-bold text-[#0f172a] text-xs flex items-center gap-2">
+                                    <h4 class="font-medium text-[#0f172a] text-xs flex items-center gap-2">
                                         <i data-feather="info" class="w-4 h-4 text-blue-500"></i>
                                         Item Satuan Terdaftar
                                     </h4>
@@ -231,11 +246,11 @@
                                         @foreach($transaksi->tambahanSatuan as $item)
                                             <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-blue-100/20 shadow-sm">
                                                 <div>
-                                                    <p class="text-xs font-bold text-[#0f172a]">{{ $item->kategoriPakaianSatuan->nama_pakaian ?? '-' }}</p>
-                                                    <p class="text-[10px] text-slate-400 font-semibold">Jumlah: {{ $item->jumlah }} pcs</p>
+                                                    <p class="text-xs font-medium text-[#0f172a]">{{ $item->kategoriPakaianSatuan->nama_pakaian ?? '-' }}</p>
+                                                    <p class="text-[10px] text-slate-400 font-medium">Jumlah: {{ $item->jumlah }} pcs</p>
                                                 </div>
                                                 <div class="text-right">
-                                                    <p class="text-xs font-extrabold text-slate-600">Rp {{ number_format($item->harga_akhir, 0, ',', '.') }}</p>
+                                                    <p class="text-xs font-medium text-slate-600">Rp {{ number_format($item->harga_akhir, 0, ',', '.') }}</p>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -245,11 +260,11 @@
 
                                 <!-- Pegawai Penanggung Jawab Section -->
                                 <div>
-                                    <h3 class="font-bold text-[#0f172a] text-sm flex items-center gap-2 mb-3">
+                                    <h3 class="font-medium text-[#0f172a] text-sm flex items-center gap-2 mb-3">
                                         <i data-feather="user" class="w-4 h-4 text-blue-500"></i>
                                         Karyawan Penanggung Jawab
                                     </h3>
-                                    <select name="pegawai_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all animate-none" required>
+                                    <select name="pegawai_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all animate-none" required>
                                         <option value="">-- Pilih Pegawai --</option>
                                         @foreach($pegawaiList as $pegawai)
                                             <option value="{{ $pegawai->id }}" {{ old('pegawai_id', $transaksi->getRawPegawaiId()) == $pegawai->id ? 'selected' : '' }}>
@@ -263,11 +278,11 @@
                                 <!-- Items List Container -->
                                 <div class="space-y-4 border-t border-slate-50 pt-4">
                                     <div class="flex justify-between items-center pb-2">
-                                        <h3 class="font-bold text-[#0f172a] text-sm flex items-center gap-2">
+                                        <h3 class="font-medium text-[#0f172a] text-sm flex items-center gap-2">
                                             <i data-feather="list" class="w-4 h-4 text-blue-500"></i>
                                             Rincian Pakaian (Kiloan)
                                         </h3>
-                                        <button type="button" @click="addCustomItem()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all">
+                                        <button type="button" @click="addCustomItem()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 transition-all">
                                             <i data-feather="plus" class="w-3.5 h-3.5"></i>
                                             Tambah Item Kustom
                                         </button>
@@ -284,17 +299,17 @@
                                                             <input type="checkbox"
                                                                    x-model="item.checked"
                                                                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4.5 h-4.5 cursor-pointer">
-                                                            <span class="text-xs font-bold text-slate-700" x-text="item.nama_item"></span>
+                                                            <span class="text-xs font-medium text-slate-700" x-text="item.nama_item"></span>
                                                         </div>
                                                         
                                                         <div class="flex items-center gap-2" x-show="item.checked" x-transition>
-                                                            <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">-</button>
+                                                            <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">-</button>
                                                             <input type="number"
                                                                    :name="item.checked ? `items[${index}][qty]` : ''"
                                                                    x-model.number="item.qty"
                                                                    min="1"
-                                                                   class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-bold text-slate-700 outline-none">
-                                                            <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">+</button>
+                                                                   class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-medium text-slate-700 outline-none">
+                                                            <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">+</button>
                                                             
                                                             <input type="hidden" :name="item.checked ? `items[${index}][nama_item]` : ''" :value="item.nama_item">
                                                         </div>
@@ -305,24 +320,24 @@
                                                 <template x-if="!item.predefined">
                                                     <div class="flex items-center gap-3 bg-blue-50/30 p-3 rounded-xl border border-blue-100/50 relative group transition-all">
                                                         <div class="flex-1">
-                                                            <label class="text-[9px] font-bold text-blue-500 uppercase tracking-wider block mb-1">Item Kustom</label>
+                                                            <label class="text-[9px] font-medium text-blue-500 uppercase tracking-wider block mb-1">Item Kustom</label>
                                                             <input type="text"
                                                                    :name="`items[${index}][nama_item]`"
                                                                    x-model="item.nama_item"
                                                                    placeholder="Nama pakaian/laundry..."
-                                                                   class="w-full bg-white border border-blue-200/60 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 transition-all"
+                                                                   class="w-full bg-white border border-blue-200/60 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 transition-all"
                                                                    required>
                                                         </div>
                                                         <div class="w-28 shrink-0">
-                                                            <label class="text-[9px] font-bold text-blue-500 uppercase tracking-wider block mb-1 text-center">Qty</label>
+                                                            <label class="text-[9px] font-medium text-blue-500 uppercase tracking-wider block mb-1 text-center">Qty</label>
                                                             <div class="flex items-center gap-1 justify-center">
-                                                                <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">-</button>
+                                                                <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">-</button>
                                                                 <input type="number"
                                                                        :name="`items[${index}][qty]`"
                                                                        x-model.number="item.qty"
                                                                        min="1"
-                                                                       class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-bold text-slate-700 outline-none">
-                                                                <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-bold">+</button>
+                                                                       class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-medium text-slate-700 outline-none">
+                                                                <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">+</button>
                                                             </div>
                                                         </div>
                                                         <div class="self-end pb-0.5">
@@ -341,10 +356,10 @@
 
                                 <!-- Submission Buttons -->
                                 <div class="flex justify-end gap-3 pt-4 border-t border-slate-50">
-                                    <a href="{{ route('admin.riwayat-pesanan') }}" class="text-center border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition-all">
+                                    <a href="{{ route('admin.riwayat-pesanan') }}" class="text-center border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-medium transition-all">
                                         Batal
                                     </a>
-                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center gap-1.5">
                                         <i data-feather="play" class="w-4 h-4"></i>
                                         Mulai Kerja & Cetak Nota
                                     </button>
