@@ -14,7 +14,7 @@
 
     <!-- Scripts and Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Feather Icons -->
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 
@@ -23,235 +23,233 @@
 
     <style>
         [x-cloak] { display: none !important; }
-        
-        /* Custom scrollbar for sidebar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+
+        body, input, select, textarea, button {
+            font-family: 'DM Sans', sans-serif;
         }
 
-        /* Hide Tailwind Forms background SVG arrow on select */
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
         select {
             background-image: none !important;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            padding-right: 2.5rem !important;
         }
-        select::-ms-expand {
-            display: none;
-        }
+        select::-ms-expand { display: none; }
 
-        /* Selector dikunci hanya untuk input di dalam .relative-input-container */
         .relative-input-container input::-webkit-calendar-picker-indicator {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
             opacity: 0;
             cursor: pointer;
             z-index: 10;
         }
-        .relative-input-container {
-            position: relative;
-        }
+        .relative-input-container { position: relative; }
     </style>
 </head>
-<body class="font-dm-sans antialiased bg-[#f8fafc] text-[#1e293b] h-full overflow-hidden" x-data="{ sidebarOpen: false, modalOpen: false }">
+<body
+    class="antialiased h-full overflow-hidden"
+    style="background:#E6F0FF; color:#0F0F0F;"
+    x-data="{
+        sidebarOpen: false,
+        modalOpen: false,
+        deleteModalOpen: false,
+        deleteAction: '',
+        deleteLabel: '',
+        openDeleteModal(action, label) {
+            this.deleteAction = action;
+            this.deleteLabel = label;
+            this.deleteModalOpen = true;
+        },
+        closeDeleteModal() {
+            this.deleteModalOpen = false;
+            this.deleteAction = '';
+            this.deleteLabel = '';
+        },
+        confirmDelete() {
+            document.getElementById('deleteForm').submit();
+        }
+    }"
+>
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
-        
+
         <!-- SIDEBAR (Desktop + Mobile) -->
         @include('operator.partials.sidebar')
 
         <!-- MAIN WINDOW WRAPPER -->
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
-            
-            <!-- HEADER -->
-            <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-4">
-                    <!-- Mobile Hamburger Menu Button -->
-                    <button @click="sidebarOpen = true" class="lg:hidden p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors">
-                        <i data-feather="menu" class="w-6 h-6"></i>
-                    </button>
-                    <h1 class="text-lg font-medium text-slate-800">Keuangan Toko</h1>
-                </div>
 
-                <!-- Right Header Actions -->
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-8 h-8 rounded-full border border-slate-100 object-cover">
-                    </div>
-                </div>
+            <!-- HEADER : bg white, h-48px, padding 0 16px, gap 16px -->
+            <header class="h-12 bg-white flex items-center gap-4 px-4 sticky top-0 z-30 shrink-0">
+                <button @click="sidebarOpen = true" class="lg:hidden p-1 text-[#0F0F0F] hover:opacity-70 transition-opacity">
+                    <i data-feather="menu" class="w-5 h-5"></i>
+                </button>
+                <h1 class="text-sm font-medium flex-1" style="color:#0F0F0F;">Keuangan Toko</h1>
+                <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
             </header>
 
             <!-- CONTENT INNER CONTAINER -->
-            <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar bg-[#f0f6ff]">
-                
-                <!-- Inner Page Stack -->
-                <div class="max-w-5xl mx-auto w-full space-y-5">
-                    
-                    <!-- Alerts for success/errors -->
+            <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
+
+                <div class="max-w-5xl mx-auto w-full flex flex-col gap-4">
+
+                    <!-- Alerts -->
                     @if(session('success'))
-                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2 animate-none">
-                            <i data-feather="check-circle" class="w-4 h-4 text-emerald-500 shrink-0"></i>
+                        <div class="bg-white text-xs font-medium px-4 py-3 rounded-lg flex items-center gap-2" style="color:#10B981;">
+                            <i data-feather="check-circle" class="w-4 h-4 shrink-0" style="color:#10B981;"></i>
                             <span>{{ session('success') }}</span>
                         </div>
                     @endif
 
                     @if($errors->any())
-                        <div class="bg-rose-50 border border-rose-100 text-rose-800 text-xs font-medium px-4 py-3 rounded-xl space-y-1">
+                        <div class="bg-white text-xs font-medium px-4 py-3 rounded-lg space-y-1" style="color:#EF4444;">
                             @foreach($errors->all() as $error)
                                 <div class="flex items-center gap-2">
-                                    <i data-feather="alert-circle" class="w-4 h-4 text-rose-500 shrink-0"></i>
+                                    <i data-feather="alert-circle" class="w-4 h-4 shrink-0" style="color:#EF4444;"></i>
                                     <span>{{ $error }}</span>
                                 </div>
                             @endforeach
                         </div>
                     @endif
 
-                    <!-- 1. CATAT KAS MANUAL BUTTON (Full width) -->
-                    <button @click="modalOpen = true" class="w-full bg-[#0b4ab1] hover:bg-blue-800 text-white font-medium text-sm py-4 px-4 rounded-2xl shadow-sm transition-colors text-center block">
+                    <!-- 1. BUTTON CATAT KAS MANUAL : bg #003E9C, radius 100, h-48, text 14/500 white -->
+                    <button
+                        @click="modalOpen = true"
+                        class="w-full text-sm font-medium py-3.5 px-4 rounded-full shadow-sm transition-colors text-center"
+                        style="background:#003E9C; color:#FFFFFF;"
+                        onmouseover="this.style.background='#002d73'" onmouseout="this.style.background='#003E9C'"
+                    >
                         + Catat Kas Manual
                     </button>
 
-                    <!-- 2. TOTAL SALDO TOKO CARD -->
-                    <div class="bg-[#0f9f6e] text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
-                        <span class="text-xs font-normal text-emerald-100/90 block">Total Saldo Toko</span>
-                        <h3 class="text-3xl font-medium mt-1">Rp {{ number_format($saldoToko, 0, ',', '.') }}</h3>
-                        <p class="text-[10px] text-emerald-100/80 mt-4 font-normal">Berdasarkan transaksi lunas & penyesuaian</p>
+                    <!-- 2. CARD SALDO : bg #10B981, radius 8, padding 16, gap 8 -->
+                    <div class="p-4 rounded-lg" style="background:#10B981;">
+                        <span class="text-sm font-medium block" style="color:#FFFFFF;">Total Saldo Toko</span>
+                        <h3 class="text-2xl font-medium mt-2" style="color:#FFFFFF;">Rp {{ number_format($saldoToko, 0, ',', '.') }}</h3>
                     </div>
 
-                    <!-- 3. PEMASUKAN & PENGELUARAN CARDS (Side-by-side) -->
+                    <!-- 3. RINGKASAN KAS : gap 16 -->
                     <div class="grid grid-cols-2 gap-4">
-                        <!-- Pemasukan Card -->
-                        <div class="bg-white border border-slate-100/80 p-5 rounded-2xl shadow-sm flex flex-col justify-center">
-                            <span class="text-xs font-normal text-slate-400 block">Pemasukan</span>
-                            <h3 class="text-lg font-medium text-[#0f9f6e] mt-1">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h3>
+                        <!-- Card Pemasukan : bg white/80, radius 8, padding 12 16 -->
+                        <div class="bg-white/80 py-3 px-4 rounded-lg flex flex-col items-center text-center gap-2">
+                            <span class="text-xs font-normal" style="color:#808080;">Total Pemasukan</span>
+                            <h3 class="text-base font-normal" style="color:#10B981;">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h3>
                         </div>
 
-                        <!-- Pengeluaran Card -->
-                        <div class="bg-white border border-slate-100/80 p-5 rounded-2xl shadow-sm flex flex-col justify-center">
-                            <span class="text-xs font-normal text-slate-400 block">Pengeluaran</span>
-                            <h3 class="text-lg font-medium text-rose-500 mt-1">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
+                        <!-- Card Pengeluaran -->
+                        <div class="bg-white/80 py-3 px-4 rounded-lg flex flex-col items-center text-center gap-2">
+                            <span class="text-xs font-normal" style="color:#808080;">Total Pengeluaran</span>
+                            <h3 class="text-base font-normal" style="color:#EF4444;">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
                         </div>
                     </div>
 
-                    <!-- Split layout grid for filter and history cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
-                        
-                        <!-- 4. FILTER CARD -->
-                        <div class="bg-white border border-slate-100/80 p-5 rounded-2xl shadow-sm md:col-span-1">
-                            <form method="GET" action="{{ route('admin.keuangan') }}" class="space-y-4">
-                                <!-- Jenis Filter -->
-                                <div class="space-y-1">
-                                    <label class="text-xs font-normal text-slate-400 block">Jenis Filter</label>
+                    <!-- Split layout: filter + riwayat -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+
+                        <!-- 4. CARD FILTER : bg white, radius 8, padding 16, gap 16 -->
+                        <div class="bg-white p-4 rounded-lg md:col-span-1">
+                            <form method="GET" action="{{ route('admin.keuangan') }}" class="flex flex-col gap-4">
+
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-sm font-medium" style="color:#000000;">Jenis Filter</label>
                                     <div class="relative">
-                                        <select name="filter_type" id="filter_type" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3.5 focus:outline-none focus:border-blue-500 focus:bg-white appearance-none transition-all">
+                                        <select name="filter_type" id="filter_type"
+                                            class="w-full text-xs font-normal rounded-full px-4 py-3 focus:outline-none appearance-none"
+                                            style="border:1px solid #CCCCCC; color:#808080; height:48px;">
                                             <option value="daily" {{ $filterType === 'daily' ? 'selected' : '' }}>Harian</option>
                                             <option value="weekly" {{ $filterType === 'weekly' ? 'selected' : '' }}>Mingguan</option>
                                             <option value="monthly" {{ $filterType === 'monthly' ? 'selected' : '' }}>Bulanan</option>
                                         </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                        <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center" style="color:#808080;">
                                             <i data-feather="chevron-down" class="w-4 h-4"></i>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Pilih Waktu -->
-                                <div class="space-y-1">
-                                    <label class="text-xs font-normal text-slate-400 block">Pilih Waktu</label>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-sm font-medium" style="color:#000000;">Pilih Waktu</label>
                                     <div class="relative relative-input-container">
-                                        <input type="date" name="date_value" id="date_value" value="{{ $filterType === 'daily' ? $dateValue : '' }}" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-100 rounded-xl px-4 py-3.5 focus:outline-none focus:border-blue-500 focus:bg-white transition-all relative" style="position: relative;">
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                        <input type="date" name="date_value" id="date_value"
+                                            value="{{ $filterType === 'daily' ? $dateValue : '' }}"
+                                            class="w-full text-xs font-normal rounded-full px-4 py-3 focus:outline-none"
+                                            style="border:1px solid #CCCCCC; color:#808080; height:48px;">
+                                        <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center" style="color:#808080;">
                                             <i data-feather="calendar" class="w-4 h-4"></i>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Submit Button -->
-                                <div class="pt-2">
-                                    <button type="submit" class="w-full bg-[#0b4ab1] hover:bg-blue-800 text-white font-medium text-sm py-3.5 px-4 rounded-xl shadow-sm transition-colors text-center block">
-                                        Terapkan Filter
-                                    </button>
-                                </div>
+                                <button type="submit"
+                                    class="w-full text-xs font-normal rounded-full text-center"
+                                    style="background:#003E9C; color:#FFFFFF; height:48px;">
+                                    Terapkan Filter
+                                </button>
                             </form>
                         </div>
 
-                        <!-- 5. RIWAYAT TRANSAKSI CARD -->
-                        <div class="bg-white border border-slate-100/80 rounded-2xl shadow-sm p-5 space-y-4 md:col-span-2">
+                        <!-- 5. CARD RIWAYAT TRANSAKSI : bg white, radius 8, padding 16, gap 16 -->
+                        <div class="bg-white rounded-lg p-4 flex flex-col gap-4 md:col-span-2">
                             <div>
-                                <h3 class="font-medium text-slate-800 text-sm">Riwayat Transaksi</h3>
-                                <p class="text-[10px] text-slate-400 font-normal mt-0.5">Periode: {{ $startDate }} s.d. {{ $endDate }}</p>
+                                <h3 class="text-sm font-medium" style="color:#000000;">Riwayat Transaksi</h3>
+                                <p class="text-[10px] font-normal mt-0.5" style="color:#808080;">Periode: {{ $startDate }} s.d. {{ $endDate }}</p>
                             </div>
-                            
-                            <hr class="border-slate-100">
 
                             <div class="overflow-x-auto custom-scrollbar">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
-                                        <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-medium">
+                                        <tr style="border-bottom:1px solid #F4F4F4;">
                                             <th class="hidden">Tanggal</th>
                                             <th class="hidden">Sumber</th>
-                                            
-                                            <th class="pb-3 text-xs font-medium">Kategori</th>
-                                            <th class="pb-3 text-xs font-medium">Keterangan</th>
-                                            <th class="pb-3 text-xs font-medium text-center">Jumlah</th>
-                                            <th class="pb-3 text-xs font-medium text-right">Aksi</th>
+                                            <th class="pb-2 text-xs font-medium" style="color:#000000;">Kategori</th>
+                                            <th class="pb-2 text-xs font-medium" style="color:#000000;">Keterangan</th>
+                                            <th class="pb-2 text-xs font-medium text-center" style="color:#000000;">Jumlah</th>
+                                            <th class="pb-2 text-xs font-medium text-right" style="color:#000000;">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-50 text-xs">
+                                    <tbody class="text-xs">
                                         @forelse($records as $rec)
-                                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <tr style="border-bottom:1px solid #F4F4F4;">
                                                 <td class="hidden">{{ $rec['tanggal'] }}</td>
                                                 <td class="hidden">{{ $rec['source'] }}</td>
-                                                
-                                                <!-- Kategori Column -->
-                                                <td class="py-4 font-normal text-slate-500">
+
+                                                <td class="py-3 font-normal" style="color:#808080;">
                                                     {{ $rec['kategori'] ?: ($rec['tipe'] === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran') }}
                                                 </td>
 
-                                                <!-- Keterangan Column -->
-                                                <td class="py-4 font-normal text-slate-500">
+                                                <td class="py-3 font-normal" style="color:#808080;">
                                                     {{ $rec['keterangan'] ?: '-' }}
                                                 </td>
-                                                
-                                                <!-- Jumlah Column -->
-                                                <td class="py-4 text-center font-normal text-slate-700 whitespace-nowrap">
+
+                                                <td class="py-3 text-center font-normal whitespace-nowrap" style="color:#808080;">
                                                     Rp {{ number_format($rec['nominal'], 0, ',', '.') }}
                                                 </td>
-                                                
-                                                <!-- Aksi Column -->
-                                                <td class="py-4 text-right">
+
+                                                <td class="py-3 text-right">
                                                     @if($rec['source'] === 'manual')
-                                                        <form method="POST" action="{{ route('admin.keuangan.destroy', $rec['id']) }}" onsubmit="event.stopPropagation(); return confirm('Apakah Anda yakin ingin menghapus catatan manual ini?')" class="inline-block">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" onclick="event.stopPropagation();" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent">
-                                                                <i data-feather="trash-2" class="w-4 h-4 pointer-events-none"></i>
-                                                            </button>
-                                                        </form>
+                                                        <button
+                                                            type="button"
+                                                            @click="openDeleteModal('{{ route('admin.keuangan.destroy', $rec['id']) }}', '{{ addslashes($rec['keterangan'] ?: ($rec['kategori'] ?: 'catatan ini')) }}')"
+                                                            class="p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center border-0 bg-transparent"
+                                                            style="color:#EF4444;"
+                                                        >
+                                                            <i data-feather="trash-2" class="w-5 h-5 pointer-events-none" stroke-width="2.5"></i>
+                                                        </button>
                                                     @else
-                                                        <span class="text-slate-300 text-[10px] font-normal italic">-</span>
+                                                        <span class="text-[10px] font-normal italic" style="color:#CCCCCC;">-</span>
                                                     @endif
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="4" class="py-12 text-center text-slate-400 font-normal">
+                                                <td colspan="4" class="py-12 text-center font-normal" style="color:#808080;">
                                                     <div class="flex flex-col items-center justify-center gap-2">
                                                         <i data-feather="folder-open" class="w-8 h-8 opacity-45"></i>
                                                         <span>Belum ada catatan keuangan.</span>
@@ -272,74 +270,137 @@
         </div>
     </div>
 
-    <!-- MODAL PENULISAN TRANSAKSI MANUAL -->
+    <!-- OVERLAY + MODAL CATAT KAS MANUAL -->
     <div x-show="modalOpen" class="fixed inset-0 z-50 overflow-y-auto" x-cloak role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="modalOpen = false"></div>
+        <!-- Overlay: rgba(0,0,0,0.5) -->
+        <div class="fixed inset-0" style="background:rgba(0,0,0,0.5);" @click="modalOpen = false"></div>
 
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg" @click.away="modalOpen = false">
-                
-                <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-                    <h3 class="font-medium text-[#0f172a] text-sm">Catat Kas Manual</h3>
-                    <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
-                        <i data-feather="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <!-- Modal Container: w-340, padding 20, gap 16, radius 16, shadow -->
+            <div
+                class="relative w-full max-w-[340px] bg-white p-5 flex flex-col gap-4"
+                style="border-radius:16px; box-shadow:0px 8px 24px rgba(0,0,0,0.1);"
+                @click.away="modalOpen = false"
+            >
+                <!-- Header Form -->
+                <h3 class="text-sm font-medium" style="color:#000000;">Catat Kas Manual</h3>
 
-                <!-- Modal Body (Form) -->
-                <form method="POST" action="{{ route('admin.keuangan.store') }}" class="p-6 space-y-4">
+                <form method="POST" action="{{ route('admin.keuangan.store') }}" class="flex flex-col gap-4">
                     @csrf
 
-                    <div>
-                        <label class="text-xs font-normal text-slate-500 block mb-1.5">Tipe Transaksi</label>
-                        <select name="tipe" required class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all">
-                            <option value="pengeluaran">Pengeluaran (Kas Keluar)</option>
-                            <option value="pemasukan">Pemasukan (Kas Masuk)</option>
-                        </select>
+                    <!-- Field: Tipe Transaksi -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium" style="color:#000000;">Tipe Transaksi</label>
+                        <div class="relative">
+                            <select name="tipe" required
+                                class="w-full text-xs font-normal rounded-full px-4 focus:outline-none appearance-none"
+                                style="border:1px solid #CCCCCC; opacity:0.9; color:#808080; height:48px;">
+                                <option value="pengeluaran">Pengeluaran</option>
+                                <option value="pemasukan">Pemasukan</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center" style="color:#1E1E1E;">
+                                <i data-feather="chevron-down" class="w-4 h-4"></i>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="text-xs font-normal text-slate-500 block mb-1.5">Kategori</label>
-                        <input type="text" name="kategori" placeholder="Contoh: Pencairan Dana, Operasional, Kas Masuk" required class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all">
+                    <!-- Field: Kategori -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium" style="color:#000000;">Kategori</label>
+                        <input type="text" name="kategori" placeholder="Kas Masuk" required
+                            class="w-full text-xs font-normal rounded-full px-4 focus:outline-none"
+                            style="border:1px solid #CCCCCC; opacity:0.9; color:#808080; height:48px;">
                     </div>
 
-                    <div>
-                        <label class="text-xs font-normal text-slate-500 block mb-1.5">Tanggal</label>
+                    <!-- Field: Tanggal -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium" style="color:#000000;">Tanggal</label>
                         <div class="relative relative-input-container">
-                            <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all relative">
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                            <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}"
+                                class="w-full text-xs font-normal rounded-full px-4 focus:outline-none"
+                                style="border:1px solid #CCCCCC; opacity:0.9; color:#808080; height:48px;">
+                            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center" style="color:#808080;">
                                 <i data-feather="calendar" class="w-4 h-4"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-xs font-normal text-slate-500 block mb-1.5">Nominal (Rupiah)</label>
-                        <input type="number" name="nominal" min="1" placeholder="Masukkan angka tanpa titik, contoh: 50000" required class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all">
+                    <!-- Field: Nominal -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium" style="color:#000000;">Nominal</label>
+                        <input type="number" name="nominal" min="1" placeholder="50000" required
+                            class="w-full text-xs font-normal rounded-full px-4 focus:outline-none"
+                            style="border:1px solid #CCCCCC; opacity:0.9; color:#808080; height:48px;">
                     </div>
 
-                    <div>
-                        <label class="text-xs font-normal text-slate-500 block mb-1.5">Keterangan Tambahan</label>
-                        <textarea name="keterangan" rows="3" placeholder="Tulis rincian pencairan dana di sini..." class="w-full text-xs font-medium bg-[#f8fafc] border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"></textarea>
+                    <!-- Field: Keterangan -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium" style="color:#000000;">Keterangan</label>
+                        <input type="text" name="keterangan" placeholder="Pembayaran token"
+                            class="w-full text-xs font-normal rounded-full px-4 focus:outline-none"
+                            style="border:1px solid #CCCCCC; opacity:0.9; color:#808080; height:48px;">
                     </div>
 
-                    <!-- Modal Actions -->
-                    <div class="pt-4 border-t border-slate-50 flex items-center justify-end gap-3">
-                        <button type="button" @click="modalOpen = false" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs px-4 py-2.5 rounded-xl transition-all">
+                    <!-- Footer buttons: gap 12, h-48, radius 100 -->
+                    <div class="flex items-center gap-3 pt-1">
+                        <button type="button" @click="modalOpen = false"
+                            class="flex-1 text-sm font-medium rounded-full transition-all"
+                            style="background:#FFFFFF; border:1px solid #003E9C; color:#003E9C; height:48px;">
                             Batal
                         </button>
-                        <button type="submit" class="bg-[#0b4ab1] hover:bg-blue-800 text-white font-medium text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all duration-300">
-                            Simpan Catatan
+                        <button type="submit"
+                            class="flex-1 text-sm font-medium rounded-full transition-all"
+                            style="background:#003E9C; border:1px solid #003E9C; color:#FFFFFF; height:48px;">
+                            Simpan
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <script>
 
+    <!-- OVERLAY + MODAL KONFIRMASI HAPUS (custom, tidak pakai confirm() native) -->
+    <div x-show="deleteModalOpen" class="fixed inset-0 z-[60] overflow-y-auto" x-cloak role="dialog" aria-modal="true">
+        <div class="fixed inset-0" style="background:rgba(0,0,0,0.5);" @click="closeDeleteModal()"></div>
+
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div
+                class="relative w-full max-w-[300px] bg-white p-5 flex flex-col gap-4 text-center"
+                style="border-radius:16px; box-shadow:0px 8px 24px rgba(0,0,0,0.1);"
+                @click.away="closeDeleteModal()"
+            >
+                <div class="flex items-center justify-center w-10 h-10 rounded-full mx-auto" style="background:rgba(239,68,68,0.1);">
+                    <i data-feather="alert-triangle" class="w-5 h-5" style="color:#EF4444;"></i>
+                </div>
+
+                <div class="space-y-1">
+                    <h3 class="text-sm font-medium" style="color:#000000;">Hapus Catatan Manual?</h3>
+                    <p class="text-xs" style="color:#808080;" x-text="'Anda akan menghapus: ' + deleteLabel"></p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" @click="closeDeleteModal()"
+                        class="flex-1 text-sm font-medium rounded-full transition-all"
+                        style="background:#FFFFFF; border:1px solid #003E9C; color:#003E9C; height:48px;">
+                        Batal
+                    </button>
+                    <button type="button" @click="confirmDelete()"
+                        class="flex-1 text-sm font-medium rounded-full transition-all"
+                        style="background:#EF4444; border:1px solid #EF4444; color:#FFFFFF; height:48px;">
+                        Ya, Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form tersembunyi yang di-submit dinamis oleh modal konfirmasi hapus -->
+    <form id="deleteForm" method="POST" :action="deleteAction" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
+
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof feather !== 'undefined') {
                 feather.replace();
@@ -364,10 +425,10 @@
 
             if (filterTypeSelect && dateValueInput) {
                 filterTypeSelect.addEventListener('change', adjustInputType);
-                
+
                 const currentFilter = "{{ $filterType }}";
                 const currentValue = "{{ $dateValue }}";
-                
+
                 if (currentFilter === 'weekly') {
                     dateValueInput.type = 'week';
                     dateValueInput.value = currentValue;
@@ -379,6 +440,12 @@
                     dateValueInput.value = currentValue;
                 }
             }
+
+            document.addEventListener('alpine:updated', function() {
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            });
         });
     </script>
 </body>
