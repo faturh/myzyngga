@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Operator Dashboard - {{ config('app.name', 'Zyngga') }}</title>
+    <title>Beranda - {{ config('app.name', 'Zyngga') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,27 +24,18 @@
     <style>
         [x-cloak] { display: none !important; }
         
-        .transition-transform-hover:hover {
-            transform: translateY(-2px);
+        body, input, select, textarea, button {
+            font-family: 'DM Sans', sans-serif;
         }
-        
-        /* Custom scrollbar for sidebar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="font-dm-sans antialiased bg-[#f8fafc] text-[#1e293b] h-full overflow-hidden" x-data="{ sidebarOpen: false }">
+<body class="antialiased h-full overflow-hidden" style="background:#E6F0FF; color:#0F0F0F;" x-data="{ sidebarOpen: false }">
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
@@ -55,138 +46,112 @@
         <!-- MAIN WINDOW WRAPPER -->
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
             
-            <!-- HEADER -->
-            <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-4">
-                    <!-- Mobile Hamburger Menu Button -->
-                    <button @click="sidebarOpen = true" class="lg:hidden p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors">
-                        <i data-feather="menu" class="w-6 h-6"></i>
-                    </button>
-                </div>
-                
-                <!-- Right Header Actions -->
-                <div class="flex items-center gap-4" x-data="{ open: false }">
-                    <div class="relative">
-                        <button @click="open = !open" class="flex items-center gap-3 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition-all">
-                            <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-8 h-8 rounded-full border border-slate-100 object-cover">
-                        </button>
-                        
-                        <!-- Dropdown Settings/Logout -->
-                        <div x-show="open" @click.away="open = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                            <div class="px-4 py-2 border-b border-slate-50 mb-1">
-                                <p class="text-xs font-medium text-[#0f172a]">MyZyngga Operator</p>
-                                <p class="text-[10px] text-slate-400 truncate">{{ Auth::user()->email ?? 'operator@zyngga.com' }}</p>
-                            </div>
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
-                                <i data-feather="settings" class="w-3.5 h-3.5 text-slate-400"></i>
-                                Pengaturan Toko
-                            </a>
-                            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50">
-                                <i data-feather="log-out" class="w-3.5 h-3.5"></i>
-                                Keluar Aplikasi
-                            </a>
-                            <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">
-                                @csrf
-                            </form>
-                        </div>
-                    </div>
-                </div>
+            <!-- HEADER : bg white, h-48px, padding 0 16px, gap 16px -->
+            <header class="h-12 bg-white flex items-center gap-4 px-4 sticky top-0 z-30 shrink-0">
+                <button @click="sidebarOpen = true" class="lg:hidden p-1 text-[#0F0F0F] hover:opacity-70 transition-opacity">
+                    <i data-feather="menu" class="w-5 h-5"></i>
+                </button>
+                <h1 class="text-sm font-medium flex-1" style="color:#0F0F0F;">Beranda</h1>
+                <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
             </header>
 
             <!-- CONTENT INNER CONTAINER -->
-            <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-8 custom-scrollbar bg-[#f0f6ff]">
+            <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
                 
                 <!-- INNER PAGE CONTAINER -->
-                <div class="max-w-5xl mx-auto w-full space-y-8">
+                <div class="max-w-5xl mx-auto w-full flex flex-col gap-4">
                     
                     <!-- SECTION 1: PESANAN AKTIF -->
-                    <section class="space-y-4">
+                    <section class="flex flex-col gap-3">
                         <div>
-                            <h1 class="text-xl font-medium text-[#0f172a] leading-none">Pesanan Aktif</h1>
-                            <p class="text-xs font-normal text-slate-400 mt-1.5">
+                            <h2 class="text-sm font-medium" style="color:#000000;">Pesanan Aktif</h2>
+                            <p class="text-[10px] font-normal mt-0.5" style="color:#808080;">
                                 Data diambil dari 7 hari terakhir
                             </p>
                         </div>
                         
                         <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                             <!-- Card 1 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
-                                <span class="text-xs font-normal text-slate-400 truncate">Perlu Diproses</span>
-                                <h3 class="text-3xl font-medium text-[#0f172a]">{{ $perluDiprosesCount }}</h3>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses']) }}" class="flex flex-col justify-between h-24 bg-white p-4 rounded-lg hover:shadow-sm transition-all duration-300">
+                                <span class="text-xs font-normal" style="color:#808080;">Perlu Diproses</span>
+                                <h3 class="text-2xl font-medium" style="color:#0F0F0F;">{{ $perluDiprosesCount }}</h3>
                             </a>
 
                             <!-- Card 2 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
-                                <span class="text-xs font-normal text-slate-400 truncate">Menunggu Pembayaran</span>
-                                <h3 class="text-3xl font-medium text-[#0f172a]">{{ $menungguPembayaranCount }}</h3>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran']) }}" class="flex flex-col justify-between h-24 bg-white p-4 rounded-lg hover:shadow-sm transition-all duration-300">
+                                <span class="text-xs font-normal" style="color:#808080;">Menunggu Pembayaran</span>
+                                <h3 class="text-2xl font-medium" style="color:#0F0F0F;">{{ $menungguPembayaranCount }}</h3>
                             </a>
 
                             <!-- Card 3 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
-                                <span class="text-xs font-normal text-slate-400 truncate">Perlu Dikerjakan</span>
-                                <h3 class="text-3xl font-medium text-[#0f172a]">{{ $perluDikerjakanCount }}</h3>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan']) }}" class="flex flex-col justify-between h-24 bg-white p-4 rounded-lg hover:shadow-sm transition-all duration-300">
+                                <span class="text-xs font-normal" style="color:#808080;">Perlu Dikerjakan</span>
+                                <h3 class="text-2xl font-medium" style="color:#0F0F0F;">{{ $perluDikerjakanCount }}</h3>
                             </a>
 
                             <!-- Card 4 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
-                                <span class="text-xs font-normal text-slate-400 truncate">Kendala Pesanan</span>
-                                <h3 class="text-3xl font-medium text-[#0f172a]">0</h3>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'kendala']) }}" class="flex flex-col justify-between h-24 bg-white p-4 rounded-lg hover:shadow-sm transition-all duration-300">
+                                <span class="text-xs font-normal" style="color:#808080;">Kendala Pesanan</span>
+                                <h3 class="text-2xl font-medium" style="color:#0F0F0F;">0</h3>
                             </a>
 
                             <!-- Card 5 -->
-                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan']) }}" class="flex flex-col justify-between h-28 bg-white p-5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
-                                <span class="text-xs font-normal text-slate-400 truncate">Sedang Dibatalkan</span>
-                                <h3 class="text-3xl font-medium text-[#0f172a]">0</h3>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan']) }}" class="flex flex-col justify-between h-24 bg-white p-4 rounded-lg hover:shadow-sm transition-all duration-300">
+                                <span class="text-xs font-normal" style="color:#808080;">Sedang Dibatalkan</span>
+                                <h3 class="text-2xl font-medium" style="color:#0F0F0F;">0</h3>
                             </a>
                         </div>
                     </section>
 
                     <!-- SECTION 2: KEUANGAN TOKO -->
-                    <section class="space-y-4">
+                    <section class="flex flex-col gap-3">
                         <div>
-                            <h1 class="text-xl font-medium text-[#0f172a] leading-none">Keuangan Toko</h1>
+                            <h2 class="text-sm font-medium" style="color:#000000;">Keuangan Toko</h2>
                         </div>
                         
-                        <div class="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] w-full">
-                            <div class="flex items-center gap-4 mb-5">
-                                <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
-                                    <i data-feather="credit-card" class="w-6 h-6"></i>
+                        <div class="bg-white p-4 rounded-lg flex flex-col gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="background:#E6F0FF; color:#003E9C;">
+                                    <i data-feather="credit-card" class="w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <span class="text-xs font-medium text-slate-400 block">Saldo Toko</span>
-                                    <h3 class="text-2xl sm:text-3xl font-medium text-[#0f172a] mt-1">Rp {{ number_format($saldoToko, 0, ',', '.') }}</h3>
+                                    <span class="text-xs font-normal" style="color:#808080;">Saldo Toko</span>
+                                    <h3 class="text-2xl font-medium mt-0.5" style="color:#0F0F0F;">Rp {{ number_format($saldoToko, 0, ',', '.') }}</h3>
                                 </div>
                             </div>
-                            <a href="{{ route('admin.keuangan') }}" class="block w-full bg-[#0b4ab1] hover:bg-blue-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center transition-colors">
+                            <a href="{{ route('admin.keuangan') }}" 
+                               class="block w-full text-sm font-medium py-3.5 px-4 rounded-full text-center transition-colors"
+                               style="background:#003E9C; color:#FFFFFF;"
+                               onmouseover="this.style.background='#002d73'" onmouseout="this.style.background='#003E9C'">
                                 Lihat Detail Keuangan
                             </a>
                         </div>
                     </section>
 
                     <!-- SECTION 3: PERFORMA TOKO -->
-                    <section class="space-y-4">
+                    <section class="flex flex-col gap-3">
                         <div>
-                            <h1 class="text-xl font-medium text-[#0f172a] leading-none">Performa Toko</h1>
-                            <p class="text-xs font-normal text-slate-400 mt-1.5">
+                            <h2 class="text-sm font-medium" style="color:#000000;">Performa Toko</h2>
+                            <p class="text-[10px] font-normal mt-0.5" style="color:#808080;">
                                 Statistik Toko - Data dari 30 hari terakhir
                             </p>
                         </div>
                         
-                        <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] overflow-hidden">
-                            <div class="divide-y divide-slate-100">
-                                <div class="flex items-center justify-between p-5">
-                                    <span class="text-sm font-medium text-slate-700">Jumlah Pelanggan</span>
-                                    <span class="text-base font-medium text-[#0f172a]">88</span>
+                        <div class="bg-white rounded-lg overflow-hidden">
+                            <div>
+                                <div class="flex items-center justify-between p-4" style="border-bottom:1px solid #F4F4F4;">
+                                    <span class="text-xs font-normal" style="color:#808080;">Jumlah Pelanggan</span>
+                                    <span class="text-sm font-medium" style="color:#0F0F0F;">88</span>
                                 </div>
 
-                                <div class="flex items-center justify-between p-5">
-                                    <span class="text-sm font-medium text-slate-700">Pesanan Selesai</span>
-                                    <span class="text-base font-medium text-[#0f172a]">{{ $pesananSelesaiCount }}</span>
+                                <div class="flex items-center justify-between p-4" style="border-bottom:1px solid #F4F4F4;">
+                                    <span class="text-xs font-normal" style="color:#808080;">Pesanan Selesai</span>
+                                    <span class="text-sm font-medium" style="color:#0F0F0F;">{{ $pesananSelesaiCount }}</span>
                                 </div>
 
-                                <div class="flex items-center justify-between p-5">
-                                    <span class="text-sm font-medium text-slate-700">Pesanan Dibatalkan</span>
-                                    <span class="text-base font-medium text-[#0f172a]">1</span>
+                                <div class="flex items-center justify-between p-4">
+                                    <span class="text-xs font-normal" style="color:#808080;">Pesanan Dibatalkan</span>
+                                    <span class="text-sm font-medium" style="color:#0F0F0F;">1</span>
                                 </div>
                             </div>
                         </div>
