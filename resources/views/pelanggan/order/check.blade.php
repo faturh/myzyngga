@@ -41,7 +41,7 @@
             <div class="w-full max-w-5xl mx-auto px-5 flex flex-col" style="min-height: calc(100vh - 200px);" id="page-content">
 
                 {{-- Search Form Card --}}
-                <x-zyngga-card title="Informasi Pesanan">
+                <x-zyngga-card title="Informasi Pesanan" padding="p-4">
                     <form action="{{ route('order.check') }}" method="POST" class="space-y-4">
                         @csrf
                         {{-- Name or Delivery ID --}}
@@ -99,16 +99,11 @@
                 </x-zyngga-card>
                 
                 {{-- Info Card --}}
-                <x-zyngga-card>
+                <x-zyngga-card padding="p-4">
                     <div class="flex items-center justify-between min-h-[56px]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-zyngga-blue-50 flex items-center justify-center shrink-0">
-                                <i data-feather="help-circle" class="w-5 h-5 text-zyngga-blue-300"></i>
-                            </div>
-                            <div class="flex flex-col">
-                                <x-zyngga-text variant="sm" weight="medium" class="leading-snug">Butuh bantuan?</x-zyngga-text>
-                                <x-zyngga-text variant="xs" color="neutral-500" class="leading-snug mt-0.5">Hubungi kami via WhatsApp</x-zyngga-text>
-                            </div>
+                        <div class="flex flex-col">
+                            <x-zyngga-text variant="sm" weight="medium" class="leading-snug">Butuh bantuan?</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="leading-snug mt-0.5">Hubungi kami via WhatsApp</x-zyngga-text>
                         </div>
                         <x-zyngga-button 
                             type="a"
@@ -129,6 +124,7 @@
                         <x-zyngga-card 
                             onclick="window.location.href='{{ route('order.detail', ['id' => $order['nota_layanan']]) }}'"
                             class="cursor-pointer"
+                            padding="p-4"
                         >
                             {{-- Top Part: User & Order Info (Extra Elements) --}}
                             <div class="flex items-start justify-between mb-4">

@@ -190,6 +190,11 @@ class OrderPageController
             return redirect()->route($request->user() ? 'order.history' : 'order.check')
                 ->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
+        
+        if ($order['has_complaint'] ?? false) {
+            return redirect()->route('profile.complaint.detail', $order['complaint_id']);
+        }
+
         return view('pelanggan.order.complaint', compact('order'));
     }
 
