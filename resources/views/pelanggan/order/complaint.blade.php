@@ -279,6 +279,7 @@
             id="complaint-success-modal" 
             openEvent="open-complaint-success-modal"
             closeEvent="close-complaint-success-modal"
+            :dismissible="false"
         >
             <x-zyngga-confirm-view
                 :image="asset('images/illustrations/confirm_order.png')"
@@ -289,6 +290,21 @@
                 primaryAction="window.location.href = complaintRedirectUrl"
                 secondaryAction="window.location.href = '{{ route('order.detail', ['id' => $order['nota_layanan']]) }}'"
             />
+            <div class="mt-4 text-center" 
+                 x-data="{ count: 7 }" 
+                 @open-complaint-success-modal.window="
+                     let intervalId = setInterval(() => { 
+                         count--; 
+                         if (count <= 0) {
+                             clearInterval(intervalId);
+                             window.location.href = complaintRedirectUrl; 
+                         }
+                     }, 1000)
+                 ">
+                <x-zyngga-text variant="sm" color="neutral-500">
+                    Dialihkan otomatis dalam <span x-text="count">7</span> detik...
+                </x-zyngga-text>
+            </div>
         </x-zyngga-selection-modal>
     </div>
     

@@ -34,10 +34,18 @@
     <div class="min-h-screen flex flex-col" x-data="{
         content: `{{ addslashes($complaint->content) }}`
     }">
+        @php
+            $previousUrl = url()->previous();
+            if (strpos($previousUrl, '/order/complaint') !== false) {
+                $backUrl = route('order.detail', ['id' => $complaint->transaksi->nota ?? $complaint->transaksi_id]);
+            } else {
+                $backUrl = $previousUrl;
+            }
+        @endphp
         {{-- HEADER --}}
         <x-dashboard-header 
             title="Detail Komplain" 
-            :backUrl="route('profile.complaints')" 
+            :backUrl="$backUrl" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -67,10 +75,27 @@
                                 </button>
                             </div>
                         </div>
+                        @php
+                            $statusRaw = strtolower($complaint->status);
+                            if ($statusRaw === 'pending' || $statusRaw === 'menunggu respon') {
+                                $displayStatus = 'Diproses';
+                                $statusType = 'secondary';
+                                $statusIcon = 'loader';
+                            } elseif ($statusRaw === 'selesai') {
+                                $displayStatus = 'Selesai';
+                                $statusType = 'success';
+                                $statusIcon = 'check';
+                            } else {
+                                $displayStatus = $complaint->status;
+                                $statusType = 'secondary';
+                                $statusIcon = '';
+                            }
+                        @endphp
                         <x-zyngga-status 
-                            :type="($complaint->status === 'Menunggu Respon' || $complaint->status === 'pending') ? 'secondary' : ($complaint->status === 'Selesai' ? 'success' : 'secondary')" 
+                            :type="$statusType" 
                             size="M" 
-                            :label="$complaint->status === 'pending' ? 'Diproses' : $complaint->status" 
+                            :label="$displayStatus" 
+                            :icon="$statusIcon"
                         />
                     </div>
 

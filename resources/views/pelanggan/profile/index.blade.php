@@ -143,18 +143,6 @@
 
                         <x-zyngga-divider class="my-2" />
 
-                        {{-- Keamanan & Password --}}
-                        <button @click="activeSection = 'change-password'" class="w-full flex items-center gap-4 h-14 group">
-                            <i data-feather="lock" class="w-6 h-6 text-zyngga-neutral-800"></i>
-                            <div class="flex-1 text-left">
-                                <x-zyngga-text variant="sm" weight="medium">Keamanan & Password</x-zyngga-text>
-                                <x-zyngga-text variant="xs" color="neutral-500">Ganti kata sandi</x-zyngga-text>
-                            </div>
-                            <i data-feather="chevron-right" class="w-5 h-5 text-zyngga-blue-300"></i>
-                        </button>
-
-                        <x-zyngga-divider class="my-2" />
-
                         {{-- Riwayat Komplain --}}
                         <a href="{{ route('profile.complaints') }}" class="w-full flex items-center gap-4 h-14 group">
                             <i data-feather="alert-circle" class="w-6 h-6 text-zyngga-neutral-800"></i>
@@ -177,19 +165,7 @@
                     </div>
                 </x-zyngga-card>
             
-            {{-- ── SECTION CHANGE PASSWORD ────────────────────────────────── --}}
-            <div x-show="activeSection === 'change-password'" x-transition x-cloak class="flex flex-col gap-4">
-                <div class="flex items-center gap-3 mb-2 px-1">
-                    <button @click="activeSection = 'overview'" class="w-10 h-10 rounded-full bg-white border border-zyngga-blue-50 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors">
-                        <i data-feather="arrow-left" class="w-5 h-5 text-zyngga-blue-300"></i>
-                    </button>
-                    <x-zyngga-text variant="lg" weight="medium">Keamanan & Password</x-zyngga-text>
-                </div>
-                <x-zyngga-card>
-                    <div class="max-w-xl">
-                        <livewire:profile.update-password-form />
-                    </div>
-                </x-zyngga-card>
+
             {{-- Deletion Modal Component --}}
             <livewire:profile.delete-user-form :hide-trigger="true" />
         </main>

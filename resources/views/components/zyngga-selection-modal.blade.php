@@ -3,6 +3,7 @@
     'title' => null,     // Modal header title (optional)
     'openEvent' => null, // Event name to listen for to open the modal
     'closeEvent' => null, // Event name to dispatch when closed
+    'dismissible' => true,
 ])
 
 <div
@@ -26,7 +27,7 @@
     x-cloak
     class="fixed inset-0 z-[100] flex items-center justify-center p-5"
     style="background: rgba(0, 0, 0, 0.08); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(12px);"
-    x-on:click="isOpen = false"
+    x-on:click="if ({{ $dismissible ? 'true' : 'false' }}) isOpen = false"
 >
     <div
         class="w-full max-w-[385px] bg-white rounded-2xl p-6 max-height-[90vh] overflow-y-auto"
