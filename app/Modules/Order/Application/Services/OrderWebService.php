@@ -425,6 +425,21 @@ class OrderWebService
         $statusLabel = $this->statusLabel($order);
         $isRoundtrip = (bool) $order->is_roundtrip;
 
+        $isFinished = $this->isFinished($order);
+        if ($isFinished) {
+            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
+            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+        } else {
+            $isUnprocessed = in_array($order->status, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
+            if ($isUnprocessed) {
+                $deliveryStatus = 'Menunggu';
+                $deliveryIcon = 'clock';
+            } else {
+                $deliveryStatus = 'Diproses';
+                $deliveryIcon = 'loader';
+            }
+        }
+
         return [
             'id' => (string) $order->id,
             'nota_layanan' => $order->nota,
@@ -434,10 +449,11 @@ class OrderWebService
             'date' => $this->formatDateTime($order->waktu),
             'status' => $statusLabel,
             'status_icon' => $statusLabel === 'Selesai' ? 'check' : ($statusLabel === 'Belum Bayar' ? 'credit-card' : 'loader'),
-            'delivery_status' => $isRoundtrip ? 'Delivery' : 'Ambil di Outlet',
-            'delivery_icon' => $isRoundtrip ? 'truck' : 'shopping-bag',
+            'delivery_status' => $deliveryStatus,
+            'delivery_icon' => $deliveryIcon,
             'is_roundtrip' => $isRoundtrip,
             'progress' => $this->progressForStatus((string) $order->status),
+            'estimated_completion' => $this->formatEstimatedFinished($order),
             'total' => (float) $order->total_bayar_akhir,
             'items_count' => (int) $order->detailTransaksi->sum('total_pakaian'),
             'weight' => $this->formatQuantity($order->detailTransaksi->sum('total_pakaian')),
@@ -462,13 +478,30 @@ class OrderWebService
 
         $complaint = \App\Models\Complaint::where('transaksi_id', $order->id)->first();
 
+        $isRoundtrip = (bool) $order->is_roundtrip || isset($meta['pending_delivery']);
+        if ($isFinished) {
+            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
+            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+        } else {
+            $isUnprocessed = in_array($order->status, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
+            if ($isUnprocessed) {
+                $deliveryStatus = 'Menunggu';
+                $deliveryIcon = 'clock';
+            } else {
+                $deliveryStatus = 'Diproses';
+                $deliveryIcon = 'loader';
+            }
+        }
+
         return [
             'id' => (string) $order->id,
             'nota_layanan' => $order->nota,
             'service_type' => $this->serviceName($order),
             'status' => $isFinished ? 'finished' : 'ongoing',
             'status_label' => $isFinished ? 'Ambil di Outlet' : $this->statusLabel($order),
-            'is_roundtrip' => (bool) $order->is_roundtrip || isset($meta['pending_delivery']),
+            'delivery_status' => $deliveryStatus,
+            'delivery_icon' => $deliveryIcon,
+            'is_roundtrip' => $isRoundtrip,
             'customer_name' => $order->pelanggan->nama ?? '-',
             'customer_phone' => $order->pelanggan->telepon ?? '-',
             'address' => $order->pickup_address ?: ($order->pelanggan->alamat ?? '-'),
@@ -1673,7 +1706,7 @@ class OrderWebService
             return collect();
         }
 
-        return \App\Models\Complaint::with('transaksi.layananPrioritas', 'transaksi.pegawai')
+        return \App\Models\Complaint::with('transaksi.layananPrioritas')
             ->where('pelanggan_id', $pelanggan->id)
             ->latest()
             ->get();
@@ -1686,7 +1719,7 @@ class OrderWebService
         // $user null, jadi PHP langsung melempar TypeError fatal (bukan
         // \Exception biasa, jadi tidak ketangkep catch di controller) sebelum
         // sempat merender apapun.
-        $complaint = \App\Models\Complaint::with('transaksi.layananPrioritas', 'transaksi.pegawai')
+        $complaint = \App\Models\Complaint::with('transaksi.layananPrioritas')
             ->findOrFail($id);
 
         if ($user) {

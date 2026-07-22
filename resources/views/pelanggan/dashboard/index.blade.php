@@ -100,6 +100,29 @@
             </div>
 
             {{-- ─────────────────────────────────────────────────────────
+                 MAU CEK PESANAN CARD
+            ───────────────────────────────────────────────────────── --}}
+            <div class="px-5">
+                <x-zyngga-card padding="p-4">
+                    <div class="flex items-center justify-between min-h-[56px]">
+                        <div class="flex flex-col">
+                            <x-zyngga-text variant="sm" weight="medium" class="leading-snug">Mau Cek Pesanan?</x-zyngga-text>
+                            <x-zyngga-text variant="xs" color="neutral-500" class="leading-snug mt-0.5">Cek status pesananmu disini</x-zyngga-text>
+                        </div>
+                        <x-zyngga-button 
+                            type="a"
+                            href="{{ route('order.check') }}"
+                            variant="secondary"
+                            size="m"
+                            icon="search"
+                            label="Cek Status"
+                            iconPosition="left"
+                        />
+                    </div>
+                </x-zyngga-card>
+            </div>
+
+            {{-- ─────────────────────────────────────────────────────────
                  PESANAN KAMU CARD (active order)
             ───────────────────────────────────────────────────────── --}}
             <div class="px-5 py-[6px]">
