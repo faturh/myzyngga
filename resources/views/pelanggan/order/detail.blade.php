@@ -116,10 +116,10 @@
                             </div>
                         </div>
                         <x-zyngga-status 
-                            :type="$order['status'] === 'finished' ? 'secondary' : 'secondary'" 
+                            type="secondary" 
                             size="L" 
-                            :icon="$order['is_roundtrip'] ? 'truck' : 'shopping-bag'" 
-                            :label="$order['is_roundtrip'] ? 'Delivery' : 'Ambil di Outlet'" 
+                            :icon="$order['delivery_icon']" 
+                            :label="$order['delivery_status']" 
                         />
                     </div>
 
@@ -148,7 +148,9 @@
                         <div class="space-y-2.5">
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Kasir</x-zyngga-text>
-                                <x-zyngga-text variant="sm" color="neutral-500">{{ $order['cashier_name'] ?? 'Belum ditugaskan' }}</x-zyngga-text>
+                                <x-zyngga-text variant="sm" color="neutral-500">
+                                    {{ (!isset($order['cashier_name']) || $order['cashier_name'] === 'Belum ditugaskan' || !in_array(strtolower($order['raw_status']), ['proses pengerjaan', 'proses_pengerjaan', 'in_progress', 'proses', 'selesai', 'completed', 'pesanan selesai', 'pesanan_selesai'])) ? '-' : $order['cashier_name'] }}
+                                </x-zyngga-text>
                             </div>
                             <div class="flex justify-between items-center">
                                 <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Tanggal Pemesanan</x-zyngga-text>
@@ -178,11 +180,14 @@
                 {{-- CARD 1.5: GALERI --}}
                 <x-zyngga-card title="Galeri">
                     @if(isset($order['gallery']) && count($order['gallery']) > 0)
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="flex gap-3 overflow-x-auto pb-2 hide-scrollbar snap-x">
                             @foreach($order['gallery'] as $image)
-                                <div class="aspect-square rounded-xl overflow-hidden bg-zyngga-neutral-100">
-                                    <img src="{{ Str::startsWith($image, 'http') ? $image : asset('storage/' . $image) }}" alt="Galeri" class="w-full h-full object-cover">
-                                </div>
+                                @php
+                                    $imgUrl = Str::startsWith($image, 'http') ? $image : asset('storage/' . $image);
+                                @endphp
+                                <a href="{{ $imgUrl }}" target="_blank" class="snap-start flex-shrink-0 block w-28 h-28 rounded-xl overflow-hidden relative border border-zyngga-neutral-200 bg-zyngga-neutral-50 hover:opacity-90 transition-opacity">
+                                    <img src="{{ $imgUrl }}" alt="Galeri" class="w-full h-full object-cover">
+                                </a>
                             @endforeach
                         </div>
                     @else
@@ -256,7 +261,7 @@
                     </div>
                 </x-zyngga-card>
 
-                @if(!in_array($order['raw_status'], ['Baru', 'created', 'Perlu Diproses']))
+                @if(!in_array($order['raw_status'], ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']))
                 {{-- CARD 2.5: RINCIAN PAKAIAN --}}
                 <x-zyngga-card title="Rincian Pakaian">
                     @php
@@ -266,8 +271,8 @@
 
                     @if(!empty($order['weight']))
                     <div class="flex justify-between items-center mb-3">
-                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">Berat Timbangan</x-zyngga-text>
-                        <x-zyngga-text variant="sm" color="neutral-500">{{ $order['weight'] }} Kg</x-zyngga-text>
+                        <x-zyngga-text variant="sm" color="neutral-900">Berat Timbangan</x-zyngga-text>
+                        <x-zyngga-text variant="sm" weight="medium" color="neutral-590000">{{ $order['weight'] }} Kg</x-zyngga-text>
                     </div>
                     <div class="divider"></div>
                     @endif
@@ -365,7 +370,7 @@
                 </x-zyngga-card>
                 @endif
 
-                @if(!in_array($order['raw_status'], ['Baru', 'created', 'Perlu Diproses']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
+                @if(!in_array($order['raw_status'], ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
                 {{-- CARD 4: BANTUAN/LAYANAN --}}
                 <x-zyngga-card title="Bantuan/Layanan">
                     <div class="flex flex-col gap-3">
