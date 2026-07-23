@@ -561,12 +561,14 @@
                                                 Chat Pelanggan
                                             </a>
 
+                                            {{--
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
                                                 <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
+                                            --}}
 
                                             <a href="{{ route('admin.riwayat-pesanan.kerjakan-form', [$item->id, 'tab' => $tab]) }}" class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2">
                                                 <i data-feather="play" class="w-4 h-4"></i>
@@ -600,12 +602,14 @@
                                                 Chat Pelanggan
                                             </a>
 
+                                            {{--
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
                                                 <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
+                                            --}}
 
                                             <form action="{{ route('admin.riwayat-pesanan.selesaikan', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none">
                                                 @csrf
@@ -642,12 +646,14 @@
                                                 Chat Pelanggan
                                             </a>
 
+                                            {{--
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
                                                 <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="w-full sm:w-auto text-center border border-amber-200 hover:bg-amber-50 hover:text-amber-700 text-amber-600 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
+                                            --}}
 
                                             <form action="{{ route('admin.riwayat-pesanan.konfirmasi-bayar', [$item->id, 'tab' => $tab]) }}" method="POST" class="w-full sm:w-auto flex-1 sm:flex-none" onsubmit="return confirm('Apakah Anda yakin mengkonfirmasi pembayaran pesanan #{{ $item->nota }}?')">
                                                 @csrf
