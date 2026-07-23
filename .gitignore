@@ -9,7 +9,6 @@ storage/*.key
 /database/database.sqlite
 /database/testing.sqlite
 .env.backup
-.env.production
 storage/logs/*.log
 .phpunit.result.cache
 docker-compose.override.yml
@@ -28,7 +27,6 @@ config.bat
 .DS_Store
 
 .vercel
-.env
 
 # Postman collections (tidak perlu di-push ke repo)
 *.postman_collection.json
