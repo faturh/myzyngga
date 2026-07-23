@@ -211,100 +211,84 @@
                             </div>
                         </template>
 
-                        <!-- Modal Bayar Gaji -->
-                        <div x-show="showBayarModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
-                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                                <div class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-sm" @click="showBayarModal = false"></div>
+                        <!-- Modal Bayar Gaji (Figma Hi-Fi Style) -->
+                        <div x-show="showBayarModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-transition>
+                            <div @click.outside="showBayarModal = false" class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl space-y-4 border border-slate-100 animate-in fade-in zoom-in-95">
+                                <h3 class="text-lg sm:text-xl font-bold text-slate-900 text-left tracking-tight">Bayar Gaji Karyawan</h3>
                                 
-                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                                
-                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
-                                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                                        <h3 class="text-sm font-medium text-[#0f172a] uppercase tracking-wider">Bayar Gaji Karyawan</h3>
-                                        <button @click="showBayarModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <form action="{{ route('admin.gaji-karyawan.bayar') }}" method="POST" class="space-y-3.5 text-left">
+                                    @csrf
+                                    <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
+                                    <input type="hidden" name="start_date" value="{{ $startDate }}">
+                                    <input type="hidden" name="end_date" value="{{ $endDate }}">
+                                    
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Nama Karyawan</label>
+                                        <input type="text" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" :value="selectedEmp?.name" readonly>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Bank</label>
+                                        <input type="text" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" :value="selectedEmp?.bank" readonly>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">No. Rekening</label>
+                                        <input type="text" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" :value="selectedEmp?.nomor_rekening" readonly>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Tanggal Pembayaran</label>
+                                        <input type="date" name="tanggal" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all cursor-pointer" x-model="payoutDate" required>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Nominal Payout (Rp)</label>
+                                        <input type="number" name="nominal" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" x-model="payoutAmount" required>
+                                    </div>
+                                    
+                                    <input type="hidden" name="keterangan" :value="payoutNote || ('Pembayaran Gaji Karyawan ' + selectedEmp?.name)">
+                                    
+                                    <div class="pt-3 flex gap-3">
+                                        <button type="button" @click="showBayarModal = false" class="flex-1 text-center font-semibold text-xs sm:text-sm rounded-full border border-[#003E9C] text-[#003E9C] py-3.5 px-5 hover:bg-blue-50 transition-colors cursor-pointer">
+                                            Batal
+                                        </button>
+                                        <button type="submit" class="flex-1 text-center text-white font-semibold text-xs sm:text-sm rounded-full bg-[#003E9C] py-3.5 px-5 hover:bg-blue-800 transition-colors shadow-sm cursor-pointer border-0">
+                                            Konfirmasi
                                         </button>
                                     </div>
-                                    <form action="{{ route('admin.gaji-karyawan.bayar') }}" method="POST" class="p-6 space-y-4">
-                                        @csrf
-                                        <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
-                                        <input type="hidden" name="start_date" value="{{ $startDate }}">
-                                        <input type="hidden" name="end_date" value="{{ $endDate }}">
-                                        
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
-                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.name" readonly>
-                                        </div>
-
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Bank</label>
-                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.bank" readonly>
-                                            </div>
-                                            <div>
-                                                <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">No. Rekening</label>
-                                                <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.nomor_rekening" readonly>
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Tanggal Pembayaran</label>
-                                            <input type="date" name="tanggal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="payoutDate" required>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Nominal Payout (Rp)</label>
-                                            <input type="number" name="nominal" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="payoutAmount" required>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Catatan / Keterangan</label>
-                                            <textarea name="keterangan" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="payoutNote" required></textarea>
-                                        </div>
-                                        
-                                        <div class="pt-2 flex gap-3">
-                                            <button type="button" @click="showBayarModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs py-2.5 rounded-xl transition-all">Batal</button>
-                                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-2.5 rounded-xl transition-all shadow-sm">Konfirmasi</button>
-                                        </div>
-                                    </form>
-                                </div>
+                                </form>
                             </div>
                         </div>
 
-                        <!-- Modal Atur Tarif -->
-                        <div x-show="showTarifModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
-                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                                <div class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-sm" @click="showTarifModal = false"></div>
+                        <!-- Modal Atur Tarif (Figma Hi-Fi Style) -->
+                        <div x-show="showTarifModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-transition>
+                            <div @click.outside="showTarifModal = false" class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl space-y-4 border border-slate-100 animate-in fade-in zoom-in-95">
+                                <h3 class="text-lg sm:text-xl font-bold text-slate-900 text-left tracking-tight">Atur Tarif Gaji per Kg</h3>
                                 
-                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                                
-                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-slate-100">
-                                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                                        <h3 class="text-sm font-medium text-[#0f172a] uppercase tracking-wider">Atur Tarif Gaji per Kg</h3>
-                                        <button @click="showTarifModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <form action="{{ route('admin.gaji-karyawan.update-tarif') }}" method="POST" class="space-y-3.5 text-left">
+                                    @csrf
+                                    <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
+                                    
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Nama Karyawan</label>
+                                        <input type="text" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] transition-all" :value="selectedEmp?.name" readonly>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Tarif Gaji Baru (Rp / kg)</label>
+                                        <input type="number" name="gaji" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" x-model="tarifAmount" required>
+                                    </div>
+                                    
+                                    <div class="pt-3 flex gap-3">
+                                        <button type="button" @click="showTarifModal = false" class="flex-1 text-center font-semibold text-xs sm:text-sm rounded-full border border-[#003E9C] text-[#003E9C] py-3.5 px-5 hover:bg-blue-50 transition-colors cursor-pointer">
+                                            Batal
+                                        </button>
+                                        <button type="submit" class="flex-1 text-center text-white font-semibold text-xs sm:text-sm rounded-full bg-[#003E9C] py-3.5 px-5 hover:bg-blue-800 transition-colors shadow-sm cursor-pointer border-0">
+                                            Simpan Tarif
                                         </button>
                                     </div>
-                                    <form action="{{ route('admin.gaji-karyawan.update-tarif') }}" method="POST" class="p-6 space-y-4">
-                                        @csrf
-                                        <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
-                                        
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Nama Karyawan</label>
-                                            <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium" :value="selectedEmp?.name" readonly>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1.5">Tarif Gaji Baru (Rp / kg)</label>
-                                            <input type="number" name="gaji" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500" x-model="tarifAmount" required>
-                                        </div>
-                                        
-                                        <div class="pt-2 flex gap-3">
-                                            <button type="button" @click="showTarifModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs py-2.5 rounded-xl transition-all">Batal</button>
-                                            <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs py-2.5 rounded-xl transition-all shadow-sm">Simpan Tarif</button>
-                                        </div>
-                                    </form>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     </div>
