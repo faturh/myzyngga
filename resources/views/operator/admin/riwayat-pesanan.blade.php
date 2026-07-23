@@ -21,6 +21,9 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- Remix Icon CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
     <style>
         [x-cloak] { display: none !important; }
         
@@ -59,16 +62,19 @@
         filterOpen: false,
         confirmModalOpen: false,
         confirmMessage: '',
+        confirmTitle: '',
         confirmTargetForm: '',
-        openConfirm(formId, message) {
+        openConfirm(formId, message, title = 'Konfirmasi Tindakan') {
             this.confirmTargetForm = formId;
             this.confirmMessage = message;
+            this.confirmTitle = title;
             this.confirmModalOpen = true;
         },
         closeConfirm() {
             this.confirmModalOpen = false;
             this.confirmTargetForm = '';
             this.confirmMessage = '';
+            this.confirmTitle = '';
         },
         confirmYes() {
             const form = document.getElementById(this.confirmTargetForm);
@@ -95,11 +101,19 @@
                 
                 <div class="max-w-5xl mx-auto w-full flex flex-col gap-4">
                     
-                    <!-- Alerts for Success/Error -->
+                    <!-- Pop-Up Notifikasi Sukses (Modal style matching Image 2) -->
                     @if(session('success'))
-                        <div class="bg-white text-xs font-medium px-4 py-3 rounded-lg flex items-center gap-2" style="color:#10B981;">
-                            <i data-feather="check-circle" class="w-4 h-4 shrink-0" style="color:#10B981;"></i>
-                            <span>{{ session('success') }}</span>
+                        <div x-data="{ successOpen: true }" x-show="successOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-transition>
+                            <div @click.outside="successOpen = false" class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl text-center flex flex-col items-center gap-4 border border-slate-100 animate-in fade-in zoom-in-95">
+                                <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <i data-feather="check-circle" class="w-6 h-6 stroke-[2.5]"></i>
+                                </div>
+                                <h3 class="text-lg sm:text-xl font-bold text-slate-900">Berhasil!</h3>
+                                <p class="text-xs sm:text-sm font-normal text-slate-600 max-w-xs leading-relaxed">{{ session('success') }}</p>
+                                <button type="button" @click="successOpen = false" class="w-full text-center text-white font-semibold text-xs rounded-full bg-[#003E9C] py-3.5 px-6 hover:bg-blue-800 transition-colors shadow-sm cursor-pointer border-0">
+                                    Selesai
+                                </button>
+                            </div>
                         </div>
                     @endif
 
@@ -257,11 +271,14 @@
                                         </div>
                                         
                                         @if($order)
-                                            <a href="{{ route('order.detail', $order->id) }}" target="_blank" class="text-xs font-normal hover:underline" style="color:#808080;">
-                                                {{ $order->nota }}
+                                            <a href="{{ route('order.detail', $order->id) }}" target="_blank" class="text-xs font-medium px-3 py-1 rounded-full border border-[#003E9C] text-[#003E9C] hover:bg-blue-50 transition-all inline-flex items-center gap-1.5 no-underline">
+                                                <span>{{ $order->nota }}</span>
+                                                <i class="ri-arrow-right-line text-xs"></i>
                                             </a>
                                         @else
-                                            <span class="text-xs font-normal" style="color:#808080;">N/A</span>
+                                            <span class="text-xs font-medium px-3 py-1 rounded-full border border-slate-200 text-slate-400 inline-flex items-center gap-1.5">
+                                                <span>N/A</span>
+                                            </span>
                                         @endif
                                     </div>
 
@@ -348,7 +365,7 @@
                                             </form>
                                             <button
                                                 type="button"
-                                                @click="openConfirm('{{ $kendalaFormId }}', 'Apakah Anda yakin menyelesaikan kendala pesanan ini? Laporan kendala akan dihapus.')"
+                                                @click="openConfirm('{{ $kendalaFormId }}', 'Apakah Anda yakin menyelesaikan kendala pesanan ini? Laporan kendala akan dihapus.', 'Yakin ingin menyelesaikan kendala ini?')"
                                                 class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                 <i data-feather="check" class="w-4 h-4"></i>
                                                 Selesai (Hapus Kendala)
@@ -401,8 +418,9 @@
                                         @endif
                                     </div>
 
-                                    <a href="{{ route('order.detail', $item->id) }}" target="_blank" class="text-xs font-normal hover:underline" style="color:#808080;">
-                                        {{ $item->nota }}
+                                    <a href="{{ route('order.detail', $item->id) }}" target="_blank" class="text-xs font-medium px-3 py-1 rounded-full border border-[#003E9C] text-[#003E9C] hover:bg-blue-50 transition-all inline-flex items-center gap-1.5 no-underline">
+                                        <span>{{ $item->nota }}</span>
+                                        <i class="ri-arrow-right-line text-xs"></i>
                                     </a>
                                 </div>
 
@@ -435,13 +453,17 @@
                                     <!-- Actions for "Perlu Diproses" (status 'Baru' / 'created') -->
                                     @if(in_array($item->status, ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput']))
                                         <div class="flex items-center gap-2">
-                                            <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="inline-block">
+                                            @php $batalJemputFormId = 'form-batal-jemput-' . $item->id; @endphp
+                                            <form id="{{ $batalJemputFormId }}" action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="inline-block">
                                                 <input type="hidden" name="tab" value="{{ $tab }}">
                                                 @csrf
-                                                <button type="submit" class="text-center bg-white border px-5 py-2 rounded-full text-xs font-medium transition-all" style="border-color:#003E9C; color:#003E9C; height:38px; border-width:1px;">
-                                                    Batalkan Pesanan
-                                                </button>
                                             </form>
+                                            <button type="button" 
+                                                    @click="openConfirm('{{ $batalJemputFormId }}', 'Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini akan mengonfirmasi pembatalan pesanan.', 'Yakin ingin membatalkan pesanan ini?')" 
+                                                    class="text-center bg-white border px-5 py-2 rounded-full text-xs font-medium transition-all cursor-pointer" 
+                                                    style="border-color:#003E9C; color:#003E9C; height:38px; border-width:1px;">
+                                                Batalkan Pesanan
+                                            </button>
                                             
                                             <form action="{{ route('admin.riwayat-pesanan.konfirmasi-jemput', $item->id) }}" method="POST" class="inline-block">
                                                 @csrf
@@ -454,13 +476,17 @@
                                         </div>
                                     @elseif(in_array($item->status, ['Baru', 'created', 'Perlu Diproses']))
                                         <div class="flex items-center gap-2">
-                                            <form action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="inline-block">
+                                            @php $batalProsesFormId = 'form-batal-proses-' . $item->id; @endphp
+                                            <form id="{{ $batalProsesFormId }}" action="{{ route('admin.riwayat-pesanan.batal', $item->id) }}" method="POST" class="inline-block">
                                                 <input type="hidden" name="tab" value="{{ $tab }}">
                                                 @csrf
-                                                <button type="submit" class="text-center bg-white border px-5 py-2 rounded-full text-xs font-medium transition-all" style="border-color:#003E9C; color:#003E9C; height:38px; border-width:1px;">
-                                                    Batalkan Pesanan
-                                                </button>
                                             </form>
+                                            <button type="button" 
+                                                    @click="openConfirm('{{ $batalProsesFormId }}', 'Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini akan mengonfirmasi pembatalan pesanan.', 'Yakin ingin membatalkan pesanan ini?')" 
+                                                    class="text-center bg-white border px-5 py-2 rounded-full text-xs font-medium transition-all cursor-pointer" 
+                                                    style="border-color:#003E9C; color:#003E9C; height:38px; border-width:1px;">
+                                                Batalkan Pesanan
+                                            </button>
                                             
                                             <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                  Proses Pesanan
@@ -590,7 +616,7 @@
                                             </form>
                                             <button
                                                 type="button"
-                                                @click="openConfirm('{{ $bayarFormId }}', 'Apakah Anda yakin konfirmasi pembayaran pesanan ini?')"
+                                                @click="openConfirm('{{ $bayarFormId }}', 'Apakah Anda yakin konfirmasi pembayaran pesanan ini?', 'Konfirmasi Pembayaran Pesanan')"
                                                 class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                 <i data-feather="check" class="w-4 h-4"></i>
                                                 Sudah Dibayar
@@ -665,40 +691,6 @@
 
     </div>
 
-    <!-- MODAL KONFIRMASI GLOBAL (custom, tidak pakai confirm() native) -->
-    <div x-show="confirmModalOpen" class="fixed inset-0 z-[70] overflow-y-auto" x-cloak role="dialog" aria-modal="true">
-        <div class="fixed inset-0" style="background:rgba(0,0,0,0.5);" @click="closeConfirm()"></div>
-
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div
-                class="relative w-full max-w-[320px] bg-white p-5 flex flex-col gap-4 text-center"
-                style="border-radius:16px; box-shadow:0px 8px 24px rgba(0,0,0,0.1);"
-                @click.away="closeConfirm()"
-            >
-                <div class="flex items-center justify-center w-10 h-10 rounded-full mx-auto" style="background:rgba(0,62,156,0.1);">
-                    <i data-feather="help-circle" class="w-5 h-5" style="color:#003E9C;"></i>
-                </div>
-
-                <div class="space-y-1">
-                    <h3 class="text-sm font-medium" style="color:#000000;">Konfirmasi</h3>
-                    <p class="text-xs" style="color:#808080;" x-text="confirmMessage"></p>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <button type="button" @click="closeConfirm()"
-                        class="flex-1 text-sm font-medium rounded-full transition-all"
-                        style="background:#FFFFFF; border:1px solid #003E9C; color:#003E9C; height:44px;">
-                        Batal
-                    </button>
-                    <button type="button" @click="confirmYes()"
-                        class="flex-1 text-sm font-medium rounded-full transition-all"
-                        style="background:#003E9C; border:1px solid #003E9C; color:#FFFFFF; height:44px;">
-                        Ya, Lanjutkan
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Real-time Background Order Poller Component -->
     <div x-data="orderPoller({ initialCount: {{ $menungguDiJemputCount }} })" x-init="start()" class="relative" x-cloak>
@@ -819,6 +811,22 @@
             }));
         });
     </script>
+
+    <!-- POP-UP MODAL KONFIRMASI (Gambar 2 Modal Style, tanpa pixel art) -->
+    <div x-show="confirmModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-transition>
+        <div @click.outside="closeConfirm()" class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl text-center flex flex-col items-center gap-4 border border-slate-100 animate-in fade-in zoom-in-95">
+            <h3 class="text-lg sm:text-xl font-bold text-slate-900" x-text="confirmTitle || 'Konfirmasi Tindakan'"></h3>
+            <p class="text-xs sm:text-sm font-normal text-slate-500 max-w-xs leading-relaxed" x-text="confirmMessage"></p>
+            <div class="flex items-center justify-center gap-3 w-full pt-2">
+                <button type="button" @click="closeConfirm()" class="flex-1 text-center font-semibold text-xs rounded-full border border-[#003E9C] text-[#003E9C] py-3.5 px-5 hover:bg-blue-50 transition-colors cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" @click="confirmYes()" class="flex-1 text-center text-white font-semibold text-xs rounded-full bg-[#003E9C] py-3.5 px-5 hover:bg-blue-800 transition-colors shadow-sm cursor-pointer border-0">
+                    Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Initialize Icons -->
     <script>

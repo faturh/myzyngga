@@ -21,18 +21,38 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- Remix Icon CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
     <style>
         [x-cloak] { display: none !important; }
-        .transition-transform-hover:hover {
-            transform: translateY(-2px);
+        
+        body, input, select, textarea, button {
+            font-family: 'DM Sans', sans-serif;
         }
-        .form-shadow {
-            box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.08), 0 2px 8px -1px rgba(148, 163, 184, 0.04);
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
         }
-        .active-ring:focus-within {
-            ring-color: #3b82f6;
-            border-color: #3b82f6;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
         }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        select {
+            background-image: none !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        select::-ms-expand { display: none; }
+
         /* Hide number input spinners */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
@@ -44,7 +64,7 @@
         }
     </style>
 </head>
-<body class="font-dm-sans antialiased bg-[#f8fafc] text-[#1e293b] h-full" x-data="{ sidebarOpen: false }">
+<body class="antialiased h-full overflow-hidden" style="background:#E6F0FF; color:#0F0F0F;" x-data="{ sidebarOpen: false }">
 
     <!-- App Container -->
     <div class="flex h-screen overflow-hidden">
@@ -56,11 +76,14 @@
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
             
             <!-- HEADER -->
-            <header class="h-16 bg-white border-b border-slate-100/90 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-4">
-                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-medium transition-all">
-                        <i data-feather="arrow-left" class="w-4 h-4"></i>
-                        Kembali ke Riwayat Pesanan
+            <header class="h-12 bg-white flex items-center justify-between px-4 sticky top-0 z-30 shrink-0">
+                <div class="flex items-center gap-3">
+                    <button @click="sidebarOpen = true" class="lg:hidden p-1 text-[#0F0F0F] hover:opacity-70 transition-opacity">
+                        <i data-feather="menu" class="w-5 h-5"></i>
+                    </button>
+                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" class="flex items-center gap-1.5 text-xs font-medium text-[#0F0F0F] hover:text-[#003E9C] transition-colors">
+                        <i class="ri-arrow-left-line text-base"></i>
+                        <span>Kembali</span>
                     </a>
                 </div>
                 
@@ -88,21 +111,21 @@
             </header>
 
             <!-- CONTENT INNER CONTAINER -->
-            <div class="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar">
+            <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
                 
-                <div class="max-w-5xl mx-auto space-y-6">
+                <div class="max-w-xl mx-auto w-full flex flex-col gap-4">
 
-                    <!-- Alerts for Errors -->
+                    <!-- ALERTS FOR ERRORS -->
                     @if(session('error'))
                         <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
-                            <i data-feather="alert-circle" class="w-4 h-4 stroke-[2.5]"></i>
+                            <i data-feather="alert-circle" class="w-4 h-4 shrink-0"></i>
                             <span>{{ session('error') }}</span>
                         </div>
                     @endif
                     @if($errors->any())
                         <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl space-y-1">
                             <div class="flex items-center gap-2">
-                                <i data-feather="alert-circle" class="w-4 h-4 stroke-[2.5]"></i>
+                                <i data-feather="alert-circle" class="w-4 h-4 shrink-0"></i>
                                 <span>Terdapat kesalahan pengisian:</span>
                             </div>
                             <ul class="list-disc list-inside pl-6 font-medium">
@@ -113,11 +136,10 @@
                         </div>
                     @endif
 
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-                        <div>
-                            <h1 class="text-2xl font-medium text-[#0f172a] tracking-tight">Proses Pekerjaan & Rincian Pakaian</h1>
-                            <p class="text-xs font-medium text-slate-400 mt-1">Pilih penanggung jawab dan isi rincian pakaian untuk Nota <span class="font-mono text-blue-600">{{ $transaksi->nota }}</span></p>
-                        </div>
+                    <!-- PAGE TITLE SECTION -->
+                    <div>
+                        <h1 class="text-base font-medium" style="color:#0F0F0F;">Proses Pekerjaan</h1>
+                        <p class="text-xs font-normal" style="color:#808080;">{{ $transaksi->nota }}</p>
                     </div>
 
                     @php
@@ -161,110 +183,53 @@
                         }
                     @endphp
 
-                    <!-- Grid Layout -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" x-data="prosesPekerjaanForm()">
-                        
-                        <!-- Left Side: Order Details -->
-                        <div class="md:col-span-1 space-y-6">
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-medium text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
-                                    <i data-feather="file-text" class="w-4 h-4 text-blue-500"></i>
-                                    Detail Pesanan
-                                </h3>
-                                <div class="text-xs space-y-3 font-medium text-slate-500">
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Nota</p>
-                                        <p class="text-[#0f172a] font-mono text-sm mt-0.5">{{ $transaksi->nota }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Pelanggan</p>
-                                        <p class="text-[#0f172a] text-sm mt-0.5">{{ $transaksi->pelanggan->nama ?? '-' }}</p>
-                                        <p class="text-slate-400 font-normal mt-0.5">{{ $transaksi->pelanggan->telepon ?? '-' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Layanan</p>
-                                        <p class="text-[#0f172a] mt-0.5 capitalize">{{ $transaksi->layananPrioritas->nama ?? '-' }}</p>
-                                    </div>
-                                    @if($transaksi->timbangan)
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Berat Timbangan</p>
-                                        <p class="text-[#0f172a] mt-0.5">{{ number_format($transaksi->timbangan->charged_weight, 2) }} kg</p>
-                                    </div>
-                                    @endif
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Estimasi Durasi</p>
-                                        <p class="text-indigo-600 font-medium text-sm mt-0.5">{{ $transaksi->getEstimasiPengerjaanJam() }} Jam</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Deadline Pengerjaan</p>
-                                        <p class="text-rose-600 font-medium text-sm mt-0.5">{{ $transaksi->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 uppercase">Total Bayar</p>
-                                        <p class="text-blue-600 font-medium text-sm mt-0.5">Rp {{ number_format($transaksi->total_bayar_akhir, 0, ',', '.') }}</p>
-                                    </div>
-                                </div>
+                    <!-- KARTU 1: DETAIL PESANAN -->
+                    <div class="bg-white rounded-lg p-5 shadow-sm space-y-3">
+                        <h3 class="text-sm font-medium" style="color:#0F0F0F;">Detail Pesanan</h3>
+
+                        <div class="space-y-2.5 text-xs font-normal">
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Nama Pelanggan</span>
+                                <span class="font-medium" style="color:#0F0F0F;">{{ $transaksi->pelanggan->nama ?? '-' }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Nomor Telepon</span>
+                                <span class="font-medium" style="color:#0F0F0F;">{{ $transaksi->pelanggan->telepon ?? '-' }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Jenis Layanan</span>
+                                <span class="font-medium capitalize" style="color:#0F0F0F;">{{ $transaksi->layananPrioritas->nama ?? '-' }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Deadline Pengerjaan</span>
+                                <span class="font-medium" style="color:#0F0F0F;">{{ $transaksi->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span style="color:#808080;">Total Bayar</span>
+                                <span class="font-medium" style="color:#003E9C;">Rp {{ number_format($transaksi->total_bayar_akhir, 0, ',', '.') }}</span>
                             </div>
 
-                            @if($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)
-                            <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                                <h3 class="font-medium text-[#0f172a] text-sm border-b border-slate-50 pb-2 flex items-center gap-2">
-                                    <i data-feather="grid" class="w-4 h-4 text-blue-500"></i>
-                                    Item Satuan (Eceran)
-                                </h3>
-                                <div class="space-y-3">
-                                    @foreach($transaksi->tambahanSatuan as $item)
-                                        <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
-                                            <div>
-                                                <p class="text-xs font-medium text-[#0f172a]">{{ $item->kategoriPakaianSatuan->nama_pakaian ?? '-' }}</p>
-                                                <p class="text-[10px] text-slate-400 font-medium">{{ $item->jumlah }} Pakaian x Rp {{ number_format(($item->harga_akhir / $item->jumlah), 0, ',', '.') }}</p>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="text-xs font-medium text-blue-600">Rp {{ number_format($item->harga_akhir, 0, ',', '.') }}</p>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                            @endif
-                        </div>
-
-                        <!-- Right Side: Employee & Items Form -->
-                        <div class="md:col-span-2 space-y-6">
-                            <form action="{{ route('admin.riwayat-pesanan.kerjakan', $transaksi->id) }}" method="POST" @submit.prevent="submitForm($event)" class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-6">
-                                @csrf
-                                <input type="hidden" name="tab" value="{{ $tab }}">
-
-                                <!-- Item Satuan (Eceran) Info Box -->
-                                @if($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)
-                                <div class="bg-blue-50/40 rounded-2xl border border-blue-100/30 p-5 space-y-3">
-                                    <h4 class="font-medium text-[#0f172a] text-xs flex items-center gap-2">
-                                        <i data-feather="info" class="w-4 h-4 text-blue-500"></i>
-                                        Item Satuan Terdaftar
-                                    </h4>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        @foreach($transaksi->tambahanSatuan as $item)
-                                            <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-blue-100/20 shadow-sm">
-                                                <div>
-                                                    <p class="text-xs font-medium text-[#0f172a]">{{ $item->kategoriPakaianSatuan->nama_pakaian ?? '-' }}</p>
-                                                    <p class="text-[10px] text-slate-400 font-medium">Jumlah: {{ $item->jumlah }} pcs</p>
-                                                </div>
-                                                <div class="text-right">
-                                                    <p class="text-xs font-medium text-slate-600">Rp {{ number_format($item->harga_akhir, 0, ',', '.') }}</p>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
+                            <!-- Data yang di-hide untuk preservasi backend logic -->
+                            <div class="hidden">
+                                @if($transaksi->timbangan)
+                                    <span>Berat: {{ number_format($transaksi->timbangan->charged_weight, 2) }} kg</span>
                                 @endif
+                                <span>Estimasi: {{ $transaksi->getEstimasiPengerjaanJam() }} Jam</span>
+                            </div>
+                        </div>
+                    </div>
 
-                                <!-- Pegawai Penanggung Jawab Section -->
-                                <div>
-                                    <h3 class="font-medium text-[#0f172a] text-sm flex items-center gap-2 mb-3">
-                                        <i data-feather="user" class="w-4 h-4 text-blue-500"></i>
-                                        Karyawan Penanggung Jawab
-                                    </h3>
-                                    <select name="pegawai_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all animate-none" required>
+                    <!-- FORM SECTION FOR KARYAWAN & RINCIAN PAKAIAN -->
+                    <div x-data="prosesPekerjaanForm()" class="space-y-4">
+                        <form action="{{ route('admin.riwayat-pesanan.kerjakan', $transaksi->id) }}" method="POST" @submit.prevent="submitForm($event)" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="tab" value="{{ $tab }}">
+
+                            <!-- KARTU 2: KARYAWAN PENANGGUNG JAWAB -->
+                            <div class="bg-white rounded-lg p-5 shadow-sm space-y-3">
+                                <h3 class="text-sm font-medium" style="color:#0F0F0F;">Karyawan Penanggung Jawab</h3>
+                                <div class="relative">
+                                    <select name="pegawai_id" class="w-full bg-white border rounded-lg px-3 text-xs text-[#0F0F0F] font-normal focus:outline-none appearance-none" style="border-color:#CCCCCC; height:40px;" required>
                                         <option value="">-- Pilih Pegawai --</option>
                                         @foreach($pegawaiList as $pegawai)
                                             <option value="{{ $pegawai->id }}" {{ old('pegawai_id', $transaksi->getRawPegawaiId()) == $pegawai->id ? 'selected' : '' }}>
@@ -272,100 +237,111 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[#808080]">
+                                        <i data-feather="chevron-down" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- KARTU 3: RINCIAN PAKAIAN -->
+                            <div class="bg-white rounded-lg p-5 shadow-sm space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-sm font-medium" style="color:#0F0F0F;">Rincian Pakaian</h3>
+                                    @if($layananNama !== 'satuan')
+                                    <button type="button" @click="addCustomItem()" class="text-xs font-medium text-[#003E9C] hover:underline bg-transparent border-0 cursor-pointer">
+                                        + Tambah Item
+                                    </button>
+                                    @endif
                                 </div>
 
-                                @if($layananNama !== 'satuan')
-                                <!-- Items List Container -->
-                                <div class="space-y-4 border-t border-slate-50 pt-4">
-                                    <div class="flex justify-between items-center pb-2">
-                                        <h3 class="font-medium text-[#0f172a] text-sm flex items-center gap-2">
-                                            <i data-feather="list" class="w-4 h-4 text-blue-500"></i>
-                                            Rincian Pakaian (Kiloan)
-                                        </h3>
-                                        <button type="button" @click="addCustomItem()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 transition-all">
-                                            <i data-feather="plus" class="w-3.5 h-3.5"></i>
-                                            Tambah Item Kustom
-                                        </button>
-                                    </div>
-
-                                    <!-- Alpine Loop for Items -->
-                                    <div class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                                        <template x-for="(item, index) in items" :key="item.id || index">
-                                            <div>
-                                                <!-- If predefined item (shows checkbox) -->
-                                                <template x-if="item.predefined">
-                                                    <div class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/75 rounded-xl border border-slate-100 transition-all">
-                                                        <div class="flex items-center gap-3">
-                                                            <input type="checkbox"
-                                                                   x-model="item.checked"
-                                                                   class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4.5 h-4.5 cursor-pointer">
-                                                            <span class="text-xs font-medium text-slate-700" x-text="item.nama_item"></span>
-                                                        </div>
-                                                        
-                                                        <div class="flex items-center gap-2" x-show="item.checked" x-transition>
-                                                            <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">-</button>
-                                                            <input type="number"
-                                                                   :name="item.checked ? `items[${index}][qty]` : ''"
-                                                                   x-model.number="item.qty"
-                                                                   min="1"
-                                                                   class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-medium text-slate-700 outline-none">
-                                                            <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">+</button>
-                                                            
-                                                            <input type="hidden" :name="item.checked ? `items[${index}][nama_item]` : ''" :value="item.nama_item">
-                                                        </div>
-                                                    </div>
-                                                </template>
-
-                                                <!-- If custom item (shows text input) -->
-                                                <template x-if="!item.predefined">
-                                                    <div class="flex items-center gap-3 bg-blue-50/30 p-3 rounded-xl border border-blue-100/50 relative group transition-all">
-                                                        <div class="flex-1">
-                                                            <label class="text-[9px] font-medium text-blue-500 uppercase tracking-wider block mb-1">Item Kustom</label>
-                                                            <input type="text"
-                                                                   :name="`items[${index}][nama_item]`"
-                                                                   x-model="item.nama_item"
-                                                                   placeholder="Nama pakaian/laundry..."
-                                                                   class="w-full bg-white border border-blue-200/60 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 transition-all"
-                                                                   required>
-                                                        </div>
-                                                        <div class="w-28 shrink-0">
-                                                            <label class="text-[9px] font-medium text-blue-500 uppercase tracking-wider block mb-1 text-center">Qty</label>
-                                                            <div class="flex items-center gap-1 justify-center">
-                                                                <button type="button" @click="if(item.qty > 1) item.qty--" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">-</button>
-                                                                <input type="number"
-                                                                       :name="`items[${index}][qty]`"
-                                                                       x-model.number="item.qty"
-                                                                       min="1"
-                                                                       class="w-12 text-center bg-white border border-slate-200 rounded-lg py-1 text-xs font-medium text-slate-700 outline-none">
-                                                                <button type="button" @click="item.qty++" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 text-xs font-medium">+</button>
-                                                            </div>
-                                                        </div>
-                                                        <div class="self-end pb-0.5">
-                                                            <button type="button" @click="removeItem(index)"
-                                                                    class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
-                                                                <i data-feather="trash-2" class="w-4 h-4"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </template>
-                                    </div>
+                                <!-- Item Satuan Terdaftar Info Box -->
+                                @if($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)
+                                <div class="bg-[#F8FAFC] p-3 rounded-xl border border-[#CCCCCC] space-y-1.5 text-xs">
+                                    <p class="font-medium text-[#0F0F0F]">Item Satuan Terdaftar:</p>
+                                    @foreach($transaksi->tambahanSatuan as $item)
+                                        <div class="flex justify-between items-center text-[#808080]">
+                                            <span>{{ $item->kategoriPakaianSatuan->nama_pakaian ?? '-' }} ({{ $item->jumlah }} pcs)</span>
+                                            <span class="font-medium text-[#0F0F0F]">Rp {{ number_format($item->harga_akhir, 0, ',', '.') }}</span>
+                                        </div>
+                                    @endforeach
                                 </div>
                                 @endif
 
-                                <!-- Submission Buttons -->
-                                <div class="flex justify-end gap-3 pt-4 border-t border-slate-50">
-                                    <a href="{{ route('admin.riwayat-pesanan') }}" class="text-center border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-medium transition-all">
+                                @if($layananNama !== 'satuan')
+                                <div class="space-y-2.5 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+                                    <template x-for="(item, index) in items" :key="item.id || index">
+                                        <div>
+                                            <!-- Predefined item -->
+                                            <template x-if="item.predefined">
+                                                <div class="flex items-center justify-between bg-[#F8FAFC] p-2.5 rounded-xl border border-[#CCCCCC]">
+                                                    <label class="flex items-center gap-2.5 cursor-pointer flex-1 select-none">
+                                                        <input type="checkbox"
+                                                               x-model="item.checked"
+                                                               class="rounded border-[#CCCCCC] text-[#003E9C] focus:ring-[#003E9C] w-4 h-4 cursor-pointer">
+                                                        <span class="text-xs font-medium text-[#0F0F0F]" x-text="item.nama_item"></span>
+                                                    </label>
+                                                    
+                                                    <div class="flex items-center gap-2" x-show="item.checked" x-transition>
+                                                        <button type="button" @click="if(item.qty > 1) item.qty--" class="w-6 h-6 rounded-md bg-white border border-[#CCCCCC] flex items-center justify-center text-[#0F0F0F] hover:bg-slate-50 text-xs font-medium">-</button>
+                                                        <input type="number"
+                                                               :name="item.checked ? `items[${index}][qty]` : ''"
+                                                               x-model.number="item.qty"
+                                                               min="1"
+                                                               class="w-10 text-center bg-transparent text-xs font-medium text-[#0F0F0F] outline-none">
+                                                        <button type="button" @click="item.qty++" class="w-6 h-6 rounded-md bg-white border border-[#CCCCCC] flex items-center justify-center text-[#0F0F0F] hover:bg-slate-50 text-xs font-medium">+</button>
+                                                        
+                                                        <input type="hidden" :name="item.checked ? `items[${index}][nama_item]` : ''" :value="item.nama_item">
+                                                    </div>
+                                                </div>
+                                            </template>
+
+                                            <!-- Custom item -->
+                                            <template x-if="!item.predefined">
+                                                <div class="flex items-center gap-2 bg-[#F8FAFC] p-2.5 rounded-xl border border-[#CCCCCC]">
+                                                    <div class="flex-1">
+                                                        <input type="text"
+                                                               :name="`items[${index}][nama_item]`"
+                                                               x-model="item.nama_item"
+                                                               placeholder="Nama item..."
+                                                               class="w-full bg-white border rounded-lg px-3 text-xs text-[#0F0F0F] font-normal focus:outline-none"
+                                                               style="border-color:#CCCCCC; height:36px;"
+                                                               required>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                        <button type="button" @click="if(item.qty > 1) item.qty--" class="w-6 h-6 rounded-md bg-white border border-[#CCCCCC] flex items-center justify-center text-[#0F0F0F] hover:bg-slate-50 text-xs font-medium">-</button>
+                                                        <input type="number"
+                                                               :name="`items[${index}][qty]`"
+                                                               x-model.number="item.qty"
+                                                               min="1"
+                                                               class="w-10 text-center bg-transparent text-xs font-medium text-[#0F0F0F] outline-none">
+                                                        <button type="button" @click="item.qty++" class="w-6 h-6 rounded-md bg-white border border-[#CCCCCC] flex items-center justify-center text-[#0F0F0F] hover:bg-slate-50 text-xs font-medium">+</button>
+                                                        
+                                                        <button type="button" @click="removeItem(index)" class="p-1 text-[#EF4444] hover:bg-rose-50 rounded-lg transition-colors bg-transparent border-0 cursor-pointer">
+                                                            <i class="ri-delete-bin-line text-base"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                                @endif
+
+                                <!-- ACTION BUTTONS -->
+                                <div class="flex items-center justify-center gap-3 pt-2">
+                                    <a href="{{ route('admin.riwayat-pesanan', ['tab' => $tab]) }}" 
+                                       class="flex-1 text-center font-medium text-xs rounded-full border transition-colors flex items-center justify-center cursor-pointer"
+                                       style="border-color:#003E9C; color:#003E9C; height:48px;">
                                         Batal
                                     </a>
-                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-medium shadow-sm transition-all flex items-center gap-1.5">
-                                        <i data-feather="play" class="w-4 h-4"></i>
+                                    <button type="submit" 
+                                            class="flex-1 text-center text-white font-medium text-xs rounded-full border-0 shadow-sm transition-colors flex items-center justify-center cursor-pointer"
+                                            style="background:#003E9C; height:48px;">
                                         Mulai Kerja & Cetak Nota
                                     </button>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </div>
 
                 </div>
@@ -376,7 +352,9 @@
 
     </div>
 
-    <!-- Initialize Icons & Alpine Component -->
+    <!-- CDNs and Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof feather !== 'undefined') {
