@@ -2,7 +2,7 @@
 <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-slate-100/90 h-full shrink-0">
     <!-- Store Profile Head -->
     <div class="p-6 border-b border-slate-100 flex flex-col items-start">
-        <img src="/img/logo-laundry-simokerto.png" alt="MyZyngga" class="w-14 h-14 rounded-full border border-slate-100 object-cover shadow-sm mb-3">
+        <img src="/img/logo-zyngga.png" alt="MyZyngga" class="w-14 h-14 rounded-full border border-slate-100 object-cover shadow-sm mb-3">
         <h2 class="font-medium text-[#0f172a] text-lg leading-tight">{{ Auth::user()->name ?? 'Rian' }}</h2>
         <span class="text-xs text-slate-400 font-normal mt-1">Operator Laundry</span>
     </div>
@@ -141,7 +141,7 @@
 
             <!-- Store Profile Head -->
             <div class="p-6 border-b border-slate-100 flex flex-col items-start">
-                <img src="/img/logo-laundry-simokerto.png" alt="MyZyngga" class="w-14 h-14 rounded-full border border-slate-100 object-cover shadow-sm mb-3">
+                <img src="/img/logo-zyngga.png" alt="MyZyngga" class="w-14 h-14 rounded-full border border-slate-100 object-cover shadow-sm mb-3">
                 <h2 class="font-medium text-[#0f172a] text-lg leading-tight">{{ Auth::user()->name ?? 'Rian' }}</h2>
                 <span class="text-xs text-slate-400 font-normal mt-1">Operator Laundry</span>
             </div>

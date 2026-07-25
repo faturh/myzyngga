@@ -24,6 +24,13 @@
     <style>
         [x-cloak] { display: none !important; }
         
+        select {
+            background-image: none !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        select::-ms-expand { display: none; }
+
         .transition-transform-hover:hover {
             transform: translateY(-2px);
         }
@@ -192,11 +199,11 @@
                                 <!-- Garis Pemisah (Divider) -->
                                 <div class="border-t border-[#F4F4F4] my-1"></div>
 
-                                <!-- Baris 5: Total Gaji Diterima & Tombol Aksi -->
+                                <!-- Baris 5: Total Gaji & Tombol Aksi -->
                                 <div class="flex items-center justify-between pt-1">
                                     <div>
-                                        <p class="text-[12px] font-normal" style="color:#808080;">Total Gaji Diterima</p>
-                                        <p class="text-xs font-medium text-[#0F0F0F]" x-text="'Rp ' + emp.total_gaji.toLocaleString('id-ID')"></p>
+                                        <p class="text-xs font-normal" style="color:#808080;">Total Gaji</p>
+                                        <p class="text-sm font-medium" style="color:#0F0F0F;" x-text="'Rp ' + emp.total_gaji.toLocaleString('id-ID')"></p>
                                     </div>
 
                                     <div class="flex items-center gap-2">
