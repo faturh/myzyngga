@@ -444,6 +444,40 @@
                                     {{ $item->catatan ?? '-' }}
                                 </div>
 
+                                <!-- Detail Layanan & Deadline (Premium Style) -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100/80">
+                                    <div>
+                                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Jenis Layanan</p>
+                                        <p class="text-xs font-medium text-slate-700 leading-snug">
+                                            @php
+                                                $services = [];
+                                                if ($item->detailTransaksi) {
+                                                    foreach ($item->detailTransaksi as $dt) {
+                                                        if ($dt->detailLayananTransaksi) {
+                                                            foreach ($dt->detailLayananTransaksi as $dlt) {
+                                                                if ($dlt->hargaJenisLayanan && $dlt->hargaJenisLayanan->jenisLayanan) {
+                                                                    $services[] = $dlt->hargaJenisLayanan->jenisLayanan->nama;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                $services = array_unique($services);
+                                                $jenisLayananText = !empty($services) ? implode(', ', $services) : 'N/A';
+                                                $priorityText = $item->layananPrioritas->nama ?? 'Reguler';
+                                            @endphp
+                                            {{ $jenisLayananText }} <span class="text-slate-400 font-normal">({{ $priorityText }})</span>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Deadline Pengerjaan</p>
+                                        <p class="text-xs font-medium text-slate-700 flex items-center gap-1.5 leading-snug">
+                                            <i class="ri-time-line text-amber-500 text-sm"></i>
+                                            <span>{{ $item->getDeadlineWaktu()->format('d M Y H:i') }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <!-- Baris 6 & 7: Total & Aksi -->
                                 <div class="flex items-center justify-between pt-2 border-t border-[#F4F4F4] mt-1 flex-wrap gap-2">
                                     <div class="text-sm font-medium" style="color:#0F0F0F;">
