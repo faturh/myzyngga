@@ -1211,7 +1211,7 @@ class OrderWebService
 
         return match ((string) $order->status) {
             'Baru', 'Perlu Diproses', 'created', 'pending' => 'Baru',
-            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 'Delivery',
+            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar',
             'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 'Diproses',
             default => (string) $order->status,
         };
