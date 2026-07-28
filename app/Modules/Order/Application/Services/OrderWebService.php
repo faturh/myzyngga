@@ -479,11 +479,17 @@ class OrderWebService
         $complaint = \App\Models\Complaint::where('transaksi_id', $order->id)->first();
 
         $isRoundtrip = (bool) $order->is_roundtrip || isset($meta['pending_delivery']);
+        $statusStr = (string) $order->status;
+        $isDeliveryStatus = in_array($statusStr, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar']);
+
         if ($isFinished) {
             $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
             $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+        } elseif ($isDeliveryStatus) {
+            $deliveryStatus = 'Delivery';
+            $deliveryIcon = 'truck';
         } else {
-            $isUnprocessed = in_array($order->status, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
+            $isUnprocessed = in_array($statusStr, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
             if ($isUnprocessed) {
                 $deliveryStatus = 'Menunggu';
                 $deliveryIcon = 'clock';
@@ -1039,18 +1045,28 @@ class OrderWebService
     private function mapOrderLogs(Transaksi $order): array
     {
         $createdAt = $order->waktu ?? $order->created_at ?? now();
+        $updatedAt = $order->updated_at ?? $createdAt;
         $logs = [[
             'time' => $createdAt->format('H:i'),
             'date' => $createdAt->locale('id')->isoFormat('dddd, D MMM'),
             'note' => 'Pesanan diterima',
         ]];
 
-        // Nama status asli dari Transaksi::getStatusName() bukan cuma 'Proses'/'Selesai'
-        // ('Proses Pengerjaan', 'Perlu Dikerjakan', dst) — samakan set-nya dengan
-        // progressForStatus() supaya log ini benar-benar muncul begitu admin mulai
-        // mengerjakan pesanan, bukan cuma diam di "Pesanan diterima" terus.
-        $inProgressStatuses = ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'Selesai', 'Pesanan Selesai'];
-        if (in_array($order->status, $inProgressStatuses, true)) {
+        $statusStr = (string) $order->status;
+
+        $pickupStatuses = ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput', 'Jemput', 'picked_up'];
+        $inProgressStatuses = ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress', 'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
+        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
+
+        if (in_array($statusStr, $pickupStatuses, true)) {
+            $logs[] = [
+                'time' => $updatedAt->format('H:i'),
+                'date' => $updatedAt->locale('id')->isoFormat('dddd, D MMM'),
+                'note' => 'Pesanan dijemput',
+            ];
+        }
+
+        if (in_array($statusStr, $inProgressStatuses, true)) {
             $logs[] = [
                 'time' => optional($order->updated_at)->format('H:i') ?: $createdAt->copy()->addHour()->format('H:i'),
                 'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: $createdAt->locale('id')->isoFormat('dddd, D MMM'),
@@ -1058,11 +1074,19 @@ class OrderWebService
             ];
         }
 
+        if (in_array($statusStr, $deliveryStatuses, true)) {
+            $logs[] = [
+                'time' => optional($order->updated_at)->format('H:i') ?: $createdAt->copy()->addHours(2)->format('H:i'),
+                'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: $createdAt->locale('id')->isoFormat('dddd, D MMM'),
+                'note' => 'Pesanan siap / sedang diantar',
+            ];
+        }
+
         if ($this->isFinished($order)) {
             $logs[] = [
                 'time' => optional($order->updated_at)->format('H:i') ?: now()->format('H:i'),
                 'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: now()->locale('id')->isoFormat('dddd, D MMM'),
-                'note' => 'Pesanan selesai dan siap diambil',
+                'note' => 'Pesanan selesai',
             ];
         }
 
@@ -1173,15 +1197,16 @@ class OrderWebService
         }
 
         if (! $this->isPaid($order)) {
-            if (in_array((string) $order->status, ['Baru', 'Perlu Diproses'])) {
+            if (in_array((string) $order->status, ['Baru', 'Perlu Diproses', 'created', 'pending'])) {
                 return 'Menunggu';
             }
             return 'Belum Bayar';
         }
 
         return match ((string) $order->status) {
-            'Baru', 'Perlu Diproses' => 'Baru',
-            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Diproses',
+            'Baru', 'Perlu Diproses', 'created', 'pending' => 'Baru',
+            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 'Delivery',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 'Diproses',
             default => (string) $order->status,
         };
     }
@@ -1189,9 +1214,11 @@ class OrderWebService
     private function currentStep(Transaksi $order): string
     {
         return match ((string) $order->status) {
-            'Selesai', 'Pesanan Selesai' => 'Selesai',
-            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Pesanan sedang diproses',
-            'Baru', 'Perlu Diproses' => 'Pesanan diterima',
+            'Selesai', 'Pesanan Selesai', 'completed' => 'Selesai',
+            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 'Pesanan siap diantar',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 'Pesanan sedang diproses',
+            'Menunggu di Jemput', 'Sedang Dijemput', 'picked_up', 'Jemput' => 'Pesanan dijemput',
+            'Baru', 'Perlu Diproses', 'created', 'pending' => 'Pesanan diterima',
             default => (string) $order->status,
         };
     }
@@ -1199,9 +1226,11 @@ class OrderWebService
     private function progressForStatus(string $status): int
     {
         return match ($status) {
-            'Selesai', 'Pesanan Selesai' => 100,
-            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 56,
-            'Baru', 'Perlu Diproses' => 20,
+            'Selesai', 'Pesanan Selesai', 'completed' => 100,
+            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 80,
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 56,
+            'Menunggu di Jemput', 'Sedang Dijemput', 'picked_up', 'Jemput' => 35,
+            'Baru', 'Perlu Diproses', 'created', 'pending' => 20,
             default => 10,
         };
     }
