@@ -423,14 +423,20 @@ class OrderWebService
     private function mapOrderCard(Transaksi $order): array
     {
         $statusLabel = $this->statusLabel($order);
-        $isRoundtrip = (bool) $order->is_roundtrip;
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $isRoundtrip = (bool) $order->is_roundtrip || isset($meta['pending_delivery']);
+        $statusStr = (string) $order->status;
+        $isDeliveryStatus = in_array($statusStr, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar']);
 
         $isFinished = $this->isFinished($order);
         if ($isFinished) {
             $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
             $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+        } elseif ($isDeliveryStatus) {
+            $deliveryStatus = 'Delivery';
+            $deliveryIcon = 'truck';
         } else {
-            $isUnprocessed = in_array($order->status, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
+            $isUnprocessed = in_array($statusStr, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
             if ($isUnprocessed) {
                 $deliveryStatus = 'Menunggu';
                 $deliveryIcon = 'clock';
