@@ -430,8 +430,8 @@ class OrderWebService
 
         $isFinished = $this->isFinished($order);
         if ($isFinished) {
-            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
-            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+            $deliveryStatus = 'Selesai';
+            $deliveryIcon = 'check-circle';
         } elseif ($isDeliveryStatus) {
             $deliveryStatus = 'Delivery';
             $deliveryIcon = 'truck';
@@ -489,8 +489,8 @@ class OrderWebService
         $isDeliveryStatus = in_array($statusStr, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar']);
 
         if ($isFinished) {
-            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
-            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+            $deliveryStatus = 'Selesai';
+            $deliveryIcon = 'check-circle';
         } elseif ($isDeliveryStatus) {
             $deliveryStatus = 'Delivery';
             $deliveryIcon = 'truck';
