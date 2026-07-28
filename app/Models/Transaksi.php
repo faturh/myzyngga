@@ -339,8 +339,9 @@ class Transaksi extends Model
     public function canBeUpgraded(): bool
     {
         $statusId = $this->listPengerjaan?->list_status_pengerjaan_id;
-        // Finished status is 5
-        if ($statusId == 5 || strtolower($this->status) === 'selesai' || strtolower($this->status) === 'pesanan selesai') {
+        $finishedOrDeliveryStatuses = ['perlu di antar', 'perlu_di_antar', 'ready_for_delivery', 'sedang diantar', 'selesai', 'pesanan selesai', 'completed'];
+
+        if ($statusId == 5 || $statusId == 9 || in_array(strtolower((string) $this->status), $finishedOrDeliveryStatuses, true)) {
             return false;
         }
 
