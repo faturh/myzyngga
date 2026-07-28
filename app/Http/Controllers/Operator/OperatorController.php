@@ -50,9 +50,9 @@ class OperatorController extends Controller
         $endDate = $request->query('end_date', now()->toDateString());
         $selectedEmployeeId = $request->query('pegawai_id');
 
-        $allKaryawan = \App\Models\User::role('pegawai_laundry')->get();
+        $allKaryawan = \App\Models\User::role(['pegawai_laundry', 'operator'])->get();
 
-        $karyawanList = \App\Models\User::role('pegawai_laundry')
+        $karyawanList = \App\Models\User::role(['pegawai_laundry', 'operator'])
             ->when($selectedEmployeeId, function ($query, $id) {
                 return $query->where('id', $id);
             })
@@ -65,7 +65,6 @@ class OperatorController extends Controller
                           ->orWhere('pegawai_id', 'like', '%_' . $emp->id);
                 })
                 ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
-                ->where('gaji_dibayar', 0)
                 ->whereBetween('waktu', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->with('timbangan')
                 ->get();
@@ -80,7 +79,7 @@ class OperatorController extends Controller
             return [
                 'id' => $emp->id,
                 'name' => $emp->name ?? $emp->username,
-                'role' => 'Pegawai Laundry',
+                'role' => $emp->hasRole('operator') ? 'Operator' : 'Pegawai Laundry',
                 'gaji_per_kg' => $tarifGaji,
                 'total_kg' => $totalKg,
                 'total_gaji' => $totalGaji,
@@ -121,7 +120,7 @@ class OperatorController extends Controller
         $endDate = $request->query('end_date', now()->toDateString());
         $selectedEmployeeId = $request->query('pegawai_id');
 
-        $karyawanList = \App\Models\User::role('pegawai_laundry')
+        $karyawanList = \App\Models\User::role(['pegawai_laundry', 'operator'])
             ->when($selectedEmployeeId, function ($query, $id) {
                 return $query->where('id', $id);
             })
@@ -148,7 +147,7 @@ class OperatorController extends Controller
             return [
                 'id' => $emp->id,
                 'name' => $emp->name ?? $emp->username,
-                'role' => 'Pegawai Laundry',
+                'role' => $emp->hasRole('operator') ? 'Operator' : 'Pegawai Laundry',
                 'gaji_per_kg' => $tarifGaji,
                 'total_kg' => $totalKg,
                 'total_gaji' => $totalGaji,
@@ -199,7 +198,7 @@ class OperatorController extends Controller
             }
         } else {
             $query = Transaksi::query()
-                ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas']);
+                ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas', 'detailTransaksi.detailLayananTransaksi.hargaJenisLayanan.jenisLayanan']);
 
             // Search filter (Nomor Pesanan / Nota or Pelanggan Name)
             if (!empty($search)) {
@@ -701,11 +700,19 @@ class OperatorController extends Controller
      */
     public function selesaikanComplaint(string $id)
     {
-        $complaint = \App\Models\Complaint::findOrFail($id);
-        $nota = optional($complaint->transaksi)->nota ?? 'N/A';
-        $complaint->delete();
+        if (is_numeric($id)) {
+            $complaint = \App\Models\Complaint::find($id);
+        } else {
+            $complaint = \App\Models\Complaint::where('transaksi_id', $id)->first();
+        }
 
-        $message = 'Kendala pesanan #' . $nota . ' telah diselesaikan dan dihapus.';
+        if ($complaint) {
+            $nota = optional($complaint->transaksi)->nota ?? 'N/A';
+            $complaint->delete();
+            $message = 'Kendala pesanan #' . $nota . ' telah diselesaikan dan dihapus.';
+        } else {
+            $message = 'Tidak ada kendala aktif yang ditemukan untuk transaksi ini.';
+        }
 
         if (request()->expectsJson()) {
             return response()->json([
@@ -1072,18 +1079,7 @@ class OperatorController extends Controller
                     'end_date' => $request->end_date,
                 ]);
 
-                // 3. Set matching completed transactions' salary status to paid (gaji_dibayar = 1)
-                if ($request->filled('start_date') && $request->filled('end_date')) {
-                    \App\Models\Transaksi::query()
-                        ->where(function($query) use ($employee) {
-                            $query->where('pegawai_id', (string) $employee->id)
-                                  ->orWhere('pegawai_id', 'like', '%_' . $employee->id);
-                        })
-                        ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
-                        ->where('gaji_dibayar', 0)
-                        ->whereBetween('waktu', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59'])
-                        ->update(['gaji_dibayar' => 1]);
-                }
+                // 3. (Gaji dibayar flag update removed for dynamic date-based tracking system)
             });
 
             if ($request->expectsJson()) {

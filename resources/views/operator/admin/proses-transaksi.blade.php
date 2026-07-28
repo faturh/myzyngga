@@ -79,7 +79,7 @@
                 
                 <div class="relative" x-data="{ profileOpen: false }">
                     <button @click="profileOpen = !profileOpen" type="button" class="flex items-center focus:outline-none cursor-pointer bg-transparent border-0 p-0">
-                        <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
+                        <img src="/img/logo-zyngga.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
                     </button>
                     
                     <div x-show="profileOpen" 
@@ -385,6 +385,28 @@
                                 @csrf
                                 <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-2">
                                     Konfirmasi Upgrade & Terima Cash
+                                </button>
+                            </form>
+                        </div>
+                    @elseif(isset($availableUpgrades) && $availableUpgrades->isNotEmpty())
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-5 shadow-sm space-y-3">
+                            <h3 class="font-medium text-blue-800 text-sm flex items-center gap-2">
+                                <i data-feather="arrow-up-circle" class="w-4 h-4 text-blue-600"></i>
+                                Upgrade Layanan Prioritas
+                            </h3>
+                            <form action="{{ route('admin.riwayat-pesanan.inisiasi-upgrade', $transaksi->id) }}" method="POST" class="space-y-3 pt-1">
+                                @csrf
+                                <div>
+                                    <label class="block text-[10px] text-blue-600 uppercase mb-1">Pilih Layanan Tujuan</label>
+                                    <select name="new_service_id" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" required>
+                                        <option value="">-- Pilih Layanan Baru --</option>
+                                        @foreach($availableUpgrades as $upg)
+                                            <option value="{{ $upg->id }}">{{ $upg->nama }} (Rp {{ number_format($upg->harga, 0, ',', '.') }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-2">
+                                    Proses Upgrade Tunai
                                 </button>
                             </form>
                         </div>
