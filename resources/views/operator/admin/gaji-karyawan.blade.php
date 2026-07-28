@@ -24,6 +24,13 @@
     <style>
         [x-cloak] { display: none !important; }
         
+        select {
+            background-image: none !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        select::-ms-expand { display: none; }
+
         .transition-transform-hover:hover {
             transform: translateY(-2px);
         }
@@ -192,74 +199,23 @@
                                 <!-- Garis Pemisah (Divider) -->
                                 <div class="border-t border-[#F4F4F4] my-1"></div>
 
-                                <!-- Baris 5: Total Gaji Diterima & Tombol Aksi -->
+                                <!-- Baris 5: Total Gaji & Tombol Aksi -->
                                 <div class="flex items-center justify-between pt-1">
                                     <div>
-                                        <p class="text-[12px] font-normal" style="color:#808080;">Total Gaji Diterima</p>
-                                        <p class="text-xs font-medium text-[#0F0F0F]" x-text="'Rp ' + emp.total_gaji.toLocaleString('id-ID')"></p>
+                                        <p class="text-xs font-normal" style="color:#808080;">Total Gaji</p>
+                                        <p class="text-sm font-medium" style="color:#0F0F0F;" x-text="'Rp ' + emp.total_gaji.toLocaleString('id-ID')"></p>
                                     </div>
 
                                     <div class="flex items-center gap-2">
                                         <button @click="openTarif(emp)" type="button" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#F2994A; height:38px;">
                                             Atur Tarif
                                         </button>
-                                        <button @click="openBayar(emp)" type="button" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
-                                            Bayar Gaji
-                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </template>
 
-                        <!-- Modal Bayar Gaji (Figma Hi-Fi Style) -->
-                        <div x-show="showBayarModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-transition>
-                            <div @click.outside="showBayarModal = false" class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl space-y-4 border border-slate-100 animate-in fade-in zoom-in-95">
-                                <h3 class="text-lg sm:text-xl font-bold text-slate-900 text-left tracking-tight">Bayar Gaji Karyawan</h3>
-                                
-                                <form action="{{ route('admin.gaji-karyawan.bayar') }}" method="POST" class="space-y-3.5 text-left">
-                                    @csrf
-                                    <input type="hidden" name="pegawai_id" :value="selectedEmp?.id">
-                                    <input type="hidden" name="start_date" value="{{ $startDate }}">
-                                    <input type="hidden" name="end_date" value="{{ $endDate }}">
-                                    
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Nama Karyawan</label>
-                                        <input type="text" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" :value="selectedEmp?.name" readonly>
-                                    </div>
 
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Bank</label>
-                                        <input type="text" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" :value="selectedEmp?.bank" readonly>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">No. Rekening</label>
-                                        <input type="text" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" :value="selectedEmp?.nomor_rekening" readonly>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Tanggal Pembayaran</label>
-                                        <input type="date" name="tanggal" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all cursor-pointer" x-model="payoutDate" required>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-slate-800 mb-1">Nominal Payout (Rp)</label>
-                                        <input type="number" name="nominal" class="w-full bg-white border border-slate-300 rounded-full px-5 py-3 text-xs sm:text-sm text-slate-700 font-normal outline-none focus:border-[#003E9C] focus:ring-1 focus:ring-[#003E9C] transition-all" x-model="payoutAmount" required>
-                                    </div>
-                                    
-                                    <input type="hidden" name="keterangan" :value="payoutNote || ('Pembayaran Gaji Karyawan ' + selectedEmp?.name)">
-                                    
-                                    <div class="pt-3 flex gap-3">
-                                        <button type="button" @click="showBayarModal = false" class="flex-1 text-center font-semibold text-xs sm:text-sm rounded-full border border-[#003E9C] text-[#003E9C] py-3.5 px-5 hover:bg-blue-50 transition-colors cursor-pointer">
-                                            Batal
-                                        </button>
-                                        <button type="submit" class="flex-1 text-center text-white font-semibold text-xs sm:text-sm rounded-full bg-[#003E9C] py-3.5 px-5 hover:bg-blue-800 transition-colors shadow-sm cursor-pointer border-0">
-                                            Konfirmasi
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
 
                         <!-- Modal Atur Tarif (Figma Hi-Fi Style) -->
                         <div x-show="showTarifModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-transition>

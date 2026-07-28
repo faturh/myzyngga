@@ -1,15 +1,15 @@
 <?php
-$app = require __DIR__.'/bootstrap/app.php';
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-$ws = app(\App\Modules\Order\Application\Services\OrderWebService::class);
-$orders = \App\Models\Transaksi::where('status', 'Baru')->get();
-
-foreach($orders as $o) {
-    try {
-        $ws->upgradeData($o->id, null);
-        echo "Order {$o->id}: Success\n";
-    } catch(\Exception $e) {
-        echo "Order {$o->id}: Error - " . $e->getMessage() . "\n";
-    }
+$t = App\Models\Transaksi::whereNotIn('status', ['Pesanan Selesai', 'Selesai', 'Batal'])->latest()->first();
+if($t) {
+    $t->waktu = now();
+    $t->save();
+    echo "ID: " . $t->id . "\n";
+    echo $t->canBeUpgraded() ? 'Bisa diupgrade' : 'Tetap gak bisa';
+} else {
+    echo 'Tidak ada transaksi aktif';
 }

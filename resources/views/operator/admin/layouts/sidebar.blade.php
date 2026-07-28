@@ -61,6 +61,7 @@
             </ul>
         </div>
 
+        @if(auth()->user()->isAdmin())
         <!-- Group 3: Karyawan -->
         <div>
             <div class="flex items-center gap-2 px-3 mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">
@@ -78,6 +79,7 @@
                 </li>
             </ul>
         </div>
+        @endif
 
         @if(auth()->user()->isAdmin())
         <!-- Group 4: Manajemen Admin -->

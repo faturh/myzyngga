@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Riwayat Pesanan - {{ config('app.name', 'Zyngga') }}</title>
+    <title>{{ $tab === 'kendala' ? 'Kendala Pesanan' : 'Riwayat Pesanan' }} - {{ config('app.name', 'Zyngga') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -94,7 +94,7 @@
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
             
             <!-- HEADER -->
-            @include('operator.partials.header', ['title' => 'Riwayat Pesanan'])
+            @include('operator.partials.header', ['title' => $tab === 'kendala' ? 'Kendala Pesanan' : 'Riwayat Pesanan'])
 
             <!-- CONTENT INNER CONTAINER -->
             <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar" style="background:#E6F0FF;">
@@ -117,80 +117,82 @@
                         </div>
                     @endif
 
-                    <!-- 1. BUTTON TAMBAH PESANAN MANUAL : bg #003E9C, radius 100, h-48, text 14/500 white -->
-                    <a href="{{ route('admin.riwayat-pesanan.tambah-form') }}" 
-                       class="w-full text-sm font-medium py-3.5 px-4 rounded-full shadow-sm transition-colors text-center block"
-                       style="background:#003E9C; color:#FFFFFF;"
-                       onmouseover="this.style.background='#002d73'" onmouseout="this.style.background='#003E9C'">
-                        + Tambah Pesanan Manual
-                    </a>
-
-                    <!-- TABS NAVIGATION -->
-                    <div class="flex overflow-x-auto scrollbar-none gap-8 text-xs font-medium border-b border-[#F4F4F4] pb-0.5">
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-di-jemput', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-di-jemput' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Menunggu di Jemput
-                            <span id="badge-menunggu-di-jemput" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-di-jemput' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $menungguDiJemputCount }}
-                            </span>
+                    @if($tab !== 'kendala')
+                        <!-- 1. BUTTON TAMBAH PESANAN MANUAL : bg #003E9C, radius 100, h-48, text 14/500 white -->
+                        <a href="{{ route('admin.riwayat-pesanan.tambah-form') }}" 
+                           class="w-full text-sm font-medium py-3.5 px-4 rounded-full shadow-sm transition-colors text-center block"
+                           style="background:#003E9C; color:#FFFFFF;"
+                           onmouseover="this.style.background='#002d73'" onmouseout="this.style.background='#003E9C'">
+                            + Tambah Pesanan Manual
                         </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-diproses' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Menunggu Diproses
-                            <span id="badge-perlu-diproses" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-diproses' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $perluDiprosesCount }}
-                            </span>
-                        </a>
+                        <!-- TABS NAVIGATION -->
+                        <div class="flex overflow-x-auto scrollbar-none gap-8 text-xs font-medium border-b border-[#F4F4F4] pb-0.5">
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-di-jemput', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-di-jemput' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Menunggu di Jemput
+                                <span id="badge-menunggu-di-jemput" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-di-jemput' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $menungguDiJemputCount }}
+                                </span>
+                            </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Sedang Diproses
-                            <span id="badge-perlu-dikerjakan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-dikerjakan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $perluDikerjakanCount }}
-                            </span>
-                        </a>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-diproses' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Menunggu Diproses
+                                <span id="badge-perlu-diproses" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-diproses' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $perluDiprosesCount }}
+                                </span>
+                            </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'proses-pengerjaan', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'proses-pengerjaan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Proses Pengerjaan
-                            <span id="badge-proses-pengerjaan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'proses-pengerjaan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $prosesPengerjaanCount }}
-                            </span>
-                        </a>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-dikerjakan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Sedang Diproses
+                                <span id="badge-perlu-dikerjakan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-dikerjakan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $perluDikerjakanCount }}
+                                </span>
+                            </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Menunggu Pembayaran
-                            <span id="badge-menunggu-pembayaran" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $menungguPembayaranCount }}
-                            </span>
-                        </a>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'proses-pengerjaan', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'proses-pengerjaan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Proses Pengerjaan
+                                <span id="badge-proses-pengerjaan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'proses-pengerjaan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $prosesPengerjaanCount }}
+                                </span>
+                            </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-di-antar', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-di-antar' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Perlu di Antar
-                            <span id="badge-perlu-di-antar" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-di-antar' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $perluDiAntarCount }}
-                            </span>
-                        </a>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'menunggu-pembayaran', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'menunggu-pembayaran' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Menunggu Pembayaran
+                                <span id="badge-menunggu-pembayaran" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'menunggu-pembayaran' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $menungguPembayaranCount }}
+                                </span>
+                            </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'selesai', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'selesai' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Pesanan Selesai
-                            <span id="badge-selesai" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'selesai' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $pesananSelesaiCount }}
-                            </span>
-                        </a>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-di-antar', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-di-antar' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Perlu di Antar
+                                <span id="badge-perlu-di-antar" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-di-antar' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $perluDiAntarCount }}
+                                </span>
+                            </a>
 
-                        <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search, 'sort' => $sort]) }}" 
-                           class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                            Sedang Dibatalkan
-                            <span id="badge-dibatalkan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'dibatalkan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $sedangDibatalkanCount }}
-                            </span>
-                        </a>
-                    </div>
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'selesai', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'selesai' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Pesanan Selesai
+                                <span id="badge-selesai" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'selesai' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $pesananSelesaiCount }}
+                                </span>
+                            </a>
+
+                            <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'dibatalkan', 'search' => $search, 'sort' => $sort]) }}" 
+                               class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'dibatalkan' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
+                                Sedang Dibatalkan
+                                <span id="badge-dibatalkan" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'dibatalkan' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $sedangDibatalkanCount }}
+                                </span>
+                            </a>
+                        </div>
+                    @endif
 
                     <!-- SEARCH & FILTER ROW -->
                     <form method="GET" action="{{ route('admin.riwayat-pesanan') }}" class="flex flex-col gap-3">
@@ -444,6 +446,21 @@
                                     {{ $item->catatan ?? '-' }}
                                 </div>
 
+                                <!-- Baris 6: Jenis Layanan -->
+                                <div class="text-xs font-normal" style="color:#808080;">
+                                    {{ $item->layananPrioritas->nama ?? 'Reguler' }}
+                                </div>
+
+                                <!-- Baris 6.5: Pesanan Masuk -->
+                                <div class="text-xs font-normal" style="color:#808080;">
+                                    Pesanan Masuk: {{ $item->created_at ? $item->created_at->format('d M Y H:i') : '-' }}
+                                </div>
+
+                                <!-- Baris 7: Deadline Pengerjaan -->
+                                <div class="text-xs font-normal" style="color:#F2994A;">
+                                    Deadline: {{ $item->getDeadlineWaktu()->format('d M Y H:i') }}
+                                </div>
+
                                 <!-- Baris 6 & 7: Total & Aksi -->
                                 <div class="flex items-center justify-between pt-2 border-t border-[#F4F4F4] mt-1 flex-wrap gap-2">
                                     <div class="text-sm font-medium" style="color:#0F0F0F;">
@@ -520,14 +537,12 @@
                                                 Chat Pelanggan
                                             </a>
 
-                                            {{--
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
                                                 <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
-                                            --}}
 
                                             <a href="{{ route('admin.riwayat-pesanan.kerjakan-form', [$item->id, 'tab' => $tab]) }}" class="text-center text-white px-5 py-2 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5" style="background:#003E9C; height:38px;">
                                                 <i data-feather="play" class="w-4 h-4"></i>
@@ -562,14 +577,12 @@
                                                 Chat Pelanggan
                                             </a>
 
-                                            {{--
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
                                                 <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
-                                            --}}
 
                                             <form action="{{ route('admin.riwayat-pesanan.selesaikan', [$item->id, 'tab' => $tab]) }}" method="POST" class="inline-block">
                                                 @csrf
@@ -607,14 +620,12 @@
                                                 Chat Pelanggan
                                             </a>
 
-                                            {{--
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
                                                 <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>
                                             @endif
-                                            --}}
 
                                             <!-- Form ini di-submit lewat JS setelah user konfirmasi di modal custom (bukan confirm() native) -->
                                             <form id="{{ $bayarFormId }}" action="{{ route('admin.riwayat-pesanan.konfirmasi-bayar', [$item->id, 'tab' => $tab]) }}" method="POST" class="inline-block">
