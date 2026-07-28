@@ -1052,6 +1052,7 @@ class OrderWebService
     {
         $createdAt = $order->waktu ?? $order->created_at ?? now();
         $updatedAt = $order->updated_at ?? $createdAt;
+
         $logs = [[
             'time' => $createdAt->format('H:i'),
             'date' => $createdAt->locale('id')->isoFormat('dddd, D MMM'),
@@ -1059,39 +1060,65 @@ class OrderWebService
         ]];
 
         $statusStr = (string) $order->status;
+        $historyLogs = \App\Models\ListHistoryPengerjaan::where('transaksi_id', $order->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $findHistoryTime = function (array $statusIds) use ($historyLogs) {
+            return $historyLogs->first(fn ($h) => in_array((int) $h->status_sesudahnya, $statusIds, true))?->created_at;
+        };
 
         $pickupStatuses = ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput', 'Jemput', 'picked_up'];
         $inProgressStatuses = ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress', 'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
         $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
 
+        $pickupTime = null;
         if (in_array($statusStr, $pickupStatuses, true)) {
+            $pickupTime = $findHistoryTime([8]) ?? $updatedAt;
             $logs[] = [
-                'time' => $updatedAt->format('H:i'),
-                'date' => $updatedAt->locale('id')->isoFormat('dddd, D MMM'),
+                'time' => $pickupTime->format('H:i'),
+                'date' => $pickupTime->locale('id')->isoFormat('dddd, D MMM'),
                 'note' => 'Pesanan dijemput',
             ];
         }
 
+        $processTime = null;
         if (in_array($statusStr, $inProgressStatuses, true)) {
+            $processTime = $findHistoryTime([2, 3, 4]);
+            if (! $processTime) {
+                $processTime = $pickupTime ? $pickupTime->copy()->addMinutes(15) : $createdAt->copy()->addMinutes(30);
+                if ($processTime->gt($updatedAt)) {
+                    $processTime = $createdAt;
+                }
+            }
             $logs[] = [
-                'time' => optional($order->updated_at)->format('H:i') ?: $createdAt->copy()->addHour()->format('H:i'),
-                'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: $createdAt->locale('id')->isoFormat('dddd, D MMM'),
+                'time' => $processTime->format('H:i'),
+                'date' => $processTime->locale('id')->isoFormat('dddd, D MMM'),
                 'note' => 'Pesanan sedang diproses',
             ];
         }
 
+        $deliveryTime = null;
         if (in_array($statusStr, $deliveryStatuses, true)) {
+            $deliveryTime = $findHistoryTime([9]);
+            if (! $deliveryTime) {
+                $deliveryTime = $processTime ? $processTime->copy()->addMinutes(30) : $createdAt->copy()->addHour();
+                if ($deliveryTime->gt($updatedAt)) {
+                    $deliveryTime = $updatedAt;
+                }
+            }
             $logs[] = [
-                'time' => optional($order->updated_at)->format('H:i') ?: $createdAt->copy()->addHours(2)->format('H:i'),
-                'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: $createdAt->locale('id')->isoFormat('dddd, D MMM'),
+                'time' => $deliveryTime->format('H:i'),
+                'date' => $deliveryTime->locale('id')->isoFormat('dddd, D MMM'),
                 'note' => 'Pesanan siap / sedang diantar',
             ];
         }
 
         if ($this->isFinished($order)) {
+            $finishedTime = $findHistoryTime([5]) ?? $updatedAt;
             $logs[] = [
-                'time' => optional($order->updated_at)->format('H:i') ?: now()->format('H:i'),
-                'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: now()->locale('id')->isoFormat('dddd, D MMM'),
+                'time' => $finishedTime->format('H:i'),
+                'date' => $finishedTime->locale('id')->isoFormat('dddd, D MMM'),
                 'note' => 'Pesanan selesai',
             ];
         }
