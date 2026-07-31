@@ -546,12 +546,29 @@ class OrderWebService
             'perfume' => $order->parfum ?: '-',
             'notes' => $order->catatan ?: '-',
             'weight' => $order->timbangan?->actual_weight,
-            'clothing_items' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
-                return [
-                    'name' => $item->jenisPakaian->nama ?? '-',
-                    'qty' => $item->qty,
-                ];
-            })->all() : [],
+            'clothing_items' => (function() use ($order) {
+                $items = [];
+                if ($order->timbangan && $order->timbangan->items && $order->timbangan->items->isNotEmpty()) {
+                    foreach ($order->timbangan->items as $tItem) {
+                        $items[] = [
+                            'name' => $tItem->jenisPakaian->nama ?? '-',
+                            'qty' => (int) $tItem->qty,
+                        ];
+                    }
+                }
+                if ($order->fk_tambahan) {
+                    $tambahanRows = \App\Models\Tambahan::with('kategoriPakaianSatuan')
+                        ->where('tambahan_id', $order->fk_tambahan)
+                        ->get();
+                    foreach ($tambahanRows as $tambahan) {
+                        $items[] = [
+                            'name' => $tambahan->kategoriPakaianSatuan->nama_pakaian ?? 'Item Satuan',
+                            'qty' => (int) $tambahan->jumlah,
+                        ];
+                    }
+                }
+                return $items;
+            })(),
         ];
     }
 
@@ -1011,6 +1028,24 @@ class OrderWebService
             ];
         })->filter(fn (array $item) => $item['subtotal'] > 0 || $item['qty'] !== '0');
 
+        if ($order->fk_tambahan) {
+            $tambahanRows = \App\Models\Tambahan::with('kategoriPakaianSatuan')
+                ->where('tambahan_id', $order->fk_tambahan)
+                ->get();
+
+            foreach ($tambahanRows as $tambahan) {
+                $qty = (float) $tambahan->jumlah;
+                $subtotal = (float) $tambahan->harga_akhir;
+                $price = $qty > 0 ? $subtotal / $qty : $subtotal;
+                $items->push([
+                    'name' => "Satuan - " . ($tambahan->kategoriPakaianSatuan->nama_pakaian ?? 'Item Satuan'),
+                    'qty' => $this->formatQuantity($qty),
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                ]);
+            }
+        }
+
         if ($items->isNotEmpty()) {
             return $items->values()->all();
         }
@@ -1068,13 +1103,14 @@ class OrderWebService
             return $historyLogs->first(fn ($h) => in_array((int) $h->status_sesudahnya, $statusIds, true))?->created_at;
         };
 
-        $pickupStatuses = ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput', 'Jemput', 'picked_up'];
-        $inProgressStatuses = ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress', 'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
-        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
+        $isWaitingPickup = in_array(strtolower(trim($statusStr)), ['menunggu di jemput', 'menunggu dijemput', 'sedang dijemput', 'baru', 'created', 'pending']);
+        $pickupHistoryTime = $historyLogs->first(fn ($h) => (int) $h->status_sebelumnya === 8 || in_array((int) $h->status_sesudahnya, [1, 2, 3, 4, 5, 9], true))?->created_at;
+        
+        $hasConfirmedPickup = $pickupHistoryTime !== null || (!$isWaitingPickup && in_array(strtolower(trim($statusStr)), ['perlu diproses', 'perlu dikerjakan', 'proses pengerjaan', 'proses', 'selesai', 'pesanan selesai', 'completed', 'perlu di antar', 'sedang diantar']));
 
         $pickupTime = null;
-        if (in_array($statusStr, $pickupStatuses, true)) {
-            $pickupTime = $findHistoryTime([8]) ?? $updatedAt;
+        if ($hasConfirmedPickup) {
+            $pickupTime = $pickupHistoryTime ?? $updatedAt;
             $logs[] = [
                 'time' => $pickupTime->format('H:i'),
                 'date' => $pickupTime->locale('id')->isoFormat('dddd, D MMM'),
@@ -1082,21 +1118,23 @@ class OrderWebService
             ];
         }
 
+        $processHistoryTime = $findHistoryTime([2, 3, 4]);
+        $hasStartedProcessing = $hasConfirmedPickup && (
+            $processHistoryTime !== null ||
+            $order->timbangan !== null ||
+            in_array(strtolower(trim($statusStr)), ['perlu dikerjakan', 'proses pengerjaan', 'proses', 'selesai', 'pesanan selesai', 'completed', 'perlu di antar', 'sedang diantar'])
+        );
+
         $processTime = null;
-        if (in_array($statusStr, $inProgressStatuses, true)) {
-            $processTime = $findHistoryTime([2, 3, 4]);
-            if (! $processTime) {
-                $processTime = $pickupTime ? $pickupTime->copy()->addMinutes(15) : $createdAt->copy()->addMinutes(30);
-                if ($processTime->gt($updatedAt)) {
-                    $processTime = $createdAt;
-                }
-            }
+        if ($hasStartedProcessing) {
+            $processTime = $processHistoryTime ?? ($pickupTime ? $pickupTime->copy()->addMinutes(15) : $updatedAt);
             $logs[] = [
                 'time' => $processTime->format('H:i'),
                 'date' => $processTime->locale('id')->isoFormat('dddd, D MMM'),
                 'note' => 'Pesanan sedang diproses',
             ];
         }
+        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
 
         $deliveryTime = null;
         if (in_array($statusStr, $deliveryStatuses, true)) {

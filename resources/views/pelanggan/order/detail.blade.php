@@ -261,7 +261,7 @@
                     </div>
                 </x-zyngga-card>
 
-                @if(!in_array($order['raw_status'], ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']))
+                @if(!empty($order['clothing_items']) || !empty($order['weight']) || !in_array($order['raw_status'], ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']))
                 {{-- CARD 2.5: RINCIAN PAKAIAN --}}
                 <x-zyngga-card title="Rincian Pakaian">
                     @php
