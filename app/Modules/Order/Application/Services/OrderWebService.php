@@ -546,12 +546,7 @@ class OrderWebService
             'perfume' => $order->parfum ?: '-',
             'notes' => $order->catatan ?: '-',
             'weight' => $order->timbangan?->actual_weight,
-            'clothing_items' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
-                return [
-                    'name' => $item->jenisPakaian->nama ?? '-',
-                    'qty' => $item->qty,
-                ];
-            })->all() : [],
+            'clothing_items' => $this->mapClothingItems($order),
         ];
     }
 
@@ -1048,6 +1043,46 @@ class OrderWebService
         ]];
     }
 
+    private function mapClothingItems(Transaksi $order): array
+    {
+        $clothingItems = collect();
+
+        if ($order->timbangan && $order->timbangan->items && $order->timbangan->items->isNotEmpty()) {
+            foreach ($order->timbangan->items as $item) {
+                $pakaianName = $item->jenisPakaian->nama ?? null;
+                if ($pakaianName) {
+                    $clothingItems->push([
+                        'name' => $pakaianName,
+                        'qty' => (float) $item->qty,
+                    ]);
+                }
+            }
+        }
+
+        if ($order->detailTransaksi && $order->detailTransaksi->isNotEmpty()) {
+            foreach ($order->detailTransaksi as $detail) {
+                foreach ($detail->detailLayananTransaksi as $serviceDetail) {
+                    $hargaJenis = $serviceDetail->hargaJenisLayanan;
+                    $pakaianName = $hargaJenis?->jenisPakaian?->nama ?? $hargaJenis?->jenisLayanan?->nama;
+                    if ($pakaianName) {
+                        $isSatuan = $hargaJenis && strtolower((string) $hargaJenis->jenis_satuan) !== 'kg';
+                        $displayName = $isSatuan ? "Satuan - {$pakaianName}" : $pakaianName;
+
+                        $exists = $clothingItems->contains(fn ($c) => $c['name'] === $displayName || $c['name'] === $pakaianName);
+                        if (! $exists) {
+                            $clothingItems->push([
+                                'name' => $displayName,
+                                'qty' => (float) ($detail->total_pakaian ?: 1),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $clothingItems->all();
+    }
+
     private function mapOrderLogs(Transaksi $order): array
     {
         $createdAt = $order->waktu ?? $order->created_at ?? now();
@@ -1072,9 +1107,14 @@ class OrderWebService
         $inProgressStatuses = ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress', 'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
         $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
 
+        $isPickupOrder = ! empty($order->pickup_address) || $findHistoryTime([8]) !== null || in_array($statusStr, $pickupStatuses, true);
+
         $pickupTime = null;
-        if (in_array($statusStr, $pickupStatuses, true)) {
-            $pickupTime = $findHistoryTime([8]) ?? $updatedAt;
+        if ($isPickupOrder && (in_array($statusStr, array_merge($pickupStatuses, $inProgressStatuses, $deliveryStatuses), true) || $this->isFinished($order))) {
+            $pickupTime = $findHistoryTime([8]) ?? $createdAt->copy()->addMinutes(10);
+            if ($pickupTime->gt($updatedAt)) {
+                $pickupTime = $createdAt;
+            }
             $logs[] = [
                 'time' => $pickupTime->format('H:i'),
                 'date' => $pickupTime->locale('id')->isoFormat('dddd, D MMM'),
