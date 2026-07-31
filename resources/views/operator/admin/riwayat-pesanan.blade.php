@@ -462,14 +462,14 @@
 
                                 @if($hasHistory && $origService && strtolower($origService) !== strtolower($currService))
                                     <div class="flex items-center gap-1.5 text-xs font-normal">
-                                        <span class="text-slate-400 capitalize">{{ $origService }}</span>
-                                        <i class="ri-arrow-right-line text-slate-400 text-xs"></i>
+                                        <span class="capitalize" style="color:#808080;">{{ $origService }}</span>
+                                        <i class="ri-arrow-right-line text-xs" style="color:#808080;"></i>
                                         <span class="text-[#F2994A] font-medium capitalize">{{ $currService }}</span>
                                     </div>
                                 @elseif($pendingTargetName)
                                     <div class="flex items-center gap-1.5 text-xs font-normal">
-                                        <span class="text-slate-400 capitalize">{{ $currService }}</span>
-                                        <i class="ri-arrow-right-line text-slate-400 text-xs"></i>
+                                        <span class="capitalize" style="color:#808080;">{{ $currService }}</span>
+                                        <i class="ri-arrow-right-line text-xs" style="color:#808080;"></i>
                                         <span class="text-[#F2994A] font-medium capitalize">{{ $pendingTargetName }}</span>
                                     </div>
                                 @else
