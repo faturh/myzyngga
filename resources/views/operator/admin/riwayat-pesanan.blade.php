@@ -170,7 +170,7 @@
 
                             <a href="{{ route('admin.riwayat-pesanan', ['tab' => 'perlu-di-antar', 'search' => $search, 'sort' => $sort]) }}" 
                                class="pb-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'perlu-di-antar' ? 'border-[#003E9C] text-[#003E9C] font-medium' : 'border-transparent text-[#808080] hover:text-slate-600 font-normal' }}">
-                                Perlu di Antar
+                                Siap Diambil/Diantar
                                 <span id="badge-perlu-di-antar" class="px-1.5 py-0.5 rounded-full text-[10px] {{ $tab === 'perlu-di-antar' ? 'bg-[#003E9C] text-white' : 'bg-slate-100 text-slate-500' }}">
                                     {{ $perluDiAntarCount }}
                                 </span>
@@ -402,7 +402,7 @@
                                         @elseif(in_array($item->status, ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput']))
                                             <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#F2994A;">Menunggu di Jemput</span>
                                         @elseif(in_array($item->status, ['Perlu di Antar', 'Perlu di antar']))
-                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#003E9C;">Perlu di Antar</span>
+                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#003E9C;">Siap Diambil/Diantar</span>
                                         @elseif($item->status === 'Kendala Pesanan')
                                             <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#EF4444;">Kendala Pesanan</span>
                                         @else
