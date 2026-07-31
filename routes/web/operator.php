@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/riwayat-pesanan/{id}/batal', [OperatorController::class, 'batalkanTransaksi'])->name('admin.riwayat-pesanan.batal');
         Route::get('/admin/riwayat-pesanan/{id}/kerjakan', [OperatorController::class, 'kerjakanForm'])->name('admin.riwayat-pesanan.kerjakan-form');
         Route::post('/admin/riwayat-pesanan/{id}/kerjakan', [OperatorController::class, 'kerjakanTransaksi'])->name('admin.riwayat-pesanan.kerjakan');
+        Route::get('/admin/riwayat-pesanan/{id}/upgrade', [OperatorController::class, 'upgradeForm'])->name('admin.riwayat-pesanan.upgrade-form');
         Route::post('/admin/riwayat-pesanan/{id}/konfirmasi-upgrade', [OperatorController::class, 'konfirmasiUpgrade'])->name('admin.riwayat-pesanan.konfirmasi-upgrade');
         Route::post('/admin/riwayat-pesanan/{id}/inisiasi-upgrade', [OperatorController::class, 'inisiasiUpgrade'])->name('admin.riwayat-pesanan.inisiasi-upgrade');
         Route::post('/admin/riwayat-pesanan/{id}/selesaikan', [OperatorController::class, 'selesaikanPengerjaan'])->name('admin.riwayat-pesanan.selesaikan');
