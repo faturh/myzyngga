@@ -148,8 +148,8 @@
                                 <span style="color:#808080;">Jenis Layanan</span>
                                 @if($hasHistory && $originalService && strtolower($originalService) !== strtolower($currentService))
                                     <div class="flex items-center gap-1.5 font-normal text-xs">
-                                        <span class="text-slate-400 capitalize">{{ $originalService }}</span>
-                                        <i class="ri-arrow-right-line text-slate-400 text-xs"></i>
+                                        <span class="capitalize" style="color:#808080;">{{ $originalService }}</span>
+                                        <i class="ri-arrow-right-line text-xs" style="color:#808080;"></i>
                                         <span class="text-[#F2994A] font-medium capitalize">{{ $currentService }}</span>
                                     </div>
                                 @else
@@ -182,8 +182,8 @@
                                 <div>
                                     <p class="text-[10px] text-amber-600 uppercase mb-1">Layanan Sebelum & Sesudah</p>
                                     <div class="flex items-center gap-1.5 text-xs">
-                                        <span class="text-slate-500 font-normal capitalize">{{ $currentService }}</span>
-                                        <i class="ri-arrow-right-line text-slate-400"></i>
+                                        <span class="font-normal capitalize" style="color:#808080;">{{ $currentService }}</span>
+                                        <i class="ri-arrow-right-line text-xs" style="color:#808080;"></i>
                                         <span class="text-[#F2994A] font-medium capitalize">{{ $pendingUpgrade['target_service_name'] }}</span>
                                     </div>
                                 </div>
@@ -233,8 +233,8 @@
                                     <!-- PREVIEW DYNAMIC SEBELUM & SESUDAH -->
                                     <template x-if="selectedUpgradeName">
                                         <div class="flex items-center gap-1.5 text-xs pt-1 px-1">
-                                            <span class="text-slate-400 font-normal capitalize">{{ $currentService }}</span>
-                                            <i class="ri-arrow-right-line text-slate-400 text-xs"></i>
+                                            <span class="font-normal capitalize" style="color:#808080;">{{ $currentService }}</span>
+                                            <i class="ri-arrow-right-line text-xs" style="color:#808080;"></i>
                                             <span class="text-[#F2994A] font-medium capitalize" x-text="selectedUpgradeName"></span>
                                         </div>
                                     </template>
