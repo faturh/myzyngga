@@ -446,10 +446,37 @@
                                     {{ $item->catatan ?? '-' }}
                                 </div>
 
-                                <!-- Baris 6: Jenis Layanan -->
-                                <div class="text-xs font-normal" style="color:#808080;">
-                                    {{ $item->layananPrioritas->nama ?? 'Reguler' }}
-                                </div>
+                                <!-- Baris 6: Jenis Layanan (Format Sebelum & Sesudah) -->
+                                @php
+                                    $itemHistory = $item->upgradeLayanans ?? collect();
+                                    $hasHistory = $itemHistory->isNotEmpty();
+                                    $origService = $hasHistory ? ($itemHistory->first()->layananAsal->nama ?? null) : null;
+                                    $currService = $item->layananPrioritas->nama ?? 'Reguler';
+                                    
+                                    $pendingTargetName = null;
+                                    if ($hasPendingUpgrade && isset($meta['pending_upgrade']['new_service_id'])) {
+                                        $srv = \App\Models\LayananPrioritas::find($meta['pending_upgrade']['new_service_id']);
+                                        $pendingTargetName = $srv ? $srv->nama : null;
+                                    }
+                                @endphp
+
+                                @if($hasHistory && $origService && strtolower($origService) !== strtolower($currService))
+                                    <div class="flex items-center gap-1.5 text-xs font-normal">
+                                        <span class="text-slate-400 capitalize">{{ $origService }}</span>
+                                        <i class="ri-arrow-right-line text-slate-400 text-xs"></i>
+                                        <span class="text-[#F2994A] font-medium capitalize">{{ $currService }}</span>
+                                    </div>
+                                @elseif($pendingTargetName)
+                                    <div class="flex items-center gap-1.5 text-xs font-normal">
+                                        <span class="text-slate-400 capitalize">{{ $currService }}</span>
+                                        <i class="ri-arrow-right-line text-slate-400 text-xs"></i>
+                                        <span class="text-[#F2994A] font-medium capitalize">{{ $pendingTargetName }}</span>
+                                    </div>
+                                @else
+                                    <div class="text-xs font-normal capitalize" style="color:#808080;">
+                                        {{ $currService }}
+                                    </div>
+                                @endif
 
                                 <!-- Baris 6.5: Pesanan Masuk -->
                                 <div class="text-xs font-normal" style="color:#808080;">
@@ -538,7 +565,7 @@
                                             </a>
 
                                             @if($item->canBeUpgraded() || $hasPendingUpgrade)
-                                                <a href="{{ route('admin.riwayat-pesanan.proses-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
+                                                <a href="{{ route('admin.riwayat-pesanan.upgrade-form', [$item->id, 'tab' => $tab]) }}" class="text-center bg-white border border-amber-200 hover:bg-amber-50 text-amber-600 px-5 py-2 rounded-full text-xs font-medium transition-all flex items-center justify-center gap-1.5" style="height:38px; border-width:1px;">
                                                     <i data-feather="arrow-up-circle" class="w-4 h-4 text-amber-500"></i>
                                                     Detail & Upgrade
                                                 </a>

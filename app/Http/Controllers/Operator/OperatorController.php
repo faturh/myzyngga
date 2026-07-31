@@ -26,6 +26,8 @@ class OperatorController extends Controller
         $menungguPembayaranCount = Operator::getMenungguPembayaranCount();
         $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
         $pesananSelesaiCount = Operator::getPesananSelesaiCount();
+        $jumlahPelangganCount = Operator::getJumlahPelangganCount();
+        $pesananDibatalkanCount = Operator::getPesananDibatalkanCount();
 
         $user = auth()->user();
         $cabangId = $user->hasRole('manajer_laundry') ? $user->cabang_id : null;
@@ -37,6 +39,8 @@ class OperatorController extends Controller
             'menungguPembayaranCount',
             'perluDikerjakanCount',
             'pesananSelesaiCount',
+            'jumlahPelangganCount',
+            'pesananDibatalkanCount',
             'saldoToko'
         ));
     }
@@ -198,7 +202,7 @@ class OperatorController extends Controller
             }
         } else {
             $query = Transaksi::query()
-                ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas', 'detailTransaksi.detailLayananTransaksi.hargaJenisLayanan.jenisLayanan']);
+                ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas', 'detailTransaksi.detailLayananTransaksi.hargaJenisLayanan.jenisLayanan', 'upgradeLayanans.layananAsal']);
 
             // Search filter (Nomor Pesanan / Nota or Pelanggan Name)
             if (!empty($search)) {
@@ -343,7 +347,8 @@ class OperatorController extends Controller
             if ($currentPriority) {
                 $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
                     ->where('prioritas', '>', $currentPriority->prioritas)
-                    ->get();
+                    ->get()
+                    ->unique('nama');
             }
 
             // Fetch available Satuan items
@@ -449,6 +454,48 @@ class OperatorController extends Controller
 
             $tab = request()->query('tab', 'perlu-dikerjakan');
             return view('operator.admin.proses-pekerjaan', compact('transaksi', 'pegawaiList', 'itemsAvailable', 'tab'));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.riwayat-pesanan')->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Show form for upgrading priority service.
+     */
+    public function upgradeForm(string $id)
+    {
+        try {
+            $transaksi = Transaksi::with([
+                'pelanggan.user',
+                'layananPrioritas',
+                'upgradeLayanans.layananAsal',
+                'upgradeLayanans.layananTujuan'
+            ])->findOrFail($id);
+            
+            // Decode pending upgrade
+            $meta = json_decode($transaksi->payment_metadata, true) ?? [];
+            $pendingUpgrade = $meta['pending_upgrade'] ?? null;
+            if ($pendingUpgrade) {
+                $targetService = \App\Models\LayananPrioritas::find($pendingUpgrade['new_service_id']);
+                $pendingUpgrade['target_service_name'] = $targetService ? $targetService->nama : '-';
+            }
+
+            $currentPriority = $transaksi->layananPrioritas;
+            $availableUpgrades = collect();
+            if ($currentPriority) {
+                $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
+                    ->where('prioritas', '>', $currentPriority->prioritas)
+                    ->get()
+                    ->unique('nama');
+            }
+
+            $tab = request()->query('tab', 'perlu-dikerjakan');
+            return view('operator.admin.upgrade-layanan', compact(
+                'transaksi',
+                'pendingUpgrade',
+                'availableUpgrades',
+                'tab'
+            ));
         } catch (\Exception $e) {
             return redirect()->route('admin.riwayat-pesanan')->with('error', $e->getMessage());
         }
@@ -729,8 +776,20 @@ class OperatorController extends Controller
      */
     public function tambahPesananForm()
     {
-        // 1. Fetch available LayananPrioritas
-        $prioritasList = \App\Models\LayananPrioritas::orderBy('id')->get();
+        $user = auth()->user();
+        $cabangId = $user->cabang_id ?? null;
+
+        // 1. Fetch available LayananPrioritas (filtered by branch and deduplicated by name)
+        $prioritasList = \App\Models\LayananPrioritas::query()
+            ->when($cabangId, fn($q) => $q->where('cabang_id', $cabangId))
+            ->orderBy('prioritas')
+            ->get();
+
+        if ($prioritasList->isEmpty()) {
+            $prioritasList = \App\Models\LayananPrioritas::orderBy('prioritas')->get();
+        }
+
+        $prioritasList = $prioritasList->unique('nama');
 
         // 2. Fetch list of registered customers
         $pelangganList = \App\Models\Pelanggan::orderBy('nama')->get();

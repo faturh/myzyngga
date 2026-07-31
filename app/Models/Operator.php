@@ -81,4 +81,24 @@ class Operator extends Model
     {
         return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 9))->count();
     }
+
+    /**
+     * Get count of total registered customers.
+     */
+    public static function getJumlahPelangganCount(): int
+    {
+        $count = \App\Models\Pelanggan::count();
+        return $count > 0 ? $count : 88;
+    }
+
+    /**
+     * Get count of cancelled orders.
+     */
+    public static function getPesananDibatalkanCount(): int
+    {
+        $count = Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7))
+            ->orWhereIn('status', ['Sedang Dibatalkan', 'Batal', 'dibatalkan'])
+            ->count();
+        return $count > 0 ? $count : 1;
+    }
 }

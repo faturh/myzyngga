@@ -112,6 +112,12 @@
                             <span>{{ session('error') }}</span>
                         </div>
                     @endif
+                    @if(session('success'))
+                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
+                            <i data-feather="check-circle" class="w-4 h-4 shrink-0"></i>
+                            <span>{{ session('success') }}</span>
+                        </div>
+                    @endif
                     @if($errors->any())
                         <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl space-y-1">
                             <div class="flex items-center gap-2">
@@ -363,54 +369,6 @@
                         </form>
                         <p class="text-[11px] font-normal text-[#808080]">Foto ini akan tampil di Galeri halaman detail pesanan pelanggan.</p>
                     </div>
-
-                    <!-- UPGRADE SECTIONS (JIKA ADA PENDING ATAU TERSEDIA) -->
-                    @if(isset($pendingUpgrade) && $pendingUpgrade)
-                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-5 shadow-sm space-y-3">
-                            <h3 class="font-medium text-amber-800 text-sm flex items-center gap-2">
-                                <i data-feather="bell" class="w-4 h-4 text-amber-600"></i>
-                                Permintaan Upgrade Layanan
-                            </h3>
-                            <div class="text-xs space-y-2 font-normal text-amber-700">
-                                <div>
-                                    <p class="text-[10px] text-amber-600 uppercase">Layanan Baru</p>
-                                    <p class="text-amber-900 font-medium capitalize">{{ $pendingUpgrade['target_service_name'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-amber-600 uppercase">Biaya Selisih (Tunai)</p>
-                                    <p class="text-amber-900 font-medium text-sm">Rp {{ number_format($pendingUpgrade['price_diff'], 0, ',', '.') }}</p>
-                                </div>
-                            </div>
-                            <form action="{{ route('admin.riwayat-pesanan.konfirmasi-upgrade', $transaksi->id) }}" method="POST" class="pt-1">
-                                @csrf
-                                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-2">
-                                    Konfirmasi Upgrade & Terima Cash
-                                </button>
-                            </form>
-                        </div>
-                    @elseif(isset($availableUpgrades) && $availableUpgrades->isNotEmpty())
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-5 shadow-sm space-y-3">
-                            <h3 class="font-medium text-blue-800 text-sm flex items-center gap-2">
-                                <i data-feather="arrow-up-circle" class="w-4 h-4 text-blue-600"></i>
-                                Upgrade Layanan Prioritas
-                            </h3>
-                            <form action="{{ route('admin.riwayat-pesanan.inisiasi-upgrade', $transaksi->id) }}" method="POST" class="space-y-3 pt-1">
-                                @csrf
-                                <div>
-                                    <label class="block text-[10px] text-blue-600 uppercase mb-1">Pilih Layanan Tujuan</label>
-                                    <select name="new_service_id" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" required>
-                                        <option value="">-- Pilih Layanan Baru --</option>
-                                        @foreach($availableUpgrades as $upg)
-                                            <option value="{{ $upg->id }}">{{ $upg->nama }} (Rp {{ number_format($upg->harga, 0, ',', '.') }})</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-2">
-                                    Proses Upgrade Tunai
-                                </button>
-                            </form>
-                        </div>
-                    @endif
 
                 </div>
 
