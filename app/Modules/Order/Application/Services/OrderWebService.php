@@ -430,8 +430,8 @@ class OrderWebService
 
         $isFinished = $this->isFinished($order);
         if ($isFinished) {
-            $deliveryStatus = 'Selesai';
-            $deliveryIcon = 'check-circle';
+            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
+            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
         } elseif ($isDeliveryStatus) {
             $deliveryStatus = 'Delivery';
             $deliveryIcon = 'truck';
@@ -489,8 +489,8 @@ class OrderWebService
         $isDeliveryStatus = in_array($statusStr, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar']);
 
         if ($isFinished) {
-            $deliveryStatus = 'Selesai';
-            $deliveryIcon = 'check-circle';
+            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
+            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
         } elseif ($isDeliveryStatus) {
             $deliveryStatus = 'Delivery';
             $deliveryIcon = 'truck';
@@ -1361,12 +1361,6 @@ class OrderWebService
             return false;
         }
 
-        // Pesanan yang sudah selesai dikerjakan atau perlu diantar tidak bisa di-upgrade
-        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar'];
-        if (in_array((string) $order->status, $deliveryStatuses, true)) {
-            return false;
-        }
-
         // Upgrade pricing is calculated from real weighed items (mapOrderItems()),
         // which only exist after the operator weighs the order. Before that, the
         // price would be based on a rough estimate — block upgrades until then.
@@ -1643,9 +1637,8 @@ class OrderWebService
     public function processUpgrade(string $id, int $newServiceId, ?User $user, ?string $paymentMethod = null): void
     {
         $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
-        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar'];
-        if (!$order || $this->isFinished($order) || in_array((string) $order->status, $deliveryStatuses, true)) {
-            throw new \Exception('Pesanan yang sudah selesai atau sedang diantar tidak dapat di-upgrade.');
+        if (!$order || $this->isFinished($order)) {
+            throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
         $this->assertOwnership($order, $user);
         $this->assertGuestOwnsOrderInSession($order, $user);
