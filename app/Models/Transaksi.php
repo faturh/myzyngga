@@ -78,7 +78,7 @@ class Transaksi extends Model
 
             if (strtolower(trim($transaksi->payment_status ?? '')) === 'paid') {
                 if ($newStatusId == 2) {
-                    $newStatusId = $transaksi->is_roundtrip ? 9 : 5;
+                    $newStatusId = 9;
                 }
             }
 
@@ -317,7 +317,7 @@ class Transaksi extends Model
                 if ($this->list_status_pengerjaan_id == 9) {
                     $statusId = 5;
                 } else {
-                    $statusId = $this->is_roundtrip ? 9 : 5;
+                    $statusId = 9;
                 }
             } else {
                 $statusId = 2;

@@ -684,7 +684,12 @@ class OperatorController extends Controller
         $transaksi->list_status_pengerjaan_id = 5;
         $transaksi->save();
 
-        $message = 'Pengantaran pesanan #' . $transaksi->nota . ' telah selesai.';
+        $meta = json_decode($transaksi->payment_metadata, true) ?? [];
+        $isDelivery = (bool) $transaksi->is_roundtrip || isset($meta['pending_delivery']);
+
+        $message = $isDelivery
+            ? 'Pengantaran pesanan #' . $transaksi->nota . ' telah selesai.'
+            : 'Pesanan #' . $transaksi->nota . ' telah diambil oleh pelanggan di outlet.';
 
         if (request()->expectsJson()) {
             return response()->json([
