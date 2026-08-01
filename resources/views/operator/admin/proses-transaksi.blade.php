@@ -284,7 +284,6 @@
                                     <label class="block text-xs font-normal text-[#808080]">Berat Timbangan</label>
                                     <div class="relative">
                                         <input type="number"
-                                               name="actual_weight"
                                                x-model.number="actualWeight"
                                                step="0.01"
                                                min="0"
@@ -297,21 +296,15 @@
                                 </div>
 
                                 <!-- HIDDEN FIELDS UNTUK PRESERVASI BACKEND LOGIC -->
-                                <input type="hidden" name="minimum_weight" x-model.number="minimumWeight">
-                                <input type="hidden" name="price_per_kg" x-model.number="pricePerKg">
-                                <template x-if="tipeLayanan === 'satuan'">
-                                    <div>
-                                        <input type="hidden" name="actual_weight" value="0">
-                                        <input type="hidden" name="minimum_weight" value="0">
-                                        <input type="hidden" name="price_per_kg" value="0">
-                                    </div>
-                                </template>
+                                <input type="hidden" name="actual_weight" :value="actualWeight || 0">
+                                <input type="hidden" name="minimum_weight" :value="minimumWeight || 3.0">
+                                <input type="hidden" name="price_per_kg" :value="pricePerKg > 0 ? pricePerKg : {{ $defaultPrice }}">
 
                                 <!-- DYNAMIC SUMMARY BOX -->
                                 <div class="bg-[#F4F4F4] rounded-xl p-4 space-y-2 text-xs">
-                                    <div class="flex justify-between items-center text-[#808080] font-normal" x-show="tipeLayanan === 'kiloan'">
+                                    <div class="flex justify-between items-center text-[#808080] font-normal">
                                         <span>Biaya Kiloan</span>
-                                        <span class="text-[#0F0F0F] font-medium" x-text="formatRupiah(chargedWeight * pricePerKg)">Rp 0</span>
+                                        <span class="text-[#0F0F0F] font-medium" x-text="formatRupiah(totalKiloanPrice)">Rp 0</span>
                                     </div>
                                     <div class="flex justify-between items-center text-[#808080] font-normal">
                                         <span>Biaya Satuan</span>
@@ -403,7 +396,7 @@
                 })),
                 actualWeight: {{ $existingTimbangan ? $existingTimbangan->actual_weight : (old('actual_weight', '') !== '' ? old('actual_weight') : '0') }},
                 minimumWeight: {{ $existingTimbangan ? $existingTimbangan->minimum_weight : old('minimum_weight', '3.0') }},
-                pricePerKg: {{ $existingTimbangan ? $existingTimbangan->price_per_kg : old('price_per_kg', $defaultPrice) }},
+                pricePerKg: {{ $existingTimbangan && $existingTimbangan->price_per_kg > 0 ? $existingTimbangan->price_per_kg : old('price_per_kg', $defaultPrice) }},
                 originalTotal: {{ $transaksi->total_bayar_akhir }},
                 
                 addSatuanItem() {
@@ -429,12 +422,12 @@
                     if (!this.actualWeight || this.actualWeight <= 0) return 0;
                     return Math.max(this.minimumWeight, this.actualWeight);
                 },
+                get totalKiloanPrice() {
+                    if (!this.actualWeight || this.actualWeight <= 0) return 0;
+                    return Math.round(this.chargedWeight * this.pricePerKg);
+                },
                 get totalPrice() {
-                    let price = this.totalSatuanPrice;
-                    if (this.tipeLayanan === 'kiloan') {
-                        price += Math.round(this.chargedWeight * this.pricePerKg);
-                    }
-                    return price;
+                    return this.totalKiloanPrice + this.totalSatuanPrice;
                 },
                 formatRupiah(value) {
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);

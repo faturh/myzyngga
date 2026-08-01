@@ -82,7 +82,9 @@ class Transaksi extends Model
                 }
             }
 
-            $transaksi->attributes['status'] = $transaksi->getStatusName($newStatusId);
+            if ($transaksi->pending_status_id !== null || !$transaksi->isDirty('status')) {
+                $transaksi->attributes['status'] = $transaksi->getStatusName($newStatusId);
+            }
 
             // Generate UUID if not set
             if (!$transaksi->id) {
@@ -148,7 +150,9 @@ class Transaksi extends Model
             // Guest tidak punya akun User, jadi fallback ke email yang mereka
             // isi sendiri saat checkout (disimpan di pelanggan.email).
             if ($transaksi->wasChanged('payment_status') && $transaksi->payment_status === 'paid') {
-                $email = $transaksi->pelanggan->user->email ?? $transaksi->pelanggan->email ?? null;
+                $email = $transaksi->pelanggan?->user?->email 
+                    ?? $transaksi->pelanggan?->email 
+                    ?? ($transaksi->pelanggan?->user_id ? \App\Models\User::find($transaksi->pelanggan->user_id)?->email : null);
                 if ($email) {
                     try {
                         \Illuminate\Support\Facades\Mail::to($email)
@@ -162,9 +166,17 @@ class Transaksi extends Model
             // 2. Kirim email jika status laundry di-update menjadi selesai. getStatusName(5)
             // menghasilkan 'Pesanan Selesai', bukan literal 'Selesai' — perbandingan lama
             // tidak pernah cocok sehingga email "pesanan selesai" tidak pernah terkirim.
-            $statusChanged = $transaksi->wasChanged('list_pengerjaan_id') || $transaksi->wasChanged('status');
-            if ($statusChanged && in_array($transaksi->status, ['Selesai', 'Pesanan Selesai'], true)) {
-                $email = $transaksi->pelanggan->user->email ?? $transaksi->pelanggan->email ?? null;
+            $statusChanged = $transaksi->wasChanged('list_pengerjaan_id') 
+                || $transaksi->wasChanged('status') 
+                || $transaksi->isDirty('status') 
+                || $transaksi->isDirty('list_pengerjaan_id');
+            $isFinishedStatus = in_array(strtolower(trim((string) $transaksi->status)), ['selesai', 'pesanan selesai'], true)
+                || (int) ($transaksi->list_pengerjaan?->list_status_pengerjaan_id) === 5;
+
+            if ($statusChanged && $isFinishedStatus) {
+                $email = $transaksi->pelanggan?->user?->email 
+                    ?? $transaksi->pelanggan?->email 
+                    ?? ($transaksi->pelanggan?->user_id ? \App\Models\User::find($transaksi->pelanggan->user_id)?->email : null);
                 if ($email) {
                     try {
                         \Illuminate\Support\Facades\Mail::to($email)
