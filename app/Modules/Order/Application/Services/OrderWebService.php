@@ -231,14 +231,18 @@ class OrderWebService
             'alamat' => $data['address'],
         ]);
 
-        $layananPrioritasId = $this->orderRepository->firstAvailableLayananPrioritasId();
-        if (! $layananPrioritasId) {
-            return redirect()->back()->withErrors(['layanan' => 'Layanan prioritas belum tersedia.']);
-        }
-
         $cabangId = $this->orderRepository->firstAvailableCabangId();
         if (! $cabangId) {
             return redirect()->back()->withErrors(['cabang' => 'Cabang belum tersedia.']);
+        }
+
+        $selectedService = $data['selected_service_id'] ?? $data['service'] ?? 'reguler';
+        $layananPrioritasId = $this->resolveLayananPrioritasId($selectedService, (int) $cabangId);
+        if (! $layananPrioritasId) {
+            $layananPrioritasId = $this->orderRepository->firstAvailableLayananPrioritasId();
+        }
+        if (! $layananPrioritasId) {
+            return redirect()->back()->withErrors(['layanan' => 'Layanan prioritas belum tersedia.']);
         }
 
         $order = $orderService->createOrder(new CreateOrderData(
@@ -983,56 +987,50 @@ class OrderWebService
     }
     private function mapOrderItems(Transaksi $order): array
     {
-        $items = $order->detailTransaksi->map(function ($detail) use ($order) {
-            $serviceNames = $detail->detailLayananTransaksi
-                ->map(fn ($serviceDetail) => $serviceDetail->hargaJenisLayanan?->jenisLayanan?->nama)
-                ->filter()
-                ->unique()
-                ->implode(' + ');
+        $items = collect();
+        $hasKiloanLine = false;
 
-            $firstServiceDetail = $detail->detailLayananTransaksi->first();
-            $clothingName = $firstServiceDetail?->hargaJenisLayanan?->jenisPakaian?->nama;
-            
-            $qty = (float) $detail->total_pakaian;
-            $subtotal = (float) ($detail->total_biaya_layanan ?: 0);
-            $price = $qty > 0 ? $subtotal / $qty : (float) $detail->harga_layanan_akhir;
-
-            $priority = (int) ($order->layananPrioritas->prioritas ?? 1);
-            $daysStr = match (true) {
-                $priority >= 99 => 'Hari ini',
-                $priority >= 3 => '1 hari',
-                $priority >= 2 => '2 hari',
-                default => '3 hari',
-            };
-
-            $isSatuan = $firstServiceDetail?->hargaJenisLayanan && strtolower($firstServiceDetail->hargaJenisLayanan->jenis_satuan) !== 'kg';
-            
-            if ($isSatuan && $clothingName) {
-                $name = "Satuan - " . $clothingName;
-            } else {
-                $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
-                $serviceBase = $originalService->nama ?? 'Reguler';
+        if ($order->detailTransaksi && $order->detailTransaksi->isNotEmpty()) {
+            foreach ($order->detailTransaksi as $detail) {
+                $firstServiceDetail = $detail->detailLayananTransaksi->first();
+                $clothingName = $firstServiceDetail?->hargaJenisLayanan?->jenisPakaian?->nama;
                 
-                // Keep the days string based on original priority
-                $origPriority = (int) ($originalService->prioritas ?? 1);
-                $origDaysStr = match (true) {
-                    $origPriority >= 99 => 'Hari ini',
-                    $origPriority >= 3 => '1 hari',
-                    $origPriority >= 2 => '2 hari',
-                    default => '3 hari',
-                };
+                $qty = (float) $detail->total_pakaian;
+                $subtotal = (float) ($detail->total_biaya_layanan ?: 0);
+                $price = $qty > 0 ? $subtotal / $qty : (float) $detail->harga_layanan_akhir;
+
+                $isSatuan = $firstServiceDetail?->hargaJenisLayanan && strtolower($firstServiceDetail->hargaJenisLayanan->jenis_satuan) !== 'kg';
                 
-                $name = "{$serviceBase} ({$origDaysStr}) - " . $this->formatQuantity($qty) . "Kg";
+                if ($isSatuan && $clothingName) {
+                    $name = "Satuan - " . $clothingName;
+                } else {
+                    $hasKiloanLine = true;
+                    $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
+                    $serviceBase = $originalService->nama ?? 'Reguler';
+                    
+                    $origPriority = (int) ($originalService->prioritas ?? 1);
+                    $origDaysStr = match (true) {
+                        $origPriority >= 99 => 'Hari ini',
+                        $origPriority >= 3 => '1 hari',
+                        $origPriority >= 2 => '2 hari',
+                        default => '3 hari',
+                    };
+                    
+                    $name = "{$serviceBase} ({$origDaysStr}) - " . $this->formatQuantity($qty) . "Kg";
+                }
+
+                if ($subtotal > 0 || $qty > 0) {
+                    $items->push([
+                        'name' => $name,
+                        'qty' => $this->formatQuantity($qty),
+                        'price' => $price,
+                        'subtotal' => $subtotal,
+                    ]);
+                }
             }
+        }
 
-            return [
-                'name' => $name,
-                'qty' => $this->formatQuantity($qty),
-                'price' => $price,
-                'subtotal' => $subtotal,
-            ];
-        })->filter(fn (array $item) => $item['subtotal'] > 0 || $item['qty'] !== '0');
-
+        $satuanTotal = 0;
         if ($order->fk_tambahan) {
             $tambahanRows = \App\Models\Tambahan::with('kategoriPakaianSatuan')
                 ->where('tambahan_id', $order->fk_tambahan)
@@ -1041,6 +1039,7 @@ class OrderWebService
             foreach ($tambahanRows as $tambahan) {
                 $qty = (float) $tambahan->jumlah;
                 $subtotal = (float) $tambahan->harga_akhir;
+                $satuanTotal += $subtotal;
                 $price = $qty > 0 ? $subtotal / $qty : $subtotal;
                 $items->push([
                     'name' => "Satuan - " . ($tambahan->kategoriPakaianSatuan->nama_pakaian ?? 'Item Satuan'),
@@ -1051,23 +1050,53 @@ class OrderWebService
             }
         }
 
+        if (! $hasKiloanLine) {
+            $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
+            $serviceBase = $originalService->nama ?? 'Layanan Laundry';
+            $origPriority = (int) ($originalService->prioritas ?? 1);
+            $origDaysStr = match (true) {
+                $origPriority >= 99 => 'Hari ini',
+                $origPriority >= 3 => '1 hari',
+                $origPriority >= 2 => '2 hari',
+                default => '3 hari',
+            };
+
+            $basePrice = $this->resolveEstimatedTotal(strtolower($originalService->nama ?? ''));
+            $kiloanSubtotal = 0;
+            $kiloanWeight = 0;
+
+            if ($order->timbangan && (double) $order->timbangan->actual_weight > 0) {
+                $kiloanWeight = (double) ($order->timbangan->charged_weight ?? $order->timbangan->actual_weight);
+                $kiloanPrice = (double) ($order->timbangan->price_per_kg ?: $basePrice);
+                $kiloanSubtotal = $kiloanWeight * $kiloanPrice;
+            } else {
+                $totalBaseCost = (float) ($order->total_biaya_layanan ?: $order->total_bayar_akhir);
+                $kiloanSubtotal = max(0, $totalBaseCost - $satuanTotal);
+                if ($kiloanSubtotal > 0 && $basePrice > 0) {
+                    $kiloanWeight = round($kiloanSubtotal / $basePrice, 2);
+                }
+            }
+
+            if ($kiloanSubtotal > 0 || ($kiloanWeight > 0 && $items->isEmpty())) {
+                $weightStr = $this->formatQuantity($kiloanWeight);
+                $name = "{$serviceBase} ({$origDaysStr}) - {$weightStr}Kg";
+                $items->prepend([
+                    'name' => $name,
+                    'qty' => $weightStr,
+                    'price' => $basePrice,
+                    'subtotal' => $kiloanSubtotal,
+                ]);
+            }
+        }
+
         if ($items->isNotEmpty()) {
             return $items->values()->all();
         }
 
-        // Pakai total_biaya_layanan (biaya dasar), BUKAN total_bayar_akhir —
-        // total_bayar_akhir sudah termasuk total_biaya_prioritas (biaya upgrade)
-        // begitu upgrade dibayar (lihat PaymentWebhookService::markAsPaid()).
-        // Kalau dipakai di sini, biaya upgrade ke-hitung dua kali: sekali
-        // "ketelan" ke estimasi berat/harga baris dasar ini, sekali lagi
-        // ditampilkan terpisah sebagai "Biaya Upgrade".
         $total = (float) ($order->total_biaya_layanan ?: $order->total_bayar_akhir);
         $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
         $basePrice = $this->resolveEstimatedTotal(strtolower($originalService->nama ?? ''));
-        $estimatedQty = $basePrice > 0 
-            ? max(1, round($total / $basePrice, 2)) 
-            : 1;
-
+        $estimatedQty = $basePrice > 0 ? max(1, round($total / $basePrice, 2)) : 1;
         $origPriority = (int) ($originalService->prioritas ?? 1);
         $origDaysStr = match (true) {
             $origPriority >= 99 => 'Hari ini',
@@ -1076,8 +1105,7 @@ class OrderWebService
             default => '3 hari',
         };
         $serviceBase = $originalService->nama ?? 'Layanan Laundry';
-        $weight = $order->detailTransaksi->sum('total_pakaian');
-        $weightStr = $weight > 0 ? $this->formatQuantity($weight) : $this->formatQuantity($estimatedQty);
+        $weightStr = $this->formatQuantity($estimatedQty);
         $name = "{$serviceBase} ({$origDaysStr}) - {$weightStr}Kg";
 
         return [[
@@ -1522,6 +1550,27 @@ class OrderWebService
     private function resolveEstimatedTotal(string $serviceId): float
     {
         return (float) (self::SERVICE_ESTIMATED_TOTALS[$serviceId] ?? self::SERVICE_ESTIMATED_TOTALS['regular']);
+    }
+
+    private function resolveLayananPrioritasId(string $serviceKey, int $cabangId): ?int
+    {
+        $serviceName = match (strtolower($serviceKey)) {
+            'quick' => 'Quick',
+            'express' => 'Express',
+            'kilat' => 'Kilat',
+            'satuan' => 'Satuan',
+            default => 'Reguler',
+        };
+
+        $layanan = \App\Models\LayananPrioritas::where('cabang_id', $cabangId)
+            ->whereRaw('LOWER(nama) = ?', [strtolower($serviceName)])
+            ->first();
+
+        if (! $layanan) {
+            $layanan = \App\Models\LayananPrioritas::whereRaw('LOWER(nama) = ?', [strtolower($serviceName)])->first();
+        }
+
+        return $layanan ? (int) $layanan->id : null;
     }
 
     public function upgradeData(string $id, ?User $user): array
