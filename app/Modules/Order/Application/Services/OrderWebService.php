@@ -492,8 +492,13 @@ class OrderWebService
             $deliveryStatus = 'Selesai';
             $deliveryIcon = 'check-circle';
         } elseif ($isDeliveryStatus) {
-            $deliveryStatus = 'Delivery';
-            $deliveryIcon = 'truck';
+            if ($isRoundtrip) {
+                $deliveryStatus = 'Siap / Sedang Diantar';
+                $deliveryIcon = 'truck';
+            } else {
+                $deliveryStatus = 'Siap Diambil di Outlet';
+                $deliveryIcon = 'shopping-bag';
+            }
         } else {
             $isUnprocessed = in_array($statusStr, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
             if ($isUnprocessed) {
@@ -1284,9 +1289,12 @@ class OrderWebService
 
     private function currentStep(Transaksi $order): string
     {
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $isDelivery = (bool) $order->is_roundtrip || isset($meta['pending_delivery']);
+
         return match ((string) $order->status) {
             'Selesai', 'Pesanan Selesai', 'completed' => 'Selesai',
-            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 'Pesanan siap diantar',
+            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => $isDelivery ? 'Pesanan siap / sedang diantar' : 'Pesanan siap diambil di outlet',
             'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 'Pesanan sedang diproses',
             'Menunggu di Jemput', 'Sedang Dijemput', 'picked_up', 'Jemput' => 'Pesanan dijemput',
             'Baru', 'Perlu Diproses', 'created', 'pending' => 'Pesanan diterima',

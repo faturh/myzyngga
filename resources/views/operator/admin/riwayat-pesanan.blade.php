@@ -402,7 +402,15 @@
                                         @elseif(in_array($item->status, ['Menunggu di Jemput', 'Menunggu di jemput', 'Sedang Dijemput']))
                                             <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#F2994A;">Menunggu di Jemput</span>
                                         @elseif(in_array($item->status, ['Perlu di Antar', 'Perlu di antar']))
-                                            <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#003E9C;">Siap Diambil/Diantar</span>
+                                            @php
+                                                $meta = json_decode($item->payment_metadata, true) ?? [];
+                                                $isDelivery = (bool) $item->is_roundtrip || isset($meta['pending_delivery']);
+                                            @endphp
+                                            @if($isDelivery)
+                                                <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#003E9C;">Perlu Diantar</span>
+                                            @else
+                                                <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#10B981;">Menunggu Diambil</span>
+                                            @endif
                                         @elseif($item->status === 'Kendala Pesanan')
                                             <span class="text-[10px] font-medium text-white px-2.5 py-1 rounded-full" style="background:#EF4444;">Kendala Pesanan</span>
                                         @else
