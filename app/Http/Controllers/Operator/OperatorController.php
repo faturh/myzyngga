@@ -865,7 +865,10 @@ class OperatorController extends Controller
 
             // 2. Resolve pricing
             $layanan = \App\Models\LayananPrioritas::findOrFail($validated['layanan_prioritas_id']);
-            $defaultCost = strtolower($layanan->nama) === 'satuan' ? 10000 : 4850;
+            $isSatuan = strtolower($layanan->nama) === 'satuan';
+            $baseCost = $isSatuan ? 10000 : 4850;
+            $priorityCost = $isSatuan ? 0 : (float) ($layanan->harga ?? 0);
+            $totalCost = $baseCost + $priorityCost;
 
             // 3. Create Transaksi
             $suffix = strtoupper(substr(str_replace('-', '', (string) \Illuminate\Support\Str::uuid()), 0, 8));
@@ -880,14 +883,14 @@ class OperatorController extends Controller
                 'pickup_time' => now()->format('H:i:s'),
                 'parfum' => $validated['parfum'] ?? 'Standard',
                 'catatan' => $validated['catatan'],
-                'total_biaya_layanan' => $defaultCost,
-                'total_biaya_prioritas' => 0,
+                'total_biaya_layanan' => $baseCost,
+                'total_biaya_prioritas' => $priorityCost,
                 'total_biaya_layanan_tambahan' => 0,
-                'total_bayar_akhir' => $defaultCost,
+                'total_bayar_akhir' => $totalCost,
                 'jenis_pembayaran' => $validated['jenis_pembayaran'],
                 'payment_status' => $validated['payment_status'],
                 'paid_at' => $validated['payment_status'] === 'paid' ? now() : null,
-                'bayar' => $validated['payment_status'] === 'paid' ? $defaultCost : 0,
+                'bayar' => $validated['payment_status'] === 'paid' ? $totalCost : 0,
                 'kembalian' => 0,
                 'status' => 'Perlu Diproses',
                 'is_roundtrip' => $request->has('antar_laundry'),
