@@ -1428,21 +1428,20 @@ class OrderWebService
         return $date->locale('id')->isoFormat('dddd, D MMM | HH.mm');
     }
 
-    private function calculateWorkingHoursETA(\Carbon\Carbon $startDate, int $hoursToAdd): \Carbon\Carbon
+    private function calculateWorkingHoursETA(\Carbon\Carbon|string $startDate, int $hoursToAdd): \Carbon\Carbon
     {
-        $date = $startDate->copy();
+        $date = \Carbon\Carbon::parse($startDate)->copy();
 
         if ($date->hour < 8) {
             $date->setTime(8, 0, 0);
-        } elseif ($date->hour >= 18) {
+        } elseif ($date->hour >= 20) {
             $date->addDay()->setTime(8, 0, 0);
         }
 
         while ($hoursToAdd > 0) {
-            $endOfDay = $date->copy()->setTime(18, 0, 0);
+            $endOfDay = $date->copy()->setTime(20, 0, 0);
             $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
             
-            // If it's somehow past 18:00 (e.g. edge cases), move to next day
             if ($minutesLeftToday <= 0) {
                 $date->addDay()->setTime(8, 0, 0);
                 continue;
@@ -1454,7 +1453,7 @@ class OrderWebService
                 $date->addMinutes($minutesToAdd);
                 $hoursToAdd = 0;
                 
-                if ($date->hour >= 18) {
+                if ($date->hour >= 20) {
                     $date->addDay()->setTime(8, 0, 0);
                 }
             } else {
@@ -1475,14 +1474,20 @@ class OrderWebService
         }
 
         $priority = (int) ($order->layananPrioritas->prioritas ?? 1);
-        $workingHours = match (true) {
-            $priority >= 99 => 5, // Kilat
-            $priority >= 3 => 10, // Express
-            $priority >= 2 => 20, // Quick
-            default => 30, // Reguler
+        $date = \Carbon\Carbon::parse($baseDate)->copy();
+
+        if ($priority >= 99) {
+            $etaDate = $this->calculateWorkingHoursETA($date, 5);
+            return $etaDate->locale('id')->isoFormat('dddd, D MMM | HH.mm');
+        }
+
+        $daysToAdd = match (true) {
+            $priority >= 3 => 1, // Express: 1 Hari (24 Jam)
+            $priority >= 2 => 2, // Quick: 2 Hari (48 Jam)
+            default => 3,        // Reguler: 3 Hari (72 Jam)
         };
 
-        $etaDate = $this->calculateWorkingHoursETA($baseDate, $workingHours);
+        $etaDate = $date->addDays($daysToAdd);
         return $etaDate->locale('id')->isoFormat('dddd, D MMM | HH.mm');
     }
 
