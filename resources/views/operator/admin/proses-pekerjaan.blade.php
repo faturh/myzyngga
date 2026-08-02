@@ -365,6 +365,7 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('prosesPekerjaanForm', () => ({
                 items: @json($initialItems),
+                hasSatuanItems: @json($layananNama === 'satuan' || ($transaksi->fk_tambahan !== null) || ($transaksi->tambahanSatuan && $transaksi->tambahanSatuan->count() > 0)),
                 
                 addCustomItem() {
                     this.items.push({ id: 'custom_' + Date.now() + '_' + Math.random(), nama_item: '', qty: 1, checked: true, predefined: false });
@@ -377,7 +378,7 @@
                 },
                 submitForm(e) {
                     const hasActiveItem = this.items.some(i => i.checked || !i.predefined);
-                    if (!hasActiveItem) {
+                    if (!this.hasSatuanItems && !hasActiveItem) {
                         alert('Silakan pilih minimal satu jenis pakaian untuk rincian pakaian.');
                         return;
                     }

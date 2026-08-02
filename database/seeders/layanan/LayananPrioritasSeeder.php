@@ -55,44 +55,30 @@ class LayananPrioritasSeeder extends Seeder
             ]
         );
 
-        LayananPrioritas::updateOrCreate(
-            ['id' => 7],
-            [
-                'nama' => 'Satuan',
-                'harga' => 3000,
-                'prioritas' => 5,
-                'cabang_id' => $cabang->id,
-            ]
-        );
-
         //? Cabang 2
-        LayananPrioritas::updateOrCreate(
-            ['id' => 5],
-            [
-                'nama' => 'Reguler',
-                'harga' => 0,
-                'prioritas' => 1,
-                'cabang_id' => $cabang2->id,
-            ]
-        );
-        LayananPrioritas::updateOrCreate(
-            ['id' => 6],
-            [
-                'nama' => 'Kilat',
-                'harga' => 3000,
-                'prioritas' => 99,
-                'cabang_id' => $cabang2->id,
-            ]
-        );
-        LayananPrioritas::updateOrCreate(
-            ['id' => 8],
-            [
-                'nama' => 'Satuan',
-                'harga' => 3000,
-                'prioritas' => 5,
-                'cabang_id' => $cabang2->id,
-            ]
-        );
+        if ($cabang2) {
+            LayananPrioritas::updateOrCreate(
+                ['id' => 5],
+                [
+                    'nama' => 'Reguler',
+                    'harga' => 0,
+                    'prioritas' => 1,
+                    'cabang_id' => $cabang2->id,
+                ]
+            );
+            LayananPrioritas::updateOrCreate(
+                ['id' => 6],
+                [
+                    'nama' => 'Kilat',
+                    'harga' => 3000,
+                    'prioritas' => 99,
+                    'cabang_id' => $cabang2->id,
+                ]
+            );
+        }
+
+        // Delete any legacy 'Satuan' priority service records
+        LayananPrioritas::whereRaw('LOWER(nama) = ?', ['satuan'])->delete();
 
         if (config('database.default') === 'pgsql') {
             \Illuminate\Support\Facades\DB::statement("SELECT setval('layanan_prioritas_id_seq', (SELECT MAX(id) FROM layanan_prioritas))");

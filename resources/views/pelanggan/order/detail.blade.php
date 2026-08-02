@@ -78,7 +78,7 @@
         {{-- HEADER --}}
         <x-dashboard-header 
             title="Detail Pesanan" 
-            :backUrl="Auth::check() ? route('order.history') : route('order.check')" 
+            :backUrl="(Auth::check() && Auth::user()->isStaff()) ? route('admin.riwayat-pesanan') : (Auth::check() ? route('order.history') : route('order.check'))" 
             :maxWidth="'max-w-full'"
             :showPoints="false"
             :back="true"
@@ -261,54 +261,46 @@
                     </div>
                 </x-zyngga-card>
 
-                @if(!empty($order['clothing_items']) || !empty($order['weight']) || !in_array($order['raw_status'], ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']))
-                {{-- CARD 2.5: RINCIAN PAKAIAN --}}
+                {{-- CARD 2: RINCIAN PAKAIAN --}}
                 <x-zyngga-card title="Rincian Pakaian">
-                    @php
-                        $clothingItems = $order['clothing_items'] ?? [];
-                        $totalClothing = collect($clothingItems)->sum('qty');
-                    @endphp
-
-                    @if(!empty($order['weight']))
-                    <div class="flex justify-between items-center mb-3">
-                        <x-zyngga-text variant="sm" color="neutral-900">Berat Timbangan</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="medium" color="neutral-590000">{{ $order['weight'] }} Kg</x-zyngga-text>
-                    </div>
-                    <div class="divider"></div>
-                    @endif
-
-                    @if(count($clothingItems) > 0)
-                    <div x-show="showClothingDetail" x-collapse x-cloak>
-                        <div class="space-y-3 mb-4">
-                            @foreach($clothingItems as $item)
-                            <div class="flex justify-between items-center">
-                                <x-zyngga-text variant="sm" color="neutral-900">{{ $item['name'] }}</x-zyngga-text>
-                                <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $item['qty'] }} pcs</x-zyngga-text>
-                            </div>
-                            @endforeach
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <x-zyngga-text variant="sm" color="neutral-900">Berat Timbangan</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ isset($order['weight']) ? number_format((float) $order['weight'], 2, ',', '.') . ' Kg' : '-' }}</x-zyngga-text>
                         </div>
-                        <div class="divider"></div>
+                        <div class="flex justify-between items-center">
+                            <x-zyngga-text variant="sm" color="neutral-900">Total</x-zyngga-text>
+                            <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $order['items_count'] ?? collect($order['clothing_items'] ?? [])->sum('qty') }} Items</x-zyngga-text>
+                        </div>
                     </div>
 
-                    <div class="flex justify-between items-center" :class="showClothingDetail ? 'pt-2' : ''">
-                        <x-zyngga-text variant="sm" color="neutral-900">Total</x-zyngga-text>
-                        <x-zyngga-text variant="sm" weight="medium" color="neutral-900">{{ $totalClothing }} Items</x-zyngga-text>
+                    @if(isset($order['clothing_items']) && count($order['clothing_items']) > 0)
+                    <div x-show="showClothingDetail" class="space-y-3 pt-4 border-t border-zyngga-neutral-200 mt-4">
+                        <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-zyngga-neutral-500 pb-1 border-b border-zyngga-neutral-100">
+                            <span>NAMA PAKAIAN</span>
+                            <span class="text-right">JUMLAH</span>
+                        </div>
+                        @foreach($order['clothing_items'] as $cItem)
+                        <div class="grid grid-cols-2 gap-2 text-xs text-zyngga-neutral-900">
+                            <span>{{ $cItem['name'] }}</span>
+                            <span class="text-right font-medium">{{ $cItem['qty'] }} pcs</span>
+                        </div>
+                        @endforeach
                     </div>
 
-                    <div class="flex justify-center pt-4">
-                        <x-zyngga-button
-                            variant="tertiary"
-                            size="m"
-                            icon="chevron-down"
-                            iconPosition="right"
-                            ::class="showClothingDetail ? 'rotate-icon' : ''"
+                    <div class="flex justify-center mt-3">
+                        <x-zyngga-button 
+                            type="button" 
+                            variant="tertiary" 
+                            size="m" 
+                            icon="chevron-down" 
+                            iconPosition="right" 
+                            ::class="showClothingDetail ? 'rotate-icon' : ''" 
                             @click="showClothingDetail = !showClothingDetail"
                         >
                             <span x-text="showClothingDetail ? 'Sembunyikan' : 'Lihat Detail'"></span>
                         </x-zyngga-button>
                     </div>
-                    @else
-                    <x-zyngga-text variant="sm" color="neutral-500">Belum ada data rincian pakaian.</x-zyngga-text>
                     @endif
                 </x-zyngga-card>
 
@@ -368,9 +360,8 @@
                             </div>
                         </div>
                 </x-zyngga-card>
-                @endif
 
-                @if(!in_array($order['raw_status'], ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
+                @if((!Auth::check() || !Auth::user()->isStaff()) && !in_array($order['raw_status'], ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']) && ($order['status'] === 'finished' || $order['can_upgrade'] || !$order['is_roundtrip']))
                 {{-- CARD 4: BANTUAN/LAYANAN --}}
                 <x-zyngga-card title="Bantuan/Layanan">
                     <div class="flex flex-col gap-3">
@@ -437,100 +428,125 @@
             {{-- STICKY FOOTER --}}
             <div id="sticky-footer">
                 <div class="max-w-5xl mx-auto px-5 flex items-center gap-4">
-                    <template x-if="status !== 'finished'">
-                        <div class="w-full">
-                            {{-- Kondisi 1: Belum diproses --}}
-                            <template x-if="['Baru', 'created', 'Perlu Diproses'].includes(rawStatus)">
-                                <x-zyngga-button 
-                                    type="a"
-                                    href="https://wa.me/6282125322500"
-                                    target="_blank"
-                                    variant="secondary" 
-                                    class="w-full !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
-                                    size="l"
-                                    icon="message-circle"
-                                    iconPosition="left"
-                                    label="Chat"
-                                />
-                            </template>
-                            
-                            {{-- Kondisi 2: Sudah diproses dan belum bayar --}}
-                            <template x-if="!['Baru', 'created', 'Perlu Diproses'].includes(rawStatus) && !isPaid">
-                                <div class="w-full flex gap-4">
-                                    <x-zyngga-button 
-                                        type="a"
-                                        href="https://wa.me/6282125322500"
-                                        target="_blank"
-                                        variant="secondary" 
-                                        class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
-                                        size="l"
-                                        icon="message-circle"
-                                        iconPosition="left"
-                                        label="Chat"
-                                    />
-                                    <x-zyngga-button 
-                                        type="button"
-                                        size="l"
-                                        variant="primary" 
-                                        class="flex-1 !h-12 font-medium"
-                                        @click="pay()"
-                                        label="Bayar Sekarang"
-                                    />
-                                </div>
-                            </template>
-
-                            {{-- Kondisi 3: Sudah diproses dan dibayar --}}
-                            <template x-if="!['Baru', 'created', 'Perlu Diproses'].includes(rawStatus) && isPaid">
-                                <div class="w-full flex gap-4">
-                                    <x-zyngga-button 
-                                        type="button"
-                                        variant="secondary" 
-                                        class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
-                                        size="l"
-                                        icon="download"
-                                        iconPosition="left"
-                                        label="Unduh Nota"
-                                        onclick="window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', message: 'Nota berhasil diunduh!' } })); window.location.href='{{ route('order.download-receipt', $order['nota_layanan']) }}';"
-                                    />
-                                    <x-zyngga-button 
-                                        type="a"
-                                        href="https://wa.me/6282125322500"
-                                        target="_blank"
-                                        variant="secondary" 
-                                        class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
-                                        size="l"
-                                        icon="message-circle"
-                                        iconPosition="left"
-                                        label="Chat"
-                                    />
-                                </div>
-                            </template>
-                        </div>
-                    </template>
-
-                    {{-- Kondisi 4: Sudah selesai --}}
-                    <template x-if="status === 'finished'">
-                        <div class="w-full flex items-center gap-4">
+                    @if(Auth::check() && Auth::user()->isStaff())
+                        <div class="w-full flex gap-4">
                             <x-zyngga-button 
-                                type="button"
+                                type="a"
+                                href="{{ route('admin.riwayat-pesanan') }}"
                                 variant="secondary" 
                                 class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
+                                size="l"
+                                icon="arrow-left"
+                                iconPosition="left"
+                                label="Kembali ke Pesanan"
+                            />
+                            <x-zyngga-button 
+                                type="button"
+                                variant="primary" 
+                                class="flex-1 !h-12 font-medium"
                                 size="l"
                                 icon="download"
                                 iconPosition="left"
                                 label="Unduh Nota"
                                 onclick="window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', message: 'Nota berhasil diunduh!' } })); window.location.href='{{ route('order.download-receipt', $order['nota_layanan']) }}';"
                             />
-                            <x-zyngga-button 
-                                type="a"
-                                href="{{ route('order.repeat', $order['nota_layanan']) }}"
-                                size="l"
-                                variant="primary" 
-                                class="flex-1 !h-12 font-medium"
-                                label="Ulangi Pesanan"
-                            />
                         </div>
-                    </template>
+                    @else
+                        <template x-if="status !== 'finished'">
+                            <div class="w-full">
+                                {{-- Kondisi 1: Belum diproses --}}
+                                <template x-if="['Baru', 'created', 'Perlu Diproses'].includes(rawStatus)">
+                                    <x-zyngga-button 
+                                        type="a"
+                                        href="https://wa.me/6282125322500"
+                                        target="_blank"
+                                        variant="secondary" 
+                                        class="w-full !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
+                                        size="l"
+                                        icon="message-circle"
+                                        iconPosition="left"
+                                        label="Chat"
+                                    />
+                                </template>
+                                
+                                {{-- Kondisi 2: Sudah diproses dan belum bayar --}}
+                                <template x-if="!['Baru', 'created', 'Perlu Diproses'].includes(rawStatus) && !isPaid">
+                                    <div class="w-full flex gap-4">
+                                        <x-zyngga-button 
+                                            type="a"
+                                            href="https://wa.me/6282125322500"
+                                            target="_blank"
+                                            variant="secondary" 
+                                            class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
+                                            size="l"
+                                            icon="message-circle"
+                                            iconPosition="left"
+                                            label="Chat"
+                                        />
+                                        <x-zyngga-button 
+                                            type="button"
+                                            size="l"
+                                            variant="primary" 
+                                            class="flex-1 !h-12 font-medium"
+                                            @click="pay()"
+                                            label="Bayar Sekarang"
+                                        />
+                                    </div>
+                                </template>
+
+                                {{-- Kondisi 3: Sudah diproses dan dibayar --}}
+                                <template x-if="!['Baru', 'created', 'Perlu Diproses'].includes(rawStatus) && isPaid">
+                                    <div class="w-full flex gap-4">
+                                        <x-zyngga-button 
+                                            type="button"
+                                            variant="secondary" 
+                                            class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
+                                            size="l"
+                                            icon="download"
+                                            iconPosition="left"
+                                            label="Unduh Nota"
+                                            onclick="window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', message: 'Nota berhasil diunduh!' } })); window.location.href='{{ route('order.download-receipt', $order['nota_layanan']) }}';"
+                                        />
+                                        <x-zyngga-button 
+                                            type="a"
+                                            href="https://wa.me/6282125322500"
+                                            target="_blank"
+                                            variant="secondary" 
+                                            class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
+                                            size="l"
+                                            icon="message-circle"
+                                            iconPosition="left"
+                                            label="Chat"
+                                        />
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        {{-- Kondisi 4: Sudah selesai --}}
+                        <template x-if="status === 'finished'">
+                            <div class="w-full flex items-center gap-4">
+                                <x-zyngga-button 
+                                    type="button"
+                                    variant="secondary" 
+                                    class="flex-1 !h-12 border-zyngga-blue-300 text-zyngga-blue-300"
+                                    size="l"
+                                    icon="download"
+                                    iconPosition="left"
+                                    label="Unduh Nota"
+                                    onclick="window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', message: 'Nota berhasil diunduh!' } })); window.location.href='{{ route('order.download-receipt', $order['nota_layanan']) }}';"
+                                />
+                                <x-zyngga-button 
+                                    type="a"
+                                    href="{{ route('order.repeat', $order['nota_layanan']) }}"
+                                    size="l"
+                                    variant="primary" 
+                                    class="flex-1 !h-12 font-medium"
+                                    label="Ulangi Pesanan"
+                                />
+                            </div>
+                        </template>
+                    @endif
                 </div>
             </div>
         </main>
