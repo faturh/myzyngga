@@ -531,8 +531,9 @@ class OrderWebService
             'lng' => $order->pickup_lng,
             'order_date' => $this->formatDateTime($order->waktu),
             'estimated_finished' => $this->formatEstimatedFinished($order),
-            'progress' => $this->progressForStatus((string) $order->status),
+            'progress' => $this->progressForStatus($order),
             'current_step' => $this->currentStep($order),
+            'is_unweighed' => $this->isUnweighed($order),
             'payment_status' => $paymentStatus,
             'payment_method' => strtoupper((string) ($this->latestPayment($order)?->method ?? $order->jenis_pembayaran ?? 'cash')),
             'subtotal' => (float) ($order->total_biaya_layanan ?: $total),
@@ -1350,16 +1351,40 @@ class OrderWebService
         };
     }
 
-    private function progressForStatus(string $status): int
+    private function progressForStatus(Transaksi|string $orderOrStatus): int
     {
-        return match ($status) {
-            'Selesai', 'Pesanan Selesai', 'completed' => 100,
-            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 80,
-            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 56,
-            'Menunggu di Jemput', 'Sedang Dijemput', 'picked_up', 'Jemput' => 35,
-            'Baru', 'Perlu Diproses', 'created', 'pending' => 20,
-            default => 10,
-        };
+        if (is_string($orderOrStatus)) {
+            return match ($orderOrStatus) {
+                'Selesai', 'Pesanan Selesai', 'completed' => 100,
+                'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 80,
+                'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 56,
+                'Menunggu di Jemput', 'Sedang Dijemput', 'picked_up', 'Jemput' => 35,
+                'Baru', 'Perlu Diproses', 'created', 'pending' => 20,
+                default => 20,
+            };
+        }
+
+        $order = $orderOrStatus;
+        $status = (string) $order->status;
+        if ($this->isFinished($order)) {
+            return 100;
+        }
+
+        if (in_array($status, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar'], true)) {
+            return 80;
+        }
+
+        if ($order->timbangan !== null || in_array($status, ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress'], true)) {
+            return 56;
+        }
+
+        $logs = $this->mapOrderLogs($order);
+        $hasPickupLog = collect($logs)->contains(fn ($l) => isset($l['note']) && $l['note'] === 'Pesanan dijemput');
+        if ($hasPickupLog) {
+            return 35;
+        }
+
+        return 20;
     }
 
     private function isFinished(Transaksi $order): bool
@@ -1369,7 +1394,24 @@ class OrderWebService
 
     private function isUnweighed(Transaksi $order): bool
     {
-        return in_array($order->status, ['Baru', 'created', 'Perlu Diproses']);
+        if ($order->timbangan !== null && (float) $order->timbangan->actual_weight > 0) {
+            return false;
+        }
+
+        if ($order->fk_tambahan !== null) {
+            return false;
+        }
+
+        $processedStatuses = [
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 
+            'in_progress', 'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 
+            'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'
+        ];
+        if (in_array((string) $order->status, $processedStatuses, true)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
