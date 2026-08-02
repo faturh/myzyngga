@@ -434,8 +434,8 @@ class OrderWebService
 
         $isFinished = $this->isFinished($order);
         if ($isFinished) {
-            $deliveryStatus = 'Selesai';
-            $deliveryIcon = 'check-circle';
+            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
+            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
         } elseif ($isDeliveryStatus) {
             $deliveryStatus = 'Delivery';
             $deliveryIcon = 'truck';
@@ -493,8 +493,8 @@ class OrderWebService
         $isDeliveryStatus = in_array($statusStr, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar']);
 
         if ($isFinished) {
-            $deliveryStatus = 'Selesai';
-            $deliveryIcon = 'check-circle';
+            $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
+            $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
         } elseif ($isDeliveryStatus) {
             if ($isRoundtrip) {
                 $deliveryStatus = 'Siap / Sedang Diantar';
@@ -555,29 +555,7 @@ class OrderWebService
             'perfume' => $order->parfum ?: '-',
             'notes' => $order->catatan ?: '-',
             'weight' => $order->timbangan?->actual_weight,
-            'clothing_items' => (function() use ($order) {
-                $items = [];
-                if ($order->timbangan && $order->timbangan->items && $order->timbangan->items->isNotEmpty()) {
-                    foreach ($order->timbangan->items as $tItem) {
-                        $items[] = [
-                            'name' => $tItem->jenisPakaian->nama ?? '-',
-                            'qty' => (int) $tItem->qty,
-                        ];
-                    }
-                }
-                if ($order->fk_tambahan) {
-                    $tambahanRows = \App\Models\Tambahan::with('kategoriPakaianSatuan')
-                        ->where('tambahan_id', $order->fk_tambahan)
-                        ->get();
-                    foreach ($tambahanRows as $tambahan) {
-                        $items[] = [
-                            'name' => $tambahan->kategoriPakaianSatuan->nama_pakaian ?? 'Item Satuan',
-                            'qty' => (int) $tambahan->jumlah,
-                        ];
-                    }
-                }
-                return $items;
-            })(),
+            'clothing_items' => $this->mapClothingItems($order),
         ];
     }
 
@@ -1116,6 +1094,46 @@ class OrderWebService
         ]];
     }
 
+    private function mapClothingItems(Transaksi $order): array
+    {
+        $clothingItems = collect();
+
+        if ($order->timbangan && $order->timbangan->items && $order->timbangan->items->isNotEmpty()) {
+            foreach ($order->timbangan->items as $item) {
+                $pakaianName = $item->jenisPakaian->nama ?? null;
+                if ($pakaianName) {
+                    $clothingItems->push([
+                        'name' => $pakaianName,
+                        'qty' => (float) $item->qty,
+                    ]);
+                }
+            }
+        }
+
+        if ($order->detailTransaksi && $order->detailTransaksi->isNotEmpty()) {
+            foreach ($order->detailTransaksi as $detail) {
+                foreach ($detail->detailLayananTransaksi as $serviceDetail) {
+                    $hargaJenis = $serviceDetail->hargaJenisLayanan;
+                    $pakaianName = $hargaJenis?->jenisPakaian?->nama ?? $hargaJenis?->jenisLayanan?->nama;
+                    if ($pakaianName) {
+                        $isSatuan = $hargaJenis && strtolower((string) $hargaJenis->jenis_satuan) !== 'kg';
+                        $displayName = $isSatuan ? "Satuan - {$pakaianName}" : $pakaianName;
+
+                        $exists = $clothingItems->contains(fn ($c) => $c['name'] === $displayName || $c['name'] === $pakaianName);
+                        if (! $exists) {
+                            $clothingItems->push([
+                                'name' => $displayName,
+                                'qty' => (float) ($detail->total_pakaian ?: 1),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $clothingItems->all();
+    }
+
     private function mapOrderLogs(Transaksi $order): array
     {
         $createdAt = $order->waktu ?? $order->created_at ?? now();
@@ -1141,9 +1159,11 @@ class OrderWebService
         
         $hasConfirmedPickup = $pickupHistoryTime !== null || (!$isWaitingPickup && in_array(strtolower(trim($statusStr)), ['perlu diproses', 'perlu dikerjakan', 'proses pengerjaan', 'proses', 'selesai', 'pesanan selesai', 'completed', 'perlu di antar', 'sedang diantar']));
 
-        $pickupTime = null;
         if ($hasConfirmedPickup) {
-            $pickupTime = $pickupHistoryTime ?? $updatedAt;
+            $pickupTime = $pickupHistoryTime ?? $findHistoryTime([8]) ?? $createdAt->copy()->addMinutes(10);
+            if ($pickupTime->gt($updatedAt)) {
+                $pickupTime = $createdAt;
+            }
             $logs[] = [
                 'time' => $pickupTime->format('H:i'),
                 'date' => $pickupTime->locale('id')->isoFormat('dddd, D MMM'),
@@ -1395,12 +1415,6 @@ class OrderWebService
             return false;
         }
 
-        // Pesanan yang sudah selesai dikerjakan atau perlu diantar tidak bisa di-upgrade
-        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar'];
-        if (in_array((string) $order->status, $deliveryStatuses, true)) {
-            return false;
-        }
-
         // Upgrade pricing is calculated from real weighed items (mapOrderItems()),
         // which only exist after the operator weighs the order. Before that, the
         // price would be based on a rough estimate — block upgrades until then.
@@ -1468,21 +1482,20 @@ class OrderWebService
         return $date->locale('id')->isoFormat('dddd, D MMM | HH.mm');
     }
 
-    private function calculateWorkingHoursETA(\Carbon\Carbon $startDate, int $hoursToAdd): \Carbon\Carbon
+    private function calculateWorkingHoursETA(\Carbon\Carbon|string $startDate, int $hoursToAdd): \Carbon\Carbon
     {
-        $date = $startDate->copy();
+        $date = \Carbon\Carbon::parse($startDate)->copy();
 
         if ($date->hour < 8) {
             $date->setTime(8, 0, 0);
-        } elseif ($date->hour >= 18) {
+        } elseif ($date->hour >= 20) {
             $date->addDay()->setTime(8, 0, 0);
         }
 
         while ($hoursToAdd > 0) {
-            $endOfDay = $date->copy()->setTime(18, 0, 0);
+            $endOfDay = $date->copy()->setTime(20, 0, 0);
             $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
             
-            // If it's somehow past 18:00 (e.g. edge cases), move to next day
             if ($minutesLeftToday <= 0) {
                 $date->addDay()->setTime(8, 0, 0);
                 continue;
@@ -1494,7 +1507,7 @@ class OrderWebService
                 $date->addMinutes($minutesToAdd);
                 $hoursToAdd = 0;
                 
-                if ($date->hour >= 18) {
+                if ($date->hour >= 20) {
                     $date->addDay()->setTime(8, 0, 0);
                 }
             } else {
@@ -1515,14 +1528,20 @@ class OrderWebService
         }
 
         $priority = (int) ($order->layananPrioritas->prioritas ?? 1);
-        $workingHours = match (true) {
-            $priority >= 99 => 5, // Kilat
-            $priority >= 3 => 10, // Express
-            $priority >= 2 => 20, // Quick
-            default => 30, // Reguler
+        $date = \Carbon\Carbon::parse($baseDate)->copy();
+
+        if ($priority >= 99) {
+            $etaDate = $this->calculateWorkingHoursETA($date, 5);
+            return $etaDate->locale('id')->isoFormat('dddd, D MMM | HH.mm');
+        }
+
+        $daysToAdd = match (true) {
+            $priority >= 3 => 1, // Express: 1 Hari (24 Jam)
+            $priority >= 2 => 2, // Quick: 2 Hari (48 Jam)
+            default => 3,        // Reguler: 3 Hari (72 Jam)
         };
 
-        $etaDate = $this->calculateWorkingHoursETA($baseDate, $workingHours);
+        $etaDate = $date->addDays($daysToAdd);
         return $etaDate->locale('id')->isoFormat('dddd, D MMM | HH.mm');
     }
 
@@ -1698,9 +1717,8 @@ class OrderWebService
     public function processUpgrade(string $id, int $newServiceId, ?User $user, ?string $paymentMethod = null): void
     {
         $order = $this->orderRepository->findByNotaPelanggan($id) ?? $this->orderRepository->findById($id);
-        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar'];
-        if (!$order || $this->isFinished($order) || in_array((string) $order->status, $deliveryStatuses, true)) {
-            throw new \Exception('Pesanan yang sudah selesai atau sedang diantar tidak dapat di-upgrade.');
+        if (!$order || $this->isFinished($order)) {
+            throw new \Exception('Pesanan yang sudah selesai tidak dapat di-upgrade.');
         }
         $this->assertOwnership($order, $user);
         $this->assertGuestOwnsOrderInSession($order, $user);

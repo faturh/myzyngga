@@ -70,8 +70,24 @@ class Transaksi extends Model
                 }
             }
 
-            // Sync list_status_pengerjaan_id when payment_status changes to paid
+            // Sync list_status_pengerjaan_id when payment_status changes to paid or status is updated
             $newStatusId = $transaksi->pending_status_id ?? $transaksi->list_status_pengerjaan_id;
+
+            if ($transaksi->isDirty('status') && $transaksi->status) {
+                $transaksi->pending_status_id = null;
+                $statusMap = [
+                    'perlu diproses' => 1, 'baru' => 1, 'created' => 1, 'pending' => 1,
+                    'perlu dikerjakan' => 2, 'proses' => 2, 'in_progress' => 2,
+                    'selesai' => 5, 'pesanan selesai' => 5, 'completed' => 5,
+                    'menunggu di jemput' => 8, 'sedang dijemput' => 8,
+                    'perlu di antar' => 9, 'sedang diantar' => 9,
+                ];
+                $normalized = strtolower(trim((string) $transaksi->status));
+                if (isset($statusMap[$normalized])) {
+                    $newStatusId = $statusMap[$normalized];
+                }
+            }
+
             if (!$newStatusId) {
                 $newStatusId = 1;
             }
@@ -119,6 +135,10 @@ class Transaksi extends Model
         });
 
         static::saved(function ($transaksi) {
+            $wasStatusChanged = ($transaksi->status_changed_to !== null 
+                || $transaksi->wasChanged('status') 
+                || $transaksi->wasChanged('list_pengerjaan_id'));
+
             if ($transaksi->status_changed_to !== null) {
                 $oldStatusId = $transaksi->status_changed_from;
                 $newStatusId = $transaksi->status_changed_to;
@@ -166,24 +186,19 @@ class Transaksi extends Model
             // 2. Kirim email jika status laundry di-update menjadi selesai. getStatusName(5)
             // menghasilkan 'Pesanan Selesai', bukan literal 'Selesai' — perbandingan lama
             // tidak pernah cocok sehingga email "pesanan selesai" tidak pernah terkirim.
-            $statusChanged = $transaksi->wasChanged('list_pengerjaan_id') 
-                || $transaksi->wasChanged('status') 
-                || $transaksi->isDirty('status') 
-                || $transaksi->isDirty('list_pengerjaan_id');
             $isFinishedStatus = in_array(strtolower(trim((string) $transaksi->status)), ['selesai', 'pesanan selesai'], true)
                 || (int) ($transaksi->list_pengerjaan?->list_status_pengerjaan_id) === 5;
 
-            if ($statusChanged && $isFinishedStatus) {
-                $email = $transaksi->pelanggan?->user?->email 
-                    ?? $transaksi->pelanggan?->email 
-                    ?? ($transaksi->pelanggan?->user_id ? \App\Models\User::find($transaksi->pelanggan->user_id)?->email : null);
+            if ($wasStatusChanged && $isFinishedStatus) {
+                $pelangganObj = $transaksi->pelanggan;
+                $userObj = $pelangganObj?->user;
+                $email = $userObj?->email 
+                    ?? $pelangganObj?->email 
+                    ?? ($pelangganObj?->user_id ? \App\Models\User::find($pelangganObj->user_id)?->email : null);
+
                 if ($email) {
-                    try {
-                        \Illuminate\Support\Facades\Mail::to($email)
-                            ->send(new \App\Mail\OrderFinishedMail($transaksi));
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Mail Error (Order Finished): ' . $e->getMessage());
-                    }
+                    \Illuminate\Support\Facades\Mail::to($email)
+                        ->send(new \App\Mail\OrderFinishedMail($transaksi));
                 }
             }
         });
@@ -326,11 +341,7 @@ class Transaksi extends Model
         } elseif (in_array($normalized, ['selesai', 'completed', 'pesanan selesai', 'pesanan_selesai'])) {
             $paymentStatus = strtolower(trim($this->payment_status ?? ''));
             if ($paymentStatus === 'paid') {
-                if ($this->list_status_pengerjaan_id == 9) {
-                    $statusId = 5;
-                } else {
-                    $statusId = 9;
-                }
+                $statusId = 5;
             } else {
                 $statusId = 2;
             }
