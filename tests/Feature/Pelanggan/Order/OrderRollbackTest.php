@@ -540,6 +540,7 @@ class OrderRollbackTest extends TestCase
             'telepon' => '081234567890',
             'alamat' => 'Alamat Asli',
             'jenis_kelamin' => 'L',
+            'email' => $email,
         ]);
 
         $cabang = Cabang::create([
