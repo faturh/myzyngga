@@ -61,6 +61,7 @@
     <div class="min-h-screen flex flex-col" x-data="{ 
         status: '{{ $order['status'] }}',
         rawStatus: '{{ $order['raw_status'] }}',
+        isUnweighed: {{ json_encode($order['is_unweighed'] ?? false) }},
         isPaid: {{ $order['payment_status'] === 'Lunas' ? 'true' : 'false' }},
         paymentMethod: '{{ strtoupper($order['payment_method'] ?? 'CASH') }}',
         showStatusDetail: false,
@@ -454,8 +455,8 @@
                     @else
                         <template x-if="status !== 'finished'">
                             <div class="w-full">
-                                {{-- Kondisi 1: Belum diproses --}}
-                                <template x-if="['Baru', 'created', 'Perlu Diproses'].includes(rawStatus)">
+                                {{-- Kondisi 1: Belum ditimbang / Belum diproses --}}
+                                <template x-if="isUnweighed || ['Baru', 'created', 'Perlu Diproses'].includes(rawStatus)">
                                     <x-zyngga-button 
                                         type="a"
                                         href="https://wa.me/6282125322500"
@@ -469,8 +470,8 @@
                                     />
                                 </template>
                                 
-                                {{-- Kondisi 2: Sudah diproses dan belum bayar --}}
-                                <template x-if="!['Baru', 'created', 'Perlu Diproses'].includes(rawStatus) && !isPaid">
+                                {{-- Kondisi 2: Sudah ditimbang dan belum bayar --}}
+                                <template x-if="!isUnweighed && !['Baru', 'created', 'Perlu Diproses'].includes(rawStatus) && !isPaid">
                                     <div class="w-full flex gap-4">
                                         <x-zyngga-button 
                                             type="a"
