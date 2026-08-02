@@ -84,6 +84,17 @@ class User extends Authenticatable
         return $this->hasRole('customer') || ($this->attributes['role'] ?? null) === 'customer';
     }
 
+    /**
+     * Check if the user is staff (admin, operator, owner, manajer_laundry, kasir, kurir).
+     */
+    public function isStaff(): bool
+    {
+        if ($this->isCustomer()) {
+            return false;
+        }
+        return $this->isAdmin() || in_array($this->attributes['role'] ?? '', ['admin', 'owner', 'operator', 'manajer_laundry', 'kasir', 'kurir']) || $this->hasAnyRole(['admin', 'owner', 'operator', 'manajer_laundry', 'kasir', 'kurir']);
+    }
+
     public function cabang()
     {
         return $this->belongsTo(Cabang::class);

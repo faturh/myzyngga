@@ -509,12 +509,15 @@ class OperatorController extends Controller
         try {
             $transaksi = Transaksi::findOrFail($id);
             $layananNama = strtolower($transaksi->layananPrioritas->nama ?? 'reguler');
+            $hasSatuanItems = $layananNama === 'satuan' 
+                || $transaksi->fk_tambahan !== null 
+                || ($transaksi->fk_tambahan && \App\Models\Tambahan::where('tambahan_id', $transaksi->fk_tambahan)->exists());
 
             $rules = [
                 'pegawai_id' => 'required|exists:users,id',
             ];
 
-            if ($layananNama !== 'satuan') {
+            if (!$hasSatuanItems) {
                 $rules['items'] = 'required|array|min:1';
                 $rules['items.*.nama_item'] = 'required|string|max:255';
                 $rules['items.*.qty'] = 'required|integer|min:1';
