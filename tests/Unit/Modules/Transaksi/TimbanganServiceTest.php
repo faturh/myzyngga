@@ -221,7 +221,7 @@ class TimbanganServiceTest extends TestCase
 
         // Expect Exception
         $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Berat timbangan harus lebih besar dari 0 kg.');
+        $this->expectExceptionMessage('Total harga pesanan tidak boleh Rp 0');
 
         // Act
         $this->service->prosesTransaksi($transaksi->id, $data);
