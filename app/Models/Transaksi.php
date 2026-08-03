@@ -96,6 +96,10 @@ class Transaksi extends Model
                 $newStatusId = 1;
             }
 
+            if (strtolower(trim($transaksi->payment_status ?? '')) === 'paid' && $newStatusId == 2) {
+                $newStatusId = 9;
+            }
+
             $transaksi->attributes['status'] = $transaksi->getStatusName($newStatusId);
 
             // Generate UUID if not set
