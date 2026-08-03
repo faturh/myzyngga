@@ -493,7 +493,7 @@
 
                                 <!-- Baris 7: Deadline Pengerjaan -->
                                 <div class="text-xs font-normal" style="color:#F2994A;">
-                                    Deadline: {{ $item->getDeadlineWaktu()->format('d M Y H:i') }}
+                                    Deadline: {{ $item->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm') }}
                                 </div>
 
                                 <!-- Baris 6 & 7: Total & Aksi -->

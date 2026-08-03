@@ -1563,55 +1563,7 @@ class OrderWebService
 
     public function formatEstimatedFinished(Transaksi $order): string
     {
-        $baseDate = null;
-        if (! empty($order->pickup_date)) {
-            $dateStr = \Carbon\Carbon::parse($order->pickup_date)->toDateString();
-            $rawTime = ! empty($order->pickup_time) ? trim(explode('-', (string) $order->pickup_time)[0]) : ($order->waktu ? \Carbon\Carbon::parse($order->waktu)->format('H:i:s') : '08:00:00');
-            if (strlen($rawTime) === 5) {
-                $rawTime .= ':00';
-            }
-            try {
-                $baseDate = \Carbon\Carbon::parse($dateStr . ' ' . $rawTime);
-            } catch (\Exception $e) {
-                $baseDate = $order->waktu ? \Carbon\Carbon::parse($order->waktu) : now();
-            }
-        } else {
-            $baseDate = $order->waktu ? \Carbon\Carbon::parse($order->waktu) : now();
-        }
-
-        if (! $baseDate) {
-            return '-';
-        }
-
-        if ($baseDate->hour < 8) {
-            $baseDate->setTime(8, 0, 0);
-        } elseif ($baseDate->hour >= 20) {
-            $baseDate->addDay()->setTime(8, 0, 0);
-        }
-
-        $priority = (int) ($order->layananPrioritas->prioritas ?? 1);
-        $date = $baseDate->copy();
-
-        if ($priority >= 99) {
-            $etaDate = $this->calculateWorkingHoursETA($date, 5);
-            return $etaDate->locale('id')->isoFormat('dddd, D MMM | HH.mm');
-        }
-
-        $daysToAdd = match (true) {
-            $priority >= 3 => 1, // Express: 1 Hari (24 Jam)
-            $priority >= 2 => 2, // Quick: 2 Hari (48 Jam)
-            default => 3,        // Reguler: 3 Hari (72 Jam)
-        };
-
-        $etaDate = $date->addDays($daysToAdd);
-
-        if ($etaDate->hour < 8) {
-            $etaDate->setTime(8, 0, 0);
-        } elseif ($etaDate->hour >= 20) {
-            $etaDate->addDay()->setTime(8, 0, 0);
-        }
-
-        return $etaDate->locale('id')->isoFormat('dddd, D MMM | HH.mm');
+        return $order->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm');
     }
 
     private function formatQuantity(float|int $quantity): string
