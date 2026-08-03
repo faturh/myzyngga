@@ -220,8 +220,7 @@ class OperatorController extends Controller
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 1));
                     break;
                 case 'menunggu-pembayaran':
-                    $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-                          ->where('payment_status', '!=', 'paid');
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 2));
                     break;
                 case 'perlu-dikerjakan':
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 3));
@@ -230,8 +229,7 @@ class OperatorController extends Controller
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 4));
                     break;
                 case 'selesai':
-                    $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-                          ->where('payment_status', 'paid');
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 5));
                     break;
                 case 'dibatalkan':
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7));
@@ -748,8 +746,7 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        $tab = request()->input('tab', 'menunggu-pembayaran');
-        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => 'perlu-di-antar'])->with('success', $message);
     }
 
     /**
