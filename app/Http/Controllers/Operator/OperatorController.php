@@ -254,29 +254,29 @@ class OperatorController extends Controller
                 if ($driver === 'pgsql') {
                     $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
                           ->select('transaksi.*')
-                          ->orderByRaw("
-                              transaksi.waktu + (
-                                  CASE 
-                                      WHEN LOWER(lp.nama) = 'kilat' THEN INTERVAL '5 hours'
-                                      WHEN LOWER(lp.nama) = 'express' THEN INTERVAL '10 hours'
-                                      WHEN LOWER(lp.nama) = 'quick' THEN INTERVAL '20 hours'
-                                      ELSE INTERVAL '30 hours'
-                                  END
-                              ) ASC
-                          ");
+                           ->orderByRaw("
+                               transaksi.waktu + (
+                                   CASE 
+                                       WHEN LOWER(lp.nama) = 'kilat' THEN INTERVAL '5 hours'
+                                       WHEN LOWER(lp.nama) = 'express' THEN INTERVAL '24 hours'
+                                       WHEN LOWER(lp.nama) = 'quick' THEN INTERVAL '48 hours'
+                                       ELSE INTERVAL '72 hours'
+                                   END
+                               ) ASC
+                           ");
                 } else {
                     $query->join('layanan_prioritas as lp', 'lp.id', '=', 'transaksi.layanan_prioritas_id')
                           ->select('transaksi.*')
                           ->orderByRaw("
-                              datetime(transaksi.waktu, 
-                                  CASE 
-                                      WHEN LOWER(lp.nama) = 'kilat' THEN '+5 hours'
-                                      WHEN LOWER(lp.nama) = 'express' THEN '+10 hours'
-                                      WHEN LOWER(lp.nama) = 'quick' THEN '+20 hours'
-                                      ELSE '+30 hours'
-                                  END
-                              ) ASC
-                          ");
+                               datetime(transaksi.waktu, 
+                                   CASE 
+                                       WHEN LOWER(lp.nama) = 'kilat' THEN '+5 hours'
+                                       WHEN LOWER(lp.nama) = 'express' THEN '+24 hours'
+                                       WHEN LOWER(lp.nama) = 'quick' THEN '+48 hours'
+                                       ELSE '+72 hours'
+                                   END
+                               ) ASC
+                           ");
                 }
             } elseif ($sort === 'terbaru') {
                 $query->orderBy('waktu', 'desc');
