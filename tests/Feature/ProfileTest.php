@@ -19,7 +19,9 @@ class ProfileTest extends TestCase
         $response = $this->actingAs($user)->get('/profile');
 
         $response
-            ->assertOk();
+            ->assertOk()
+            ->assertSeeVolt('profile.update-password-form')
+            ->assertSeeVolt('profile.delete-user-form');
 
         $responseAccount = $this->actingAs($user)->get('/profile/account');
 
