@@ -402,46 +402,82 @@ class Transaksi extends Model
     {
         $priority = (int) ($this->layananPrioritas->prioritas ?? 1);
         return match (true) {
-            $priority >= 99 => 5,  // Kilat
-            $priority >= 3 => 10,  // Express
-            $priority >= 2 => 20,  // Quick
-            default => 30,         // Reguler
+            $priority >= 99 => 5,  // Kilat: 5 Jam
+            $priority >= 3 => 24,  // Express: 1 Hari (24 Jam)
+            $priority >= 2 => 48,  // Quick: 2 Hari (48 Jam)
+            default => 72,         // Reguler: 3 Hari (72 Jam)
         };
     }
 
     public function getDeadlineWaktu(): \Carbon\Carbon
     {
-        $baseDate = $this->pickup_date ?? $this->waktu ?? now();
-        $hoursToAdd = $this->getEstimasiPengerjaanJam();
-
-        $date = \Carbon\Carbon::parse($baseDate);
-
-        if ($date->hour < 8) {
-            $date->setTime(8, 0, 0);
-        } elseif ($date->hour >= 18) {
-            $date->addDay()->setTime(8, 0, 0);
+        $baseDate = null;
+        if (! empty($this->pickup_date)) {
+            $dateStr = \Carbon\Carbon::parse($this->pickup_date)->toDateString();
+            $rawTime = ! empty($this->pickup_time) ? trim(explode('-', (string) $this->pickup_time)[0]) : ($this->waktu ? \Carbon\Carbon::parse($this->waktu)->format('H:i:s') : '08:00:00');
+            if (strlen($rawTime) === 5) {
+                $rawTime .= ':00';
+            }
+            try {
+                $baseDate = \Carbon\Carbon::parse($dateStr . ' ' . $rawTime);
+            } catch (\Exception $e) {
+                $baseDate = $this->waktu ? \Carbon\Carbon::parse($this->waktu) : now();
+            }
+        } else {
+            $baseDate = $this->waktu ? \Carbon\Carbon::parse($this->waktu) : now();
         }
 
-        while ($hoursToAdd > 0) {
-            $endOfDay = $date->copy()->setTime(18, 0, 0);
-            $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
-            
-            if ($minutesLeftToday <= 0) {
-                $date->addDay()->setTime(8, 0, 0);
-                continue;
-            }
-
-            $minutesToAdd = $hoursToAdd * 60;
-
-            if ($minutesToAdd <= $minutesLeftToday) {
-                $date->addMinutes($minutesToAdd);
-                $hoursToAdd = 0;
-            } else {
-                $date->addDay()->setTime(8, 0, 0);
-                $hoursToAdd -= ($minutesLeftToday / 60);
-            }
+        if ($baseDate->hour < 8) {
+            $baseDate->setTime(8, 0, 0);
+        } elseif ($baseDate->hour >= 20) {
+            $baseDate->addDay()->setTime(8, 0, 0);
         }
 
-        return $date;
+        $priority = (int) ($this->layananPrioritas->prioritas ?? 1);
+        $date = $baseDate->copy();
+
+        if ($priority >= 99) {
+            $hoursToAdd = 5;
+            while ($hoursToAdd > 0) {
+                $endOfDay = $date->copy()->setTime(20, 0, 0);
+                $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
+
+                if ($minutesLeftToday <= 0) {
+                    $date->addDay()->setTime(8, 0, 0);
+                    continue;
+                }
+
+                $minutesToAdd = $hoursToAdd * 60;
+
+                if ($minutesToAdd <= $minutesLeftToday) {
+                    $date->addMinutes($minutesToAdd);
+                    $hoursToAdd = 0;
+
+                    if ($date->hour >= 20) {
+                        $date->addDay()->setTime(8, 0, 0);
+                    }
+                } else {
+                    $date->addDay()->setTime(8, 0, 0);
+                    $hoursToAdd -= ($minutesLeftToday / 60);
+                }
+            }
+            return $date;
+        }
+
+        $daysToAdd = match (true) {
+            $priority >= 3 => 1, // Express: 1 Hari (24 Jam)
+            $priority >= 2 => 2, // Quick: 2 Hari (48 Jam)
+            default => 3,        // Reguler: 3 Hari (72 Jam)
+        };
+
+        $etaDate = $date->addDays($daysToAdd);
+
+        if ($etaDate->hour < 8) {
+            $etaDate->setTime(8, 0, 0);
+        } elseif ($etaDate->hour >= 20) {
+            $etaDate->addDay()->setTime(8, 0, 0);
+        }
+
+        return $etaDate;
     }
 }
