@@ -76,11 +76,15 @@ class Transaksi extends Model
             if ($transaksi->isDirty('status') && $transaksi->status) {
                 $transaksi->pending_status_id = null;
                 $statusMap = [
-                    'perlu diproses' => 1, 'baru' => 1, 'created' => 1, 'pending' => 1,
-                    'perlu dikerjakan' => 2, 'proses' => 2, 'in_progress' => 2,
+                    'baru' => 1, 'created' => 1, 'perlu diproses' => 1, 'perlu_diproses' => 1, 'pending' => 1,
+                    'menunggu pembayaran' => 2, 'menunggu_pembayaran' => 2,
+                    'proses' => 3, 'perlu dikerjakan' => 3, 'perlu_dikerjakan' => 3,
+                    'proses pengerjaan' => 4, 'proses_pengerjaan' => 4, 'siap ambil' => 4, 'siap_ambil' => 4, 'in_progress' => 4,
                     'selesai' => 5, 'pesanan selesai' => 5, 'completed' => 5,
-                    'menunggu di jemput' => 8, 'sedang dijemput' => 8,
-                    'perlu di antar' => 9, 'sedang diantar' => 9,
+                    'kendala' => 6, 'kendala pesanan' => 6, 'kendala_pesanan' => 6,
+                    'batal' => 7, 'dibatalkan' => 7, 'cancelled' => 7, 'sedang dibatalkan' => 7, 'sedang_dibatalkan' => 7,
+                    'jemput' => 8, 'penjemputan' => 8, 'picked_up' => 8, 'sedang dijemput' => 8, 'sedang_dijemput' => 8, 'menunggu di jemput' => 8, 'menunggu_di_jemput' => 8,
+                    'antar' => 9, 'pengantaran' => 9, 'ready_for_delivery' => 9, 'perlu di antar' => 9, 'perlu_di_antar' => 9,
                 ];
                 $normalized = strtolower(trim((string) $transaksi->status));
                 if (isset($statusMap[$normalized])) {
@@ -92,15 +96,7 @@ class Transaksi extends Model
                 $newStatusId = 1;
             }
 
-            if (strtolower(trim($transaksi->payment_status ?? '')) === 'paid') {
-                if ($newStatusId == 2) {
-                    $newStatusId = 9;
-                }
-            }
-
-            if ($transaksi->pending_status_id !== null || !$transaksi->isDirty('status')) {
-                $transaksi->attributes['status'] = $transaksi->getStatusName($newStatusId);
-            }
+            $transaksi->attributes['status'] = $transaksi->getStatusName($newStatusId);
 
             // Generate UUID if not set
             if (!$transaksi->id) {
