@@ -424,8 +424,7 @@ class OperatorController extends Controller
                     'status' => 200
                 ], 200);
             }
-            $tab = $request->input('tab', 'perlu-diproses');
-            return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
+            return redirect()->route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan'])->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -578,8 +577,7 @@ class OperatorController extends Controller
                     'status' => 200
                 ], 200);
             }
-            $tab = $request->input('tab', 'perlu-dikerjakan');
-            return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
+            return redirect()->route('admin.riwayat-pesanan', ['tab' => 'proses-pengerjaan'])->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -674,8 +672,13 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        $tab = request()->input('tab', 'proses-pengerjaan');
-        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
+        $targetTab = match ((int) $transaksi->list_status_pengerjaan_id) {
+            2 => 'menunggu-pembayaran',
+            9 => 'perlu-di-antar',
+            5 => 'selesai',
+            default => 'proses-pengerjaan',
+        };
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $targetTab])->with('success', $message);
     }
 
     /**
@@ -723,8 +726,7 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        $tab = request()->input('tab', 'menunggu-di-jemput');
-        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses'])->with('success', $message);
     }
 
     /**

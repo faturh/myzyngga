@@ -341,7 +341,12 @@ class Transaksi extends Model
         } elseif (in_array($normalized, ['selesai', 'completed', 'pesanan selesai', 'pesanan_selesai'])) {
             $paymentStatus = strtolower(trim($this->payment_status ?? ''));
             if ($paymentStatus === 'paid') {
-                $statusId = 5;
+                $meta = json_decode($this->payment_metadata ?? '{}', true) ?? [];
+                if ($this->is_roundtrip || isset($meta['pending_delivery']) || $this->list_status_pengerjaan_id == 9) {
+                    $statusId = 9;
+                } else {
+                    $statusId = 5;
+                }
             } else {
                 $statusId = 2;
             }
