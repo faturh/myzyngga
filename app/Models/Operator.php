@@ -19,9 +19,7 @@ class Operator extends Model
      */
     public static function getMenungguPembayaranCount(): int
     {
-        return Transaksi::whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-            ->where('payment_status', '!=', 'paid')
-            ->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 2))->count();
     }
 
     /**
@@ -37,9 +35,7 @@ class Operator extends Model
      */
     public static function getPesananSelesaiCount(): int
     {
-        return Transaksi::whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-            ->where('payment_status', 'paid')
-            ->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 5))->count();
     }
 
     /**
