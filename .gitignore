@@ -23,7 +23,6 @@ yarn-error.log
 bootstrap/cache/*.php
 bootstrap/cache/*.tmp
 !bootstrap/cache/.gitkeep
-config.bat
 .DS_Store
 
 .vercel
@@ -35,7 +34,7 @@ config.bat
 # Playwright MCP
 .playwright-mcp/
 
-# Load testing artifacts (k6 binary alone is ~55MB — blows past Vercel's
+# Load testing artifacts (k6 binary alone is ~55MB ΓÇö blows past Vercel's
 # 250MB uncompressed function size limit when accidentally bundled)
 /k6_bin
 /load_tests
