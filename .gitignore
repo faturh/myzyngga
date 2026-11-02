@@ -33,10 +33,9 @@ bootstrap/cache/*.tmp
 # Playwright MCP
 .playwright-mcp/
 
-# Load testing artifacts (k6 binary alone is ~55MB â€” blows past Vercel's
+# Load testing artifacts (k6 binary alone is ~55MB ├óΓé¼ΓÇ¥ blows past Vercel's
 # 250MB uncompressed function size limit when accidentally bundled)
 /k6_bin
 /load_tests
 /load_test.js
 /loadtest.js
-config.bat
