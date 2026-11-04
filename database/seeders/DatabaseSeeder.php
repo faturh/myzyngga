@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             //? Data Transaksi
             TransaksiSeeder::class,
             KeuanganTokoSeeder::class,
+            GajiKaryawanSeeder::class,
         ]);
 
         // Buat Akun Pelanggan Skripsi Default untuk Postman

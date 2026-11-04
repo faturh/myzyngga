@@ -9,7 +9,14 @@ class StoreKeuanganRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && ($this->user()->isAdmin() || $this->user()->hasRole('manajer_laundry'));
+        $user = $this->user();
+        if (!$user) {
+            return false;
+        }
+
+        return $user->isAdmin() ||
+            in_array($user->role, ['admin', 'operator', 'kasir', 'manajer_laundry', 'owner']) ||
+            $user->hasAnyRole(['admin', 'operator', 'kasir', 'manajer_laundry', 'owner']);
     }
 
     public function rules(): array

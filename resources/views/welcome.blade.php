@@ -95,15 +95,14 @@
                         <x-zyngga-text variant="base" weight="medium">Pesan Sekarang</x-zyngga-text>
                     </div>
 
-                    {{-- Service icons: Kilat | Regular | Quick | Express | Satuan --}}
-                    <div class="grid grid-cols-5">
+                    {{-- Service icons: Kilat | Regular | Quick | Express --}}
+                    <div class="grid grid-cols-4">
                         @php
                             $services = [
                                 ['label' => 'Regular', 'icon' => 'star',    'key' => 'regular'],
                                 ['label' => 'Quick',   'icon' => 'clock',   'key' => 'quick'],
                                 ['label' => 'Express', 'icon' => 'fast-forward', 'key' => 'express'],
                                 ['label' => 'Kilat',   'icon' => 'zap',     'key' => 'kilat'],
-                                ['label' => 'Satuan',  'icon' => 'package', 'key' => 'satuan'],
                             ];
                         @endphp
                         @foreach ($services as $s)
@@ -193,7 +192,6 @@
                                 ['name' => 'Quick', 'desc' => 'Layanan 2 hari (48 jam)', 'price' => 'Rp6.000/kg'],
                                 ['name' => 'Express', 'desc' => 'Layanan 1 hari (24 jam)', 'price' => 'Rp6.250/kg'],
                                 ['name' => 'Kilat', 'desc' => 'Layanan 5 jam', 'price' => 'Rp7.850/kg'],
-                                ['name' => 'Satuan', 'desc' => 'Selimut, Bed Cover, dll.', 'price' => 'Mulai Rp10.000'],
                             ];
                         @endphp
                         @foreach ($services as $service)

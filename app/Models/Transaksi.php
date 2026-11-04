@@ -70,16 +70,34 @@ class Transaksi extends Model
                 }
             }
 
-            // Sync list_status_pengerjaan_id when payment_status changes to paid
+            // Sync list_status_pengerjaan_id when payment_status changes to paid or status is updated
             $newStatusId = $transaksi->pending_status_id ?? $transaksi->list_status_pengerjaan_id;
+
+            if ($transaksi->isDirty('status') && $transaksi->status) {
+                $transaksi->pending_status_id = null;
+                $statusMap = [
+                    'baru' => 1, 'created' => 1, 'perlu diproses' => 1, 'perlu_diproses' => 1, 'pending' => 1,
+                    'menunggu pembayaran' => 2, 'menunggu_pembayaran' => 2,
+                    'proses' => 3, 'perlu dikerjakan' => 3, 'perlu_dikerjakan' => 3,
+                    'proses pengerjaan' => 4, 'proses_pengerjaan' => 4, 'siap ambil' => 4, 'siap_ambil' => 4, 'in_progress' => 4,
+                    'selesai' => 5, 'pesanan selesai' => 5, 'completed' => 5,
+                    'kendala' => 6, 'kendala pesanan' => 6, 'kendala_pesanan' => 6,
+                    'batal' => 7, 'dibatalkan' => 7, 'cancelled' => 7, 'sedang dibatalkan' => 7, 'sedang_dibatalkan' => 7,
+                    'jemput' => 8, 'penjemputan' => 8, 'picked_up' => 8, 'sedang dijemput' => 8, 'sedang_dijemput' => 8, 'menunggu di jemput' => 8, 'menunggu_di_jemput' => 8,
+                    'antar' => 9, 'pengantaran' => 9, 'ready_for_delivery' => 9, 'perlu di antar' => 9, 'perlu_di_antar' => 9,
+                ];
+                $normalized = strtolower(trim((string) $transaksi->status));
+                if (isset($statusMap[$normalized])) {
+                    $newStatusId = $statusMap[$normalized];
+                }
+            }
+
             if (!$newStatusId) {
                 $newStatusId = 1;
             }
 
-            if (strtolower(trim($transaksi->payment_status ?? '')) === 'paid') {
-                if ($newStatusId == 2) {
-                    $newStatusId = $transaksi->is_roundtrip ? 9 : 5;
-                }
+            if (strtolower(trim($transaksi->payment_status ?? '')) === 'paid' && $newStatusId == 2) {
+                $newStatusId = 9;
             }
 
             $transaksi->attributes['status'] = $transaksi->getStatusName($newStatusId);
@@ -117,6 +135,10 @@ class Transaksi extends Model
         });
 
         static::saved(function ($transaksi) {
+            $wasStatusChanged = ($transaksi->status_changed_to !== null 
+                || $transaksi->wasChanged('status') 
+                || $transaksi->wasChanged('list_pengerjaan_id'));
+
             if ($transaksi->status_changed_to !== null) {
                 $oldStatusId = $transaksi->status_changed_from;
                 $newStatusId = $transaksi->status_changed_to;
@@ -148,7 +170,9 @@ class Transaksi extends Model
             // Guest tidak punya akun User, jadi fallback ke email yang mereka
             // isi sendiri saat checkout (disimpan di pelanggan.email).
             if ($transaksi->wasChanged('payment_status') && $transaksi->payment_status === 'paid') {
-                $email = $transaksi->pelanggan->user->email ?? $transaksi->pelanggan->email ?? null;
+                $email = $transaksi->pelanggan?->user?->email 
+                    ?? $transaksi->pelanggan?->email 
+                    ?? ($transaksi->pelanggan?->user_id ? \App\Models\User::find($transaksi->pelanggan->user_id)?->email : null);
                 if ($email) {
                     try {
                         \Illuminate\Support\Facades\Mail::to($email)
@@ -162,16 +186,19 @@ class Transaksi extends Model
             // 2. Kirim email jika status laundry di-update menjadi selesai. getStatusName(5)
             // menghasilkan 'Pesanan Selesai', bukan literal 'Selesai' — perbandingan lama
             // tidak pernah cocok sehingga email "pesanan selesai" tidak pernah terkirim.
-            $statusChanged = $transaksi->wasChanged('list_pengerjaan_id') || $transaksi->wasChanged('status');
-            if ($statusChanged && in_array($transaksi->status, ['Selesai', 'Pesanan Selesai'], true)) {
-                $email = $transaksi->pelanggan->user->email ?? $transaksi->pelanggan->email ?? null;
+            $isFinishedStatus = in_array(strtolower(trim((string) $transaksi->status)), ['selesai', 'pesanan selesai'], true)
+                || (int) ($transaksi->list_pengerjaan?->list_status_pengerjaan_id) === 5;
+
+            if ($wasStatusChanged && $isFinishedStatus) {
+                $pelangganObj = $transaksi->pelanggan;
+                $userObj = $pelangganObj?->user;
+                $email = $userObj?->email 
+                    ?? $pelangganObj?->email 
+                    ?? ($pelangganObj?->user_id ? \App\Models\User::find($pelangganObj->user_id)?->email : null);
+
                 if ($email) {
-                    try {
-                        \Illuminate\Support\Facades\Mail::to($email)
-                            ->send(new \App\Mail\OrderFinishedMail($transaksi));
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Mail Error (Order Finished): ' . $e->getMessage());
-                    }
+                    \Illuminate\Support\Facades\Mail::to($email)
+                        ->send(new \App\Mail\OrderFinishedMail($transaksi));
                 }
             }
         });
@@ -314,10 +341,11 @@ class Transaksi extends Model
         } elseif (in_array($normalized, ['selesai', 'completed', 'pesanan selesai', 'pesanan_selesai'])) {
             $paymentStatus = strtolower(trim($this->payment_status ?? ''));
             if ($paymentStatus === 'paid') {
-                if ($this->list_status_pengerjaan_id == 9) {
-                    $statusId = 5;
+                $meta = json_decode($this->payment_metadata ?? '{}', true) ?? [];
+                if ($this->is_roundtrip || isset($meta['pending_delivery']) || $this->list_status_pengerjaan_id == 9) {
+                    $statusId = 9;
                 } else {
-                    $statusId = $this->is_roundtrip ? 9 : 5;
+                    $statusId = 5;
                 }
             } else {
                 $statusId = 2;
@@ -339,8 +367,9 @@ class Transaksi extends Model
     public function canBeUpgraded(): bool
     {
         $statusId = $this->listPengerjaan?->list_status_pengerjaan_id;
-        // Finished status is 5
-        if ($statusId == 5 || strtolower($this->status) === 'selesai' || strtolower($this->status) === 'pesanan selesai') {
+        $finishedOrDeliveryStatuses = ['perlu di antar', 'perlu_di_antar', 'ready_for_delivery', 'sedang diantar', 'selesai', 'pesanan selesai', 'completed'];
+
+        if ($statusId == 5 || $statusId == 9 || in_array(strtolower((string) $this->status), $finishedOrDeliveryStatuses, true)) {
             return false;
         }
 
@@ -387,37 +416,73 @@ class Transaksi extends Model
 
     public function getDeadlineWaktu(): \Carbon\Carbon
     {
-        $baseDate = $this->pickup_date ?? $this->waktu ?? now();
-        $hoursToAdd = $this->getEstimasiPengerjaanJam();
-
-        $date = \Carbon\Carbon::parse($baseDate);
-
-        if ($date->hour < 8) {
-            $date->setTime(8, 0, 0);
-        } elseif ($date->hour >= 18) {
-            $date->addDay()->setTime(8, 0, 0);
+        $baseDate = null;
+        if (! empty($this->pickup_date)) {
+            $dateStr = \Carbon\Carbon::parse($this->pickup_date)->toDateString();
+            $rawTime = ! empty($this->pickup_time) ? trim(explode('-', (string) $this->pickup_time)[0]) : ($this->waktu ? \Carbon\Carbon::parse($this->waktu)->format('H:i:s') : '08:00:00');
+            if (strlen($rawTime) === 5) {
+                $rawTime .= ':00';
+            }
+            try {
+                $baseDate = \Carbon\Carbon::parse($dateStr . ' ' . $rawTime);
+            } catch (\Exception $e) {
+                $baseDate = $this->waktu ? \Carbon\Carbon::parse($this->waktu) : now();
+            }
+        } else {
+            $baseDate = $this->waktu ? \Carbon\Carbon::parse($this->waktu) : now();
         }
 
-        while ($hoursToAdd > 0) {
-            $endOfDay = $date->copy()->setTime(18, 0, 0);
-            $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
-            
-            if ($minutesLeftToday <= 0) {
-                $date->addDay()->setTime(8, 0, 0);
-                continue;
-            }
-
-            $minutesToAdd = $hoursToAdd * 60;
-
-            if ($minutesToAdd <= $minutesLeftToday) {
-                $date->addMinutes($minutesToAdd);
-                $hoursToAdd = 0;
-            } else {
-                $date->addDay()->setTime(8, 0, 0);
-                $hoursToAdd -= ($minutesLeftToday / 60);
-            }
+        if (! $baseDate) {
+            $baseDate = now();
         }
 
-        return $date;
+        if ($baseDate->hour < 8) {
+            $baseDate->setTime(8, 0, 0);
+        } elseif ($baseDate->hour >= 20) {
+            $baseDate->addDay()->setTime(8, 0, 0);
+        }
+
+        $priority = (int) ($this->layananPrioritas->prioritas ?? 1);
+        $date = $baseDate->copy();
+
+        if ($priority >= 99) {
+            $hoursToAdd = 5;
+            while ($hoursToAdd > 0) {
+                $endOfDay = $date->copy()->setTime(20, 0, 0);
+                $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
+                
+                if ($minutesLeftToday <= 0) {
+                    $date->addDay()->setTime(8, 0, 0);
+                    continue;
+                }
+
+                $minutesToAdd = $hoursToAdd * 60;
+
+                if ($minutesToAdd <= $minutesLeftToday) {
+                    $date->addMinutes($minutesToAdd);
+                    $hoursToAdd = 0;
+                } else {
+                    $date->addDay()->setTime(8, 0, 0);
+                    $hoursToAdd -= ($minutesLeftToday / 60);
+                }
+            }
+            return $date;
+        }
+
+        $daysToAdd = match (true) {
+            $priority >= 3 => 1, // Express: 1 Hari (24 Jam)
+            $priority >= 2 => 2, // Quick: 2 Hari (48 Jam)
+            default => 3,        // Reguler: 3 Hari (72 Jam)
+        };
+
+        $etaDate = $date->addDays($daysToAdd);
+
+        if ($etaDate->hour < 8) {
+            $etaDate->setTime(8, 0, 0);
+        } elseif ($etaDate->hour >= 20) {
+            $etaDate->addDay()->setTime(8, 0, 0);
+        }
+
+        return $etaDate;
     }
 }

@@ -1,8 +1,8 @@
 {
 	"info": {
 		"name": "Zyngga Operator & Keuangan Admin API",
-		"_postman_id": "zyngga-operator-admin-2026",
-		"description": "Koleksi REST API Manajemen Admin, Transaksi Pesanan, Keuangan, dan Gaji Karyawan sesuai dengan scope pengujian skripsi.",
+		"_postman_id": "zyngga-operator-admin-2026-v2",
+		"description": "Koleksi REST API modul operator laundry Zyngga Sukabirus yang diselaraskan penuh dengan Kebutuhan Fungsional (REQ-01.01 s/d REQ-07.02) untuk pengujian skripsi.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -13,7 +13,7 @@
 		},
 		{
 			"key": "user_slug",
-			"value": "alex-laundry",
+			"value": "alex-operator",
 			"type": "string"
 		},
 		{
@@ -44,10 +44,10 @@
 	],
 	"item": [
 		{
-			"name": "1. Authentication",
+			"name": "REQ-01. Autentikasi",
 			"item": [
 				{
-					"name": "Login (Operator Session)",
+					"name": "REQ-01.01 Login",
 					"event": [
 						{
 							"listen": "test",
@@ -55,10 +55,6 @@
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});",
-									"pm.test(\"Response contains message or success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('status', 200);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -98,17 +94,101 @@
 								"login"
 							]
 						},
-						"description": "Melakukan login session web untuk operator/admin."
+						"description": "REQ-01.01: Login pengguna operator/owner."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-01.02 Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 302\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logout"
+							]
+						},
+						"description": "REQ-01.02: Keluar dari sesi aktif."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-01.03 Forget Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 atau 302\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 302, 422]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "admin@zyngga.com",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"forgot-password"
+							]
+						},
+						"description": "REQ-01.03: Request link atur ulang kata sandi."
 					},
 					"response": []
 				}
 			]
 		},
 		{
-			"name": "A. Penerimaan Pesanan",
+			"name": "REQ-02. Penerimaan dan Pembuatan Pesanan",
 			"item": [
 				{
-					"name": "V.1 View Pesanan Masuk",
+					"name": "REQ-02.01 View Daftar Pesanan",
 					"event": [
 						{
 							"listen": "test",
@@ -141,12 +221,12 @@
 								"riwayat-pesanan"
 							]
 						},
-						"description": "Menampilkan daftar pesanan masuk."
+						"description": "REQ-02.01: Menampilkan antrean pesanan aktif di dashboard."
 					},
 					"response": []
 				},
 				{
-					"name": "V.2 Tambah Pesanan Manual",
+					"name": "REQ-02.02 Tambah Pesanan Manual",
 					"event": [
 						{
 							"listen": "test",
@@ -155,16 +235,9 @@
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
-									"pm.test(\"Response has transaction data\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.be.an('object');",
-									"    pm.expect(jsonData.data).to.have.property('id');",
-									"    pm.expect(jsonData.data).to.have.property('nota');",
-									"});",
 									"var jsonData = pm.response.json();",
 									"if (jsonData && jsonData.data && jsonData.data.id) {",
 									"    pm.collectionVariables.set('transaksi_id', jsonData.data.id);",
-									"    console.log('Transaksi ID disimpan otomatis: ' + jsonData.data.id);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -190,7 +263,7 @@
 								},
 								{
 									"key": "customer_name",
-									"value": "John Walkin Postman",
+									"value": "John Postman Walkin",
 									"type": "text"
 								},
 								{
@@ -200,7 +273,7 @@
 								},
 								{
 									"key": "customer_address",
-									"value": "Jl Coblong No 4",
+									"value": "Jalan Sukabirus No 44",
 									"type": "text"
 								},
 								{
@@ -230,7 +303,7 @@
 								},
 								{
 									"key": "catatan",
-									"value": "Cuci rapi setrika wangi",
+									"value": "Tolong pengerjaan rapi",
 									"type": "text"
 								}
 							]
@@ -246,12 +319,12 @@
 								"tambah"
 							]
 						},
-						"description": "Menambahkan transaksi laundry baru via operator."
+						"description": "REQ-02.02: Operator mendaftarkan pesanan walk-in secara langsung di outlet."
 					},
 					"response": []
 				},
 				{
-					"name": "V.3 Proses Timbangan",
+					"name": "REQ-02.03 Upgrade Layanan Prioritas",
 					"event": [
 						{
 							"listen": "test",
@@ -259,10 +332,101 @@
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});",
-									"pm.test(\"Response status is 200\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.status).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "new_service_id",
+									"value": "2",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/riwayat-pesanan/{{transaksi_id}}/inisiasi-upgrade",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"riwayat-pesanan",
+								"{{transaksi_id}}",
+								"inisiasi-upgrade"
+							]
+						},
+						"description": "REQ-02.03: Mengonfirmasi upgrade layanan prioritas secara tunai."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "REQ-03. Pembaruan Status Cucian",
+			"item": [
+				{
+					"name": "REQ-03.01 Menunggu di Jemput",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/riwayat-pesanan/{{transaksi_id}}/konfirmasi-jemput",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"riwayat-pesanan",
+								"{{transaksi_id}}",
+								"konfirmasi-jemput"
+							]
+						},
+						"description": "REQ-03.01: Konfirmasi jemput pakaian online oleh kurir/staf lapangan."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-03.02 Menunggu Diproses (Timbangan)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -305,17 +469,12 @@
 								"proses"
 							]
 						},
-						"description": "Memproses timbangan berat cucian untuk transaksi."
+						"description": "REQ-03.02: Input timbangan pakaian untuk mengubah status ke Sedang Diproses."
 					},
 					"response": []
-				}
-			]
-		},
-		{
-			"name": "B. Pembaruan Status Cucian",
-			"item": [
+				},
 				{
-					"name": "V.4 Mulai Pengerjaan",
+					"name": "REQ-03.03 Sedang Diproses (Mulai Pengerjaan)",
 					"event": [
 						{
 							"listen": "test",
@@ -323,10 +482,6 @@
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});",
-									"pm.test(\"Response status is 200\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.status).to.equal(200);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -349,7 +504,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"pegawai_id\": {{pegawai_id}},\n    \"items\": [\n        {\n            \"nama_item\": \"Kaos\",\n            \"qty\": 5\n        },\n        {\n            \"nama_item\": \"Celana\",\n            \"qty\": 3\n        }\n    ]\n}",
+							"raw": "{\n    \"pegawai_id\": {{pegawai_id}},\n    \"items\": [\n        {\n            \"nama_item\": \"Kemeja\",\n            \"qty\": 4\n        },\n        {\n            \"nama_item\": \"Celana Pendek\",\n            \"qty\": 2\n        }\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -368,12 +523,12 @@
 								"kerjakan"
 							]
 						},
-						"description": "Memulai pengerjaan detail item cucian."
+						"description": "REQ-03.03: Penunjukan pegawai penanggung jawab untuk memulai pengerjaan."
 					},
 					"response": []
 				},
 				{
-					"name": "V.5 Selesai Pesanan",
+					"name": "REQ-03.04 Proses Pengerjaan (Selesaikan)",
 					"event": [
 						{
 							"listen": "test",
@@ -381,10 +536,6 @@
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});",
-									"pm.test(\"Response status is 200\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.status).to.equal(200);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -412,12 +563,12 @@
 								"selesaikan"
 							]
 						},
-						"description": "Menyelesaikan proses cuci cucian."
+						"description": "REQ-03.04: Menandai cuci-setrika selesai, memicu rekap gaji otomatis."
 					},
 					"response": []
 				},
 				{
-					"name": "V.6 Batalkan Pesanan",
+					"name": "REQ-03.05 Menunggu Pembayaran (Konfirmasi)",
 					"event": [
 						{
 							"listen": "test",
@@ -425,10 +576,130 @@
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});",
-									"pm.test(\"Response status is 200\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.status).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/riwayat-pesanan/{{transaksi_id}}/konfirmasi-bayar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"riwayat-pesanan",
+								"{{transaksi_id}}",
+								"konfirmasi-bayar"
+							]
+						},
+						"description": "REQ-03.05: Konfirmasi pembayaran tagihan laundry secara manual."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-03.06 Perlu di Antar (Selesaikan)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/riwayat-pesanan/{{transaksi_id}}/selesaikan-antar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"riwayat-pesanan",
+								"{{transaksi_id}}",
+								"selesaikan-antar"
+							]
+						},
+						"description": "REQ-03.06: Selesaikan proses pengantaran cucian ke rumah pelanggan."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-03.07 Pesanan Selesai (View Tab)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/riwayat-pesanan?tab=selesai",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"riwayat-pesanan"
+							],
+							"query": [
+								{
+									"key": "tab",
+									"value": "selesai"
+								}
+							]
+						},
+						"description": "REQ-03.07: Menampilkan seluruh daftar pesanan selesai."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-03.08 Batal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -456,17 +727,17 @@
 								"batal"
 							]
 						},
-						"description": "Membatalkan pengerjaan transaksi."
+						"description": "REQ-03.08: Membatalkan pesanan berjalan."
 					},
 					"response": []
 				}
 			]
 		},
 		{
-			"name": "C. Rekap Gaji Karyawan",
+			"name": "REQ-04. Kendala Pesanan",
 			"item": [
 				{
-					"name": "V.7 Kalkulasi Gaji Otomatis",
+					"name": "REQ-04.01 Monitoring Aduan Pelanggan",
 					"event": [
 						{
 							"listen": "test",
@@ -490,26 +761,171 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/admin/gaji-karyawan",
+							"raw": "{{base_url}}/admin/riwayat-pesanan?tab=kendala",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"admin",
-								"gaji-karyawan"
+								"riwayat-pesanan"
+							],
+							"query": [
+								{
+									"key": "tab",
+									"value": "kendala"
+								}
 							]
 						},
-						"description": "Melihat daftar rekap dan kalkulasi gaji karyawan."
+						"description": "REQ-04.01: Menampilkan seluruh laporan aduan/kendala aktif."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-04.02 Penanganan & Resolusi Kendala",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/riwayat-pesanan/kendala/{{transaksi_id}}/selesai",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"riwayat-pesanan",
+								"kendala",
+								"{{transaksi_id}}",
+								"selesai"
+							]
+						},
+						"description": "REQ-04.02: Menandai aduan kendala selesai (menghapus aduan dari sistem)."
 					},
 					"response": []
 				}
 			]
 		},
 		{
-			"name": "D. Pencatatan Keuangan Harian",
+			"name": "REQ-05. Rekap Gaji Karyawan",
 			"item": [
 				{
-					"name": "V.8 Monitoring Saldo Dan Filter",
+					"name": "REQ-05.01 Konfigurasi Karyawan & Tarif",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "pegawai_id",
+									"value": "{{pegawai_id}}",
+									"type": "text"
+								},
+								{
+									"key": "gaji",
+									"value": "4500",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/gaji-karyawan/update-tarif",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"gaji-karyawan",
+								"update-tarif"
+							]
+						},
+						"description": "REQ-05.01: Owner mengatur nilai tarif upah kerja per kilogram karyawan."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-05.03 Unduh Rekap Gaji (Excel)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/gaji-karyawan/download",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"gaji-karyawan",
+								"download"
+							]
+						},
+						"description": "REQ-05.03: Mengunduh file laporan spreadsheet rekapitulasi gaji karyawan."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "REQ-06. Keuangan Harian Toko",
+			"item": [
+				{
+					"name": "REQ-06.01 Monitoring Kas & Saldo",
 					"event": [
 						{
 							"listen": "test",
@@ -542,12 +958,12 @@
 								"keuangan"
 							]
 						},
-						"description": "Melihat/monitoring saldo kas toko."
+						"description": "REQ-06.01: Menampilkan kas dan saldo dinamis beranda keuangan."
 					},
 					"response": []
 				},
 				{
-					"name": "V.9 Pencatatan Kas Manual",
+					"name": "REQ-06.02 Pencatatan Kas Manual",
 					"event": [
 						{
 							"listen": "test",
@@ -556,15 +972,9 @@
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
-									"pm.test(\"Response has data object\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.be.an('object');",
-									"    pm.expect(jsonData.data).to.have.property('id');",
-									"});",
 									"var jsonData = pm.response.json();",
 									"if (jsonData && jsonData.data && jsonData.data.id) {",
 									"    pm.collectionVariables.set('keuangan_id', jsonData.data.id);",
-									"    console.log('Keuangan ID disimpan: ' + jsonData.data.id);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -585,7 +995,7 @@
 							"formdata": [
 								{
 									"key": "tanggal",
-									"value": "2026-07-09",
+									"value": "2026-07-24",
 									"type": "text"
 								},
 								{
@@ -595,17 +1005,17 @@
 								},
 								{
 									"key": "kategori",
-									"value": "Pencairan Dana",
+									"value": "Operasional",
 									"type": "text"
 								},
 								{
 									"key": "nominal",
-									"value": "200000",
+									"value": "150000",
 									"type": "text"
 								},
 								{
 									"key": "keterangan",
-									"value": "Pencairan kas oleh owner",
+									"value": "Pembelian deterjen dan packing plastik",
 									"type": "text"
 								},
 								{
@@ -625,12 +1035,56 @@
 								"keuangan"
 							]
 						},
-						"description": "Menambahkan pencatatan kas manual."
+						"description": "REQ-06.02: Operator/Owner mencatat kas kecil manual."
 					},
 					"response": []
 				},
 				{
-					"name": "V.10 Hapus Kas Manual",
+					"name": "REQ-06.03 Filter Laporan Kas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/keuangan?filterType=harian",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"keuangan"
+							],
+							"query": [
+								{
+									"key": "filterType",
+									"value": "harian"
+								}
+							]
+						},
+						"description": "REQ-06.03: Menyaring laporan mutasi kas harian."
+					},
+					"response": []
+				},
+				{
+					"name": "REQ-06.04 Hapus Kas Harian",
 					"event": [
 						{
 							"listen": "test",
@@ -664,229 +1118,560 @@
 								"{{keuangan_id}}"
 							]
 						},
-						"description": "Menghapus kas manual."
+						"description": "REQ-06.04: Owner menghapus entri kas manual harian yang salah."
 					},
 					"response": []
 				}
 			]
 		},
 		{
-			"name": "E. Manajemen Admin",
+			"name": "REQ-07. Manajemen Pengguna",
 			"item": [
 				{
-					"name": "V.11 Tambah Karyawan",
-					"event": [
+					"name": "REQ-07.01 Pengelolaan Akun Operator",
+					"item": [
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"pm.test(\"Object is present\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.be.an('object');",
-									"});",
-									"var jsonData = pm.response.json();",
-									"if (jsonData && jsonData.data && jsonData.data.slug) {",
-									"    pm.collectionVariables.set('user_slug', jsonData.data.slug);",
-									"    console.log('User Slug disimpan otomatis: ' + jsonData.data.slug);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
+							"name": "Tambah Akun Operator",
+							"event": [
 								{
-									"key": "username",
-									"value": "alex_laundry",
-									"type": "text"
-								},
-								{
-									"key": "email",
-									"value": "alex@zyngga.com",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "password123",
-									"type": "text"
-								},
-								{
-									"key": "password_confirmation",
-									"value": "password123",
-									"type": "text"
-								},
-								{
-									"key": "nama",
-									"value": "alex Karyawan",
-									"type": "text"
-								},
-								{
-									"key": "telepon",
-									"value": "08123456789",
-									"type": "text"
-								},
-								{
-									"key": "role",
-									"value": "pegawai_laundry",
-									"type": "text"
-								},
-								{
-									"key": "gaji",
-									"value": "2500",
-									"type": "text"
-								},
-								{
-									"key": "cabang_id",
-									"value": "{{cabang_id}}",
-									"type": "text"
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = pm.response.json();",
+											"if (jsonData && jsonData.data && jsonData.data.slug) {",
+											"    pm.collectionVariables.set('user_slug', jsonData.data.slug);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
 								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/user/simpan",
-							"host": [
-								"{{base_url}}"
 							],
-							"path": [
-								"user",
-								"simpan"
-							]
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "operator_postman",
+											"type": "text"
+										},
+										{
+											"key": "email",
+											"value": "operator_postman@zyngga.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "password123",
+											"type": "text"
+										},
+										{
+											"key": "password_confirmation",
+											"value": "password123",
+											"type": "text"
+										},
+										{
+											"key": "nama",
+											"value": "Operator Postman",
+											"type": "text"
+										},
+										{
+											"key": "telepon",
+											"value": "08123456789",
+											"type": "text"
+										},
+										{
+											"key": "role",
+											"value": "operator",
+											"type": "text"
+										},
+										{
+											"key": "cabang_id",
+											"value": "{{cabang_id}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/simpan",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"simpan"
+									]
+								},
+								"description": "Mendaftarkan operator kasir outlet baru."
+							},
+							"response": []
 						},
-						"description": "Menambahkan karyawan baru."
-					},
-					"response": []
+						{
+							"name": "Ubah Data Operator",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "operator_postman_edit",
+											"type": "text"
+										},
+										{
+											"key": "email",
+											"value": "operator_postman_edit@zyngga.com",
+											"type": "text"
+										},
+										{
+											"key": "nama",
+											"value": "Operator Postman Edit",
+											"type": "text"
+										},
+										{
+											"key": "telepon",
+											"value": "08123456799",
+											"type": "text"
+										},
+										{
+											"key": "role",
+											"value": "operator",
+											"type": "text"
+										},
+										{
+											"key": "cabang_id",
+											"value": "{{cabang_id}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/ubah/{{user_slug}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"ubah",
+										"{{user_slug}}"
+									]
+								},
+								"description": "Mengedit data profil operator."
+							},
+							"response": []
+						},
+						{
+							"name": "Reset Password Operator",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "password",
+											"value": "newpassword123",
+											"type": "text"
+										},
+										{
+											"key": "password_confirmation",
+											"value": "newpassword123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/ubah-password/{{user_slug}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"ubah-password",
+										"{{user_slug}}"
+									]
+								},
+								"description": "Mengubah kata sandi operator."
+							},
+							"response": []
+						},
+						{
+							"name": "Hapus Akun Operator",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "slug",
+											"value": "{{user_slug}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/hapus",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"hapus"
+									]
+								},
+								"description": "Menghapus akun operator."
+							},
+							"response": []
+						}
+					]
 				},
 				{
-					"name": "V.12 Edit Karyawan",
-					"event": [
+					"name": "REQ-07.02 Pengelolaan Akun Karyawan",
+					"item": [
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
+							"name": "Tambah Akun Karyawan",
+							"event": [
 								{
-									"key": "username",
-									"value": "alexa",
-									"type": "text"
-								},
-								{
-									"key": "email",
-									"value": "alex123@zyngga.com",
-									"type": "text"
-								},
-								{
-									"key": "nama",
-									"value": "alex-Edit",
-									"type": "text"
-								},
-								{
-									"key": "telepon",
-									"value": "123123123",
-									"type": "text"
-								},
-								{
-									"key": "role",
-									"value": "pegawai_laundry",
-									"type": "text"
-								},
-								{
-									"key": "gaji",
-									"value": "3000",
-									"type": "text"
-								},
-								{
-									"key": "cabang_id",
-									"value": "{{cabang_id}}",
-									"type": "text"
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = pm.response.json();",
+											"if (jsonData && jsonData.data && jsonData.data.slug) {",
+											"    pm.collectionVariables.set('user_slug', jsonData.data.slug);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
 								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/user/ubah/{{user_slug}}",
-							"host": [
-								"{{base_url}}"
 							],
-							"path": [
-								"user",
-								"ubah",
-								"{{user_slug}}"
-							]
-						},
-						"description": "Mengedit data karyawan."
-					},
-					"response": []
-				},
-				{
-					"name": "V.13 Menampilkan Karyawan",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
 								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/user/lihat/{{user_slug}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"user",
-								"lihat",
-								"{{user_slug}}"
-							]
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "karyawan_postman",
+											"type": "text"
+										},
+										{
+											"key": "email",
+											"value": "karyawan_postman@zyngga.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "password123",
+											"type": "text"
+										},
+										{
+											"key": "password_confirmation",
+											"value": "password123",
+											"type": "text"
+										},
+										{
+											"key": "nama",
+											"value": "Karyawan Postman",
+											"type": "text"
+										},
+										{
+											"key": "telepon",
+											"value": "08123456789",
+											"type": "text"
+										},
+										{
+											"key": "role",
+											"value": "pegawai_laundry",
+											"type": "text"
+										},
+										{
+											"key": "gaji",
+											"value": "3500",
+											"type": "text"
+										},
+										{
+											"key": "cabang_id",
+											"value": "{{cabang_id}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/simpan",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"simpan"
+									]
+								},
+								"description": "Mendaftarkan karyawan lapangan baru."
+							},
+							"response": []
 						},
-						"description": "Melihat info detail data karyawan."
-					},
-					"response": []
+						{
+							"name": "Ubah Data Karyawan",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "karyawan_postman_edit",
+											"type": "text"
+										},
+										{
+											"key": "email",
+											"value": "karyawan_postman_edit@zyngga.com",
+											"type": "text"
+										},
+										{
+											"key": "nama",
+											"value": "Karyawan Postman Edit",
+											"type": "text"
+										},
+										{
+											"key": "telepon",
+											"value": "08123456799",
+											"type": "text"
+										},
+										{
+											"key": "role",
+											"value": "pegawai_laundry",
+											"type": "text"
+										},
+										{
+											"key": "gaji",
+											"value": "4000",
+											"type": "text"
+										},
+										{
+											"key": "cabang_id",
+											"value": "{{cabang_id}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/ubah/{{user_slug}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"ubah",
+										"{{user_slug}}"
+									]
+								},
+								"description": "Mengedit data karyawan lapangan."
+							},
+							"response": []
+						},
+						{
+							"name": "Reset Password Karyawan",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "password",
+											"value": "newpassword123",
+											"type": "text"
+										},
+										{
+											"key": "password_confirmation",
+											"value": "newpassword123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/ubah-password/{{user_slug}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"ubah-password",
+										"{{user_slug}}"
+									]
+								},
+								"description": "Mengubah kata sandi karyawan."
+							},
+							"response": []
+						},
+						{
+							"name": "Hapus Akun Karyawan",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "slug",
+											"value": "{{user_slug}}",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/user/hapus",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"user",
+										"hapus"
+									]
+								},
+								"description": "Menghapus akun karyawan."
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}

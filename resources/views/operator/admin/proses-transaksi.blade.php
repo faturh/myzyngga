@@ -79,7 +79,7 @@
                 
                 <div class="relative" x-data="{ profileOpen: false }">
                     <button @click="profileOpen = !profileOpen" type="button" class="flex items-center focus:outline-none cursor-pointer bg-transparent border-0 p-0">
-                        <img src="/images/MyZyngga_avatar.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
+                        <img src="/img/logo-zyngga.png" alt="MyZyngga" class="w-6 h-6 rounded-full object-cover" style="border:0.5px solid #0F0F0F;">
                     </button>
                     
                     <div x-show="profileOpen" 
@@ -110,6 +110,12 @@
                         <div class="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
                             <i data-feather="alert-circle" class="w-4 h-4 shrink-0"></i>
                             <span>{{ session('error') }}</span>
+                        </div>
+                    @endif
+                    @if(session('success'))
+                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2">
+                            <i data-feather="check-circle" class="w-4 h-4 shrink-0"></i>
+                            <span>{{ session('success') }}</span>
                         </div>
                     @endif
                     @if($errors->any())
@@ -278,7 +284,6 @@
                                     <label class="block text-xs font-normal text-[#808080]">Berat Timbangan</label>
                                     <div class="relative">
                                         <input type="number"
-                                               name="actual_weight"
                                                x-model.number="actualWeight"
                                                step="0.01"
                                                min="0"
@@ -291,21 +296,15 @@
                                 </div>
 
                                 <!-- HIDDEN FIELDS UNTUK PRESERVASI BACKEND LOGIC -->
-                                <input type="hidden" name="minimum_weight" x-model.number="minimumWeight">
-                                <input type="hidden" name="price_per_kg" x-model.number="pricePerKg">
-                                <template x-if="tipeLayanan === 'satuan'">
-                                    <div>
-                                        <input type="hidden" name="actual_weight" value="0">
-                                        <input type="hidden" name="minimum_weight" value="0">
-                                        <input type="hidden" name="price_per_kg" value="0">
-                                    </div>
-                                </template>
+                                <input type="hidden" name="actual_weight" :value="actualWeight || 0">
+                                <input type="hidden" name="minimum_weight" :value="minimumWeight || 3.0">
+                                <input type="hidden" name="price_per_kg" :value="pricePerKg > 0 ? pricePerKg : {{ $defaultPrice }}">
 
                                 <!-- DYNAMIC SUMMARY BOX -->
                                 <div class="bg-[#F4F4F4] rounded-xl p-4 space-y-2 text-xs">
-                                    <div class="flex justify-between items-center text-[#808080] font-normal" x-show="tipeLayanan === 'kiloan'">
+                                    <div class="flex justify-between items-center text-[#808080] font-normal">
                                         <span>Biaya Kiloan</span>
-                                        <span class="text-[#0F0F0F] font-medium" x-text="formatRupiah(chargedWeight * pricePerKg)">Rp 0</span>
+                                        <span class="text-[#0F0F0F] font-medium" x-text="formatRupiah(totalKiloanPrice)">Rp 0</span>
                                     </div>
                                     <div class="flex justify-between items-center text-[#808080] font-normal">
                                         <span>Biaya Satuan</span>
@@ -364,32 +363,6 @@
                         <p class="text-[11px] font-normal text-[#808080]">Foto ini akan tampil di Galeri halaman detail pesanan pelanggan.</p>
                     </div>
 
-                    <!-- UPGRADE SECTIONS (JIKA ADA PENDING ATAU TERSEDIA) -->
-                    @if(isset($pendingUpgrade) && $pendingUpgrade)
-                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-5 shadow-sm space-y-3">
-                            <h3 class="font-medium text-amber-800 text-sm flex items-center gap-2">
-                                <i data-feather="bell" class="w-4 h-4 text-amber-600"></i>
-                                Permintaan Upgrade Layanan
-                            </h3>
-                            <div class="text-xs space-y-2 font-normal text-amber-700">
-                                <div>
-                                    <p class="text-[10px] text-amber-600 uppercase">Layanan Baru</p>
-                                    <p class="text-amber-900 font-medium capitalize">{{ $pendingUpgrade['target_service_name'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-amber-600 uppercase">Biaya Selisih (Tunai)</p>
-                                    <p class="text-amber-900 font-medium text-sm">Rp {{ number_format($pendingUpgrade['price_diff'], 0, ',', '.') }}</p>
-                                </div>
-                            </div>
-                            <form action="{{ route('admin.riwayat-pesanan.konfirmasi-upgrade', $transaksi->id) }}" method="POST" class="pt-1">
-                                @csrf
-                                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-full text-xs font-medium shadow-sm transition-all border-0 cursor-pointer flex items-center justify-center gap-2">
-                                    Konfirmasi Upgrade & Terima Cash
-                                </button>
-                            </form>
-                        </div>
-                    @endif
-
                 </div>
 
             </div>
@@ -423,7 +396,7 @@
                 })),
                 actualWeight: {{ $existingTimbangan ? $existingTimbangan->actual_weight : (old('actual_weight', '') !== '' ? old('actual_weight') : '0') }},
                 minimumWeight: {{ $existingTimbangan ? $existingTimbangan->minimum_weight : old('minimum_weight', '3.0') }},
-                pricePerKg: {{ $existingTimbangan ? $existingTimbangan->price_per_kg : old('price_per_kg', $defaultPrice) }},
+                pricePerKg: {{ $existingTimbangan && $existingTimbangan->price_per_kg > 0 ? $existingTimbangan->price_per_kg : old('price_per_kg', $defaultPrice) }},
                 originalTotal: {{ $transaksi->total_bayar_akhir }},
                 
                 addSatuanItem() {
@@ -449,12 +422,12 @@
                     if (!this.actualWeight || this.actualWeight <= 0) return 0;
                     return Math.max(this.minimumWeight, this.actualWeight);
                 },
+                get totalKiloanPrice() {
+                    if (!this.actualWeight || this.actualWeight <= 0) return 0;
+                    return Math.round(this.chargedWeight * this.pricePerKg);
+                },
                 get totalPrice() {
-                    let price = this.totalSatuanPrice;
-                    if (this.tipeLayanan === 'kiloan') {
-                        price += Math.round(this.chargedWeight * this.pricePerKg);
-                    }
-                    return price;
+                    return this.totalKiloanPrice + this.totalSatuanPrice;
                 },
                 formatRupiah(value) {
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);

@@ -67,12 +67,15 @@ class TimbanganService
         $minimumWeight = (double) ($data['minimum_weight'] ?? 3.0);
         $pricePerKg = (double) ($data['price_per_kg'] ?? 0);
 
-        if ($actualWeight <= 0) {
-            throw new DomainException('Berat timbangan harus lebih besar dari 0 kg.', 422);
-        }
-
-        if ($pricePerKg < 0) {
-            throw new DomainException('Harga per kg tidak boleh bernilai negatif.', 422);
+        if ($pricePerKg <= 0 && ($actualWeight > 0 || $tipeLayanan === 'kiloan')) {
+            $layananNama = strtolower($transaksi->layananPrioritas->nama ?? 'reguler');
+            $pricePerKg = match($layananNama) {
+                'quick' => 6000,
+                'express' => 6250,
+                'kilat' => 7850,
+                'satuan' => 10000,
+                default => 4850,
+            };
         }
 
         if ($actualWeight > 0) {
@@ -84,6 +87,10 @@ class TimbanganService
         }
 
         $totalPrice = $totalKiloanPrice + $totalSatuanPrice;
+
+        if ($totalPrice <= 0) {
+            throw new DomainException('Total harga pesanan tidak boleh Rp 0. Silakan isi berat timbangan atau item satuan.', 422);
+        }
 
         // Save Satuan items in tambahan table if any
         if (!empty($satuanItemsData)) {

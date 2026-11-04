@@ -231,14 +231,18 @@ class OrderWebService
             'alamat' => $data['address'],
         ]);
 
-        $layananPrioritasId = $this->orderRepository->firstAvailableLayananPrioritasId();
-        if (! $layananPrioritasId) {
-            return redirect()->back()->withErrors(['layanan' => 'Layanan prioritas belum tersedia.']);
-        }
-
         $cabangId = $this->orderRepository->firstAvailableCabangId();
         if (! $cabangId) {
             return redirect()->back()->withErrors(['cabang' => 'Cabang belum tersedia.']);
+        }
+
+        $selectedService = $data['selected_service_id'] ?? $data['service'] ?? 'reguler';
+        $layananPrioritasId = $this->resolveLayananPrioritasId($selectedService, (int) $cabangId);
+        if (! $layananPrioritasId) {
+            $layananPrioritasId = $this->orderRepository->firstAvailableLayananPrioritasId();
+        }
+        if (! $layananPrioritasId) {
+            return redirect()->back()->withErrors(['layanan' => 'Layanan prioritas belum tersedia.']);
         }
 
         $order = $orderService->createOrder(new CreateOrderData(
@@ -423,14 +427,20 @@ class OrderWebService
     private function mapOrderCard(Transaksi $order): array
     {
         $statusLabel = $this->statusLabel($order);
-        $isRoundtrip = (bool) $order->is_roundtrip;
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $isRoundtrip = (bool) $order->is_roundtrip || isset($meta['pending_delivery']);
+        $statusStr = (string) $order->status;
+        $isDeliveryStatus = in_array($statusStr, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar']);
 
         $isFinished = $this->isFinished($order);
         if ($isFinished) {
             $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
             $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+        } elseif ($isDeliveryStatus) {
+            $deliveryStatus = 'Delivery';
+            $deliveryIcon = 'truck';
         } else {
-            $isUnprocessed = in_array($order->status, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
+            $isUnprocessed = in_array($statusStr, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
             if ($isUnprocessed) {
                 $deliveryStatus = 'Menunggu';
                 $deliveryIcon = 'clock';
@@ -479,11 +489,22 @@ class OrderWebService
         $complaint = \App\Models\Complaint::where('transaksi_id', $order->id)->first();
 
         $isRoundtrip = (bool) $order->is_roundtrip || isset($meta['pending_delivery']);
+        $statusStr = (string) $order->status;
+        $isDeliveryStatus = in_array($statusStr, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar']);
+
         if ($isFinished) {
             $deliveryStatus = $isRoundtrip ? 'Delivery' : 'Ambil di Outlet';
             $deliveryIcon = $isRoundtrip ? 'truck' : 'shopping-bag';
+        } elseif ($isDeliveryStatus) {
+            if ($isRoundtrip) {
+                $deliveryStatus = 'Siap / Sedang Diantar';
+                $deliveryIcon = 'truck';
+            } else {
+                $deliveryStatus = 'Siap Diambil di Outlet';
+                $deliveryIcon = 'shopping-bag';
+            }
         } else {
-            $isUnprocessed = in_array($order->status, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
+            $isUnprocessed = in_array($statusStr, ['Baru', 'created', 'pending', 'Perlu Diproses', 'Menunggu di Jemput']);
             if ($isUnprocessed) {
                 $deliveryStatus = 'Menunggu';
                 $deliveryIcon = 'clock';
@@ -510,8 +531,9 @@ class OrderWebService
             'lng' => $order->pickup_lng,
             'order_date' => $this->formatDateTime($order->waktu),
             'estimated_finished' => $this->formatEstimatedFinished($order),
-            'progress' => $this->progressForStatus((string) $order->status),
+            'progress' => $this->progressForStatus($order),
             'current_step' => $this->currentStep($order),
+            'is_unweighed' => $this->isUnweighed($order),
             'payment_status' => $paymentStatus,
             'payment_method' => strtoupper((string) ($this->latestPayment($order)?->method ?? $order->jenis_pembayaran ?? 'cash')),
             'subtotal' => (float) ($order->total_biaya_layanan ?: $total),
@@ -534,12 +556,7 @@ class OrderWebService
             'perfume' => $order->parfum ?: '-',
             'notes' => $order->catatan ?: '-',
             'weight' => $order->timbangan?->actual_weight,
-            'clothing_items' => $order->timbangan && $order->timbangan->items ? $order->timbangan->items->map(function ($item) {
-                return [
-                    'name' => $item->jenisPakaian->nama ?? '-',
-                    'qty' => $item->qty,
-                ];
-            })->all() : [],
+            'clothing_items' => $this->mapClothingItems($order),
         ];
     }
 
@@ -949,73 +966,116 @@ class OrderWebService
     }
     private function mapOrderItems(Transaksi $order): array
     {
-        $items = $order->detailTransaksi->map(function ($detail) use ($order) {
-            $serviceNames = $detail->detailLayananTransaksi
-                ->map(fn ($serviceDetail) => $serviceDetail->hargaJenisLayanan?->jenisLayanan?->nama)
-                ->filter()
-                ->unique()
-                ->implode(' + ');
+        $items = collect();
+        $hasKiloanLine = false;
 
-            $firstServiceDetail = $detail->detailLayananTransaksi->first();
-            $clothingName = $firstServiceDetail?->hargaJenisLayanan?->jenisPakaian?->nama;
-            
-            $qty = (float) $detail->total_pakaian;
-            $subtotal = (float) ($detail->total_biaya_layanan ?: 0);
-            $price = $qty > 0 ? $subtotal / $qty : (float) $detail->harga_layanan_akhir;
+        if ($order->detailTransaksi && $order->detailTransaksi->isNotEmpty()) {
+            foreach ($order->detailTransaksi as $detail) {
+                $firstServiceDetail = $detail->detailLayananTransaksi->first();
+                $clothingName = $firstServiceDetail?->hargaJenisLayanan?->jenisPakaian?->nama;
+                
+                $qty = (float) $detail->total_pakaian;
+                $subtotal = (float) ($detail->total_biaya_layanan ?: 0);
+                $price = $qty > 0 ? $subtotal / $qty : (float) $detail->harga_layanan_akhir;
 
-            $priority = (int) ($order->layananPrioritas->prioritas ?? 1);
-            $daysStr = match (true) {
-                $priority >= 99 => 'Hari ini',
-                $priority >= 3 => '1 hari',
-                $priority >= 2 => '2 hari',
+                $isSatuan = $firstServiceDetail?->hargaJenisLayanan && strtolower($firstServiceDetail->hargaJenisLayanan->jenis_satuan) !== 'kg';
+                
+                if ($isSatuan && $clothingName) {
+                    $name = "Satuan - " . $clothingName;
+                } else {
+                    $hasKiloanLine = true;
+                    $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
+                    $serviceBase = $originalService->nama ?? 'Reguler';
+                    
+                    $origPriority = (int) ($originalService->prioritas ?? 1);
+                    $origDaysStr = match (true) {
+                        $origPriority >= 99 => 'Hari ini',
+                        $origPriority >= 3 => '1 hari',
+                        $origPriority >= 2 => '2 hari',
+                        default => '3 hari',
+                    };
+                    
+                    $name = "{$serviceBase} ({$origDaysStr}) - " . $this->formatQuantity($qty) . "Kg";
+                }
+
+                if ($subtotal > 0 || $qty > 0) {
+                    $items->push([
+                        'name' => $name,
+                        'qty' => $this->formatQuantity($qty),
+                        'price' => $price,
+                        'subtotal' => $subtotal,
+                    ]);
+                }
+            }
+        }
+
+        $satuanTotal = 0;
+        if ($order->fk_tambahan) {
+            $tambahanRows = \App\Models\Tambahan::with('kategoriPakaianSatuan')
+                ->where('tambahan_id', $order->fk_tambahan)
+                ->get();
+
+            foreach ($tambahanRows as $tambahan) {
+                $qty = (float) $tambahan->jumlah;
+                $subtotal = (float) $tambahan->harga_akhir;
+                $satuanTotal += $subtotal;
+                $price = $qty > 0 ? $subtotal / $qty : $subtotal;
+                $items->push([
+                    'name' => "Satuan - " . ($tambahan->kategoriPakaianSatuan->nama_pakaian ?? 'Item Satuan'),
+                    'qty' => $this->formatQuantity($qty),
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                ]);
+            }
+        }
+
+        if (! $hasKiloanLine) {
+            $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
+            $serviceBase = $originalService->nama ?? 'Layanan Laundry';
+            $origPriority = (int) ($originalService->prioritas ?? 1);
+            $origDaysStr = match (true) {
+                $origPriority >= 99 => 'Hari ini',
+                $origPriority >= 3 => '1 hari',
+                $origPriority >= 2 => '2 hari',
                 default => '3 hari',
             };
 
-            $isSatuan = $firstServiceDetail?->hargaJenisLayanan && strtolower($firstServiceDetail->hargaJenisLayanan->jenis_satuan) !== 'kg';
-            
-            if ($isSatuan && $clothingName) {
-                $name = "Satuan - " . $clothingName;
+            $basePrice = $this->resolveEstimatedTotal(strtolower($originalService->nama ?? ''));
+            $kiloanSubtotal = 0;
+            $kiloanWeight = 0;
+
+            if ($order->timbangan && (double) $order->timbangan->actual_weight > 0) {
+                $kiloanWeight = (double) ($order->timbangan->charged_weight ?? $order->timbangan->actual_weight);
+                $kiloanPrice = (double) ($order->timbangan->price_per_kg ?: $basePrice);
+                $kiloanSubtotal = $kiloanWeight * $kiloanPrice;
             } else {
-                $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
-                $serviceBase = $originalService->nama ?? 'Reguler';
-                
-                // Keep the days string based on original priority
-                $origPriority = (int) ($originalService->prioritas ?? 1);
-                $origDaysStr = match (true) {
-                    $origPriority >= 99 => 'Hari ini',
-                    $origPriority >= 3 => '1 hari',
-                    $origPriority >= 2 => '2 hari',
-                    default => '3 hari',
-                };
-                
-                $name = "{$serviceBase} ({$origDaysStr}) - " . $this->formatQuantity($qty) . "Kg";
+                $totalBaseCost = (float) ($order->total_biaya_layanan ?: $order->total_bayar_akhir);
+                $kiloanSubtotal = max(0, $totalBaseCost - $satuanTotal);
+                if ($kiloanSubtotal > 0 && $basePrice > 0) {
+                    $kiloanWeight = round($kiloanSubtotal / $basePrice, 2);
+                }
             }
 
-            return [
-                'name' => $name,
-                'qty' => $this->formatQuantity($qty),
-                'price' => $price,
-                'subtotal' => $subtotal,
-            ];
-        })->filter(fn (array $item) => $item['subtotal'] > 0 || $item['qty'] !== '0');
+            if ($kiloanSubtotal > 0 || ($kiloanWeight > 0 && $items->isEmpty())) {
+                $weightStr = $this->formatQuantity($kiloanWeight);
+                $name = "{$serviceBase} ({$origDaysStr}) - {$weightStr}Kg";
+                $items->prepend([
+                    'name' => $name,
+                    'qty' => $weightStr,
+                    'price' => $basePrice,
+                    'subtotal' => $kiloanSubtotal,
+                ]);
+            }
+        }
 
         if ($items->isNotEmpty()) {
             return $items->values()->all();
         }
 
-        // Pakai total_biaya_layanan (biaya dasar), BUKAN total_bayar_akhir —
-        // total_bayar_akhir sudah termasuk total_biaya_prioritas (biaya upgrade)
-        // begitu upgrade dibayar (lihat PaymentWebhookService::markAsPaid()).
-        // Kalau dipakai di sini, biaya upgrade ke-hitung dua kali: sekali
-        // "ketelan" ke estimasi berat/harga baris dasar ini, sekali lagi
-        // ditampilkan terpisah sebagai "Biaya Upgrade".
         $total = (float) ($order->total_biaya_layanan ?: $order->total_bayar_akhir);
         $originalService = $order->upgradeLayanans->first()?->layananAsal ?? $order->layananPrioritas;
         $basePrice = $this->resolveEstimatedTotal(strtolower($originalService->nama ?? ''));
-        $estimatedQty = $basePrice > 0 
-            ? max(1, round($total / $basePrice, 2)) 
-            : 1;
-
+        $estimatedQty = $basePrice > 0 ? max(1, round($total / $basePrice, 2)) : 1;
         $origPriority = (int) ($originalService->prioritas ?? 1);
         $origDaysStr = match (true) {
             $origPriority >= 99 => 'Hari ini',
@@ -1024,8 +1084,7 @@ class OrderWebService
             default => '3 hari',
         };
         $serviceBase = $originalService->nama ?? 'Layanan Laundry';
-        $weight = $order->detailTransaksi->sum('total_pakaian');
-        $weightStr = $weight > 0 ? $this->formatQuantity($weight) : $this->formatQuantity($estimatedQty);
+        $weightStr = $this->formatQuantity($estimatedQty);
         $name = "{$serviceBase} ({$origDaysStr}) - {$weightStr}Kg";
 
         return [[
@@ -1036,33 +1095,123 @@ class OrderWebService
         ]];
     }
 
+    private function mapClothingItems(Transaksi $order): array
+    {
+        $clothingItems = collect();
+
+        if ($order->timbangan && $order->timbangan->items && $order->timbangan->items->isNotEmpty()) {
+            foreach ($order->timbangan->items as $item) {
+                $pakaianName = $item->jenisPakaian->nama ?? null;
+                if ($pakaianName) {
+                    $clothingItems->push([
+                        'name' => $pakaianName,
+                        'qty' => (float) $item->qty,
+                    ]);
+                }
+            }
+        }
+
+        if ($order->detailTransaksi && $order->detailTransaksi->isNotEmpty()) {
+            foreach ($order->detailTransaksi as $detail) {
+                foreach ($detail->detailLayananTransaksi as $serviceDetail) {
+                    $hargaJenis = $serviceDetail->hargaJenisLayanan;
+                    $pakaianName = $hargaJenis?->jenisPakaian?->nama ?? $hargaJenis?->jenisLayanan?->nama;
+                    if ($pakaianName) {
+                        $isSatuan = $hargaJenis && strtolower((string) $hargaJenis->jenis_satuan) !== 'kg';
+                        $displayName = $isSatuan ? "Satuan - {$pakaianName}" : $pakaianName;
+
+                        $exists = $clothingItems->contains(fn ($c) => $c['name'] === $displayName || $c['name'] === $pakaianName);
+                        if (! $exists) {
+                            $clothingItems->push([
+                                'name' => $displayName,
+                                'qty' => (float) ($detail->total_pakaian ?: 1),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $clothingItems->all();
+    }
+
     private function mapOrderLogs(Transaksi $order): array
     {
         $createdAt = $order->waktu ?? $order->created_at ?? now();
+        $updatedAt = $order->updated_at ?? $createdAt;
+
         $logs = [[
             'time' => $createdAt->format('H:i'),
             'date' => $createdAt->locale('id')->isoFormat('dddd, D MMM'),
             'note' => 'Pesanan diterima',
         ]];
 
-        // Nama status asli dari Transaksi::getStatusName() bukan cuma 'Proses'/'Selesai'
-        // ('Proses Pengerjaan', 'Perlu Dikerjakan', dst) — samakan set-nya dengan
-        // progressForStatus() supaya log ini benar-benar muncul begitu admin mulai
-        // mengerjakan pesanan, bukan cuma diam di "Pesanan diterima" terus.
-        $inProgressStatuses = ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'Selesai', 'Pesanan Selesai'];
-        if (in_array($order->status, $inProgressStatuses, true)) {
+        $statusStr = (string) $order->status;
+        $historyLogs = \App\Models\ListHistoryPengerjaan::where('transaksi_id', $order->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $findHistoryTime = function (array $statusIds) use ($historyLogs) {
+            return $historyLogs->first(fn ($h) => in_array((int) $h->status_sesudahnya, $statusIds, true))?->created_at;
+        };
+
+        $isWaitingPickup = in_array(strtolower(trim($statusStr)), ['menunggu di jemput', 'menunggu dijemput', 'sedang dijemput', 'baru', 'created', 'pending']);
+        $pickupHistoryTime = $historyLogs->first(fn ($h) => (int) $h->status_sebelumnya === 8 || in_array((int) $h->status_sesudahnya, [1, 2, 3, 4, 5, 9], true))?->created_at;
+        
+        $hasConfirmedPickup = $pickupHistoryTime !== null || (!$isWaitingPickup && in_array(strtolower(trim($statusStr)), ['perlu diproses', 'perlu dikerjakan', 'proses pengerjaan', 'proses', 'selesai', 'pesanan selesai', 'completed', 'perlu di antar', 'sedang diantar']));
+
+        if ($hasConfirmedPickup) {
+            $pickupTime = $pickupHistoryTime ?? $findHistoryTime([8]) ?? $createdAt->copy()->addMinutes(10);
+            if ($pickupTime->gt($updatedAt)) {
+                $pickupTime = $createdAt;
+            }
             $logs[] = [
-                'time' => optional($order->updated_at)->format('H:i') ?: $createdAt->copy()->addHour()->format('H:i'),
-                'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: $createdAt->locale('id')->isoFormat('dddd, D MMM'),
+                'time' => $pickupTime->format('H:i'),
+                'date' => $pickupTime->locale('id')->isoFormat('dddd, D MMM'),
+                'note' => 'Pesanan dijemput',
+            ];
+        }
+
+        $processHistoryTime = $findHistoryTime([2, 3, 4]);
+        $hasStartedProcessing = $hasConfirmedPickup && (
+            $processHistoryTime !== null ||
+            $order->timbangan !== null ||
+            in_array(strtolower(trim($statusStr)), ['perlu dikerjakan', 'proses pengerjaan', 'proses', 'selesai', 'pesanan selesai', 'completed', 'perlu di antar', 'sedang diantar'])
+        );
+
+        $processTime = null;
+        if ($hasStartedProcessing) {
+            $processTime = $processHistoryTime ?? ($pickupTime ? $pickupTime->copy()->addMinutes(15) : $updatedAt);
+            $logs[] = [
+                'time' => $processTime->format('H:i'),
+                'date' => $processTime->locale('id')->isoFormat('dddd, D MMM'),
                 'note' => 'Pesanan sedang diproses',
+            ];
+        }
+        $deliveryStatuses = ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'];
+
+        $deliveryTime = null;
+        if (in_array($statusStr, $deliveryStatuses, true)) {
+            $deliveryTime = $findHistoryTime([9]);
+            if (! $deliveryTime) {
+                $deliveryTime = $processTime ? $processTime->copy()->addMinutes(30) : $createdAt->copy()->addHour();
+                if ($deliveryTime->gt($updatedAt)) {
+                    $deliveryTime = $updatedAt;
+                }
+            }
+            $logs[] = [
+                'time' => $deliveryTime->format('H:i'),
+                'date' => $deliveryTime->locale('id')->isoFormat('dddd, D MMM'),
+                'note' => 'Pesanan siap / sedang diantar',
             ];
         }
 
         if ($this->isFinished($order)) {
+            $finishedTime = $findHistoryTime([5]) ?? $updatedAt;
             $logs[] = [
-                'time' => optional($order->updated_at)->format('H:i') ?: now()->format('H:i'),
-                'date' => optional($order->updated_at)->locale('id')->isoFormat('dddd, D MMM') ?: now()->locale('id')->isoFormat('dddd, D MMM'),
-                'note' => 'Pesanan selesai dan siap diambil',
+                'time' => $finishedTime->format('H:i'),
+                'date' => $finishedTime->locale('id')->isoFormat('dddd, D MMM'),
+                'note' => 'Pesanan selesai',
             ];
         }
 
@@ -1173,37 +1322,69 @@ class OrderWebService
         }
 
         if (! $this->isPaid($order)) {
-            if (in_array((string) $order->status, ['Baru', 'Perlu Diproses'])) {
+            if (in_array((string) $order->status, ['Baru', 'Perlu Diproses', 'created', 'pending'])) {
                 return 'Menunggu';
             }
             return 'Belum Bayar';
         }
 
         return match ((string) $order->status) {
-            'Baru', 'Perlu Diproses' => 'Baru',
-            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Diproses',
+            'Baru', 'Perlu Diproses', 'created', 'pending' => 'Baru',
+            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 'Diproses',
             default => (string) $order->status,
         };
     }
 
     private function currentStep(Transaksi $order): string
     {
+        $meta = json_decode($order->payment_metadata, true) ?? [];
+        $isDelivery = (bool) $order->is_roundtrip || isset($meta['pending_delivery']);
+
         return match ((string) $order->status) {
-            'Selesai', 'Pesanan Selesai' => 'Selesai',
-            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 'Pesanan sedang diproses',
-            'Baru', 'Perlu Diproses' => 'Pesanan diterima',
+            'Selesai', 'Pesanan Selesai', 'completed' => 'Selesai',
+            'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => $isDelivery ? 'Pesanan siap / sedang diantar' : 'Pesanan siap diambil di outlet',
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 'Pesanan sedang diproses',
+            'Menunggu di Jemput', 'Sedang Dijemput', 'picked_up', 'Jemput' => 'Pesanan dijemput',
+            'Baru', 'Perlu Diproses', 'created', 'pending' => 'Pesanan diterima',
             default => (string) $order->status,
         };
     }
 
-    private function progressForStatus(string $status): int
+    private function progressForStatus(Transaksi|string $orderOrStatus): int
     {
-        return match ($status) {
-            'Selesai', 'Pesanan Selesai' => 100,
-            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan' => 56,
-            'Baru', 'Perlu Diproses' => 20,
-            default => 10,
-        };
+        if (is_string($orderOrStatus)) {
+            return match ($orderOrStatus) {
+                'Selesai', 'Pesanan Selesai', 'completed' => 100,
+                'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar' => 80,
+                'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress' => 56,
+                'Menunggu di Jemput', 'Sedang Dijemput', 'picked_up', 'Jemput' => 35,
+                'Baru', 'Perlu Diproses', 'created', 'pending' => 20,
+                default => 20,
+            };
+        }
+
+        $order = $orderOrStatus;
+        $status = (string) $order->status;
+        if ($this->isFinished($order)) {
+            return 100;
+        }
+
+        if (in_array($status, ['Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 'Sedang Diantar'], true)) {
+            return 80;
+        }
+
+        if ($order->timbangan !== null || in_array($status, ['Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 'in_progress'], true)) {
+            return 56;
+        }
+
+        $logs = $this->mapOrderLogs($order);
+        $hasPickupLog = collect($logs)->contains(fn ($l) => isset($l['note']) && $l['note'] === 'Pesanan dijemput');
+        if ($hasPickupLog) {
+            return 35;
+        }
+
+        return 20;
     }
 
     private function isFinished(Transaksi $order): bool
@@ -1213,7 +1394,24 @@ class OrderWebService
 
     private function isUnweighed(Transaksi $order): bool
     {
-        return in_array($order->status, ['Baru', 'created', 'Perlu Diproses']);
+        if ($order->timbangan !== null && (float) $order->timbangan->actual_weight > 0) {
+            return false;
+        }
+
+        if ($order->fk_tambahan !== null) {
+            return false;
+        }
+
+        $processedStatuses = [
+            'Proses', 'Menunggu Pembayaran', 'Perlu Dikerjakan', 'Proses Pengerjaan', 
+            'in_progress', 'Perlu di Antar', 'Perlu di antar', 'ready_for_delivery', 
+            'Sedang Diantar', 'Selesai', 'Pesanan Selesai', 'completed'
+        ];
+        if (in_array((string) $order->status, $processedStatuses, true)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -1326,21 +1524,20 @@ class OrderWebService
         return $date->locale('id')->isoFormat('dddd, D MMM | HH.mm');
     }
 
-    private function calculateWorkingHoursETA(\Carbon\Carbon $startDate, int $hoursToAdd): \Carbon\Carbon
+    private function calculateWorkingHoursETA(\Carbon\Carbon|string $startDate, int $hoursToAdd): \Carbon\Carbon
     {
-        $date = $startDate->copy();
+        $date = \Carbon\Carbon::parse($startDate)->copy();
 
         if ($date->hour < 8) {
             $date->setTime(8, 0, 0);
-        } elseif ($date->hour >= 18) {
+        } elseif ($date->hour >= 20) {
             $date->addDay()->setTime(8, 0, 0);
         }
 
         while ($hoursToAdd > 0) {
-            $endOfDay = $date->copy()->setTime(18, 0, 0);
+            $endOfDay = $date->copy()->setTime(20, 0, 0);
             $minutesLeftToday = $date->diffInMinutes($endOfDay, false);
             
-            // If it's somehow past 18:00 (e.g. edge cases), move to next day
             if ($minutesLeftToday <= 0) {
                 $date->addDay()->setTime(8, 0, 0);
                 continue;
@@ -1352,7 +1549,7 @@ class OrderWebService
                 $date->addMinutes($minutesToAdd);
                 $hoursToAdd = 0;
                 
-                if ($date->hour >= 18) {
+                if ($date->hour >= 20) {
                     $date->addDay()->setTime(8, 0, 0);
                 }
             } else {
@@ -1366,22 +1563,7 @@ class OrderWebService
 
     public function formatEstimatedFinished(Transaksi $order): string
     {
-        $baseDate = $order->pickup_date ?? $order->waktu;
-
-        if (! $baseDate) {
-            return '-';
-        }
-
-        $priority = (int) ($order->layananPrioritas->prioritas ?? 1);
-        $workingHours = match (true) {
-            $priority >= 99 => 5, // Kilat
-            $priority >= 3 => 10, // Express
-            $priority >= 2 => 20, // Quick
-            default => 30, // Reguler
-        };
-
-        $etaDate = $this->calculateWorkingHoursETA($baseDate, $workingHours);
-        return $etaDate->locale('id')->isoFormat('dddd, D MMM | HH.mm');
+        return $order->getDeadlineWaktu()->locale('id')->isoFormat('dddd, D MMM | HH.mm');
     }
 
     private function formatQuantity(float|int $quantity): string
@@ -1408,6 +1590,27 @@ class OrderWebService
     private function resolveEstimatedTotal(string $serviceId): float
     {
         return (float) (self::SERVICE_ESTIMATED_TOTALS[$serviceId] ?? self::SERVICE_ESTIMATED_TOTALS['regular']);
+    }
+
+    private function resolveLayananPrioritasId(string $serviceKey, int $cabangId): ?int
+    {
+        $serviceName = match (strtolower($serviceKey)) {
+            'quick' => 'Quick',
+            'express' => 'Express',
+            'kilat' => 'Kilat',
+            'satuan' => 'Satuan',
+            default => 'Reguler',
+        };
+
+        $layanan = \App\Models\LayananPrioritas::where('cabang_id', $cabangId)
+            ->whereRaw('LOWER(nama) = ?', [strtolower($serviceName)])
+            ->first();
+
+        if (! $layanan) {
+            $layanan = \App\Models\LayananPrioritas::whereRaw('LOWER(nama) = ?', [strtolower($serviceName)])->first();
+        }
+
+        return $layanan ? (int) $layanan->id : null;
     }
 
     public function upgradeData(string $id, ?User $user): array

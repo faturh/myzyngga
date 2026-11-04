@@ -143,9 +143,10 @@
     <table class="items-list">
         @foreach($order['items'] ?? [] as $item)
             @php
-                $qty = $item['quantity'] ?? 1;
+                $qty = $item['qty'] ?? $item['quantity'] ?? 1;
                 $price = $item['price'] ?? 0;
-                $total = $item['total'] ?? ($price * $qty);
+                $total = $item['subtotal'] ?? $item['total'] ?? ($price * (float)$qty);
+                $isKg = str_contains(strtolower($item['name'] ?? ''), 'kg');
             @endphp
             <tr>
                 <td colspan="2">
@@ -153,11 +154,24 @@
                 </td>
             </tr>
             <tr>
-                <td width="65%">{{ $qty }} Pcs x {{ number_format($price, 0, '', '') }}</td>
+                <td width="65%">{{ $qty }} {{ $isKg ? 'Kg' : 'Pcs' }} x {{ number_format($price, 0, '', '.') }}</td>
                 <td width="35%" class="text-right">{{ number_format($total, 0, '', '.') }}</td>
             </tr>
         @endforeach
     </table>
+
+    @if(!empty($order['clothing_items']) && count($order['clothing_items']) > 0)
+    <div class="dashed-line"></div>
+    <div style="font-size: 10px; font-weight: bold; margin-bottom: 4px;">Rincian Pakaian:</div>
+    <table class="items-list" style="margin: 2px 0 6px 0;">
+        @foreach($order['clothing_items'] as $cItem)
+            <tr>
+                <td width="70%">- {{ $cItem['name'] }}</td>
+                <td width="30%" class="text-right">{{ $cItem['qty'] }} pcs</td>
+            </tr>
+        @endforeach
+    </table>
+    @endif
 
     <div class="dashed-line"></div>
 
@@ -204,11 +218,11 @@
         <table style="margin-top: 5px;">
             <tr>
                 <td width="30%">Parfum</td>
-                <td width="70%">TANPA PEWANGI</td>
+                <td width="70%">{{ strtoupper(($order['perfume'] && $order['perfume'] !== '-') ? $order['perfume'] : 'STANDARD') }}</td>
             </tr>
             <tr>
                 <td>Kasir</td>
-                <td>Sistem Zyngga</td>
+                <td>{{ $order['cashier_name'] ?? 'Sistem Zyngga' }}</td>
             </tr>
         </table>
     </div>

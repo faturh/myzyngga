@@ -256,8 +256,7 @@ class OrderRollbackTest extends TestCase
         [$user, $order] = $this->makeCustomerOrder('email-selesai@example.com', 'email-selesai');
         $order->update(['payment_status' => 'paid']);
 
-        $order->status = 'Selesai';
-        $order->save();
+        $order->update(['status' => 'Selesai']);
 
         \Illuminate\Support\Facades\Mail::assertSent(
             \App\Mail\OrderFinishedMail::class,
@@ -541,6 +540,7 @@ class OrderRollbackTest extends TestCase
             'telepon' => '081234567890',
             'alamat' => 'Alamat Asli',
             'jenis_kelamin' => 'L',
+            'email' => $email,
         ]);
 
         $cabang = Cabang::create([

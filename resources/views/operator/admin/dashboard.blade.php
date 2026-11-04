@@ -135,7 +135,7 @@
                             <div>
                                 <div class="flex items-center justify-between p-4" style="border-bottom:1px solid #F4F4F4;">
                                     <span class="text-xs font-normal" style="color:#808080;">Jumlah Pelanggan</span>
-                                    <span class="text-sm font-medium" style="color:#0F0F0F;">88</span>
+                                    <span class="text-sm font-medium" style="color:#0F0F0F;">{{ $jumlahPelangganCount }}</span>
                                 </div>
 
                                 <div class="flex items-center justify-between p-4" style="border-bottom:1px solid #F4F4F4;">
@@ -145,7 +145,7 @@
 
                                 <div class="flex items-center justify-between p-4">
                                     <span class="text-xs font-normal" style="color:#808080;">Pesanan Dibatalkan</span>
-                                    <span class="text-sm font-medium" style="color:#0F0F0F;">1</span>
+                                    <span class="text-sm font-medium" style="color:#0F0F0F;">{{ $pesananDibatalkanCount }}</span>
                                 </div>
                             </div>
                         </div>

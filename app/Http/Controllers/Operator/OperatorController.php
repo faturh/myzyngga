@@ -26,6 +26,8 @@ class OperatorController extends Controller
         $menungguPembayaranCount = Operator::getMenungguPembayaranCount();
         $perluDikerjakanCount = Operator::getPerluDikerjakanCount();
         $pesananSelesaiCount = Operator::getPesananSelesaiCount();
+        $jumlahPelangganCount = Operator::getJumlahPelangganCount();
+        $pesananDibatalkanCount = Operator::getPesananDibatalkanCount();
 
         $user = auth()->user();
         $cabangId = $user->hasRole('manajer_laundry') ? $user->cabang_id : null;
@@ -37,6 +39,8 @@ class OperatorController extends Controller
             'menungguPembayaranCount',
             'perluDikerjakanCount',
             'pesananSelesaiCount',
+            'jumlahPelangganCount',
+            'pesananDibatalkanCount',
             'saldoToko'
         ));
     }
@@ -50,9 +54,9 @@ class OperatorController extends Controller
         $endDate = $request->query('end_date', now()->toDateString());
         $selectedEmployeeId = $request->query('pegawai_id');
 
-        $allKaryawan = \App\Models\User::role('pegawai_laundry')->get();
+        $allKaryawan = \App\Models\User::role(['pegawai_laundry', 'operator'])->get();
 
-        $karyawanList = \App\Models\User::role('pegawai_laundry')
+        $karyawanList = \App\Models\User::role(['pegawai_laundry', 'operator'])
             ->when($selectedEmployeeId, function ($query, $id) {
                 return $query->where('id', $id);
             })
@@ -65,7 +69,6 @@ class OperatorController extends Controller
                           ->orWhere('pegawai_id', 'like', '%_' . $emp->id);
                 })
                 ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
-                ->where('gaji_dibayar', 0)
                 ->whereBetween('waktu', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->with('timbangan')
                 ->get();
@@ -80,7 +83,7 @@ class OperatorController extends Controller
             return [
                 'id' => $emp->id,
                 'name' => $emp->name ?? $emp->username,
-                'role' => 'Pegawai Laundry',
+                'role' => $emp->hasRole('operator') ? 'Operator' : 'Pegawai Laundry',
                 'gaji_per_kg' => $tarifGaji,
                 'total_kg' => $totalKg,
                 'total_gaji' => $totalGaji,
@@ -121,7 +124,7 @@ class OperatorController extends Controller
         $endDate = $request->query('end_date', now()->toDateString());
         $selectedEmployeeId = $request->query('pegawai_id');
 
-        $karyawanList = \App\Models\User::role('pegawai_laundry')
+        $karyawanList = \App\Models\User::role(['pegawai_laundry', 'operator'])
             ->when($selectedEmployeeId, function ($query, $id) {
                 return $query->where('id', $id);
             })
@@ -148,7 +151,7 @@ class OperatorController extends Controller
             return [
                 'id' => $emp->id,
                 'name' => $emp->name ?? $emp->username,
-                'role' => 'Pegawai Laundry',
+                'role' => $emp->hasRole('operator') ? 'Operator' : 'Pegawai Laundry',
                 'gaji_per_kg' => $tarifGaji,
                 'total_kg' => $totalKg,
                 'total_gaji' => $totalGaji,
@@ -199,7 +202,7 @@ class OperatorController extends Controller
             }
         } else {
             $query = Transaksi::query()
-                ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas']);
+                ->with(['pelanggan.user', 'pegawai', 'cabang', 'layananPrioritas', 'detailTransaksi.detailLayananTransaksi.hargaJenisLayanan.jenisLayanan', 'upgradeLayanans.layananAsal']);
 
             // Search filter (Nomor Pesanan / Nota or Pelanggan Name)
             if (!empty($search)) {
@@ -217,8 +220,7 @@ class OperatorController extends Controller
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 1));
                     break;
                 case 'menunggu-pembayaran':
-                    $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-                          ->where('payment_status', '!=', 'paid');
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 2));
                     break;
                 case 'perlu-dikerjakan':
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 3));
@@ -227,8 +229,7 @@ class OperatorController extends Controller
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 4));
                     break;
                 case 'selesai':
-                    $query->whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-                          ->where('payment_status', 'paid');
+                    $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 5));
                     break;
                 case 'dibatalkan':
                     $query->whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7));
@@ -344,7 +345,8 @@ class OperatorController extends Controller
             if ($currentPriority) {
                 $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
                     ->where('prioritas', '>', $currentPriority->prioritas)
-                    ->get();
+                    ->get()
+                    ->unique('nama');
             }
 
             // Fetch available Satuan items
@@ -420,8 +422,7 @@ class OperatorController extends Controller
                     'status' => 200
                 ], 200);
             }
-            $tab = $request->input('tab', 'perlu-diproses');
-            return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
+            return redirect()->route('admin.riwayat-pesanan', ['tab' => 'perlu-dikerjakan'])->with('success', 'Pesanan #' . $transaksi->nota . ' berhasil diproses.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -456,6 +457,48 @@ class OperatorController extends Controller
     }
 
     /**
+     * Show form for upgrading priority service.
+     */
+    public function upgradeForm(string $id)
+    {
+        try {
+            $transaksi = Transaksi::with([
+                'pelanggan.user',
+                'layananPrioritas',
+                'upgradeLayanans.layananAsal',
+                'upgradeLayanans.layananTujuan'
+            ])->findOrFail($id);
+            
+            // Decode pending upgrade
+            $meta = json_decode($transaksi->payment_metadata, true) ?? [];
+            $pendingUpgrade = $meta['pending_upgrade'] ?? null;
+            if ($pendingUpgrade) {
+                $targetService = \App\Models\LayananPrioritas::find($pendingUpgrade['new_service_id']);
+                $pendingUpgrade['target_service_name'] = $targetService ? $targetService->nama : '-';
+            }
+
+            $currentPriority = $transaksi->layananPrioritas;
+            $availableUpgrades = collect();
+            if ($currentPriority) {
+                $availableUpgrades = \App\Models\LayananPrioritas::where('cabang_id', $currentPriority->cabang_id)
+                    ->where('prioritas', '>', $currentPriority->prioritas)
+                    ->get()
+                    ->unique('nama');
+            }
+
+            $tab = request()->query('tab', 'perlu-dikerjakan');
+            return view('operator.admin.upgrade-layanan', compact(
+                'transaksi',
+                'pendingUpgrade',
+                'availableUpgrades',
+                'tab'
+            ));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.riwayat-pesanan')->with('error', $e->getMessage());
+        }
+    }
+
+    /**
      * Start working on transaction (update status to 'Proses Pengerjaan').
      */
     public function kerjakanTransaksi(Request $request, string $id)
@@ -463,12 +506,15 @@ class OperatorController extends Controller
         try {
             $transaksi = Transaksi::findOrFail($id);
             $layananNama = strtolower($transaksi->layananPrioritas->nama ?? 'reguler');
+            $hasSatuanItems = $layananNama === 'satuan' 
+                || $transaksi->fk_tambahan !== null 
+                || ($transaksi->fk_tambahan && \App\Models\Tambahan::where('tambahan_id', $transaksi->fk_tambahan)->exists());
 
             $rules = [
                 'pegawai_id' => 'required|exists:users,id',
             ];
 
-            if ($layananNama !== 'satuan') {
+            if (!$hasSatuanItems) {
                 $rules['items'] = 'required|array|min:1';
                 $rules['items.*.nama_item'] = 'required|string|max:255';
                 $rules['items.*.qty'] = 'required|integer|min:1';
@@ -529,8 +575,7 @@ class OperatorController extends Controller
                     'status' => 200
                 ], 200);
             }
-            $tab = $request->input('tab', 'perlu-dikerjakan');
-            return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
+            return redirect()->route('admin.riwayat-pesanan', ['tab' => 'proses-pengerjaan'])->with('success', 'Pesanan #' . $transaksi->nota . ' mulai dikerjakan oleh ' . $transaksi->pegawai->name . '.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -625,8 +670,13 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        $tab = request()->input('tab', 'proses-pengerjaan');
-        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
+        $targetTab = match ((int) $transaksi->list_status_pengerjaan_id) {
+            2 => 'menunggu-pembayaran',
+            9 => 'perlu-di-antar',
+            5 => 'selesai',
+            default => 'proses-pengerjaan',
+        };
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => $targetTab])->with('success', $message);
     }
 
     /**
@@ -638,7 +688,12 @@ class OperatorController extends Controller
         $transaksi->list_status_pengerjaan_id = 5;
         $transaksi->save();
 
-        $message = 'Pengantaran pesanan #' . $transaksi->nota . ' telah selesai.';
+        $meta = json_decode($transaksi->payment_metadata, true) ?? [];
+        $isDelivery = (bool) $transaksi->is_roundtrip || isset($meta['pending_delivery']);
+
+        $message = $isDelivery
+            ? 'Pengantaran pesanan #' . $transaksi->nota . ' telah selesai.'
+            : 'Pesanan #' . $transaksi->nota . ' telah diambil oleh pelanggan di outlet.';
 
         if (request()->expectsJson()) {
             return response()->json([
@@ -669,8 +724,7 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        $tab = request()->input('tab', 'menunggu-di-jemput');
-        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => 'perlu-diproses'])->with('success', $message);
     }
 
     /**
@@ -692,8 +746,7 @@ class OperatorController extends Controller
                 'status'  => 200
             ], 200);
         }
-        $tab = request()->input('tab', 'menunggu-pembayaran');
-        return redirect()->route('admin.riwayat-pesanan', ['tab' => $tab])->with('success', $message);
+        return redirect()->route('admin.riwayat-pesanan', ['tab' => 'perlu-di-antar'])->with('success', $message);
     }
 
     /**
@@ -701,11 +754,19 @@ class OperatorController extends Controller
      */
     public function selesaikanComplaint(string $id)
     {
-        $complaint = \App\Models\Complaint::findOrFail($id);
-        $nota = optional($complaint->transaksi)->nota ?? 'N/A';
-        $complaint->delete();
+        if (is_numeric($id)) {
+            $complaint = \App\Models\Complaint::find($id);
+        } else {
+            $complaint = \App\Models\Complaint::where('transaksi_id', $id)->first();
+        }
 
-        $message = 'Kendala pesanan #' . $nota . ' telah diselesaikan dan dihapus.';
+        if ($complaint) {
+            $nota = optional($complaint->transaksi)->nota ?? 'N/A';
+            $complaint->delete();
+            $message = 'Kendala pesanan #' . $nota . ' telah diselesaikan dan dihapus.';
+        } else {
+            $message = 'Tidak ada kendala aktif yang ditemukan untuk transaksi ini.';
+        }
 
         if (request()->expectsJson()) {
             return response()->json([
@@ -722,8 +783,20 @@ class OperatorController extends Controller
      */
     public function tambahPesananForm()
     {
-        // 1. Fetch available LayananPrioritas
-        $prioritasList = \App\Models\LayananPrioritas::orderBy('id')->get();
+        $user = auth()->user();
+        $cabangId = $user->cabang_id ?? null;
+
+        // 1. Fetch available LayananPrioritas (filtered by branch and deduplicated by name)
+        $prioritasList = \App\Models\LayananPrioritas::query()
+            ->when($cabangId, fn($q) => $q->where('cabang_id', $cabangId))
+            ->orderBy('prioritas')
+            ->get();
+
+        if ($prioritasList->isEmpty()) {
+            $prioritasList = \App\Models\LayananPrioritas::orderBy('prioritas')->get();
+        }
+
+        $prioritasList = $prioritasList->unique('nama');
 
         // 2. Fetch list of registered customers
         $pelangganList = \App\Models\Pelanggan::orderBy('nama')->get();
@@ -794,7 +867,10 @@ class OperatorController extends Controller
 
             // 2. Resolve pricing
             $layanan = \App\Models\LayananPrioritas::findOrFail($validated['layanan_prioritas_id']);
-            $defaultCost = strtolower($layanan->nama) === 'satuan' ? 10000 : 4850;
+            $isSatuan = strtolower($layanan->nama) === 'satuan';
+            $baseCost = $isSatuan ? 10000 : 4850;
+            $priorityCost = $isSatuan ? 0 : (float) ($layanan->harga ?? 0);
+            $totalCost = $baseCost + $priorityCost;
 
             // 3. Create Transaksi
             $suffix = strtoupper(substr(str_replace('-', '', (string) \Illuminate\Support\Str::uuid()), 0, 8));
@@ -809,14 +885,14 @@ class OperatorController extends Controller
                 'pickup_time' => now()->format('H:i:s'),
                 'parfum' => $validated['parfum'] ?? 'Standard',
                 'catatan' => $validated['catatan'],
-                'total_biaya_layanan' => $defaultCost,
-                'total_biaya_prioritas' => 0,
+                'total_biaya_layanan' => $baseCost,
+                'total_biaya_prioritas' => $priorityCost,
                 'total_biaya_layanan_tambahan' => 0,
-                'total_bayar_akhir' => $defaultCost,
+                'total_bayar_akhir' => $totalCost,
                 'jenis_pembayaran' => $validated['jenis_pembayaran'],
                 'payment_status' => $validated['payment_status'],
                 'paid_at' => $validated['payment_status'] === 'paid' ? now() : null,
-                'bayar' => $validated['payment_status'] === 'paid' ? $defaultCost : 0,
+                'bayar' => $validated['payment_status'] === 'paid' ? $totalCost : 0,
                 'kembalian' => 0,
                 'status' => 'Perlu Diproses',
                 'is_roundtrip' => $request->has('antar_laundry'),
@@ -1072,18 +1148,7 @@ class OperatorController extends Controller
                     'end_date' => $request->end_date,
                 ]);
 
-                // 3. Set matching completed transactions' salary status to paid (gaji_dibayar = 1)
-                if ($request->filled('start_date') && $request->filled('end_date')) {
-                    \App\Models\Transaksi::query()
-                        ->where(function($query) use ($employee) {
-                            $query->where('pegawai_id', (string) $employee->id)
-                                  ->orWhere('pegawai_id', 'like', '%_' . $employee->id);
-                        })
-                        ->whereIn('status', ['Pesanan Selesai', 'Selesai'])
-                        ->where('gaji_dibayar', 0)
-                        ->whereBetween('waktu', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59'])
-                        ->update(['gaji_dibayar' => 1]);
-                }
+                // 3. (Gaji dibayar flag update removed for dynamic date-based tracking system)
             });
 
             if ($request->expectsJson()) {

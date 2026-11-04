@@ -53,9 +53,9 @@
     @php
         $tabCounts = [
             'Semua' => count($orders),
-            'Menunggu' => collect($orders)->whereIn('status', ['Menunggu', 'Belum Bayar'])->count(),
-            'Diproses' => collect($orders)->where('status', 'Diproses')->count(),
-            'Selesai' => collect($orders)->where('status', 'Selesai')->count(),
+            'Menunggu' => collect($orders)->whereIn('status', ['Menunggu', 'Belum Bayar', 'Baru'])->count(),
+            'Diproses' => collect($orders)->whereIn('status', ['Diproses', 'Delivery', 'in_progress', 'ready_for_delivery'])->count(),
+            'Selesai' => collect($orders)->whereIn('status', ['Selesai', 'completed'])->count(),
         ];
     @endphp
 </head>
@@ -96,7 +96,7 @@
                 <div class="flex flex-col">
                     
                     @forelse($orders as $order)
-                    <x-zyngga-card x-show="activeTab === 'Semua' || (activeTab === 'Menunggu' && ['Menunggu', 'Belum Bayar'].includes('{{ $order['status'] }}')) || activeTab === '{{ $order['status'] }}'"
+                    <x-zyngga-card x-show="activeTab === 'Semua' || (activeTab === 'Menunggu' && ['Menunggu', 'Belum Bayar', 'Baru'].includes('{{ $order['status'] }}')) || (activeTab === 'Diproses' && ['Diproses', 'Delivery', 'in_progress', 'ready_for_delivery'].includes('{{ $order['status'] }}')) || activeTab === '{{ $order['status'] }}'"
                         onclick="window.location.href='{{ route('order.detail', ['id' => $order['nota_layanan']]) }}'"
                         class="cursor-pointer"
                     >

@@ -182,6 +182,10 @@ class OrderPageController
     }
     public function complaint(Request $request, string $id)
     {
+        if ($request->user()?->isStaff()) {
+            return redirect()->route('admin.riwayat-pesanan')->with('error', 'Aksi pengajuan komplain hanya dapat dilakukan oleh Pelanggan.');
+        }
+
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
             // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
@@ -249,6 +253,10 @@ class OrderPageController
 
     public function requestDelivery(Request $request, string $id)
     {
+        if ($request->user()?->isStaff()) {
+            return redirect()->route('admin.riwayat-pesanan')->with('error', 'Aksi pengajuan pengantaran hanya dapat dilakukan oleh Pelanggan.');
+        }
+
         $order = $this->webService->detailData($id, $request->user());
         if (!$order) {
             // route('home') butuh login — tamu yang order-nya tidak ketemu di sini
@@ -388,6 +396,10 @@ class OrderPageController
 
     public function upgrade(Request $request, string $id)
     {
+        if ($request->user()?->isStaff()) {
+            return redirect()->route('admin.riwayat-pesanan')->with('error', 'Aksi upgrade layanan hanya dapat dilakukan oleh Pelanggan.');
+        }
+
         try {
             $data = $this->webService->upgradeData($id, $request->user());
             return view('pelanggan.order.upgrade', $data);

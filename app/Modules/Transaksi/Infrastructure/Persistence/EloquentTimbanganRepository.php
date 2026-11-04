@@ -59,7 +59,6 @@ class EloquentTimbanganRepository implements TimbanganRepositoryInterface
 
         $totalBiayaLayanan = $totalPrice;
         $totalBayarAkhir = $totalBiayaLayanan 
-            + (double) ($transaksi->total_biaya_prioritas ?? 0) 
             + (double) ($transaksi->total_biaya_layanan_tambahan ?? 0);
 
         $transaksi->status = $status;

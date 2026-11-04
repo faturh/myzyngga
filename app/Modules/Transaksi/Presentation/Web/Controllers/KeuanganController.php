@@ -80,8 +80,8 @@ class KeuanganController extends Controller
         $validated = $request->validated();
         $user = $request->user();
 
-        // Enforce manager's branch restriction
-        if ($user->hasRole('manajer_laundry')) {
+        // Enforce user's branch restriction if set
+        if (empty($validated['cabang_id']) && $user->cabang_id) {
             $validated['cabang_id'] = $user->cabang_id;
         }
 

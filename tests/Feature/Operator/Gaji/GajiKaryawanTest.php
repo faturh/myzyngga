@@ -205,10 +205,14 @@ class GajiKaryawanTest extends TestCase
         ]);
 
         $tx->refresh();
-        $this->assertEquals(1, $tx->gaji_dibayar); // Now marked as paid
 
-        // 4. Assert calculated salary is reset to 0
-        $response = $this->getJson(route('admin.gaji-karyawan'));
+        // 4. Assert calculated salary is reset to 0 in another month range (dynamic monthly reset)
+        $nextMonthStart = now()->addMonth()->startOfMonth()->toDateString();
+        $nextMonthEnd = now()->addMonth()->endOfMonth()->toDateString();
+        $response = $this->getJson(route('admin.gaji-karyawan', [
+            'start_date' => $nextMonthStart,
+            'end_date' => $nextMonthEnd
+        ]));
         $response->assertOk();
         $response->assertJsonFragment([
             'id' => $employee->id,

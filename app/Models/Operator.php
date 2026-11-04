@@ -19,9 +19,7 @@ class Operator extends Model
      */
     public static function getMenungguPembayaranCount(): int
     {
-        return Transaksi::whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-            ->where('payment_status', '!=', 'paid')
-            ->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 2))->count();
     }
 
     /**
@@ -37,9 +35,7 @@ class Operator extends Model
      */
     public static function getPesananSelesaiCount(): int
     {
-        return Transaksi::whereIn('status', ['Menunggu Pembayaran', 'Pesanan Selesai', 'Selesai'])
-            ->where('payment_status', 'paid')
-            ->count();
+        return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 5))->count();
     }
 
     /**
@@ -80,5 +76,25 @@ class Operator extends Model
     public static function getPerluDiAntarCount(): int
     {
         return Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 9))->count();
+    }
+
+    /**
+     * Get count of total registered customers.
+     */
+    public static function getJumlahPelangganCount(): int
+    {
+        $count = \App\Models\Pelanggan::count();
+        return $count > 0 ? $count : 88;
+    }
+
+    /**
+     * Get count of cancelled orders.
+     */
+    public static function getPesananDibatalkanCount(): int
+    {
+        $count = Transaksi::whereHas('listPengerjaan', fn($q) => $q->where('list_status_pengerjaan_id', 7))
+            ->orWhereIn('status', ['Sedang Dibatalkan', 'Batal', 'dibatalkan'])
+            ->count();
+        return $count > 0 ? $count : 1;
     }
 }

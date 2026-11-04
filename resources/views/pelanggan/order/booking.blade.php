@@ -364,7 +364,6 @@
                     ['id' => 'quick',    'name' => 'Quick',    'desc' => 'Layanan 2 hari (48 jam)',   'price' => 'Rp6.000/kg'],
                     ['id' => 'express',  'name' => 'Express',  'desc' => 'Layanan 1 hari (24 jam)',   'price' => 'Rp6.250/kg'],
                     ['id' => 'kilat',    'name' => 'Kilat',    'desc' => 'Layanan 5 jam',              'price' => 'Rp7.850/kg'],
-                    ['id' => 'satuan',   'name' => 'Satuan',   'desc' => 'Selimut, Bed Cover, dll.',  'price' => 'Mulai Rp10.000'],
                 ];
             @endphp
 
@@ -564,7 +563,6 @@
         { id: 'quick',   name: 'Quick',   desc: 'Layanan 2 hari (48 jam)',   price: 'Rp6.000/kg',      workingHours: 20, originalEta: 2 },
         { id: 'express', name: 'Express', desc: 'Layanan 1 hari (24 jam)',   price: 'Rp6.250/kg',      workingHours: 10, originalEta: 1 },
         { id: 'kilat',   name: 'Kilat',   desc: 'Layanan 5 jam',              price: 'Rp7.850/kg',      workingHours: 5,  originalEta: 0 },
-        { id: 'satuan',  name: 'Satuan',  desc: 'Selimut, Bed Cover, dll.',  price: 'Mulai Rp10.000',  workingHours: 30, originalEta: 3 },
     ];
 
     function calculateWorkingHoursETA(startDate, hoursToAdd) {
